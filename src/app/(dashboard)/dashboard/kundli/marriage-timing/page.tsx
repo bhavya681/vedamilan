@@ -1,66 +1,81 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
 import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
 
-export const metadata = { title: "Marriage Timing" };
+type Window = { label: string; window: string; reason: string; score: number };
 
-export default function Page() {
+export default function MarriageTimingPage() {
+  const [windows, setWindows] = useState<Window[]>([]);
+  const [meta, setMeta] = useState<{ manglikStatus?: string; currentMaha?: string | null }>({});
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/marriage-timing")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          setWindows(json.data.windows || []);
+          setMeta({
+            manglikStatus: json.data.manglikStatus,
+            currentMaha: json.data.currentMaha,
+          });
+        } else setError(json.error?.message || "Failed to load");
+      })
+      .catch(() => setError("Failed to load marriage timing"));
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
-        title="Marriage Timing"
-        description="Activation windows with context"
+        eyebrow="Marriage timing"
+        title="Activation windows"
+        description="Deterministic dasha confluence — not AI speculation"
         actions={
           <Button asChild variant="secondary">
-            <Link href={routes.dashboard}>Back to overview</Link>
+            <Link href={routes.kundli}>Kundli workspace</Link>
           </Button>
         }
       />
-      <>
-        <div className="space-y-4">
-          {mockMarriageTiming.map((w) => (
-            <GlassCard key={w.window} glow={w.score > 90}>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-crimson text-xs uppercase">{w.label}</p>
-                  <h2 className="font-display text-2xl">{w.window}</h2>
-                </div>
-                <p className="font-display text-brand-dual text-3xl">{w.score}</p>
-              </div>
-              <p className="text-muted-foreground mt-3 text-sm">{w.reason}</p>
-            </GlassCard>
-          ))}
-        </div>
-      </>
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <GlassCard>
+          <p className="text-muted-foreground text-xs uppercase">Current mahadasha</p>
+          <p className="font-display mt-2 text-2xl">{meta.currentMaha || "—"}</p>
+        </GlassCard>
+        <GlassCard>
+          <p className="text-muted-foreground text-xs uppercase">Manglik status</p>
+          <p className="font-display mt-2 text-2xl">{meta.manglikStatus || "—"}</p>
+        </GlassCard>
+      </div>
+      <div className="space-y-3">
+        {windows.map((w) => (
+          <GlassCard
+            key={w.window + w.label}
+            glow={w.score > 90}
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="text-rose text-[11px] tracking-[0.16em] uppercase">{w.label}</p>
+              <p className="font-display text-xl sm:text-2xl">{w.window}</p>
+              <p className="text-muted-foreground mt-1 text-sm">{w.reason}</p>
+            </div>
+            <p className="font-display text-brand-dual text-3xl sm:text-4xl">{w.score}</p>
+          </GlassCard>
+        ))}
+        {!error && windows.length === 0 ? (
+          <GlassCard>
+            <p className="text-muted-foreground text-sm">
+              Generate your kundli first to compute marriage timing windows.
+            </p>
+          </GlassCard>
+        ) : null}
+      </div>
     </div>
   );
 }

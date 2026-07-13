@@ -20,6 +20,7 @@
     "test:auth": "vitest run src/lib/auth",
     "test:profile": "vitest run src/application/profile",
     "test:horoscope": "vitest run src/application/horoscope",
+    "test:rules": "vitest run src/application/rules",
     "test:watch": "vitest"
   },
   "lint-staged": {

@@ -42,22 +42,22 @@ src/
 
 ## Module roadmap (strict order)
 
-| #   | Module                                                             | Done when           |
-| --- | ------------------------------------------------------------------ | ------------------- |
-| 1   | MongoDB schemas, indexes, connection, seed, repos                  | **Complete**        |
-| 2   | Better Auth (email, Google, OTP, sessions, RBAC, protected routes) | **Complete**        |
-| 3   | Profile CRUD + Cloudinary + preferences + completion               | **Complete**        |
-| 4   | Swiss Ephemeris horoscope engine + persistence                     | **Complete**        |
-| 5   | Deterministic rule engines (compat, timing, yogas, doshas)         | Next                |
-| 6   | Matchmaking + ranking + search                                     | Matches/search live |
-| 7   | Mastra agents (explain-only AI)                                    | AI insights live    |
-| 8   | Chat + Pusher realtime                                             | Messages live       |
-| 9   | Payments (Stripe/Razorpay) + webhooks                              | Premium live        |
-| 10  | Notifications (email/SMS/in-app)                                   | Notifications live  |
-| 11  | Admin + audit + analytics                                          | Admin live          |
-| 12  | Security hardening + rate limits                                   | OWASP checklist     |
-| 13  | Performance (Redis, pagination, streaming)                         | SLOs met            |
-| 14  | Full test suite + docs finalize                                    | Ship-ready          |
+| #   | Module                                                             | Done when          |
+| --- | ------------------------------------------------------------------ | ------------------ |
+| 1   | MongoDB schemas, indexes, connection, seed, repos                  | **Complete**       |
+| 2   | Better Auth (email, Google, OTP, sessions, RBAC, protected routes) | **Complete**       |
+| 3   | Profile CRUD + Cloudinary + preferences + completion               | **Complete**       |
+| 4   | Swiss Ephemeris horoscope engine + persistence                     | **Complete**       |
+| 5   | Deterministic rule engines (compat, timing, yogas, doshas)         | **Complete**       |
+| 6   | Matchmaking + ranking + search                                     | Next               |
+| 7   | Mastra agents (explain-only AI)                                    | AI insights live   |
+| 8   | Chat + Pusher realtime                                             | Messages live      |
+| 9   | Payments (Stripe/Razorpay) + webhooks                              | Premium live       |
+| 10  | Notifications (email/SMS/in-app)                                   | Notifications live |
+| 11  | Admin + audit + analytics                                          | Admin live         |
+| 12  | Security hardening + rate limits                                   | OWASP checklist    |
+| 13  | Performance (Redis, pagination, streaming)                         | SLOs met           |
+| 14  | Full test suite + docs finalize                                    | Ship-ready         |
 
 **Workflow per module:** implement → tests → fix → commit → next.
 
