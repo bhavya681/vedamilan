@@ -19,6 +19,7 @@
     "test:db": "vitest run src/infrastructure/database src/repositories",
     "test:auth": "vitest run src/lib/auth",
     "test:profile": "vitest run src/application/profile",
+    "test:horoscope": "vitest run src/application/horoscope",
     "test:watch": "vitest"
   },
   "lint-staged": {
