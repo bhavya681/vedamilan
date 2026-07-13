@@ -1,0 +1,361 @@
+model Plan {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  code          SubscriptionPlan @unique
+  name          String       @db.VarChar(120)
+  description   String?
+  priceInrPaise Int          @map("price_inr_paise")
+  priceUsdCents Int?         @map("price_usd_cents")
+  billingPeriodDays Int      @map("billing_period_days")
+  featuresJson  Json         @map("features_json")
+  stripePriceId String?      @map("stripe_price_id")
+  razorpayPlanId String?     @map("razorpay_plan_id")
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  subscriptions Subscription[]
+  coupons       Coupon[]
+
+  @@index([status, deletedAt])
+  @@map("plans")
+}
+
+model Subscription {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  planId        String       @map("plan_id") @db.Uuid
+  startsAt      DateTime     @map("starts_at") @db.Timestamptz(6)
+  endsAt        DateTime?    @map("ends_at") @db.Timestamptz(6)
+  autoRenew     Boolean      @default(true) @map("auto_renew")
+  cancelledAt   DateTime?    @map("cancelled_at") @db.Timestamptz(6)
+  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          Plan         @relation(fields: [planId], references: [id], onDelete: Restrict)
+  invoices      Invoice[]
+
+  @@index([userId, endsAt])
+  @@index([planId, paymentStatus])
+  @@index([status, deletedAt])
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  subscriptionId String?     @map("subscription_id") @db.Uuid
+  invoiceNumber String       @unique @map("invoice_number") @db.VarChar(64)
+  currency      String       @default("INR") @db.VarChar(8)
+  amountMinor   Int          @map("amount_minor")
+  taxMinor      Int          @default(0) @map("tax_minor")
+  totalMinor    Int          @map("total_minor")
+  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
+  issuedAt      DateTime     @default(now()) @map("issued_at") @db.Timestamptz(6)
+  dueAt         DateTime?    @map("due_at") @db.Timestamptz(6)
+  pdfUrl        String?      @map("pdf_url")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription  Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  transactions  PaymentTransaction[]
+  couponRedemptions CouponRedemption[]
+
+  @@index([userId, issuedAt])
+  @@index([paymentStatus])
+  @@index([status, deletedAt])
+  @@map("invoices")
+}
+
+model PaymentTransaction {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  invoiceId     String?      @map("invoice_id") @db.Uuid
+  provider      String       @db.VarChar(40)
+  providerPaymentId String?  @map("provider_payment_id")
+  amountMinor   Int          @map("amount_minor")
+  currency      String       @default("INR") @db.VarChar(8)
+  paymentStatus PaymentStatus @map("payment_status")
+  metaJson      Json?        @map("meta_json")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice       Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  refunds       Refund[]
+  razorpayOrders RazorpayOrder[]
+  stripePayments StripePayment[]
+
+  @@index([userId, createdAt])
+  @@index([provider, providerPaymentId])
+  @@index([paymentStatus, createdAt])
+  @@index([status, deletedAt])
+  @@map("payment_transactions")
+}
+
+model Coupon {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  code          String       @unique @db.VarChar(64)
+  couponType    CouponType   @map("coupon_type")
+  value         Decimal      @db.Decimal(12, 2)
+  maxRedemptions Int?        @map("max_redemptions")
+  redeemedCount Int          @default(0) @map("redeemed_count")
+  startsAt      DateTime?    @map("starts_at") @db.Timestamptz(6)
+  endsAt        DateTime?    @map("ends_at") @db.Timestamptz(6)
+  planId        String?      @map("plan_id") @db.Uuid
+
+  plan          Plan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
+  promoCodes    PromoCode[]
+  redemptions   CouponRedemption[]
+
+  @@index([endsAt])
+  @@index([status, deletedAt])
+  @@map("coupons")
+}
+
+model PromoCode {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  couponId      String       @map("coupon_id") @db.Uuid
+  code          String       @unique @db.VarChar(64)
+  campaignName  String?      @map("campaign_name") @db.VarChar(120)
+  usageLimitPerUser Int?     @map("usage_limit_per_user")
+
+  coupon        Coupon       @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  redemptions   CouponRedemption[]
+
+  @@index([couponId])
+  @@index([status, deletedAt])
+  @@map("promo_codes")
+}
+
+model CouponRedemption {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  couponId      String       @map("coupon_id") @db.Uuid
+  promoCodeId   String?      @map("promo_code_id") @db.Uuid
+  invoiceId     String?      @map("invoice_id") @db.Uuid
+  redeemedAt    DateTime     @default(now()) @map("redeemed_at") @db.Timestamptz(6)
+  discountMinor Int          @map("discount_minor")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon        Coupon       @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  promoCode     PromoCode?   @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  invoice       Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, redeemedAt])
+  @@index([couponId, redeemedAt])
+  @@index([invoiceId])
+  @@index([status, deletedAt])
+  @@map("coupon_redemptions")
+}
+
+model Wallet {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  currency      String       @default("INR") @db.VarChar(8)
+  balanceMinor  Int          @default(0) @map("balance_minor")
+  heldMinor     Int          @default(0) @map("held_minor")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger        WalletLedger[]
+
+  @@index([status, deletedAt])
+  @@map("wallets")
+}
+
+model WalletLedger {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  walletId      String       @map("wallet_id") @db.Uuid
+  txnType       WalletTxnType @map("txn_type")
+  amountMinor   Int          @map("amount_minor")
+  balanceAfterMinor Int      @map("balance_after_minor")
+  reference     String?      @db.VarChar(160)
+  metaJson      Json?        @map("meta_json")
+
+  wallet        Wallet       @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@index([status, deletedAt])
+  @@map("wallet_ledger")
+}
+
+model Refund {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  transactionId String       @map("transaction_id") @db.Uuid
+  amountMinor   Int          @map("amount_minor")
+  reason        String?
+  paymentStatus PaymentStatus @default(PENDING) @map("payment_status")
+  providerRefundId String?   @map("provider_refund_id")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction   PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([paymentStatus])
+  @@index([status, deletedAt])
+  @@map("refunds")
+}
+
+model RazorpayOrder {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  paymentTransactionId String? @map("payment_transaction_id") @db.Uuid
+  razorpayOrderId String     @unique @map("razorpay_order_id")
+  amountMinor   Int          @map("amount_minor")
+  currency      String       @default("INR") @db.VarChar(8)
+  receipt       String       @db.VarChar(120)
+  paymentStatus PaymentStatus @default(CREATED) @map("payment_status")
+  notesJson     Json?        @map("notes_json")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentTransaction PaymentTransaction? @relation(fields: [paymentTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([paymentTransactionId])
+  @@index([paymentStatus])
+  @@index([status, deletedAt])
+  @@map("razorpay_orders")
+}
+
+model StripePayment {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  paymentTransactionId String? @map("payment_transaction_id") @db.Uuid
+  stripePaymentIntentId String @unique @map("stripe_payment_intent_id")
+  stripeCustomerId String?   @map("stripe_customer_id")
+  amountMinor   Int          @map("amount_minor")
+  currency      String       @default("USD") @db.VarChar(8)
+  paymentStatus PaymentStatus @default(CREATED) @map("payment_status")
+  metaJson      Json?        @map("meta_json")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentTransaction PaymentTransaction? @relation(fields: [paymentTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([paymentTransactionId])
+  @@index([paymentStatus])
+  @@index([status, deletedAt])
+  @@map("stripe_payments")
+}
+
+model StripeCustomer {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  stripeCustomerId String    @unique @map("stripe_customer_id")
+  defaultCurrency String     @default("USD") @map("default_currency") @db.VarChar(8)
+  metaJson      Json?        @map("meta_json")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("stripe_customers")
+}
+
+model PaymentWebhookEvent {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  provider      String       @db.VarChar(40)
+  eventId       String       @map("event_id") @db.VarChar(191)
+  eventType     String       @map("event_type") @db.VarChar(120)
+  payloadJson   Json         @map("payload_json")
+  processedAt   DateTime?    @map("processed_at") @db.Timestamptz(6)
+  processingError String?    @map("processing_error")
+
+  @@unique([provider, eventId])
+  @@index([eventType, createdAt])
+  @@index([processedAt])
+  @@index([status, deletedAt])
+  @@map("payment_webhook_events")
+}

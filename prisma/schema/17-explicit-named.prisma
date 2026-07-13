@@ -1,0 +1,343 @@
+/// Explicit Vimshottari period tables (in addition to polymorphic DashaPeriod).
+model Mahadasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  timelineId    String       @map("timeline_id") @db.Uuid
+  lord          PlanetName
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  timeline      DashaTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  antardashas   Antardasha[]
+
+  @@index([timelineId, startAt])
+  @@index([lord])
+  @@index([status, deletedAt])
+  @@map("mahadashas")
+}
+
+model Antardasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  mahadashaId   String       @map("mahadasha_id") @db.Uuid
+  lord          PlanetName
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  mahadasha     Mahadasha    @relation(fields: [mahadashaId], references: [id], onDelete: Cascade)
+  pratyantars   PratyantarDasha[]
+
+  @@index([mahadashaId, startAt])
+  @@index([status, deletedAt])
+  @@map("antardashas")
+}
+
+model PratyantarDasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  antardashaId  String       @map("antardasha_id") @db.Uuid
+  lord          PlanetName
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  antardasha    Antardasha   @relation(fields: [antardashaId], references: [id], onDelete: Cascade)
+
+  @@index([antardashaId, startAt])
+  @@index([status, deletedAt])
+  @@map("pratyantar_dashas")
+}
+
+model MarriageTimingWindow {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  score         Decimal?     @db.Decimal(5, 2)
+  rationale     String?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+  @@index([status, deletedAt])
+  @@map("marriage_timing_windows")
+}
+
+model CareerTimingWindow {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  score         Decimal?     @db.Decimal(5, 2)
+  rationale     String?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+  @@index([status, deletedAt])
+  @@map("career_timing_windows")
+}
+
+model EducationTimingWindow {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  score         Decimal?     @db.Decimal(5, 2)
+  rationale     String?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+  @@index([status, deletedAt])
+  @@map("education_timing_windows")
+}
+
+model ForeignSettlementWindow {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  score         Decimal?     @db.Decimal(5, 2)
+  rationale     String?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+  @@index([status, deletedAt])
+  @@map("foreign_settlement_windows")
+}
+
+model HoroscopePdfReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  chartId       String?      @map("chart_id") @db.Uuid
+  storageUrl    String       @map("storage_url")
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chart         HoroscopeChart? @relation(fields: [chartId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([chartId])
+  @@index([status, deletedAt])
+  @@map("horoscope_pdf_reports")
+}
+
+model CompatibilityPdfReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  compatibilityReportId String? @map("compatibility_report_id") @db.Uuid
+  storageUrl    String       @map("storage_url")
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  compatibilityReport CompatibilityReport? @relation(fields: [compatibilityReportId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([compatibilityReportId])
+  @@index([status, deletedAt])
+  @@map("compatibility_pdf_reports")
+}
+
+model MarriageTimingPdfReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  storageUrl    String       @map("storage_url")
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, deletedAt])
+  @@map("marriage_timing_pdf_reports")
+}
+
+model AiSummaryPdfReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  aiReportId    String?      @map("ai_report_id") @db.Uuid
+  storageUrl    String       @map("storage_url")
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiReport      AiReport?    @relation(fields: [aiReportId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([aiReportId])
+  @@index([status, deletedAt])
+  @@map("ai_summary_pdf_reports")
+}
+
+model PushNotification {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  deviceId      String?      @map("device_id") @db.Uuid
+  title         String       @db.VarChar(200)
+  body          String
+  payloadJson   Json?        @map("payload_json")
+  sentAt        DateTime?    @map("sent_at") @db.Timestamptz(6)
+  deliveryStatus String      @default("PENDING") @map("delivery_status") @db.VarChar(40)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        Device?      @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([deviceId])
+  @@index([status, deletedAt])
+  @@map("push_notifications")
+}
+
+model EmailNotification {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String?      @map("user_id") @db.Uuid
+  toEmail       String       @map("to_email") @db.Citext
+  subject       String       @db.VarChar(200)
+  bodyHtml      String       @map("body_html")
+  sentAt        DateTime?    @map("sent_at") @db.Timestamptz(6)
+  deliveryStatus String      @default("PENDING") @map("delivery_status") @db.VarChar(40)
+  providerMessageId String?  @map("provider_message_id")
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([toEmail, createdAt])
+  @@index([userId])
+  @@index([status, deletedAt])
+  @@map("email_notifications")
+}
+
+model SmsNotification {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String?      @map("user_id") @db.Uuid
+  toPhone       String       @map("to_phone") @db.VarChar(20)
+  body          String
+  sentAt        DateTime?    @map("sent_at") @db.Timestamptz(6)
+  deliveryStatus String      @default("PENDING") @map("delivery_status") @db.VarChar(40)
+  providerMessageId String?  @map("provider_message_id")
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([toPhone, createdAt])
+  @@index([userId])
+  @@index([status, deletedAt])
+  @@map("sms_notifications")
+}
+
+model InAppNotification {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  title         String       @db.VarChar(200)
+  body          String
+  actionUrl     String?      @map("action_url")
+  readAt        DateTime?    @map("read_at") @db.Timestamptz(6)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([status, deletedAt])
+  @@map("in_app_notifications")
+}

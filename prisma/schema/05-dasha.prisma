@@ -1,0 +1,146 @@
+model DashaTimeline {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  system        String       @default("VIMSHOTTARI") @db.VarChar(40)
+  computedAt    DateTime     @default(now()) @map("computed_at") @db.Timestamptz(6)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periods       DashaPeriod[]
+  currentDasha  CurrentDasha?
+  futureDashas  FutureDasha[]
+  previousDashas PreviousDasha[]
+  mahadashas    Mahadasha[]
+
+  @@index([userId, system])
+  @@index([status, deletedAt])
+  @@map("dasha_timelines")
+}
+
+model DashaPeriod {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  timelineId    String       @map("timeline_id") @db.Uuid
+  level         DashaLevel
+  lord          PlanetName
+  parentPeriodId String?     @map("parent_period_id") @db.Uuid
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  timeline      DashaTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  parent        DashaPeriod?  @relation("DashaTree", fields: [parentPeriodId], references: [id], onDelete: Cascade)
+  children      DashaPeriod[] @relation("DashaTree")
+
+  @@index([timelineId, level, startAt])
+  @@index([parentPeriodId])
+  @@index([lord, startAt, endAt])
+  @@index([status, deletedAt])
+  @@map("dasha_periods")
+}
+
+model CurrentDasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  timelineId    String       @unique @map("timeline_id") @db.Uuid
+  mahadashaLord PlanetName   @map("mahadasha_lord")
+  antardashaLord PlanetName  @map("antardasha_lord")
+  pratyantarLord PlanetName? @map("pratyantar_lord")
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  snapshotAt    DateTime     @default(now()) @map("snapshot_at") @db.Timestamptz(6)
+
+  timeline      DashaTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("current_dashas")
+}
+
+model FutureDasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  timelineId    String       @map("timeline_id") @db.Uuid
+  level         DashaLevel
+  lord          PlanetName
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+
+  timeline      DashaTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+
+  @@index([timelineId, startAt])
+  @@index([status, deletedAt])
+  @@map("future_dashas")
+}
+
+model PreviousDasha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  timelineId    String       @map("timeline_id") @db.Uuid
+  level         DashaLevel
+  lord          PlanetName
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+
+  timeline      DashaTimeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+
+  @@index([timelineId, endAt])
+  @@index([status, deletedAt])
+  @@map("previous_dashas")
+}
+
+model DashaWindow {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  windowType    DashaWindowType @map("window_type")
+  startAt       DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime     @map("end_at") @db.Timestamptz(6)
+  confidence    Decimal?     @db.Decimal(5, 2)
+  mahadashaLord PlanetName?  @map("mahadasha_lord")
+  antardashaLord PlanetName? @map("antardasha_lord")
+  rationale     String?
+  score         Decimal?     @db.Decimal(5, 2)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, windowType, startAt])
+  @@index([windowType, startAt, endAt])
+  @@index([status, deletedAt])
+  @@map("dasha_windows")
+}

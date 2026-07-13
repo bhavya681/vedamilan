@@ -1,0 +1,202 @@
+/// Daily aggregate metrics — append-only style snapshots for BI / dashboards.
+model AnalyticsDailyActiveUser {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  activeUsers   Int          @map("active_users")
+  newUsers      Int          @default(0) @map("new_users")
+  returningUsers Int         @default(0) @map("returning_users")
+
+  @@unique([metricDate])
+  @@index([status, deletedAt])
+  @@map("analytics_daily_active_users")
+}
+
+model AnalyticsRevenue {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  currency      String       @default("INR") @db.VarChar(8)
+  grossMinor    Int          @map("gross_minor")
+  netMinor      Int          @map("net_minor")
+  refundMinor   Int          @default(0) @map("refund_minor")
+  transactionCount Int       @map("transaction_count")
+
+  @@unique([metricDate, currency])
+  @@index([status, deletedAt])
+  @@map("analytics_revenue")
+}
+
+model AnalyticsSubscription {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  planCode      SubscriptionPlan @map("plan_code")
+  activeCount   Int          @map("active_count")
+  newCount      Int          @default(0) @map("new_count")
+  churnedCount  Int          @default(0) @map("churned_count")
+
+  @@unique([metricDate, planCode])
+  @@index([status, deletedAt])
+  @@map("analytics_subscriptions")
+}
+
+model AnalyticsRetention {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  cohortDate    DateTime     @map("cohort_date") @db.Date
+  dayN          Int          @map("day_n")
+  cohortSize    Int          @map("cohort_size")
+  retainedUsers Int          @map("retained_users")
+  retentionRate Decimal      @map("retention_rate") @db.Decimal(5, 2)
+
+  @@unique([cohortDate, dayN])
+  @@index([status, deletedAt])
+  @@map("analytics_retention")
+}
+
+model AnalyticsConversion {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  funnelName    String       @map("funnel_name") @db.VarChar(80)
+  stepName      String       @map("step_name") @db.VarChar(80)
+  usersEntered  Int          @map("users_entered")
+  usersConverted Int         @map("users_converted")
+  conversionRate Decimal     @map("conversion_rate") @db.Decimal(5, 2)
+
+  @@unique([metricDate, funnelName, stepName])
+  @@index([status, deletedAt])
+  @@map("analytics_conversions")
+}
+
+model AnalyticsCompatibilitySuccess {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  reportsGenerated Int       @map("reports_generated")
+  mutualMatches Int          @map("mutual_matches")
+  avgOverallScore Decimal?   @map("avg_overall_score") @db.Decimal(5, 2)
+  avgAiScore    Decimal?     @map("avg_ai_score") @db.Decimal(5, 2)
+
+  @@unique([metricDate])
+  @@index([status, deletedAt])
+  @@map("analytics_compatibility_success")
+}
+
+model AnalyticsAiUsage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  provider      AiProvider
+  model         String       @db.VarChar(80)
+  requestCount  Int          @map("request_count")
+  promptTokens  Int          @map("prompt_tokens")
+  completionTokens Int       @map("completion_tokens")
+  estimatedCostUsd Decimal?  @map("estimated_cost_usd") @db.Decimal(12, 6)
+
+  @@unique([metricDate, provider, model])
+  @@index([status, deletedAt])
+  @@map("analytics_ai_usage")
+}
+
+model AnalyticsChatUsage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  activeConversations Int    @map("active_conversations")
+  messagesSent  Int          @map("messages_sent")
+  voiceNotesSent Int         @default(0) @map("voice_notes_sent")
+  videoCalls    Int          @default(0) @map("video_calls")
+
+  @@unique([metricDate])
+  @@index([status, deletedAt])
+  @@map("analytics_chat_usage")
+}
+
+model AnalyticsPayment {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  provider      String       @db.VarChar(40)
+  successCount  Int          @map("success_count")
+  failureCount  Int          @map("failure_count")
+  volumeMinor   Int          @map("volume_minor")
+
+  @@unique([metricDate, provider])
+  @@index([status, deletedAt])
+  @@map("analytics_payments")
+}
+
+model AnalyticsReportUsage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  metricDate    DateTime     @map("metric_date") @db.Date
+  reportKind    String       @map("report_kind") @db.VarChar(80)
+  generatedCount Int         @map("generated_count")
+  downloadCount Int          @map("download_count")
+
+  @@unique([metricDate, reportKind])
+  @@index([status, deletedAt])
+  @@map("analytics_report_usage")
+}

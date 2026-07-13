@@ -1,0 +1,13 @@
+// VedaMilan AI — Production PostgreSQL schema (Prisma multi-file)
+// Target scale: 10M+ users. UUID PKs, soft deletes, audit columns, indexed FKs.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgcrypto, uuid_ossp(map: "uuid-ossp"), citext, pg_trgm, btree_gin]
+}

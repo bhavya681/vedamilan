@@ -1,0 +1,197 @@
+model BlogCategory {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  slug          String       @unique @db.VarChar(120)
+  name          String       @db.VarChar(120)
+  description   String?
+
+  posts         BlogPostCategory[]
+
+  @@index([status, deletedAt])
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  slug          String       @unique @db.VarChar(120)
+  name          String       @db.VarChar(120)
+
+  posts         BlogPostTag[]
+
+  @@index([status, deletedAt])
+  @@map("blog_tags")
+}
+
+model BlogPost {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  authorId      String       @map("author_id") @db.Uuid
+  slug          String       @unique @db.VarChar(180)
+  title         String       @db.VarChar(200)
+  excerpt       String?
+  contentMarkdown String     @map("content_markdown")
+  coverImageUrl String?      @map("cover_image_url")
+  contentStatus ContentStatus @default(DRAFT) @map("content_status")
+  publishedAt   DateTime?    @map("published_at") @db.Timestamptz(6)
+
+  author        User         @relation("Author", fields: [authorId], references: [id], onDelete: Restrict)
+  categories    BlogPostCategory[]
+  tags          BlogPostTag[]
+  comments      BlogComment[]
+
+  @@index([contentStatus, publishedAt])
+  @@index([authorId])
+  @@index([status, deletedAt])
+  @@map("blog_posts")
+}
+
+model BlogPostCategory {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  postId        String       @map("post_id") @db.Uuid
+  categoryId    String       @map("category_id") @db.Uuid
+
+  post          BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category      BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, categoryId])
+  @@index([status, deletedAt])
+  @@map("blog_post_categories")
+}
+
+model BlogPostTag {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  postId        String       @map("post_id") @db.Uuid
+  tagId         String       @map("tag_id") @db.Uuid
+
+  post          BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag           BlogTag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, tagId])
+  @@index([status, deletedAt])
+  @@map("blog_post_tags")
+}
+
+model BlogComment {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  postId        String       @map("post_id") @db.Uuid
+  authorId      String       @map("author_id") @db.Uuid
+  parentId      String?      @map("parent_id") @db.Uuid
+  body          String
+
+  post          BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent        BlogComment? @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  children      BlogComment[] @relation("CommentThread")
+
+  @@index([postId, createdAt])
+  @@index([status, deletedAt])
+  @@map("blog_comments")
+}
+
+model FaqItem {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  question      String
+  answer        String
+  category      String?      @db.VarChar(80)
+  sortOrder     Int          @default(0) @map("sort_order")
+  contentStatus ContentStatus @default(PUBLISHED) @map("content_status")
+
+  @@index([category, sortOrder])
+  @@index([status, deletedAt])
+  @@map("faq_items")
+}
+
+model Testimonial {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String?      @map("user_id") @db.Uuid
+  displayName   String       @map("display_name") @db.VarChar(120)
+  locationLabel String?      @map("location_label") @db.VarChar(120)
+  quote         String
+  rating        Int          @default(5)
+  contentStatus ContentStatus @default(REVIEW) @map("content_status")
+  sortOrder     Int          @default(0) @map("sort_order")
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([contentStatus, sortOrder])
+  @@index([status, deletedAt])
+  @@map("testimonials")
+}
+
+model SuccessStory {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String?      @map("user_id") @db.Uuid
+  partnerNames  String       @map("partner_names") @db.VarChar(200)
+  title         String       @db.VarChar(200)
+  story         String
+  weddingDate   DateTime?    @map("wedding_date") @db.Date
+  coverImageUrl String?      @map("cover_image_url")
+  contentStatus ContentStatus @default(REVIEW) @map("content_status")
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([contentStatus, createdAt])
+  @@index([status, deletedAt])
+  @@map("success_stories")
+}

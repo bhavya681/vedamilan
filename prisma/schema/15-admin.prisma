@@ -1,0 +1,169 @@
+model Admin {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  employeeCode  String?      @unique @map("employee_code") @db.VarChar(64)
+  department    String?      @db.VarChar(80)
+  isSuperAdmin  Boolean      @default(false) @map("is_super_admin")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("admins")
+}
+
+model AuditLog {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  actorId       String?      @map("actor_id") @db.Uuid
+  action        AuditAction
+  entityType    String       @map("entity_type") @db.VarChar(80)
+  entityId      String?      @map("entity_id") @db.Uuid
+  beforeJson    Json?        @map("before_json")
+  afterJson     Json?        @map("after_json")
+  ipAddress     String?      @map("ip_address") @db.VarChar(64)
+  userAgent     String?      @map("user_agent")
+
+  actor         User?        @relation("Actor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
+  @@index([status, deletedAt])
+  @@map("audit_logs")
+}
+
+model ActivityLog {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String?      @map("user_id") @db.Uuid
+  eventName     String       @map("event_name") @db.VarChar(120)
+  propertiesJson Json?       @map("properties_json")
+  occurredAt    DateTime     @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, occurredAt])
+  @@index([eventName, occurredAt])
+  @@index([status, deletedAt])
+  @@map("activity_logs")
+}
+
+model PermissionLog {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  permissionId  String?      @map("permission_id") @db.Uuid
+  actorUserId   String?      @map("actor_user_id") @db.Uuid
+  targetUserId  String?      @map("target_user_id") @db.Uuid
+  changeType    String       @map("change_type") @db.VarChar(40)
+  details       String?
+
+  permission    Permission?  @relation(fields: [permissionId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([status, deletedAt])
+  @@map("permission_logs")
+}
+
+model AppSetting {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  key           String       @unique @db.VarChar(120)
+  valueJson     Json         @map("value_json")
+  description   String?
+
+  @@index([status, deletedAt])
+  @@map("app_settings")
+}
+
+model FeatureFlag {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  key           String       @unique @db.VarChar(120)
+  enabled       Boolean      @default(false)
+  description   String?
+  rulesJson     Json?        @map("rules_json")
+
+  @@index([enabled])
+  @@index([status, deletedAt])
+  @@map("feature_flags")
+}
+
+model Announcement {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  title         String       @db.VarChar(200)
+  body          String
+  startsAt      DateTime?    @map("starts_at") @db.Timestamptz(6)
+  endsAt        DateTime?    @map("ends_at") @db.Timestamptz(6)
+  audience      String       @default("ALL") @db.VarChar(40)
+  priority      Int          @default(0)
+
+  @@index([startsAt, endsAt])
+  @@index([status, deletedAt])
+  @@map("announcements")
+}
+
+model CmsPage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  slug          String       @unique @db.VarChar(180)
+  title         String       @db.VarChar(200)
+  contentMarkdown String     @map("content_markdown")
+  contentStatus ContentStatus @default(DRAFT) @map("content_status")
+  publishedAt   DateTime?    @map("published_at") @db.Timestamptz(6)
+  seoJson       Json?        @map("seo_json")
+
+  @@index([contentStatus, publishedAt])
+  @@index([status, deletedAt])
+  @@map("cms_pages")
+}

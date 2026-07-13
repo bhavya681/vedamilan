@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env
+.env*.local
+coverage
+src/generated
+dist
+out
+npm-debug.log*
+README.md
+docs

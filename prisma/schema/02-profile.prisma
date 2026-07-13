@@ -1,0 +1,625 @@
+/// Geographic reference data (normalized; City enum is for filters only).
+model GeoCountry {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  code          Country      @unique
+  name          String       @db.VarChar(120)
+  phoneCode     String?      @map("phone_code") @db.VarChar(8)
+  states        GeoState[]
+  cities        GeoCity[]
+  userLocations UserLocation[]
+
+  @@index([status, deletedAt])
+  @@map("geo_countries")
+}
+
+model GeoState {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  countryId     String       @map("country_id") @db.Uuid
+  code          State
+  name          String       @db.VarChar(120)
+  country       GeoCountry   @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  cities        GeoCity[]
+  userLocations UserLocation[]
+
+  @@unique([countryId, code])
+  @@index([status, deletedAt])
+  @@map("geo_states")
+}
+
+model GeoCity {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  countryId     String       @map("country_id") @db.Uuid
+  stateId       String?      @map("state_id") @db.Uuid
+  name          String       @db.VarChar(160)
+  cityEnum      City?        @map("city_enum")
+  latitude      Decimal?     @db.Decimal(10, 7)
+  longitude     Decimal?     @db.Decimal(10, 7)
+  timezone      String?      @db.VarChar(64)
+
+  country       GeoCountry   @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  state         GeoState?    @relation(fields: [stateId], references: [id], onDelete: SetNull)
+  userLocations UserLocation[]
+  birthPlaces   BirthDetails[]
+
+  @@unique([countryId, stateId, name])
+  @@index([cityEnum])
+  @@index([name])
+  @@index([status, deletedAt])
+  @@map("geo_cities")
+}
+
+model UserProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  firstName     String       @map("first_name") @db.VarChar(80)
+  middleName    String?      @map("middle_name") @db.VarChar(80)
+  lastName      String?      @map("last_name") @db.VarChar(80)
+  gender        Gender
+  maritalStatus MaritalStatus @map("marital_status")
+  relationshipIntent RelationshipIntent @default(MARRIAGE) @map("relationship_intent")
+  heightCm      Int?         @map("height_cm")
+  weightKg      Int?         @map("weight_kg")
+  heightRange   HeightRange? @map("height_range")
+  weightRange   WeightRange? @map("weight_range")
+  bloodGroup    String?      @map("blood_group") @db.VarChar(8)
+  complexion    String?      @db.VarChar(40)
+  motherTongue  Language?    @map("mother_tongue")
+  aboutMe       String?      @map("about_me")
+  profileCompleteness Int     @default(0) @map("profile_completeness")
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  isProfileComplete Boolean  @default(false) @map("is_profile_complete")
+  profileSlug   String?      @unique @map("profile_slug") @db.VarChar(120)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio           ProfileBio?
+
+  @@index([gender, maritalStatus, status])
+  @@index([verificationStatus])
+  @@index([profileCompleteness])
+  @@index([status, deletedAt])
+  @@map("user_profiles")
+}
+
+model ProfileBio {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  profileId     String       @unique @map("profile_id") @db.Uuid
+  headline      String?      @db.VarChar(180)
+  summary       String?
+  familyDetails String?      @map("family_details")
+  partnerExpectations String? @map("partner_expectations")
+
+  profile       UserProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("profile_bios")
+}
+
+model PartnerPreference {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  minAge        Int          @default(21) @map("min_age")
+  maxAge        Int          @default(40) @map("max_age")
+  genders       Gender[]
+  maritalStatuses MaritalStatus[] @map("marital_statuses")
+  religions     Religion[]
+  countries     Country[]
+  states        State[]
+  cities        City[]
+  heightMinCm   Int?         @map("height_min_cm")
+  heightMaxCm   Int?         @map("height_max_cm")
+  educationLevels EducationLevel[] @map("education_levels")
+  professionTypes ProfessionType[] @map("profession_types")
+  incomeRanges  IncomeRange[] @map("income_ranges")
+  foodPreferences FoodPreference[] @map("food_preferences")
+  lifestyleTypes LifestyleType[] @map("lifestyle_types")
+  familyTypes   FamilyType[] @map("family_types")
+  motherTongues Language[]   @map("mother_tongues")
+  manglikAccept Boolean?     @map("manglik_accept")
+  maxDistanceKm Int?         @map("max_distance_km")
+  mustHaveNotes String?      @map("must_have_notes")
+  dealBreakers  String?      @map("deal_breakers")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([minAge, maxAge])
+  @@index([status, deletedAt])
+  @@map("partner_preferences")
+}
+
+model ProfileImage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  cloudinaryPublicId String  @map("cloudinary_public_id")
+  url           String
+  thumbnailUrl  String?      @map("thumbnail_url")
+  isPrimary     Boolean      @default(false) @map("is_primary")
+  sortOrder     Int          @default(0) @map("sort_order")
+  moderationStatus VerificationStatus @default(PENDING) @map("moderation_status")
+  width         Int?
+  height        Int?
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isPrimary])
+  @@index([moderationStatus])
+  @@index([status, deletedAt])
+  @@map("profile_images")
+}
+
+model UserDocument {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  documentType  DocumentType @map("document_type")
+  title         String       @db.VarChar(160)
+  storageUrl    String       @map("storage_url")
+  mimeType      String?      @map("mime_type") @db.VarChar(120)
+  fileSizeBytes Int?         @map("file_size_bytes")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, documentType])
+  @@index([status, deletedAt])
+  @@map("user_documents")
+}
+
+model VerificationDocument {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  documentType  DocumentType @map("document_type")
+  storageUrl    String       @map("storage_url")
+  idNumberMasked String?     @map("id_number_masked") @db.VarChar(64)
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  reviewedBy    String?      @map("reviewed_by") @db.Uuid
+  reviewedAt    DateTime?    @map("reviewed_at") @db.Timestamptz(6)
+  rejectionReason String?    @map("rejection_reason")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, verificationStatus])
+  @@index([status, deletedAt])
+  @@map("verification_documents")
+}
+
+model GalleryItem {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  mediaType     MediaType    @map("media_type")
+  url           String
+  caption       String?      @db.VarChar(280)
+  sortOrder     Int          @default(0) @map("sort_order")
+  visibility    PrivacyVisibility @default(MEMBERS_ONLY)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sortOrder])
+  @@index([status, deletedAt])
+  @@map("gallery_items")
+}
+
+model Education {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  level         EducationLevel
+  institution   String       @db.VarChar(200)
+  fieldOfStudy  String?      @map("field_of_study") @db.VarChar(160)
+  yearFrom      Int?         @map("year_from")
+  yearTo        Int?         @map("year_to")
+  isHighest     Boolean      @default(false) @map("is_highest")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, level])
+  @@index([status, deletedAt])
+  @@map("education")
+}
+
+model Career {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  professionType ProfessionType @map("profession_type")
+  organization  String?      @db.VarChar(200)
+  designation   String?      @db.VarChar(160)
+  incomeRange   IncomeRange? @map("income_range")
+  workCity      String?      @map("work_city") @db.VarChar(120)
+  isCurrent     Boolean      @default(true) @map("is_current")
+  yearsExperience Int?       @map("years_experience")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isCurrent])
+  @@index([professionType, incomeRange])
+  @@index([status, deletedAt])
+  @@map("careers")
+}
+
+model Lifestyle {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  lifestyleType LifestyleType @map("lifestyle_type")
+  foodPreference FoodPreference @map("food_preference")
+  smoking       String?      @db.VarChar(40)
+  drinking      String?      @db.VarChar(40)
+  workout       String?      @db.VarChar(40)
+  sleepSchedule String?      @map("sleep_schedule") @db.VarChar(80)
+  pets          Boolean      @default(false)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lifestyleType, foodPreference])
+  @@index([status, deletedAt])
+  @@map("lifestyles")
+}
+
+model ReligionProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  religion      Religion
+  caste         String?      @db.VarChar(120)
+  subCaste      String?      @map("sub_caste") @db.VarChar(120)
+  gotra         String?      @db.VarChar(120)
+  manglikSelfDeclared Boolean? @map("manglik_self_declared")
+  practicingLevel String?    @map("practicing_level") @db.VarChar(80)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([religion, caste])
+  @@index([status, deletedAt])
+  @@map("religion_profiles")
+}
+
+model CommunityProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  communityName String       @map("community_name") @db.VarChar(160)
+  subCommunity  String?      @map("sub_community") @db.VarChar(160)
+  familyType    FamilyType   @map("family_type")
+  familyValues  String?      @map("family_values")
+  ancestralOrigin String?    @map("ancestral_origin") @db.VarChar(160)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([communityName])
+  @@index([status, deletedAt])
+  @@map("community_profiles")
+}
+
+model UserLanguage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  language      Language
+  proficiency   String?      @db.VarChar(40)
+  isPrimary     Boolean      @default(false) @map("is_primary")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, language])
+  @@index([status, deletedAt])
+  @@map("user_languages")
+}
+
+model UserHobby {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  name          String       @db.VarChar(120)
+  category      String?      @db.VarChar(80)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([status, deletedAt])
+  @@map("user_hobbies")
+}
+
+model UserInterest {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  name          String       @db.VarChar(120)
+  weight        Int          @default(1)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([status, deletedAt])
+  @@map("user_interests")
+}
+
+model UserLocation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  countryId     String?      @map("country_id") @db.Uuid
+  stateId       String?      @map("state_id") @db.Uuid
+  cityId        String?      @map("city_id") @db.Uuid
+  countryEnum   Country?     @map("country_enum")
+  stateEnum     State?       @map("state_enum")
+  cityEnum      City?        @map("city_enum")
+  addressLine   String?      @map("address_line")
+  postalCode    String?      @map("postal_code") @db.VarChar(20)
+  latitude      Decimal?     @db.Decimal(10, 7)
+  longitude     Decimal?     @db.Decimal(10, 7)
+  isCurrent     Boolean      @default(true) @map("is_current")
+  isHometown    Boolean      @default(false) @map("is_hometown")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  country       GeoCountry?  @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  state         GeoState?    @relation(fields: [stateId], references: [id], onDelete: SetNull)
+  city          GeoCity?     @relation(fields: [cityId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isCurrent])
+  @@index([countryEnum, stateEnum, cityEnum])
+  @@index([latitude, longitude])
+  @@index([status, deletedAt])
+  @@map("user_locations")
+}
+
+model PrivacySettings {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @unique @map("user_id") @db.Uuid
+  profileVisibility PrivacyVisibility @default(MEMBERS_ONLY) @map("profile_visibility")
+  photoVisibility PrivacyVisibility @default(MEMBERS_ONLY) @map("photo_visibility")
+  contactVisibility PrivacyVisibility @default(CONNECTIONS_ONLY) @map("contact_visibility")
+  horoscopeVisibility PrivacyVisibility @default(CONNECTIONS_ONLY) @map("horoscope_visibility")
+  showOnlineStatus Boolean   @default(true) @map("show_online_status")
+  showLastActive Boolean     @default(true) @map("show_last_active")
+  allowAiMatching Boolean    @default(true) @map("allow_ai_matching")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("privacy_settings")
+}
+
+model BlockedUser {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  blockerId     String       @map("blocker_id") @db.Uuid
+  blockedId     String       @map("blocked_id") @db.Uuid
+  reason        String?
+
+  blocker       User         @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked       User         @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@index([status, deletedAt])
+  @@map("blocked_users")
+}
+
+model ReportedUser {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reporterId    String       @map("reporter_id") @db.Uuid
+  reportedId    String       @map("reported_id") @db.Uuid
+  reasonCode    String       @map("reason_code") @db.VarChar(80)
+  details       String?
+  resolution    String?
+  resolvedAt    DateTime?    @map("resolved_at") @db.Timestamptz(6)
+
+  reporter      User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported      User         @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reportedId, createdAt])
+  @@index([status, deletedAt])
+  @@map("reported_users")
+}
+
+model SavedProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  saverId       String       @map("saver_id") @db.Uuid
+  savedId       String       @map("saved_id") @db.Uuid
+  note          String?      @db.VarChar(280)
+
+  saver         User         @relation("Saver", fields: [saverId], references: [id], onDelete: Cascade)
+  saved         User         @relation("Saved", fields: [savedId], references: [id], onDelete: Cascade)
+
+  @@unique([saverId, savedId])
+  @@index([savedId])
+  @@index([status, deletedAt])
+  @@map("saved_profiles")
+}
+
+model RecentlyViewedProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  viewerId      String       @map("viewer_id") @db.Uuid
+  viewedId      String       @map("viewed_id") @db.Uuid
+  viewedAt      DateTime     @default(now()) @map("viewed_at") @db.Timestamptz(6)
+  viewCount     Int          @default(1) @map("view_count")
+
+  viewer        User         @relation("Viewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  viewed        User         @relation("Viewed", fields: [viewedId], references: [id], onDelete: Cascade)
+
+  @@unique([viewerId, viewedId])
+  @@index([viewerId, viewedAt])
+  @@index([viewedId, viewedAt])
+  @@index([status, deletedAt])
+  @@map("recently_viewed_profiles")
+}
+
+model ShortlistedProfile {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  shortlisterId String       @map("shortlister_id") @db.Uuid
+  shortlistedId String       @map("shortlisted_id") @db.Uuid
+  priority      Int          @default(0)
+  notes         String?
+
+  shortlister   User         @relation("Shortlister", fields: [shortlisterId], references: [id], onDelete: Cascade)
+  shortlisted   User         @relation("Shortlisted", fields: [shortlistedId], references: [id], onDelete: Cascade)
+
+  @@unique([shortlisterId, shortlistedId])
+  @@index([shortlistedId])
+  @@index([status, deletedAt])
+  @@map("shortlisted_profiles")
+}

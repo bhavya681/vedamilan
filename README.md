@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VedaMilan AI
 
-## Getting Started
+AI Powered Vedic Relationship Intelligence Platform.
 
-First, run the development server:
+Frontend is complete. Backend is being wired module-by-module to production services — **no UI redesign**.
+
+## Stack
+
+- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
+- **Backend:** Next.js Route Handlers, Clean Architecture (domain / application / infrastructure / repositories)
+- **Database:** MongoDB Atlas + Mongoose
+- **Auth:** Better Auth
+- **Integrations:** Cloudinary, Stripe, Razorpay, Pusher, Resend, Twilio, Redis
+- **AI:** Mastra orchestration (explain-only); Gemini / OpenAI / Claude
+- **Astrology:** Swiss Ephemeris + deterministic TypeScript rule engines (**AI never calculates charts**)
+
+## Quick start
 
 ```bash
+npm install
+cp .env.example .env
+# Set MONGODB_URI to your MongoDB Atlas connection string
+# Optionally start Redis: docker compose -f docker/docker-compose.yml up -d redis
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script               | Purpose                           |
+| -------------------- | --------------------------------- |
+| `npm run dev`        | Local development                 |
+| `npm run build`      | Production build                  |
+| `npm run db:seed`    | Seed plans, FAQs, bootstrap users |
+| `npm run db:indexes` | Ensure MongoDB indexes            |
+| `npm run test:db`    | Module database tests             |
+| `npm run typecheck`  | TypeScript check                  |
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+- [Architecture & module roadmap](docs/architecture/ARCHITECTURE.md)
+- [Database (MongoDB)](docs/database/DATABASE.md)
+- [Environment variables](docs/ENV.md)
+- [Visual identity](docs/design/VISUAL_IDENTITY.md)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Module status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Module               | Status                   |
+| -------------------- | ------------------------ |
+| 1 MongoDB foundation | Complete                 |
+| 2 Better Auth        | Complete                 |
+| 3–14                 | See architecture roadmap |
 
-## Deploy on Vercel
+## Hard rules
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Do not redesign UI while wiring backend.
+2. AI explains; rule engines + Swiss Ephemeris calculate.
+3. Every AI astrology explanation includes the Vedic disclaimer.

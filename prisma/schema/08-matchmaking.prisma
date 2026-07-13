@@ -1,0 +1,189 @@
+model Like {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  likerId       String       @map("liker_id") @db.Uuid
+  likedId       String       @map("liked_id") @db.Uuid
+  matchStatus   MatchStatus  @default(LIKED) @map("match_status")
+
+  liker         User         @relation("Liker", fields: [likerId], references: [id], onDelete: Cascade)
+  liked         User         @relation("Liked", fields: [likedId], references: [id], onDelete: Cascade)
+
+  @@unique([likerId, likedId])
+  @@index([likedId, createdAt])
+  @@index([status, deletedAt])
+  @@map("likes")
+}
+
+model Interest {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  fromUserId    String       @map("from_user_id") @db.Uuid
+  toUserId      String       @map("to_user_id") @db.Uuid
+  message       String?      @db.VarChar(500)
+  matchStatus   MatchStatus  @default(INTERESTED) @map("match_status")
+
+  fromUser      User         @relation("InterestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser        User         @relation("InterestTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, createdAt])
+  @@index([status, deletedAt])
+  @@map("interests")
+}
+
+model MutualMatch {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userAId       String       @map("user_a_id") @db.Uuid
+  userBId       String       @map("user_b_id") @db.Uuid
+  matchedAt     DateTime     @default(now()) @map("matched_at") @db.Timestamptz(6)
+  matchStatus   MatchStatus  @default(MUTUAL) @map("match_status")
+  conversationId String?     @unique @map("conversation_id") @db.Uuid
+
+  userA         User         @relation("MutualA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB         User         @relation("MutualB", fields: [userBId], references: [id], onDelete: Cascade)
+  conversation  Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@unique([userAId, userBId])
+  @@index([matchedAt])
+  @@index([status, deletedAt])
+  @@map("mutual_matches")
+}
+
+model ConnectionRequest {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  fromUserId    String       @map("from_user_id") @db.Uuid
+  toUserId      String       @map("to_user_id") @db.Uuid
+  note          String?      @db.VarChar(500)
+  matchStatus   MatchStatus  @default(REQUESTED) @map("match_status")
+  respondedAt   DateTime?    @map("responded_at") @db.Timestamptz(6)
+
+  fromUser      User         @relation("ConnFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser        User         @relation("ConnTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, matchStatus])
+  @@index([status, deletedAt])
+  @@map("connection_requests")
+}
+
+model AcceptedMatch {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userAId       String       @map("user_a_id") @db.Uuid
+  userBId       String       @map("user_b_id") @db.Uuid
+  acceptedAt    DateTime     @default(now()) @map("accepted_at") @db.Timestamptz(6)
+  matchStatus   MatchStatus  @default(ACCEPTED) @map("match_status")
+
+  userA         User         @relation("AcceptedA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB         User         @relation("AcceptedB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([acceptedAt])
+  @@index([status, deletedAt])
+  @@map("accepted_matches")
+}
+
+model RejectedMatch {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  rejectorId    String       @map("rejector_id") @db.Uuid
+  rejectedId    String       @map("rejected_id") @db.Uuid
+  reason        String?      @db.VarChar(280)
+  matchStatus   MatchStatus  @default(REJECTED) @map("match_status")
+
+  rejector      User         @relation("Rejector", fields: [rejectorId], references: [id], onDelete: Cascade)
+  rejected      User         @relation("Rejected", fields: [rejectedId], references: [id], onDelete: Cascade)
+
+  @@unique([rejectorId, rejectedId])
+  @@index([rejectedId])
+  @@index([status, deletedAt])
+  @@map("rejected_matches")
+}
+
+model BlockedMatch {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  blockerId     String       @map("blocker_id") @db.Uuid
+  blockedId     String       @map("blocked_id") @db.Uuid
+  reason        String?
+  matchStatus   MatchStatus  @default(BLOCKED) @map("match_status")
+
+  blocker       User         @relation("MatchBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked       User         @relation("MatchBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@index([status, deletedAt])
+  @@map("blocked_matches")
+}
+
+model MatchRecommendation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  candidateUserId String     @map("candidate_user_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  matchStatus   MatchStatus  @default(SUGGESTED) @map("match_status")
+  algorithmVersion String    @map("algorithm_version") @db.VarChar(40)
+  featuresJson  Json         @map("features_json")
+  shownAt       DateTime?    @map("shown_at") @db.Timestamptz(6)
+  expiresAt     DateTime?    @map("expires_at") @db.Timestamptz(6)
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, candidateUserId, algorithmVersion])
+  @@index([userId, score])
+  @@index([candidateUserId])
+  @@index([status, deletedAt])
+  @@map("match_recommendations")
+}

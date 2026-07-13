@@ -1,0 +1,226 @@
+model Conversation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  isGroup       Boolean      @default(false) @map("is_group")
+  title         String?      @db.VarChar(160)
+  lastMessageAt DateTime?    @map("last_message_at") @db.Timestamptz(6)
+
+  participants  ConversationParticipant[]
+  messages      Message[]
+  videoCalls    VideoCall[]
+  callHistory   CallHistory[]
+  mutualMatch   MutualMatch?
+
+  @@index([lastMessageAt])
+  @@index([status, deletedAt])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  conversationId String      @map("conversation_id") @db.Uuid
+  userId        String       @map("user_id") @db.Uuid
+  joinedAt      DateTime     @default(now()) @map("joined_at") @db.Timestamptz(6)
+  leftAt        DateTime?    @map("left_at") @db.Timestamptz(6)
+  mutedUntil    DateTime?    @map("muted_until") @db.Timestamptz(6)
+  lastReadAt    DateTime?    @map("last_read_at") @db.Timestamptz(6)
+
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, lastReadAt])
+  @@index([status, deletedAt])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  conversationId String      @map("conversation_id") @db.Uuid
+  senderId      String       @map("sender_id") @db.Uuid
+  body          String?
+  messageStatus MessageStatus @default(SENT) @map("message_status")
+  replyToMessageId String?   @map("reply_to_message_id") @db.Uuid
+  clientMessageId String?    @map("client_message_id") @db.VarChar(80)
+
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender        User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo       Message?     @relation("MessageThread", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies       Message[]    @relation("MessageThread")
+  readReceipts  ReadReceipt[]
+  attachments   MessageAttachment[]
+  voiceNote     VoiceNote?
+  deletedByUsers DeletedMessage[]
+
+  @@unique([conversationId, clientMessageId])
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@index([messageStatus])
+  @@index([status, deletedAt])
+  @@map("messages")
+}
+
+model ReadReceipt {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  messageId     String       @map("message_id") @db.Uuid
+  userId        String       @map("user_id") @db.Uuid
+  readAt        DateTime     @default(now()) @map("read_at") @db.Timestamptz(6)
+
+  message       Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+  @@index([status, deletedAt])
+  @@map("read_receipts")
+}
+
+model MessageAttachment {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  messageId     String       @map("message_id") @db.Uuid
+  uploaderId    String       @map("uploader_id") @db.Uuid
+  mediaType     MediaType    @map("media_type")
+  url           String
+  mimeType      String?      @map("mime_type") @db.VarChar(120)
+  fileSizeBytes Int?         @map("file_size_bytes")
+  width         Int?
+  height        Int?
+
+  message       Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploader      User         @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([status, deletedAt])
+  @@map("message_attachments")
+}
+
+model VoiceNote {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  messageId     String       @unique @map("message_id") @db.Uuid
+  uploaderId    String       @map("uploader_id") @db.Uuid
+  url           String
+  durationMs    Int          @map("duration_ms")
+  waveformJson  Json?        @map("waveform_json")
+
+  message       Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploader      User         @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("voice_notes")
+}
+
+model VideoCall {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  conversationId String      @map("conversation_id") @db.Uuid
+  initiatorId   String       @map("initiator_id") @db.Uuid
+  callType      CallType     @default(VIDEO) @map("call_type")
+  callStatus    CallStatus   @default(INITIATED) @map("call_status")
+  startedAt     DateTime?    @map("started_at") @db.Timestamptz(6)
+  endedAt       DateTime?    @map("ended_at") @db.Timestamptz(6)
+  providerRoomId String?     @map("provider_room_id") @db.VarChar(160)
+
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  initiator     User         @relation("CallInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  history       CallHistory[]
+
+  @@index([conversationId, createdAt])
+  @@index([callStatus])
+  @@index([status, deletedAt])
+  @@map("video_calls")
+}
+
+model CallHistory {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  conversationId String      @map("conversation_id") @db.Uuid
+  videoCallId   String?      @map("video_call_id") @db.Uuid
+  userId        String       @map("user_id") @db.Uuid
+  callType      CallType     @map("call_type")
+  callStatus    CallStatus   @map("call_status")
+  durationSeconds Int?       @map("duration_seconds")
+  happenedAt    DateTime     @default(now()) @map("happened_at") @db.Timestamptz(6)
+
+  conversation  Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  videoCall     VideoCall?   @relation(fields: [videoCallId], references: [id], onDelete: SetNull)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, happenedAt])
+  @@index([conversationId, happenedAt])
+  @@index([status, deletedAt])
+  @@map("call_history")
+}
+
+model DeletedMessage {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  messageId     String       @map("message_id") @db.Uuid
+  userId        String       @map("user_id") @db.Uuid
+  deletedForEveryone Boolean @default(false) @map("deleted_for_everyone")
+
+  message       Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([status, deletedAt])
+  @@map("deleted_messages")
+}

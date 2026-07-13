@@ -1,0 +1,362 @@
+model CompatibilityReport {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userAId       String       @map("user_a_id") @db.Uuid
+  userBId       String       @map("user_b_id") @db.Uuid
+  overallMatchScore Decimal  @map("overall_match_score") @db.Decimal(5, 2)
+  aiMatchScore  Decimal?     @map("ai_match_score") @db.Decimal(5, 2)
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+  summary       String?
+  computedAt    DateTime?    @map("computed_at") @db.Timestamptz(6)
+
+  userA         User         @relation("CompatUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB         User         @relation("CompatUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  ashtaKoota    AshtaKootaScore?
+  planetMatching PlanetMatchingScore?
+  navamsaMatching NavamsaMatchingScore?
+  moonMatching  MoonMatchingScore?
+  venusMatching VenusMatchingScore?
+  marsMatching  MarsMatchingScore?
+  seventhHouseMatching SeventhHouseMatchingScore?
+  dashaMatching DashaMatchingScore?
+  transitMatching TransitMatchingScore?
+  emotionalCompatibility EmotionalCompatibilityScore?
+  communicationScore CommunicationCompatibilityScore?
+  financeScore  FinanceCompatibilityScore?
+  childrenScore ChildrenCompatibilityScore?
+  careerScore   CareerCompatibilityScore?
+  spiritualScore SpiritualCompatibilityScore?
+  conflictIndicators ConflictIndicator[]
+  pdfReports    CompatibilityPdfReport[]
+
+  @@unique([userAId, userBId])
+  @@index([overallMatchScore])
+  @@index([aiMatchScore])
+  @@index([userBId, overallMatchScore])
+  @@index([status, deletedAt])
+  @@map("compatibility_reports")
+}
+
+model AshtaKootaScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  varna         Decimal      @db.Decimal(4, 2)
+  vashya        Decimal      @db.Decimal(4, 2)
+  tara          Decimal      @db.Decimal(4, 2)
+  yoni          Decimal      @db.Decimal(4, 2)
+  grahaMaitri   Decimal      @map("graha_maitri") @db.Decimal(4, 2)
+  gana          Decimal      @db.Decimal(4, 2)
+  bhakoot       Decimal      @db.Decimal(4, 2)
+  nadi          Decimal      @db.Decimal(4, 2)
+  total         Decimal      @db.Decimal(5, 2)
+  maxTotal      Decimal      @default(36) @map("max_total") @db.Decimal(5, 2)
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([total])
+  @@index([status, deletedAt])
+  @@map("ashta_koota_scores")
+}
+
+model PlanetMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("planet_matching_scores")
+}
+
+model NavamsaMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("navamsa_matching_scores")
+}
+
+model MoonMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("moon_matching_scores")
+}
+
+model VenusMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("venus_matching_scores")
+}
+
+model MarsMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("mars_matching_scores")
+}
+
+model SeventhHouseMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("seventh_house_matching_scores")
+}
+
+model DashaMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("dasha_matching_scores")
+}
+
+model TransitMatchingScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  asOfDate      DateTime     @map("as_of_date") @db.Date
+  details       Json
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("transit_matching_scores")
+}
+
+model EmotionalCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("emotional_compatibility_scores")
+}
+
+model CommunicationCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("communication_compatibility_scores")
+}
+
+model FinanceCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("finance_compatibility_scores")
+}
+
+model ChildrenCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("children_compatibility_scores")
+}
+
+model CareerCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("career_compatibility_scores")
+}
+
+model SpiritualCompatibilityScore {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @unique @map("report_id") @db.Uuid
+  score         Decimal      @db.Decimal(5, 2)
+  explanation   String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("spiritual_compatibility_scores")
+}
+
+model ConflictIndicator {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  reportId      String       @map("report_id") @db.Uuid
+  code          String       @db.VarChar(80)
+  severity      String       @db.VarChar(40)
+  description   String
+  mitigation    String?
+
+  report        CompatibilityReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, severity])
+  @@index([status, deletedAt])
+  @@map("conflict_indicators")
+}

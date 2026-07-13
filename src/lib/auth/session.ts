@@ -1,0 +1,53 @@
+import { headers } from "next/headers";
+
+import { getAuth } from "@/lib/auth";
+import type { UserRoleCode } from "@/infrastructure/database/base";
+
+export type SessionUser = {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  emailVerified: boolean;
+  role?: string | null;
+  roles?: string[];
+  phone?: string | null;
+  displayName?: string | null;
+};
+
+export async function getSession() {
+  const auth = await getAuth();
+  return auth.api.getSession({ headers: await headers() });
+}
+
+export async function requireSession() {
+  const session = await getSession();
+  if (!session?.user) {
+    throw new Error("UNAUTHORIZED");
+  }
+  return session;
+}
+
+export function getUserRoles(user: SessionUser | null | undefined): string[] {
+  if (!user) return [];
+  if (Array.isArray(user.roles) && user.roles.length > 0) return user.roles;
+  if (user.role) {
+    const mapped =
+      user.role === "admin"
+        ? "ADMIN"
+        : user.role === "super_admin"
+          ? "SUPER_ADMIN"
+          : user.role.toUpperCase();
+    return [mapped];
+  }
+  return ["MEMBER"];
+}
+
+export function hasRole(user: SessionUser | null | undefined, roles: UserRoleCode[]): boolean {
+  const current = getUserRoles(user);
+  return roles.some((role) => current.includes(role));
+}
+
+export function isAdmin(user: SessionUser | null | undefined): boolean {
+  return hasRole(user, ["ADMIN", "SUPER_ADMIN"]);
+}

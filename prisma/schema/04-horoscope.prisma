@@ -1,0 +1,943 @@
+/// Root natal / derived chart record for a user.
+model HoroscopeChart {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  userId        String       @map("user_id") @db.Uuid
+  chartType     HoroscopeType @map("chart_type")
+  reportStatus  AstrologyReportStatus @default(QUEUED) @map("report_status")
+  ayanamsa      String       @default("LAHIRI") @db.VarChar(40)
+  houseSystem   String       @default("WHOLE_SIGN") @map("house_system") @db.VarChar(40)
+  lagnaSign     ZodiacSign?  @map("lagna_sign")
+  moonSign      ZodiacSign?  @map("moon_sign")
+  sunSign       ZodiacSign?  @map("sun_sign")
+  computedAt    DateTime?    @map("computed_at") @db.Timestamptz(6)
+  engineVersion String?      @map("engine_version") @db.VarChar(40)
+  rawPayload    Json?        @map("raw_payload")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planetPositions PlanetPosition[]
+  planetDegrees PlanetDegree[]
+  houses        HouseCusp[]
+  houseLords    HouseLord[]
+  nakshatras    NakshatraPlacement[]
+  padas         PadaPlacement[]
+  signs         SignPlacement[]
+  planetStrengths PlanetStrength[]
+  shadbala      Shadbala[]
+  exaltations   Exaltation[]
+  debilitations Debilitation[]
+  combustions   Combustion[]
+  retrogrades   Retrograde[]
+  conjunctions  Conjunction[]
+  aspects       Aspect[]
+  planetaryYogas PlanetaryYoga[]
+  rajYogas      RajYoga[]
+  dhanaYogas    DhanaYoga[]
+  vipreetRajYogas VipreetRajYoga[]
+  neechaBhangas NeechaBhanga[]
+  doshas        Dosha[]
+  manglik       ManglikDosha?
+  kaalSarp      KaalSarpDosha?
+  pitruDosha    PitruDosha?
+  nadi          NadiAttribute?
+  bhakoot       BhakootAttribute?
+  yoni          YoniAttribute?
+  varna         VarnaAttribute?
+  vashya        VashyaAttribute?
+  tara          TaraAttribute?
+  gana          GanaAttribute?
+  grahaMaitri   GrahaMaitriAttribute?
+  navamsa       NavamsaChart?
+  dashamsa      DashamsaChart?
+  moonChart     MoonChartDetail?
+  kpData        KpData?
+  jaiminiData   JaiminiData?
+  upapadaLagna  UpapadaLagna?
+  darakaraka    Darakaraka?
+  atmakaraka    Atmakaraka?
+  karakamsa     Karakamsa?
+  horoscopePdfReports HoroscopePdfReport[]
+
+  @@unique([userId, chartType])
+  @@index([reportStatus, computedAt])
+  @@index([status, deletedAt])
+  @@map("horoscope_charts")
+}
+
+model PlanetPosition {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  longitude     Decimal      @db.Decimal(10, 6)
+  latitude      Decimal      @db.Decimal(10, 6)
+  speed         Decimal      @db.Decimal(10, 6)
+  houseNumber   Int          @map("house_number")
+  sign          ZodiacSign
+  isRetrograde  Boolean      @default(false) @map("is_retrograde")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([planet, sign])
+  @@index([status, deletedAt])
+  @@map("planet_positions")
+}
+
+model PlanetDegree {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  absoluteDegree Decimal     @map("absolute_degree") @db.Decimal(10, 6)
+  signDegree    Decimal      @map("sign_degree") @db.Decimal(10, 6)
+  minutes       Int
+  seconds       Int
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("planet_degrees")
+}
+
+model HouseCusp {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  houseNumber   Int          @map("house_number")
+  cuspLongitude Decimal      @map("cusp_longitude") @db.Decimal(10, 6)
+  sign          ZodiacSign
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, houseNumber])
+  @@index([status, deletedAt])
+  @@map("house_cusps")
+}
+
+model HouseLord {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  houseNumber   Int          @map("house_number")
+  lordPlanet    PlanetName   @map("lord_planet")
+  lordHouse     Int          @map("lord_house")
+  lordSign      ZodiacSign   @map("lord_sign")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, houseNumber])
+  @@index([lordPlanet])
+  @@index([status, deletedAt])
+  @@map("house_lords")
+}
+
+model NakshatraPlacement {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  nakshatra     NakshatraName
+  lord          PlanetName
+  pada          Int
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([nakshatra, pada])
+  @@index([status, deletedAt])
+  @@map("nakshatra_placements")
+}
+
+model PadaPlacement {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  padaNumber    Int          @map("pada_number")
+  navamsaSign   ZodiacSign   @map("navamsa_sign")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("pada_placements")
+}
+
+model SignPlacement {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  sign          ZodiacSign
+  dignity       String?      @db.VarChar(40)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([sign])
+  @@index([status, deletedAt])
+  @@map("sign_placements")
+}
+
+model PlanetStrength {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  strengthScore Decimal      @map("strength_score") @db.Decimal(8, 4)
+  strengthLabel String?      @map("strength_label") @db.VarChar(40)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("planet_strengths")
+}
+
+model Shadbala {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  sthanaBala    Decimal      @map("sthana_bala") @db.Decimal(10, 4)
+  digBala       Decimal      @map("dig_bala") @db.Decimal(10, 4)
+  kalaBala      Decimal      @map("kala_bala") @db.Decimal(10, 4)
+  chestaBala    Decimal      @map("chesta_bala") @db.Decimal(10, 4)
+  naisargikaBala Decimal     @map("naisargika_bala") @db.Decimal(10, 4)
+  drikBala      Decimal      @map("drik_bala") @db.Decimal(10, 4)
+  totalBala     Decimal      @map("total_bala") @db.Decimal(10, 4)
+  rupa          Decimal      @db.Decimal(10, 4)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("shadbala")
+}
+
+model Exaltation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  isExalted     Boolean      @map("is_exalted")
+  sign          ZodiacSign
+  degreeDiff    Decimal?     @map("degree_diff") @db.Decimal(8, 4)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("exaltations")
+}
+
+model Debilitation {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  isDebilitated Boolean      @map("is_debilitated")
+  sign          ZodiacSign
+  degreeDiff    Decimal?     @map("degree_diff") @db.Decimal(8, 4)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("debilitations")
+}
+
+model Combustion {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  isCombust     Boolean      @map("is_combust")
+  orbDegrees    Decimal?     @map("orb_degrees") @db.Decimal(8, 4)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("combustions")
+}
+
+model Retrograde {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  isRetrograde  Boolean      @map("is_retrograde")
+  speed         Decimal?     @db.Decimal(10, 6)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("retrogrades")
+}
+
+model Conjunction {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planetA       PlanetName   @map("planet_a")
+  planetB       PlanetName   @map("planet_b")
+  orbDegrees    Decimal      @map("orb_degrees") @db.Decimal(8, 4)
+  houseNumber   Int?         @map("house_number")
+  sign          ZodiacSign?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId, planetA, planetB])
+  @@index([status, deletedAt])
+  @@map("conjunctions")
+}
+
+model Aspect {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  fromPlanet    PlanetName   @map("from_planet")
+  toPlanet      PlanetName   @map("to_planet")
+  aspectType    String       @map("aspect_type") @db.VarChar(40)
+  orbDegrees    Decimal      @map("orb_degrees") @db.Decimal(8, 4)
+  isApplying    Boolean      @default(false) @map("is_applying")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId, fromPlanet, toPlanet])
+  @@index([status, deletedAt])
+  @@map("aspects")
+}
+
+model PlanetaryYoga {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  yogaCode      String       @map("yoga_code") @db.VarChar(80)
+  yogaName      String       @map("yoga_name") @db.VarChar(160)
+  strength      Decimal?     @db.Decimal(8, 4)
+  description   String?
+  planetsInvolved PlanetName[] @map("planets_involved")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId, yogaCode])
+  @@index([status, deletedAt])
+  @@map("planetary_yogas")
+}
+
+model RajYoga {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  yogaName      String       @map("yoga_name") @db.VarChar(160)
+  lordsInvolved PlanetName[] @map("lords_involved")
+  housesInvolved Int[]       @map("houses_involved")
+  strength      Decimal?     @db.Decimal(8, 4)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId])
+  @@index([status, deletedAt])
+  @@map("raj_yogas")
+}
+
+model DhanaYoga {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  yogaName      String       @map("yoga_name") @db.VarChar(160)
+  planetsInvolved PlanetName[] @map("planets_involved")
+  strength      Decimal?     @db.Decimal(8, 4)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId])
+  @@index([status, deletedAt])
+  @@map("dhana_yogas")
+}
+
+model VipreetRajYoga {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  subtype       String       @db.VarChar(80)
+  planetsInvolved PlanetName[] @map("planets_involved")
+  housesInvolved Int[]       @map("houses_involved")
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId, subtype])
+  @@index([status, deletedAt])
+  @@map("vipreet_raj_yogas")
+}
+
+model NeechaBhanga {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  planet        PlanetName
+  isCancelled   Boolean      @map("is_cancelled")
+  cancellationType String?   @map("cancellation_type") @db.VarChar(80)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([chartId, planet])
+  @@index([status, deletedAt])
+  @@map("neecha_bhanga")
+}
+
+model Dosha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @map("chart_id") @db.Uuid
+  doshaCode     String       @map("dosha_code") @db.VarChar(80)
+  doshaName     String       @map("dosha_name") @db.VarChar(160)
+  severity      String?      @db.VarChar(40)
+  isPresent     Boolean      @map("is_present")
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([chartId, doshaCode])
+  @@index([status, deletedAt])
+  @@map("doshas")
+}
+
+model ManglikDosha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  isManglik     Boolean      @map("is_manglik")
+  intensity     String?      @db.VarChar(40)
+  marsHouse     Int?         @map("mars_house")
+  exceptions    String[]
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([isManglik])
+  @@index([status, deletedAt])
+  @@map("manglik_doshas")
+}
+
+model KaalSarpDosha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  isPresent     Boolean      @map("is_present")
+  subtype       String?      @db.VarChar(80)
+  intensity     String?      @db.VarChar(40)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("kaal_sarp_doshas")
+}
+
+model PitruDosha {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  isPresent     Boolean      @map("is_present")
+  indicators    String[]
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("pitru_doshas")
+}
+
+model NadiAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  nadiType      String       @map("nadi_type") @db.VarChar(40)
+  sourcePlanet  PlanetName   @default(MOON) @map("source_planet")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("nadi_attributes")
+}
+
+model BhakootAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  moonSign      ZodiacSign   @map("moon_sign")
+  bhakootGroup  String?      @map("bhakoot_group") @db.VarChar(40)
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("bhakoot_attributes")
+}
+
+model YoniAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  yoniType      String       @map("yoni_type") @db.VarChar(40)
+  nakshatra     NakshatraName
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("yoni_attributes")
+}
+
+model VarnaAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  varnaType     String       @map("varna_type") @db.VarChar(40)
+  moonSign      ZodiacSign   @map("moon_sign")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("varna_attributes")
+}
+
+model VashyaAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  vashyaType    String       @map("vashya_type") @db.VarChar(40)
+  moonSign      ZodiacSign   @map("moon_sign")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("vashya_attributes")
+}
+
+model TaraAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  birthNakshatra NakshatraName @map("birth_nakshatra")
+  taraSequence  Int[]        @map("tara_sequence")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("tara_attributes")
+}
+
+model GanaAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  ganaType      String       @map("gana_type") @db.VarChar(40)
+  nakshatra     NakshatraName
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("gana_attributes")
+}
+
+model GrahaMaitriAttribute {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  moonLord      PlanetName   @map("moon_lord")
+  friendshipClass String     @map("friendship_class") @db.VarChar(40)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("graha_maitri_attributes")
+}
+
+model NavamsaChart {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  lagnaSign     ZodiacSign   @map("lagna_sign")
+  summaryJson   Json         @map("summary_json")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("navamsa_charts")
+}
+
+model DashamsaChart {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  lagnaSign     ZodiacSign   @map("lagna_sign")
+  careerHints   String?      @map("career_hints")
+  summaryJson   Json         @map("summary_json")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("dashamsa_charts")
+}
+
+model MoonChartDetail {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  moonSign      ZodiacSign   @map("moon_sign")
+  moonNakshatra NakshatraName @map("moon_nakshatra")
+  moonPada      Int          @map("moon_pada")
+  summaryJson   Json         @map("summary_json")
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("moon_chart_details")
+}
+
+model KpData {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  cuspalSubLords Json        @map("cuspal_sub_lords")
+  significators Json
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("kp_data")
+}
+
+model JaiminiData {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  karakas       Json
+  charaDasha    Json?        @map("chara_dasha")
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("jaimini_data")
+}
+
+model UpapadaLagna {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  sign          ZodiacSign
+  lord          PlanetName
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("upapada_lagnas")
+}
+
+model Darakaraka {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  planet        PlanetName
+  degree        Decimal      @db.Decimal(10, 6)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("darakarakas")
+}
+
+model Atmakaraka {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  planet        PlanetName
+  degree        Decimal      @db.Decimal(10, 6)
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("atmakarakas")
+}
+
+model Karakamsa {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  createdBy     String?      @map("created_by") @db.Uuid
+  updatedBy     String?      @map("updated_by") @db.Uuid
+  status        RecordStatus @default(ACTIVE)
+
+  chartId       String       @unique @map("chart_id") @db.Uuid
+  sign          ZodiacSign
+  atmakarakaPlanet PlanetName @map("atmakaraka_planet")
+  notes         String?
+
+  chart         HoroscopeChart @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@index([status, deletedAt])
+  @@map("karakamsas")
+}
