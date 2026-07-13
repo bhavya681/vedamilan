@@ -46,8 +46,8 @@ src/
 | --- | ------------------------------------------------------------------ | ------------------- |
 | 1   | MongoDB schemas, indexes, connection, seed, repos                  | **Complete**        |
 | 2   | Better Auth (email, Google, OTP, sessions, RBAC, protected routes) | **Complete**        |
-| 3   | Profile CRUD + Cloudinary + preferences + completion               | Next                |
-| 4   | Swiss Ephemeris horoscope engine + persistence                     | Kundli pages live   |
+| 3   | Profile CRUD + Cloudinary + preferences + completion               | **Complete**        |
+| 4   | Swiss Ephemeris horoscope engine + persistence                     | Next                |
 | 5   | Deterministic rule engines (compat, timing, yogas, doshas)         | Scores real         |
 | 6   | Matchmaking + ranking + search                                     | Matches/search live |
 | 7   | Mastra agents (explain-only AI)                                    | AI insights live    |

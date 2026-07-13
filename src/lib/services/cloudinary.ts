@@ -43,7 +43,7 @@ export class CloudinaryService {
 
     try {
       return await cloudinary.uploader.upload(file, {
-        folder: input.folder ?? "jyotisangam",
+        folder: input.folder ?? "vedamilan",
         public_id: input.publicId,
         resource_type: input.resourceType ?? "image",
         overwrite: false,
