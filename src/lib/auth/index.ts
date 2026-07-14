@@ -74,7 +74,8 @@ function createAuth(db: Db, client: MongoClient) {
     plugins: [
       admin({
         defaultRole: "user",
-        adminRoles: ["admin", "super_admin"],
+        // Built-in roles only unless custom access control (`ac` + `roles`) is defined
+        adminRoles: ["admin"],
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp, type }) {

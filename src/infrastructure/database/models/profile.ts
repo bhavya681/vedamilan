@@ -49,8 +49,8 @@ const profileSchema = new Schema(
     state: { type: String, default: null },
     country: { type: String, default: "India", index: true },
     location: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], default: undefined }, // [lng, lat]
+      type: { type: String, enum: ["Point"], required: false },
+      coordinates: { type: [Number], required: false }, // [lng, lat]
     },
     lifestyle: {
       diet: { type: String, default: null },

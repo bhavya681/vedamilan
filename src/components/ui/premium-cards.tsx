@@ -65,6 +65,8 @@ export function MatchCard({
   headline,
   photo,
   href = routes.matchProfile,
+  onShortlist,
+  shortlisting,
 }: {
   name: string;
   age: number;
@@ -75,6 +77,8 @@ export function MatchCard({
   headline: string;
   photo?: string;
   href?: string;
+  onShortlist?: () => void;
+  shortlisting?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
 
@@ -132,6 +136,9 @@ export function MatchCard({
               variant="outline"
               className="border-ivory/25 text-ivory"
               aria-label="Shortlist"
+              type="button"
+              disabled={shortlisting}
+              onClick={onShortlist}
             >
               <Bookmark className="h-4 w-4" />
             </Button>

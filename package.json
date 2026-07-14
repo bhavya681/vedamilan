@@ -21,6 +21,7 @@
     "test:profile": "vitest run src/application/profile",
     "test:horoscope": "vitest run src/application/horoscope",
     "test:rules": "vitest run src/application/rules",
+    "test:matchmaking": "vitest run src/application/matchmaking",
     "test:watch": "vitest"
   },
   "lint-staged": {

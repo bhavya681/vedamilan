@@ -1,40 +1,47 @@
+"use client";
+
 import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+import { useEffect, useState } from "react";
+import { Bookmark } from "lucide-react";
+
+import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
 
-export const metadata = { title: "Shortlisted" };
+type ShortlistRow = {
+  _id: string;
+  targetUserId: string;
+  name: string;
+  note?: string;
+  compatibilityScore?: number;
+};
 
-export default function Page() {
+export default function ShortlistedPage() {
+  const [items, setItems] = useState<ShortlistRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void fetch("/api/shortlist")
+      .then((r) => r.json())
+      .then((json) => {
+        setLoading(false);
+        if (!json.success) {
+          setError(json.error?.message || "Failed to load shortlist");
+          return;
+        }
+        setItems(json.data.shortlist || []);
+      })
+      .catch(() => {
+        setLoading(false);
+        setError("Failed to load shortlist");
+      });
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Shortlisted"
@@ -45,19 +52,41 @@ export default function Page() {
           </Button>
         }
       />
-      <>
+
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+
+      {!loading && items.length === 0 ? (
+        <EmptyState
+          icon={<Bookmark className="h-8 w-8" />}
+          title="Shortlist is empty"
+          description="Bookmark profiles from Match feed to review later."
+          action={
+            <Button asChild>
+              <Link href={routes.matches}>Browse matches</Link>
+            </Button>
+          }
+        />
+      ) : (
         <div className="space-y-3">
-          {mockShortlisted.map((s) => (
-            <GlassCard key={s.name}>
-              <div className="flex justify-between">
-                <p className="font-display text-xl">{s.name}</p>
-                <Badge>{s.score}%</Badge>
+          {items.map((s) => (
+            <GlassCard key={s._id}>
+              <div className="flex justify-between gap-3">
+                <div>
+                  <p className="font-display text-xl">{s.name}</p>
+                  <p className="text-muted-foreground mt-2 text-sm">{s.note || "No note yet"}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge>{s.compatibilityScore || 0}%</Badge>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`${routes.matchProfile}?id=${s.targetUserId}`}>View</Link>
+                  </Button>
+                </div>
               </div>
-              <p className="text-muted-foreground mt-2 text-sm">{s.note}</p>
             </GlassCard>
           ))}
         </div>
-      </>
+      )}
     </div>
   );
 }

@@ -19,7 +19,7 @@ async function ensureAuthUser(input: {
     if (input.role && existing.role !== input.role) {
       await db.collection("user").updateOne({ _id: existing._id }, { $set: { role: input.role } });
     }
-    return String(existing._id);
+    return String(existing.id || existing._id);
   }
 
   const result = await auth.api.signUpEmail({
@@ -33,7 +33,6 @@ async function ensureAuthUser(input: {
   const userId = result.user.id;
   if (input.role) {
     await db.collection("user").updateOne({ id: userId }, { $set: { role: input.role } });
-    // Better Auth may store _id as ObjectId with separate id field depending on version
     await db
       .collection("user")
       .updateOne({ _id: result.user.id as never }, { $set: { role: input.role } });
@@ -59,8 +58,19 @@ async function seed() {
     name: "Ananya Sharma",
   });
 
-  const existingProfile = await Profile.findOne({ userId: memberId });
-  if (!existingProfile) {
+  const rohanId = await ensureAuthUser({
+    email: "rohan.mehta@email.com",
+    password: "RohanDemo!23",
+    name: "Rohan Mehta",
+  });
+
+  const kabirId = await ensureAuthUser({
+    email: "kabir.iyer@email.com",
+    password: "KabirDemo!23",
+    name: "Kabir Iyer",
+  });
+
+  if (!(await Profile.findOne({ userId: memberId }))) {
     await Profile.create({
       userId: memberId,
       headline: "Designer seeking intentional partnership",
@@ -84,22 +94,65 @@ async function seed() {
     });
   }
 
-  const prefs = await PartnerPreferences.findOne({ userId: memberId });
-  if (!prefs) {
+  if (!(await Profile.findOne({ userId: rohanId }))) {
+    await Profile.create({
+      userId: rohanId,
+      headline: "Engineer building calm systems",
+      about: "Staff engineer who enjoys classical music, temple visits, and long walks.",
+      gender: "MALE",
+      dateOfBirth: new Date("1994-07-21"),
+      heightCm: 178,
+      religion: "Hindu",
+      community: "Gujarati",
+      motherTongue: "Gujarati",
+      languages: ["Gujarati", "Hindi", "English"],
+      education: "B.Tech, IIT Bombay",
+      profession: "Staff Engineer",
+      company: "Google",
+      city: "Bengaluru",
+      state: "Karnataka",
+      country: "India",
+      location: { type: "Point", coordinates: [77.5946, 12.9716] },
+      lifestyle: { diet: "Vegetarian", smoking: "No", drinking: "No" },
+      visibility: "MEMBERS",
+    });
+  }
+
+  if (!(await Profile.findOne({ userId: kabirId }))) {
+    await Profile.create({
+      userId: kabirId,
+      headline: "Product lead with South Indian roots",
+      about: "Hyderabad-based PM focused on family values and intentional dating.",
+      gender: "MALE",
+      dateOfBirth: new Date("1993-11-02"),
+      heightCm: 175,
+      religion: "Hindu",
+      community: "Iyer",
+      motherTongue: "Tamil",
+      languages: ["Tamil", "English", "Hindi"],
+      education: "MBA, IIM",
+      profession: "Product Manager",
+      city: "Hyderabad",
+      state: "Telangana",
+      country: "India",
+      location: { type: "Point", coordinates: [78.4867, 17.385] },
+      lifestyle: { diet: "Vegetarian", smoking: "No", drinking: "Occasionally" },
+      visibility: "MEMBERS",
+    });
+  }
+
+  if (!(await PartnerPreferences.findOne({ userId: memberId }))) {
     await PartnerPreferences.create({
       userId: memberId,
       ageMin: 28,
       ageMax: 36,
       religions: ["Hindu"],
       cities: ["Bengaluru", "Mumbai", "Delhi"],
-      minCompatibilityScore: 24,
+      minCompatibilityScore: 18,
     });
   }
 
-  logger.info(
-    { adminId, memberId },
-    "MongoDB + Better Auth seed completed (admin@vedamilan.ai / ananya.sharma@email.com)",
-  );
+  logger.info({ adminId, memberId, rohanId, kabirId }, "MongoDB + Better Auth seed completed");
   await disconnectMongo();
 }
 
