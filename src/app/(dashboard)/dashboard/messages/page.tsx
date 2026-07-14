@@ -1,75 +1,90 @@
+"use client";
+
 import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+import { useEffect, useState } from "react";
+
+import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
+import { MessageSquare } from "lucide-react";
 
-export const metadata = { title: "Messages" };
+type ChatRow = {
+  id: string;
+  name: string;
+  preview: string;
+  unread: number;
+  lastMessageAt?: string | null;
+};
 
-export default function Page() {
+export default function MessagesPage() {
+  const [chats, setChats] = useState<ChatRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/chats")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) {
+          setError(json.error?.message || "Failed to load messages");
+          return;
+        }
+        setChats(json.data.chats || []);
+      })
+      .catch(() => setError("Failed to load messages"));
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Messages"
         description="Secure conversations"
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.dashboard}>Back to overview</Link>
+          <Button asChild>
+            <Link href={routes.chat}>Open chat</Link>
           </Button>
         }
       />
-      <>
+
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+
+      {chats.length === 0 ? (
+        <EmptyState
+          icon={<MessageSquare className="h-8 w-8" />}
+          title="No conversations yet"
+          description="Message a match from their profile to start chatting."
+          action={
+            <Button asChild>
+              <Link href={routes.matches}>Browse matches</Link>
+            </Button>
+          }
+        />
+      ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-2 lg:col-span-1">
-            {mockConversations.map((c) => (
+            {chats.map((c) => (
               <GlassCard key={c.id}>
-                <p className="font-medium">{c.name}</p>
-                <p className="text-muted-foreground mt-1 truncate text-xs">{c.preview}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-muted-foreground mt-1 truncate text-xs">{c.preview}</p>
+                  </div>
+                  {c.unread > 0 ? <Badge>{c.unread}</Badge> : null}
+                </div>
               </GlassCard>
             ))}
           </div>
           <GlassCard className="lg:col-span-2">
-            <p className="font-display text-2xl">{mockConversations[0]!.name}</p>
-            <div className="mt-4 space-y-3">
-              {mockConversations[0]!.messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.from === "me" ? "bg-primary/15 ml-auto" : "bg-muted"}`}
-                >
-                  {m.text}
-                </div>
-              ))}
-            </div>
+            <p className="font-display text-2xl">{chats[0]?.name}</p>
+            <p className="text-muted-foreground mt-2 text-sm">{chats[0]?.preview}</p>
+            <Button asChild className="mt-6">
+              <Link href={routes.chat}>Continue in chat</Link>
+            </Button>
           </GlassCard>
         </div>
-      </>
+      )}
     </div>
   );
 }

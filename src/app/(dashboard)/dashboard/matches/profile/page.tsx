@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -28,6 +28,7 @@ type Candidate = {
 
 export default function MatchProfilePage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = searchParams.get("id");
   const [profile, setProfile] = useState<Candidate | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +78,24 @@ export default function MatchProfilePage() {
     const json = await res.json();
     setBusy(false);
     setMessage(json.success ? "Added to shortlist." : json.error?.message || "Failed");
+  }
+
+  async function startChat() {
+    if (!id) return;
+    setBusy(true);
+    setMessage(null);
+    const res = await fetch("/api/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ otherUserId: id }),
+    });
+    const json = await res.json();
+    setBusy(false);
+    if (!json.success) {
+      setMessage(json.error?.message || "Could not start chat");
+      return;
+    }
+    router.push(routes.chat);
   }
 
   return (
@@ -130,6 +149,14 @@ export default function MatchProfilePage() {
               onClick={() => void shortlist()}
             >
               Shortlist
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || !id}
+              onClick={() => void startChat()}
+            >
+              Message
             </Button>
             <Button asChild variant="outline">
               <Link href={`${routes.compatibility}?candidate=${profile.userId}`}>

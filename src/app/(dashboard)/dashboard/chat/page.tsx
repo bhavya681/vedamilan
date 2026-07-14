@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Mic, Phone, Send, Sparkles, Video } from "lucide-react";
+import Pusher from "pusher-js";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +11,168 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils/cn";
-import { mockAiReplies, mockConversations } from "@/lib/mock/phase1";
 import { routes } from "@/lib/constants/routes";
+import { authClient } from "@/lib/auth/client";
+
+type ChatListItem = {
+  id: string;
+  otherUserId: string;
+  name: string;
+  preview: string;
+  unread: number;
+};
+
+type ChatMessage = {
+  _id: string;
+  senderId: string;
+  body: string;
+  type: string;
+  mediaUrl?: string | null;
+  durationSec?: number | null;
+  createdAt?: string;
+  readBy?: string[];
+};
 
 export default function ChatPage() {
-  const [activeId, setActiveId] = useState(mockConversations[0]?.id ?? "");
+  const { data: session } = authClient.useSession();
+  const meId = session?.user?.id || "";
+  const [chats, setChats] = useState<ChatListItem[]>([]);
+  const [activeId, setActiveId] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
-  const active = mockConversations.find((item) => item.id === activeId) ?? mockConversations[0];
+  const [iceBreakers, setIceBreakers] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const typingTimer = useRef<number | null>(null);
+
+  const active = useMemo(
+    () => chats.find((item) => item.id === activeId) || chats[0],
+    [chats, activeId],
+  );
+
+  const loadChats = useCallback(async () => {
+    const res = await fetch("/api/chats");
+    const json = await res.json();
+    if (!json.success) {
+      setError(json.error?.message || "Failed to load chats");
+      return;
+    }
+    const list = json.data.chats || [];
+    setChats(list);
+    if (!activeId && list[0]) setActiveId(list[0].id);
+  }, [activeId]);
+
+  const loadMessages = useCallback(async (chatId: string) => {
+    const res = await fetch(`/api/chats/${chatId}/messages?limit=80`);
+    const json = await res.json();
+    if (!json.success) {
+      setError(json.error?.message || "Failed to load messages");
+      return;
+    }
+    setMessages(json.data.data || []);
+  }, []);
+
+  useEffect(() => {
+    void loadChats().catch(() => setError("Failed to load chats"));
+  }, [loadChats]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    void loadMessages(activeId);
+    void fetch(`/api/chats/ice-breakers?otherUserId=${active?.otherUserId || ""}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) setIceBreakers(json.data.replies || []);
+      });
+  }, [activeId, active?.otherUserId, loadMessages]);
+
+  useEffect(() => {
+    const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    if (!key || !cluster || !activeId) return;
+
+    const pusher = new Pusher(key, {
+      cluster,
+      authEndpoint: "/api/pusher/auth",
+    });
+    const channel = pusher.subscribe(`private-chat-${activeId}`);
+    channel.bind("message:new", (payload: { message: ChatMessage }) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === payload.message._id)) return prev;
+        return [...prev, payload.message];
+      });
+      void loadChats();
+    });
+    channel.bind("typing", (payload: { userId: string; isTyping: boolean }) => {
+      if (payload.userId !== meId) setTyping(payload.isTyping);
+    });
+
+    return () => {
+      channel.unbind_all();
+      pusher.unsubscribe(`private-chat-${activeId}`);
+      pusher.disconnect();
+    };
+  }, [activeId, meId, loadChats]);
+
+  async function sendTyping(isTyping: boolean) {
+    if (!activeId) return;
+    await fetch(`/api/chats/${activeId}/typing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isTyping }),
+    });
+  }
+
+  async function onSend(event: React.FormEvent) {
+    event.preventDefault();
+    if (!activeId || !draft.trim()) return;
+    const body = draft.trim();
+    setDraft("");
+    await sendTyping(false);
+    const res = await fetch(`/api/chats/${activeId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body, type: "TEXT", clientMessageId: crypto.randomUUID() }),
+    });
+    const json = await res.json();
+    if (!json.success) {
+      setError(json.error?.message || "Send failed");
+      return;
+    }
+    setMessages((prev) => {
+      if (prev.some((m) => m._id === json.data.message._id)) return prev;
+      return [...prev, json.data.message];
+    });
+    await loadChats();
+  }
+
+  function onDraftChange(value: string) {
+    setDraft(value);
+    void sendTyping(true);
+    if (typingTimer.current) window.clearTimeout(typingTimer.current);
+    typingTimer.current = window.setTimeout(() => {
+      void sendTyping(false);
+    }, 1200);
+  }
+
+  async function onVoiceNote() {
+    if (!activeId) return;
+    // Voice notes: store as VOICE with duration placeholder until Cloudinary recording upload is attached.
+    const res = await fetch(`/api/chats/${activeId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "VOICE",
+        body: "Voice note",
+        durationSec: 5,
+        clientMessageId: crypto.randomUUID(),
+      }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setMessages((prev) => [...prev, json.data.message]);
+    }
+  }
 
   return (
     <div className="grid h-[calc(100vh-10rem)] gap-4 lg:grid-cols-[280px_1fr]">
@@ -27,7 +182,13 @@ export default function ChatPage() {
         </div>
         <ScrollArea className="h-[calc(100%-57px)]">
           <div className="space-y-1 p-2">
-            {mockConversations.map((conversation) => (
+            {chats.length === 0 ? (
+              <p className="text-muted-foreground p-3 text-sm">
+                No conversations yet. Open a match profile and send interest, then start a chat from
+                Messages.
+              </p>
+            ) : null}
+            {chats.map((conversation) => (
               <button
                 key={conversation.id}
                 type="button"
@@ -72,9 +233,9 @@ export default function ChatPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{active?.name}</p>
+              <p className="font-medium">{active?.name || "Select a conversation"}</p>
               <p className="text-muted-foreground text-xs">
-                {active?.online ? "Online" : "Last seen recently"}
+                {typing ? "Typing…" : "Secure conversation"}
               </p>
             </div>
           </div>
@@ -90,26 +251,43 @@ export default function ChatPage() {
           </div>
         </header>
 
+        {error ? <p className="text-destructive px-4 pt-2 text-sm">{error}</p> : null}
+
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
-            {active?.messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn("flex", message.from === "me" ? "justify-end" : "justify-start")}
-              >
+            {messages.map((message) => {
+              const mine = message.senderId === meId;
+              return (
                 <div
-                  className={cn(
-                    "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                    message.from === "me"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground",
-                  )}
+                  key={message._id}
+                  className={cn("flex", mine ? "justify-end" : "justify-start")}
                 >
-                  <p>{message.text}</p>
-                  <p className="mt-1 text-[10px] opacity-70">{message.time}</p>
+                  <div
+                    className={cn(
+                      "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
+                      mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                    )}
+                  >
+                    <p>
+                      {message.type === "VOICE"
+                        ? `🎤 Voice note${message.durationSec ? ` (${message.durationSec}s)` : ""}`
+                        : message.type === "IMAGE"
+                          ? "📷 Photo"
+                          : message.body}
+                    </p>
+                    <p className="mt-1 text-[10px] opacity-70">
+                      {message.createdAt
+                        ? new Date(message.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : ""}
+                      {mine && message.readBy && message.readBy.length > 1 ? " · Read" : ""}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {typing ? (
               <p className="text-muted-foreground text-xs" aria-live="polite">
                 {active?.name} is typing…
@@ -123,7 +301,7 @@ export default function ChatPage() {
             <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
               <Sparkles className="h-3.5 w-3.5" /> AI suggested replies
             </span>
-            {mockAiReplies.map((reply) => (
+            {iceBreakers.map((reply) => (
               <Button
                 key={reply}
                 type="button"
@@ -136,25 +314,24 @@ export default function ChatPage() {
               </Button>
             ))}
           </div>
-          <form
-            className="flex items-center gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setDraft("");
-              setTyping(true);
-              window.setTimeout(() => setTyping(false), 1500);
-            }}
-          >
-            <Button type="button" size="icon" variant="outline" aria-label="Record voice note">
+          <form className="flex items-center gap-2" onSubmit={onSend}>
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              aria-label="Record voice note"
+              onClick={() => void onVoiceNote()}
+            >
               <Mic className="h-4 w-4" />
             </Button>
             <Input
               value={draft}
-              onChange={(event) => setDraft(event.target.value)}
+              onChange={(event) => onDraftChange(event.target.value)}
               placeholder="Write a thoughtful message"
               aria-label="Message"
+              disabled={!activeId}
             />
-            <Button type="submit" size="icon" aria-label="Send message">
+            <Button type="submit" size="icon" aria-label="Send message" disabled={!activeId}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
