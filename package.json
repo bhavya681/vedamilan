@@ -22,6 +22,7 @@
     "test:horoscope": "vitest run src/application/horoscope",
     "test:rules": "vitest run src/application/rules",
     "test:matchmaking": "vitest run src/application/matchmaking",
+    "test:ai": "vitest run src/application/ai src/mastra",
     "test:watch": "vitest"
   },
   "lint-staged": {
@@ -34,6 +35,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@mastra/core": "^1.50.1",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@radix-ui/react-accordion": "^1.2.16",
