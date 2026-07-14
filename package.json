@@ -24,6 +24,7 @@
     "test:matchmaking": "vitest run src/application/matchmaking",
     "test:ai": "vitest run src/application/ai src/mastra",
     "test:chat": "vitest run src/application/chat",
+    "test:billing": "vitest run src/application/billing",
     "test:watch": "vitest"
   },
   "lint-staged": {

@@ -1,52 +1,59 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { brand } from "@/lib/constants/brand";
 import { routes } from "@/lib/constants/routes";
 
-export default function InvoicePage() {
+type Payment = {
+  _id: string;
+  provider: string;
+  providerPaymentId: string;
+  amount: number;
+  currency: string;
+  paymentStatus: string;
+  createdAt?: string;
+};
+
+export default function InvoiceDetailPage() {
+  const params = useSearchParams();
+  const id = params.get("id");
+  const [payment, setPayment] = useState<Payment | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/billing/invoices")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) return;
+        const found = (json.data.payments || []).find((p: Payment) => p._id === id);
+        setPayment(found || null);
+      });
+  }, [id]);
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl">Invoice</h1>
-        <Button asChild variant="outline">
-          <Link href={routes.payments}>Back</Link>
-        </Button>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-primary text-2xl">{brand.name}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Invoice number</span>
-            <span>INV-2026-0001</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Plan</span>
-            <span>Sangam · Monthly</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Billed to</span>
-            <span>Aryan Mehta</span>
-          </div>
-          <Separator />
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>₹2,499.00</span>
-          </div>
-          <div className="flex justify-between">
-            <span>GST (18%)</span>
-            <span>₹449.82</span>
-          </div>
-          <div className="flex justify-between font-semibold">
-            <span>Total</span>
-            <span>₹2,948.82</span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <GlassCard className="mx-auto max-w-lg space-y-4">
+      <h1 className="font-display text-3xl">Invoice</h1>
+      {payment ? (
+        <>
+          <p className="text-sm">Provider: {payment.provider}</p>
+          <p className="text-sm">Reference: {payment.providerPaymentId}</p>
+          <p className="text-sm">
+            Amount: {(payment.amount / 100).toFixed(2)} {payment.currency}
+          </p>
+          <p className="text-sm">Status: {payment.paymentStatus}</p>
+          <p className="text-muted-foreground text-xs">
+            {payment.createdAt ? new Date(payment.createdAt).toLocaleString("en-IN") : ""}
+          </p>
+        </>
+      ) : (
+        <p className="text-muted-foreground text-sm">Invoice not found.</p>
+      )}
+      <Button asChild variant="outline">
+        <Link href={routes.invoices}>Back</Link>
+      </Button>
+    </GlassCard>
   );
 }

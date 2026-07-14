@@ -1,57 +1,105 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { routes } from "@/lib/constants/routes";
 
-export default async function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ plan?: string }>;
-}) {
-  const params = await searchParams;
-  const plan = params.plan ?? "sangam";
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+export default function CheckoutPage() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const orderId = params.get("orderId");
+  const plan = params.get("plan") || "PREMIUM";
+  const amount = Number(params.get("amount") || 0);
+  const key = params.get("key") || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
+  const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!orderId) return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setReady(true);
+    document.body.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, [orderId]);
+
+  async function openRazorpay() {
+    if (!window.Razorpay || !orderId || !key) {
+      setError("Razorpay checkout is not ready. Check NEXT_PUBLIC_RAZORPAY_KEY_ID.");
+      return;
+    }
+    const rzp = new window.Razorpay({
+      key,
+      amount,
+      currency: "INR",
+      name: "VedaMilan AI",
+      description: `${plan} plan`,
+      order_id: orderId,
+      handler: async (response: {
+        razorpay_order_id: string;
+        razorpay_payment_id: string;
+        razorpay_signature: string;
+      }) => {
+        const res = await fetch("/api/billing/razorpay/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: response.razorpay_order_id,
+            paymentId: response.razorpay_payment_id,
+            signature: response.razorpay_signature,
+            planCode: plan,
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          setError(json.error?.message || "Verification failed");
+          router.push(routes.paymentFailure);
+          return;
+        }
+        router.push(routes.paymentSuccess);
+      },
+    });
+    rzp.open();
+  }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
+    <div className="mx-auto max-w-lg space-y-6">
+      <GlassCard className="space-y-4">
         <h1 className="font-display text-3xl">Checkout</h1>
-        <p className="text-muted-foreground mt-2">
-          Mock checkout for <span className="capitalize">{plan}</span>. No payment is processed.
+        <p className="text-muted-foreground text-sm">
+          {orderId
+            ? `Complete Razorpay payment for ${plan} (₹${(amount / 100).toFixed(0)}).`
+            : "Choose a plan from Billing to start checkout."}
         </p>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment details</CardTitle>
-          <CardDescription>UI fields only</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="card">Card number</Label>
-            <Input id="card" placeholder="4242 4242 4242 4242" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="expiry">Expiry</Label>
-              <Input id="expiry" placeholder="12/28" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cvc">CVC</Label>
-              <Input id="cvc" placeholder="123" />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button asChild className="flex-1">
-              <Link href={routes.paymentSuccess}>Pay successfully</Link>
+        {error ? <p className="text-destructive text-sm">{error}</p> : null}
+        <div className="flex flex-wrap gap-2">
+          {orderId ? (
+            <Button disabled={!ready} onClick={() => void openRazorpay()}>
+              {ready ? "Pay now" : "Loading Razorpay…"}
             </Button>
-            <Button asChild variant="outline" className="flex-1">
-              <Link href={routes.paymentFailure}>Simulate failure</Link>
+          ) : (
+            <Button asChild>
+              <Link href={routes.payments}>Choose a plan</Link>
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+          <Button asChild variant="outline">
+            <Link href={routes.payments}>Cancel</Link>
+          </Button>
+        </div>
+      </GlassCard>
     </div>
   );
 }

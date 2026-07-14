@@ -1,25 +1,26 @@
-import Link from "next/link";
-import { XCircle } from "lucide-react";
+"use client";
 
+import Link from "next/link";
+
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/constants/routes";
 
 export default function PaymentFailurePage() {
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center py-16 text-center">
-      <XCircle className="text-destructive h-14 w-14" aria-hidden="true" />
-      <h1 className="font-display mt-4 text-3xl">Payment failed</h1>
-      <p className="text-muted-foreground mt-2">
-        Mock failure state for UX validation. Retry or choose another method later.
+    <GlassCard className="mx-auto max-w-lg space-y-4 text-center">
+      <h1 className="font-display text-3xl">Payment unsuccessful</h1>
+      <p className="text-muted-foreground text-sm">
+        No charges were finalized. You can retry checkout or choose another provider.
       </p>
-      <div className="mt-6 flex gap-2">
+      <div className="flex justify-center gap-2">
         <Button asChild>
-          <Link href={routes.checkout}>Try again</Link>
+          <Link href={routes.payments}>Try again</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href={routes.payments}>Back to billing</Link>
+          <Link href={routes.support}>Contact support</Link>
         </Button>
       </div>
-    </div>
+    </GlassCard>
   );
 }

@@ -1,89 +1,155 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
 
-const plans = [
-  {
-    name: "Essence",
-    price: "₹999",
-    features: ["AI matches", "Basic kundali", "Messaging"],
-  },
-  {
-    name: "Sangam",
-    price: "₹2,499",
-    features: ["Advanced reports", "Priority ranking", "Family sharing"],
-    highlighted: true,
-  },
-  {
-    name: "Parampara",
-    price: "₹5,999",
-    features: ["Concierge", "Multi-chart compare", "Premium support"],
-  },
-];
+type Plan = {
+  code: string;
+  name: string;
+  description?: string;
+  priceInr: number;
+  interval: string;
+  features?: string[];
+  isHighlighted?: boolean;
+};
+
+type Subscription = {
+  planCode: string;
+  subscriptionStatus: string;
+  currentPeriodEnd?: string;
+} | null;
 
 export default function BillingPage() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscription, setSubscription] = useState<Subscription>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/billing")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) {
+          setError(json.error?.message || "Failed to load billing");
+          return;
+        }
+        setPlans(json.data.plans || []);
+        setSubscription(json.data.subscription || null);
+      })
+      .catch(() => setError("Failed to load billing"));
+  }, []);
+
+  async function checkout(planCode: string, provider: "STRIPE" | "RAZORPAY") {
+    setBusy(`${planCode}-${provider}`);
+    setError(null);
+    const res = await fetch("/api/billing/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planCode, provider }),
+    });
+    const json = await res.json();
+    setBusy(null);
+    if (!json.success) {
+      setError(json.error?.message || "Checkout failed");
+      return;
+    }
+    if (json.data.activated) {
+      setSubscription(json.data.subscription);
+      return;
+    }
+    if (json.data.checkoutUrl) {
+      window.location.href = json.data.checkoutUrl;
+      return;
+    }
+    if (json.data.orderId) {
+      window.location.href = `${routes.checkout}?orderId=${json.data.orderId}&plan=${planCode}&amount=${json.data.amount}&key=${json.data.keyId || ""}`;
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl">Premium & billing</h1>
         <p className="text-muted-foreground mt-2">
-          Subscription and invoice UI with mock data only.
+          Manage your subscription with Stripe or Razorpay.
         </p>
       </div>
+
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Current plan</CardTitle>
-            <CardDescription>Free · upgrade to unlock full matchmaking</CardDescription>
+            <CardDescription>
+              {subscription
+                ? `${subscription.planCode} · renews ${subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN") : "—"}`
+                : "Free · upgrade to unlock full matchmaking"}
+            </CardDescription>
           </div>
-          <Badge variant="secondary">Active</Badge>
+          <Badge variant="secondary">{subscription?.subscriptionStatus || "Active"}</Badge>
         </CardHeader>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {plans.map((plan) => (
           <Card
-            key={plan.name}
-            className={plan.highlighted ? "border-primary shadow-gold" : undefined}
+            key={plan.code}
+            className={plan.isHighlighted ? "border-primary shadow-gold" : undefined}
           >
             <CardHeader>
               <CardTitle className="font-display text-2xl">{plan.name}</CardTitle>
               <CardDescription className="font-display text-foreground text-3xl">
-                {plan.price}
-                <span className="text-muted-foreground font-sans text-sm">/mo</span>
+                ₹{plan.priceInr}
+                <span className="text-muted-foreground font-sans text-sm">
+                  /{plan.interval.toLowerCase()}
+                </span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                {plan.features.map((feature) => (
-                  <li key={feature}>• {feature}</li>
+              <p className="text-muted-foreground text-sm">{plan.description}</p>
+              <ul className="space-y-1 text-sm">
+                {(plan.features || []).map((f) => (
+                  <li key={f}>• {f}</li>
                 ))}
               </ul>
-              <Button asChild className="w-full" variant={plan.highlighted ? "default" : "outline"}>
-                <Link href={`${routes.checkout}?plan=${plan.name.toLowerCase()}`}>
-                  Choose {plan.name}
-                </Link>
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  disabled={Boolean(busy) || plan.priceInr <= 0}
+                  onClick={() => void checkout(plan.code, "RAZORPAY")}
+                >
+                  {busy === `${plan.code}-RAZORPAY` ? "Starting…" : "Pay with Razorpay"}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={Boolean(busy) || plan.priceInr <= 0}
+                  onClick={() => void checkout(plan.code, "STRIPE")}
+                >
+                  {busy === `${plan.code}-STRIPE` ? "Starting…" : "Pay with Stripe"}
+                </Button>
+                {plan.priceInr <= 0 ? (
+                  <Button
+                    variant="secondary"
+                    disabled={Boolean(busy)}
+                    onClick={() => void checkout(plan.code, "RAZORPAY")}
+                  >
+                    Activate free
+                  </Button>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Invoices</CardTitle>
-          <Button asChild variant="ghost" size="sm">
-            <Link href={routes.invoice}>View sample invoice</Link>
-          </Button>
-        </CardHeader>
-        <CardContent className="text-muted-foreground text-sm">
-          No paid invoices yet in this mock account.
-        </CardContent>
-      </Card>
+      <Button asChild variant="secondary">
+        <Link href={routes.invoices}>View invoices</Link>
+      </Button>
     </div>
   );
 }

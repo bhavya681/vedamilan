@@ -1,40 +1,39 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
 import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
 
-export const metadata = { title: "Premium" };
+type Subscription = {
+  planCode?: string;
+  subscriptionStatus?: string;
+  currentPeriodEnd?: string;
+} | null;
 
-export default function Page() {
+export default function PremiumPage() {
+  const [subscription, setSubscription] = useState<Subscription>(null);
+
+  useEffect(() => {
+    void fetch("/api/billing")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) setSubscription(json.data.subscription || null);
+      });
+  }, []);
+
+  const isPremium =
+    subscription &&
+    subscription.planCode &&
+    subscription.planCode !== "FREE" &&
+    ["ACTIVE", "TRIALING"].includes(subscription.subscriptionStatus || "");
+
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Premium"
@@ -45,22 +44,28 @@ export default function Page() {
           </Button>
         }
       />
-      <>
-        <GlassCard glow>
-          <h2 className="font-display text-3xl">Sangam Premium</h2>
-          <p className="text-muted-foreground mt-2">
-            You are on the recommended plan for full relationship intelligence.
-          </p>
-          <div className="mt-6 flex gap-2">
-            <Button asChild>
-              <Link href={routes.checkout}>Manage billing</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={routes.pricing}>Compare plans</Link>
-            </Button>
-          </div>
-        </GlassCard>
-      </>
+
+      <GlassCard glow>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-display text-3xl">
+            {isPremium ? subscription?.planCode : "Sangam Premium"}
+          </h2>
+          <Badge>{isPremium ? "Active" : "Upgrade available"}</Badge>
+        </div>
+        <p className="text-muted-foreground mt-2">
+          {isPremium
+            ? `Your plan is active until ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IN") : "—"}.`
+            : "You are on the recommended path for full relationship intelligence. Upgrade to unlock unlimited matches, reports, and timing guidance."}
+        </p>
+        <div className="mt-6 flex gap-2">
+          <Button asChild>
+            <Link href={routes.payments}>Manage billing</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={routes.pricing}>Compare plans</Link>
+          </Button>
+        </div>
+      </GlassCard>
     </div>
   );
 }
