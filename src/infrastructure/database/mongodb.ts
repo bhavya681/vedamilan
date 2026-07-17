@@ -1,6 +1,20 @@
+import dns from "node:dns";
 import mongoose from "mongoose";
 
 import { logger } from "@/lib/utils/logger";
+
+/**
+ * Windows / corporate DNS often fails Node's SRV lookup for mongodb+srv.
+ * Prefer public resolvers so Atlas SRV records resolve reliably.
+ */
+try {
+  const current = dns.getServers();
+  if (!current.includes("8.8.8.8") && !current.includes("1.1.1.1")) {
+    dns.setServers(["8.8.8.8", "1.1.1.1", ...current]);
+  }
+} catch {
+  // ignore — fall back to system DNS
+}
 
 const globalForMongo = globalThis as unknown as {
   mongoosePromise?: Promise<typeof mongoose>;
@@ -29,7 +43,7 @@ export async function connectMongo(): Promise<typeof mongoose> {
     globalForMongo.mongoosePromise = mongoose.connect(uri, {
       maxPoolSize: 20,
       minPoolSize: 2,
-      serverSelectionTimeoutMS: 10_000,
+      serverSelectionTimeoutMS: 15_000,
       autoIndex: process.env.NODE_ENV !== "production",
     });
   }

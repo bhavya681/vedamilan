@@ -88,14 +88,28 @@ export function HeroSection() {
             Relationship intelligence
           </p>
 
-          <motion.p
-            className="font-display text-brand-dual mt-5 text-[2.75rem] leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl"
-            initial={reduceMotion ? false : { opacity: 0, letterSpacing: "0.05em" }}
-            animate={{ opacity: 1, letterSpacing: "0.01em" }}
-            transition={{ duration: 0.9, delay: 0.08 }}
+          <motion.div
+            className="mt-5 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.05 }}
           >
-            {brand.name}
-          </motion.p>
+            <Image
+              src="/brand/logo-mark.png"
+              alt=""
+              width={88}
+              height={88}
+              priority
+              className="drop-shadow-lg"
+              aria-hidden
+            />
+            <p className="font-display text-[2.5rem] leading-none tracking-wide sm:text-6xl md:text-7xl">
+              <span className="text-brand-gold">{brand.shortName}</span>
+              <span className="text-ivory/70 ml-2 text-[0.45em] font-semibold tracking-[0.16em]">
+                AI
+              </span>
+            </p>
+          </motion.div>
 
           <h1
             id="hero-heading"

@@ -1,77 +1,62 @@
+"use client";
+
 import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+
+import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
+import { useHoroscope } from "@/hooks/use-horoscope";
 
-export const metadata = { title: "Dasha Timeline" };
+export default function DashaPage() {
+  const { data, error, loading } = useHoroscope();
+  const periods = (data?.dasha?.periods || []).filter((p) => p.level === "MAHA").slice(0, 12);
 
-export default function Page() {
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
-        title="Dasha Timeline"
-        description="Mahadasha and antardasha clarity"
+        title="Dasha"
+        description="Vimshottari mahadasha timeline"
         actions={
           <Button asChild variant="secondary">
-            <Link href={routes.dashboard}>Back to overview</Link>
+            <Link href={routes.kundli}>Back to kundli</Link>
           </Button>
         }
       />
-      <>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-3">
-            {mockDasha.map((d) => (
-              <GlassCard key={d.planet} glow={d.active}>
-                <div className="flex justify-between gap-3">
-                  <h2 className="font-display text-xl">{d.planet}</h2>
-                  {d.active ? <Badge>Active</Badge> : null}
-                </div>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {d.start} → {d.end}
+      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+      <GlassCard>
+        <p className="text-sm">
+          Current: <strong>{data?.dasha?.currentMaha || "—"}</strong>
+          {data?.dasha?.currentAntar ? ` / ${data.dasha.currentAntar}` : ""}
+        </p>
+      </GlassCard>
+      {!loading && periods.length === 0 ? (
+        <EmptyState
+          title="No dasha yet"
+          description="Generate kundli to compute Vimshottari periods."
+          action={
+            <Button asChild>
+              <Link href={routes.kundli}>Generate</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {periods.map((p, idx) => (
+            <GlassCard key={`${p.lord}-${idx}`}>
+              <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+                <p className="font-medium">{p.lord} Mahadasha</p>
+                <p className="text-muted-foreground text-xs">
+                  {new Date(p.startDate).toLocaleDateString("en-IN")} –{" "}
+                  {new Date(p.endDate).toLocaleDateString("en-IN")}
                 </p>
-                <p className="mt-3 text-sm">{d.theme}</p>
-              </GlassCard>
-            ))}
-          </div>
-          <div className="space-y-3">
-            {mockAntardasha.map((a) => (
-              <GlassCard key={a.planet}>
-                <p className="font-medium">{a.planet}</p>
-                <p className="text-muted-foreground text-xs">{a.period}</p>
-                <p className="text-muted-foreground mt-2 text-sm">{a.note}</p>
-              </GlassCard>
-            ))}
-          </div>
+              </div>
+            </GlassCard>
+          ))}
         </div>
-      </>
+      )}
     </div>
   );
 }

@@ -46,7 +46,8 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
   const circ = Math.min(diff, 12 - diff);
 
   // Varna (1) — simplified by moon sign element class
-  const varnaOf = (i: number) => [1, 2, 3, 4][i % 4];
+  const varnaRank = [1, 2, 3, 4] as const;
+  const varnaOf = (i: number) => varnaRank[i % 4] ?? 1;
   const varnaScore = varnaOf(sA) >= varnaOf(sB) ? 1 : 0;
 
   // Vashya (2)
@@ -79,8 +80,8 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
     "Saturn",
     "Jupiter",
   ];
-  const lordA = lords[sA];
-  const lordB = lords[sB];
+  const lordA = lords[sA] ?? "Mars";
+  const lordB = lords[sB] ?? "Mars";
   const friends: Record<string, string[]> = {
     Sun: ["Moon", "Mars", "Jupiter"],
     Moon: ["Sun", "Mercury"],
@@ -93,9 +94,9 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
   const grahaScore =
     lordA === lordB
       ? 5
-      : friends[lordA]?.includes(lordB)
+      : (friends[lordA]?.includes(lordB) ?? false)
         ? 4
-        : friends[lordB]?.includes(lordA)
+        : (friends[lordB]?.includes(lordA) ?? false)
           ? 3
           : 1;
 

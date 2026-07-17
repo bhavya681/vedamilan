@@ -8,8 +8,9 @@ Better Auth + MongoDB adapter. Auth collections `user`, `session`, `account`, `v
 | --------------------------------- | ------------------------------------------------------------------- |
 | Email + password login/register   | Live                                                                |
 | Forgot / reset password           | Live (dev logs reset URL)                                           |
-| Email verification OTP            | Live (dev logs OTP)                                                 |
-| Phone OTP login                   | Live (dev logs OTP; Twilio Module 10)                               |
+| Email verification OTP            | Live (dev logs OTP; not used for passwordless login)                |
+| Passwordless OTP login            | Disabled (redirects to `/login`)                                    |
+| Phone OTP login                   | Disabled                                                            |
 | Google OAuth                      | When `GOOGLE_CLIENT_*` set + `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true` |
 | Sessions + secure cookies         | Live                                                                |
 | Protected `/dashboard` + `/admin` | Middleware cookie gate                                              |

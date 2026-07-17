@@ -68,7 +68,7 @@ export function buildPlanetRows(
 export function buildHouseLords(lagnaSignId: number): Record<string, string> {
   const lords: Record<string, string> = {};
   for (let i = 0; i < 12; i += 1) {
-    const sign = SIGNS[(lagnaSignId + i) % 12];
+    const sign = SIGNS[(lagnaSignId + i) % 12] ?? "Aries";
     lords[String(i + 1)] = HOUSE_LORDS[sign];
   }
   return lords;
@@ -175,7 +175,9 @@ export function buildNorthChart(planets: ChartPlanet[], lagnaSignId: number) {
   const houses: Record<string, string[]> = {};
   for (let i = 1; i <= 12; i += 1) houses[String(i)] = [];
   for (const p of planets) {
-    houses[String(p.house)].push(p.planet);
+    const key = String(p.house);
+    const bucket = houses[key] ?? (houses[key] = []);
+    bucket.push(p.planet);
   }
   return { style: "NORTH", lagnaSignId, houses };
 }

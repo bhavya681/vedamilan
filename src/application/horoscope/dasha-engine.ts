@@ -1,9 +1,4 @@
-import {
-  NAKSHATRAS,
-  VIMSHOTTARI_LORDS,
-  VIMSHOTTARI_YEARS,
-  longitudeToNakshatra,
-} from "./vedic-constants";
+import { VIMSHOTTARI_LORDS, VIMSHOTTARI_YEARS, longitudeToNakshatra } from "./vedic-constants";
 
 export type DashaPeriod = {
   lord: string;
@@ -24,9 +19,9 @@ export function computeVimshottari(
   currentMaha: string | null;
   currentAntar: string | null;
 } {
-  const { nakshatraIndex } = longitudeToNakshatra(moonLongitude);
+  const { nakshatraIndex, nakshatra } = longitudeToNakshatra(moonLongitude);
   const lordIndex = nakshatraIndex % 9;
-  const lord = VIMSHOTTARI_LORDS[lordIndex];
+  const lord = VIMSHOTTARI_LORDS[lordIndex] ?? "Ketu";
   const span = 360 / 27;
   const norm = ((moonLongitude % 360) + 360) % 360;
   const progressed = (norm % span) / span;
@@ -46,7 +41,7 @@ export function computeVimshottari(
   cursor = firstEnd;
 
   for (let i = 1; i < 9; i += 1) {
-    const nextLord = VIMSHOTTARI_LORDS[(lordIndex + i) % 9];
+    const nextLord = VIMSHOTTARI_LORDS[(lordIndex + i) % 9] ?? "Ketu";
     const years = VIMSHOTTARI_YEARS[nextLord];
     const end = new Date(cursor.getTime() + years * MS_PER_YEAR);
     periods.push({
@@ -60,12 +55,12 @@ export function computeVimshottari(
   }
 
   // Antardasha for current/first maha only (compact persistence)
-  const firstMaha = periods[0];
+  const firstMaha = periods[0]!;
   const antar: DashaPeriod[] = [];
   let antarCursor = new Date(firstMaha.startDate);
   const startIdx = VIMSHOTTARI_LORDS.indexOf(firstMaha.lord as (typeof VIMSHOTTARI_LORDS)[number]);
   for (let i = 0; i < 9; i += 1) {
-    const aLord = VIMSHOTTARI_LORDS[(startIdx + i) % 9];
+    const aLord = VIMSHOTTARI_LORDS[(startIdx + i) % 9] ?? "Ketu";
     const portion =
       (VIMSHOTTARI_YEARS[aLord] / 120) *
       ((firstMaha.endDate.getTime() - firstMaha.startDate.getTime()) / MS_PER_YEAR);
@@ -91,7 +86,7 @@ export function computeVimshottari(
     balanceAtBirth: {
       lord,
       yearsRemaining: Number(yearsRemaining.toFixed(4)),
-      nakshatra: NAKSHATRAS[nakshatraIndex],
+      nakshatra,
     },
     periods: all,
     currentMaha,

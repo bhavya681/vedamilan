@@ -19,16 +19,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "framer-motion"],
   },
-  serverExternalPackages: [
-    "sweph",
-    "pino",
-    "pino-pretty",
-    "@prisma/client",
-    "ioredis",
-    "pg",
-    "mongoose",
-    "mongodb",
-  ],
+  serverExternalPackages: ["sweph", "pino", "pino-pretty", "ioredis", "mongoose", "mongodb"],
 };
 
 export default nextConfig;

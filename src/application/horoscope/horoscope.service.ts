@@ -48,10 +48,16 @@ function parseBirthDateTime(birthDate: Date, birthTime: string, timezone: string
   // Store exact civil components into Date.UTC adjusted for IST when timezone is Asia/Kolkata
   const [y, m, d] = datePart.split("-").map(Number);
   const [hh, mm, ss] = time.split(":").map(Number);
+  const year = y ?? 1970;
+  const month = (m ?? 1) - 1;
+  const day = d ?? 1;
+  const hour = hh ?? 0;
+  const minute = mm ?? 0;
+  const second = ss ?? 0;
   if (timezone === "Asia/Kolkata" || timezone === "Asia/Calcutta") {
-    return new Date(Date.UTC(y, m - 1, d, hh - 5, mm - 30, ss || 0));
+    return new Date(Date.UTC(year, month, day, hour - 5, minute - 30, second));
   }
-  return new Date(Date.UTC(y, m - 1, d, hh, mm, ss || 0));
+  return new Date(Date.UTC(year, month, day, hour, minute, second));
 }
 
 export class HoroscopeService {
@@ -73,7 +79,7 @@ export class HoroscopeService {
     const moon = planets.find((p) => p.planet === "Moon");
     const sun = planets.find((p) => p.planet === "Sun");
     const manglik = detectManglik(planets);
-    const yogas = detectYogas(planets, lagna.sign);
+    const yogas = detectYogas(planets, lagna.sign ?? "Aries");
     const doshas = detectDoshas(planets, manglik.status);
     const houseLords = buildHouseLords(lagna.signId);
 

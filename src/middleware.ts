@@ -1,15 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const AUTH_PAGES = [
-  "/login",
-  "/register",
-  "/otp",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-];
-
 export function middleware(request: NextRequest) {
   const maintenanceMode = process.env.MAINTENANCE_MODE === "true";
   const { pathname } = request.nextUrl;
@@ -27,25 +18,21 @@ export function middleware(request: NextRequest) {
   }
 
   const sessionCookie = getSessionCookie(request);
-  const isAuthed = Boolean(sessionCookie);
-
+  const hasSessionCookie = Boolean(sessionCookie);
   const isDashboard = pathname.startsWith("/dashboard");
   const isAdmin = pathname.startsWith("/admin");
-  const isAuthPage = AUTH_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  if ((isDashboard || isAdmin) && !isAuthed) {
+  // Guests cannot open the product workspace — force login first.
+  if ((isDashboard || isAdmin) && !hasSessionCookie) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (isAuthPage && isAuthed && pathname !== "/verify-email" && pathname !== "/reset-password") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
-
+  // Do not auto-redirect /login or /register when a cookie exists.
+  // Stale cookies used to bounce signup → dashboard. Auth pages handle
+  // valid sessions with Continue / Sign out UI instead.
   return NextResponse.next();
 }
 

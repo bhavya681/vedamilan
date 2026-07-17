@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/table";
 
 const payments = [
-  { id: "pay_01", user: "Ananya Sharma", amount: "₹2,499", status: "Captured" },
-  { id: "pay_02", user: "Meera Iyer", amount: "₹999", status: "Failed" },
+  { id: "pay_01", user: "Aditi Sharma", amount: "₹2,499", status: "Captured" },
+  { id: "pay_02", user: "Meera Joshi", amount: "₹999", status: "Failed" },
   { id: "pay_03", user: "Priya Nair", amount: "₹5,999", status: "Refunded" },
 ];
 

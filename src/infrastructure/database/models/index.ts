@@ -1,4 +1,4 @@
-export { Profile, BirthDetails, PartnerPreferences } from "./profile";
+export { Profile, BirthDetails, PartnerPreferences, type ProfileDocument } from "./profile";
 export { Horoscope, Dasha } from "./horoscope";
 export { CompatibilityReport, Match, Like, Visitor, Shortlist } from "./matchmaking";
 export { Chat, Message } from "./chat";

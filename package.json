@@ -14,7 +14,6 @@
     "prepare": "husky",
     "db:seed": "tsx src/infrastructure/database/seed.ts",
     "db:indexes": "tsx src/infrastructure/database/ensure-indexes.ts",
-    "prisma:generate": "prisma generate",
     "test": "vitest run",
     "test:db": "vitest run src/infrastructure/database src/repositories",
     "test:auth": "vitest run src/lib/auth",

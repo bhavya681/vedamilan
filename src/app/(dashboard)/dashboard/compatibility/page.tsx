@@ -38,6 +38,8 @@ export default function CompatibilityPage() {
   }
 
   useEffect(() => {
+    const candidate = new URLSearchParams(window.location.search).get("candidate");
+    if (candidate) setCandidateUserId(candidate);
     void load().catch(() => setError("Failed to load compatibility"));
   }, []);
 
@@ -68,7 +70,15 @@ export default function CompatibilityPage() {
         description="Ashta Koota scoring from deterministic rule engines"
         actions={
           <Button asChild variant="secondary">
-            <Link href={routes.compatibilityReport}>Open report view</Link>
+            <Link
+              href={
+                active?._id
+                  ? `${routes.compatibilityReport}?id=${active._id}`
+                  : routes.compatibilityReport
+              }
+            >
+              Open report view
+            </Link>
           </Button>
         }
       />

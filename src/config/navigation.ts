@@ -8,11 +8,11 @@ export type NavItem = {
   group?: string;
 };
 
+/** Keep landing nav short — product-first, like top matrimony apps */
 export const mainNav: NavItem[] = [
-  { title: "Product", href: "/#features", description: "Platform capabilities" },
+  { title: "How it works", href: "/#features", description: "Platform capabilities" },
   { title: "Compatibility", href: "/#compatibility", description: "Guna Milan & AI" },
   { title: "Pricing", href: routes.pricing, description: "Membership plans" },
-  { title: "Stories", href: "/#stories", description: "Success stories" },
   { title: "FAQ", href: routes.faq, description: "Common questions" },
 ];
 
@@ -36,19 +36,21 @@ export const footerNav: Record<string, NavItem[]> = {
   ],
 };
 
+/** Primary dashboard paths first — fewer clicks to core jobs */
 export const dashboardNav: NavItem[] = [
-  { title: "Overview", href: routes.dashboard, group: "Home" },
-  { title: "Matches", href: routes.matches, group: "Discover" },
-  { title: "Search", href: routes.search, group: "Discover" },
-  { title: "Shortlisted", href: routes.shortlisted, group: "Discover" },
+  { title: "Home", href: routes.dashboard, group: "Main" },
+  { title: "Matches", href: routes.matches, group: "Main" },
+  { title: "Search", href: routes.search, group: "Main" },
+  { title: "Messages", href: routes.chat, group: "Main" },
   { title: "Kundli", href: routes.kundli, group: "Vedic" },
-  { title: "Horoscope", href: routes.horoscope, group: "Vedic" },
   { title: "Compatibility", href: routes.compatibility, group: "Vedic" },
-  { title: "AI Insights", href: routes.aiInsights, group: "Intelligence" },
-  { title: "Messages", href: routes.chat, group: "Connect" },
-  { title: "Consultation", href: routes.consultation, group: "Connect" },
+  { title: "Horoscope", href: routes.horoscope, group: "Vedic" },
+  { title: "Calendar", href: routes.calendar, group: "Vedic" },
+  { title: "AI Insights", href: routes.aiInsights, group: "More" },
+  { title: "Shortlisted", href: routes.shortlisted, group: "More" },
+  { title: "Consultation", href: routes.consultation, group: "More" },
+  { title: "Notifications", href: routes.notifications, group: "More" },
   { title: "Premium", href: routes.premium, group: "Account" },
-  { title: "Reports", href: routes.reports, group: "Account" },
   { title: "Settings", href: routes.settings, group: "Account" },
 ];
 

@@ -85,13 +85,18 @@ export class SwissEphemerisService {
 
   calculatePlanets(jd: number): Record<PlanetKey, PlanetPosition> {
     this.ensureInitialized();
-    const flags = sweph.constants.SEFLG_SWIEPH | sweph.constants.SEFLG_SPEED;
+    // Prefer Swiss Ephemeris files; fall back to built-in Moshier (no ephe pack required).
+    const preferred = sweph.constants.SEFLG_SWIEPH | sweph.constants.SEFLG_SPEED;
+    const fallback = sweph.constants.SEFLG_MOSEPH | sweph.constants.SEFLG_SPEED;
     const result = {} as Record<PlanetKey, PlanetPosition>;
 
     (Object.keys(PLANET_BODIES) as Array<Exclude<PlanetKey, "ketu">>).forEach((key) => {
       const body = PLANET_BODIES[key];
-      const calc = sweph.calc_ut(jd, body, flags);
-      if (calc.flag < 0 || (calc.error && calc.error.length > 0 && calc.flag !== flags)) {
+      let calc = sweph.calc_ut(jd, body, preferred);
+      if (calc.flag < 0) {
+        calc = sweph.calc_ut(jd, body, fallback);
+      }
+      if (calc.flag < 0) {
         throw new AppError(
           "SWISS_EPHEMERIS_CALC_FAILED",
           `Failed calculating ${key}: ${calc.error || "unknown error"}`,

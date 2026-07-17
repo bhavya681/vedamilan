@@ -1,4 +1,4 @@
-import type { FilterQuery, Model, UpdateQuery } from "mongoose";
+import type { Model, UpdateQuery } from "mongoose";
 
 import {
   normalizePagination,
@@ -6,6 +6,8 @@ import {
   type PaginatedResult,
   type PaginationInput,
 } from "./pagination";
+
+type MongoFilter<T> = Record<string, unknown> | Partial<T>;
 
 export class BaseRepository<T> {
   constructor(protected readonly model: Model<T>) {}
@@ -20,13 +22,13 @@ export class BaseRepository<T> {
     return (doc as T | null) ?? null;
   }
 
-  async findOne(filter: FilterQuery<T>): Promise<T | null> {
+  async findOne(filter: MongoFilter<T>): Promise<T | null> {
     const doc = await this.model.findOne(filter).lean();
     return (doc as T | null) ?? null;
   }
 
   async findMany(
-    filter: FilterQuery<T> = {},
+    filter: MongoFilter<T> = {},
     pagination: PaginationInput = {},
   ): Promise<PaginatedResult<T>> {
     const { page, limit, skip, sort } = normalizePagination(pagination);

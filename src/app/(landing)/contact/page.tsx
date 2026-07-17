@@ -31,7 +31,7 @@ export default function ContactPage() {
             <input
               id="contact-name"
               className="border-input bg-background mt-1.5 w-full rounded-xl border px-3 py-2.5 text-sm"
-              defaultValue="Ananya Sharma"
+              defaultValue="Aditi Sharma"
             />
           </div>
           <div>

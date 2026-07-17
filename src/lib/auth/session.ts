@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { getAuth } from "@/lib/auth";
 import type { UserRoleCode } from "@/infrastructure/database/base";
+import { UnauthorizedError } from "@/lib/utils/error-handler";
 
 export type SessionUser = {
   id: string;
@@ -23,7 +24,7 @@ export async function getSession() {
 export async function requireSession() {
   const session = await getSession();
   if (!session?.user) {
-    throw new Error("UNAUTHORIZED");
+    throw new UnauthorizedError();
   }
   return session;
 }

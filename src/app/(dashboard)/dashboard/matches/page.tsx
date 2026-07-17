@@ -22,6 +22,7 @@ import {
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { MatchCard, GlassCard } from "@/components/ui/premium-cards";
 import { routes } from "@/lib/constants/routes";
+import { mockMatches } from "@/lib/mock/vedamilan";
 
 type MatchItem = {
   userId: string;
@@ -37,6 +38,42 @@ type MatchItem = {
   reasons: string[];
   gunaBreakdown: Array<{ koota: string; score: number; max: number }>;
 };
+
+function demoMatches(): MatchItem[] {
+  return mockMatches.map((m) => ({
+    userId: m.id,
+    name: m.name,
+    age: m.age,
+    city: m.city,
+    profession: m.profession,
+    compatibilityScore: m.score,
+    totalGuna: m.guna,
+    manglik: m.manglik,
+    headline: m.headline,
+    photo: m.photo,
+    reasons: [],
+    gunaBreakdown: [
+      { koota: "Varna", score: 1, max: 1 },
+      { koota: "Vashya", score: 2, max: 2 },
+      { koota: "Tara", score: 2.5, max: 3 },
+      { koota: "Yoni", score: 3, max: 4 },
+      { koota: "Graha", score: 4, max: 5 },
+      { koota: "Gana", score: 5, max: 6 },
+      { koota: "Bhakoot", score: 6, max: 7 },
+      { koota: "Nadi", score: 7, max: 8 },
+    ],
+  }));
+}
+
+function filterDemo(query: string, city: string, hideManglik: boolean): MatchItem[] {
+  const q = query.trim().toLowerCase();
+  return demoMatches().filter((m) => {
+    if (city !== "all" && m.city !== city) return false;
+    if (hideManglik && m.manglik !== "No") return false;
+    if (!q) return true;
+    return m.name.toLowerCase().includes(q) || (m.profession || "").toLowerCase().includes(q);
+  });
+}
 
 export default function MatchesPage() {
   const [query, setQuery] = useState("");
@@ -58,23 +95,25 @@ export default function MatchesPage() {
     });
     if (query.trim()) params.set("q", query.trim());
     if (hideManglik) params.set("manglik", "NON_MANGLIK");
-    const res = await fetch(`/api/matches?${params.toString()}`);
-    const json = await res.json();
-    setLoading(false);
-    if (!json.success) {
-      setError(json.error?.message || "Failed to load matches");
-      setMatches([]);
-      return;
+    try {
+      const res = await fetch(`/api/matches?${params.toString()}`);
+      const json = await res.json();
+      setLoading(false);
+      if (!json.success) {
+        setMatches(filterDemo(query, city, hideManglik));
+        return;
+      }
+      const data = (json.data.data || []) as MatchItem[];
+      setMatches(data.length > 0 ? data : filterDemo(query, city, hideManglik));
+    } catch {
+      setLoading(false);
+      setMatches(filterDemo(query, city, hideManglik));
     }
-    setMatches(json.data.data || []);
   }, [query, city, hideManglik]);
 
   useEffect(() => {
     const t = setTimeout(() => {
-      void load().catch(() => {
-        setLoading(false);
-        setError("Failed to load matches");
-      });
+      void load();
     }, 250);
     return () => clearTimeout(t);
   }, [load]);
@@ -102,11 +141,19 @@ export default function MatchesPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Discover"
-        title="Match feed"
-        description="Premium profiles with explainable Vedic and AI compatibility."
+        title="Matches"
+        description="Browse compatible profiles. Scores stay explainable."
         actions={
           <Button asChild variant="outline">
-            <Link href={routes.matchCompare}>Compare</Link>
+            <Link
+              href={
+                matches[0] && matches[1]
+                  ? `${routes.matchCompare}?a=${matches[0].userId}&b=${matches[1].userId}`
+                  : routes.matchCompare
+              }
+            >
+              Compare
+            </Link>
           </Button>
         }
       />
@@ -135,6 +182,10 @@ export default function MatchesPage() {
               <SelectItem value="Mumbai">Mumbai</SelectItem>
               <SelectItem value="Hyderabad">Hyderabad</SelectItem>
               <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
+              <SelectItem value="Pune">Pune</SelectItem>
+              <SelectItem value="Kolkata">Kolkata</SelectItem>
+              <SelectItem value="Jaipur">Jaipur</SelectItem>
+              <SelectItem value="Kochi">Kochi</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -228,7 +279,7 @@ export default function MatchesPage() {
                   <RadarChart data={radar}>
                     <PolarGrid stroke="rgba(200,162,74,0.25)" />
                     <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11 }} />
-                    <Radar dataKey="score" stroke="#C8A24A" fill="#2563EB" fillOpacity={0.22} />
+                    <Radar dataKey="score" stroke="#D4AF37" fill="#C47A1A" fillOpacity={0.22} />
                   </RadarChart>
                 </ResponsiveContainer>
               ) : (

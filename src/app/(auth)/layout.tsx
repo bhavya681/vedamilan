@@ -1,9 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 
+import { BrandLogo, BrandMark } from "@/components/brand/brand-logo";
 import { brand } from "@/lib/constants/brand";
 import { landingImages } from "@/lib/constants/images";
 import { routes } from "@/lib/constants/routes";
+
+void routes;
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,13 +17,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           fill
           priority
           sizes="50vw"
-          className="object-cover opacity-60"
+          className="object-cover opacity-55"
         />
-        <div className="from-navy via-navy/70 to-navy/40 absolute inset-0 bg-gradient-to-t" />
-        <div className="mandala-bg absolute inset-0 opacity-30 mix-blend-soft-light" />
+        <div className="from-navy via-navy/75 to-navy/45 absolute inset-0 bg-gradient-to-t" />
+        <div className="mandala-bg absolute inset-0 opacity-25 mix-blend-soft-light" />
         <div className="text-ivory relative flex h-full flex-col justify-end p-12">
-          <p className="font-display text-brand-dual text-5xl">{brand.shortName}</p>
-          <p className="text-ivory/80 mt-4 max-w-md text-lg leading-relaxed">
+          <BrandMark size={96} className="mb-5 drop-shadow-lg" />
+          <p className="font-display text-brand-gold text-4xl tracking-wide">VedaMilan</p>
+          <p className="text-ivory/80 mt-3 max-w-md text-lg leading-relaxed">
             Private by design. Explainable by default. Built for intentional unions.
           </p>
         </div>
@@ -31,9 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mandala-bg absolute inset-0 opacity-20 lg:opacity-10" aria-hidden />
         <div className="relative w-full max-w-md">
           <div className="mb-8 text-center lg:text-left">
-            <Link href={routes.home} className="font-display text-brand-dual text-3xl">
-              {brand.name}
-            </Link>
+            <BrandLogo href={routes.home} size="lg" priority />
             <p className="text-muted-foreground mt-2 text-sm">{brand.tagline}</p>
           </div>
           <div className="glass-panel border-gold/15 shadow-elevated rounded-[1.75rem] p-6 sm:p-8">

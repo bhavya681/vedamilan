@@ -1,169 +1,108 @@
 "use client";
 
-import { useState } from "react";
-import { Download } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Timeline } from "@/components/ui/vedic";
-import { PageHeader } from "@/components/layout/page-shell";
-import { mockDasha, mockDoshas, mockPlanets, mockYogas, mockTransits } from "@/lib/mock/vedamilan";
-import {
-  NorthIndianKundli,
-  SouthIndianKundli,
-  EastIndianKundli,
-} from "@/features/horoscope/components/kundli-charts";
+import { Progress } from "@/components/ui/progress";
+import { routes } from "@/lib/constants/routes";
 
 export default function HoroscopePage() {
-  const [style, setStyle] = useState<"north" | "south" | "east">("north");
+  const [moonSign, setMoonSign] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [scores, setScores] = useState({ love: 0, career: 0, health: 0, spirit: 0 });
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const [chartRes, aiRes] = await Promise.all([
+        fetch("/api/horoscope"),
+        fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            agent: "HOROSCOPE",
+            message: "Give a gentle daily focus based on my stored chart and dasha.",
+          }),
+        }),
+      ]);
+      const chart = await chartRes.json();
+      const ai = await aiRes.json();
+      if (!chart.success || !chart.data?.horoscope) {
+        setError("Generate your kundli to unlock daily horoscope guidance.");
+        return;
+      }
+      const h = chart.data.horoscope;
+      setMoonSign(h.moonSign);
+      const seed =
+        (h.moonSign?.length || 0) +
+        (chart.data.dasha?.currentMaha?.length || 0) +
+        new Date().getDate();
+      setScores({
+        love: 55 + (seed % 35),
+        career: 50 + ((seed * 3) % 40),
+        health: 60 + ((seed * 5) % 30),
+        spirit: 58 + ((seed * 7) % 32),
+      });
+      setSummary(
+        ai.success
+          ? ai.data.answer
+          : `Moon in ${h.moonSign}. Review kundli and AI Insights for deeper guidance.`,
+      );
+    }
+    void load().catch(() => setError("Failed to load horoscope"));
+  }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
       <PageHeader
-        eyebrow="Vedic"
-        title="Horoscope studio"
-        description="Interactive kundli styles with realistic planetary mock data."
+        eyebrow="VedaMilan AI"
+        title="Daily horoscope"
+        description="Guidance grounded in your stored Vedic chart"
         actions={
-          <Button type="button" variant="outline">
-            <Download className="h-4 w-4" />
-            Download report
+          <Button asChild variant="secondary">
+            <Link href={routes.kundli}>Kundli</Link>
           </Button>
         }
       />
-
-      <Tabs defaultValue="chart">
-        <TabsList>
-          <TabsTrigger value="chart">Chart</TabsTrigger>
-          <TabsTrigger value="planets">Planets</TabsTrigger>
-          <TabsTrigger value="yogas">Yogas & doshas</TabsTrigger>
-          <TabsTrigger value="dasha">Dasha</TabsTrigger>
-          <TabsTrigger value="transits">Transits</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="chart" className="space-y-4">
-          <div className="flex flex-wrap gap-2">
+      {error ? (
+        <EmptyState
+          title="Chart required"
+          description={error}
+          action={
+            <Button asChild>
+              <Link href={routes.birthDetails}>Add birth details</Link>
+            </Button>
+          }
+        />
+      ) : (
+        <GlassCard glow>
+          <h2 className="font-display text-3xl">{moonSign || "…"} · Today</h2>
+          <p className="text-muted-foreground mt-4 text-sm leading-relaxed whitespace-pre-wrap">
+            {summary || "Loading…"}
+          </p>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {(
               [
-                ["north", "North Indian"],
-                ["south", "South Indian"],
-                ["east", "East Indian"],
+                ["Love", scores.love],
+                ["Career", scores.career],
+                ["Health", scores.health],
+                ["Spirit", scores.spirit],
               ] as const
-            ).map(([key, label]) => (
-              <Button
-                key={key}
-                type="button"
-                size="sm"
-                variant={style === key ? "default" : "outline"}
-                onClick={() => setStyle(key)}
-              >
-                {label}
-              </Button>
+            ).map(([label, value]) => (
+              <div key={label}>
+                <div className="mb-2 flex justify-between text-xs">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span>{value}%</span>
+                </div>
+                <Progress value={value} />
+              </div>
             ))}
           </div>
-          <Card className="glass-panel">
-            <CardContent className="flex justify-center p-6">
-              {style === "north" ? <NorthIndianKundli /> : null}
-              {style === "south" ? <SouthIndianKundli /> : null}
-              {style === "east" ? <EastIndianKundli /> : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="planets">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {mockPlanets.map((planet) => (
-              <Card key={planet.name} className="glass-panel">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-display text-xl">{planet.name}</CardTitle>
-                  <CardDescription>
-                    {planet.sign} · House {planet.house}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between text-sm">
-                  <span>{planet.degree}</span>
-                  <Badge variant="secondary">{planet.dignity}</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="yogas" className="grid gap-6 lg:grid-cols-2">
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Yogas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockYogas.map((yoga) => (
-                <div key={yoga.name} className="border-border/60 rounded-xl border p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{yoga.name}</p>
-                    <Badge>{yoga.strength}</Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">{yoga.note}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Doshas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockDoshas.map((dosha) => (
-                <div key={dosha.name} className="border-border/60 rounded-xl border p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{dosha.name}</p>
-                    <Badge variant={dosha.status === "Absent" ? "secondary" : "destructive"}>
-                      {dosha.status}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">{dosha.note}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="dasha">
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Vimshottari timeline</CardTitle>
-              <CardDescription>Mahadasha sequence with active emphasis</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Timeline
-                items={mockDasha.map((d) => ({
-                  title: d.planet,
-                  subtitle: d.theme,
-                  meta: `${d.start} → ${d.end}`,
-                  active: d.active,
-                }))}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="transits">
-          <Card className="glass-panel">
-            <CardHeader>
-              <CardTitle>Current transits</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              {mockTransits.map((item) => (
-                <div key={item.planet + item.date} className="bg-muted/50 rounded-xl p-4 text-sm">
-                  <p className="font-medium">
-                    {item.planet}: {item.from} → {item.to}
-                  </p>
-                  <p className="text-muted-foreground mt-1">{item.impact}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </GlassCard>
+      )}
     </div>
   );
 }

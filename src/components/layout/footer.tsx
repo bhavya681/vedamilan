@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { footerNav } from "@/config/navigation";
 import { brand } from "@/lib/constants/brand";
 import { routes } from "@/lib/constants/routes";
@@ -11,9 +12,7 @@ export function Footer() {
     <footer className="border-border/40 bg-navy text-ivory border-t">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="md:col-span-2 lg:col-span-1">
-          <Link href={routes.home} className="font-display text-brand-dual text-2xl">
-            {brand.name}
-          </Link>
+          <BrandLogo href={routes.home} size="md" className="[&_span]:text-ivory" />
           <p className="text-ivory/70 mt-4 max-w-sm text-sm leading-relaxed">{brand.tagline}</p>
           <p className="text-ivory/60 mt-4 text-sm">
             <a className="hover:text-ivory" href={`mailto:${brand.supportEmail}`}>

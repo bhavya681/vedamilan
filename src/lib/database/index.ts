@@ -8,9 +8,6 @@ export {
 
 export * from "@/infrastructure/database/models";
 
-/** @deprecated Prisma/PostgreSQL — do not use for new modules */
-export { prisma, getPrisma, disconnectPrisma } from "@/lib/database/prisma";
-
 export {
   getRedis,
   ensureRedisConnected,

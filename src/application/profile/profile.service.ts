@@ -186,7 +186,8 @@ export class ProfileService {
     }
 
     if (profile.photos.length > 0 && !profile.photos.some((p) => p.isPrimary)) {
-      profile.photos[0].isPrimary = true;
+      const first = profile.photos[0];
+      if (first) first.isPrimary = true;
     }
 
     const completion = calculateProfileCompletion(profile.toObject() as Record<string, unknown>);

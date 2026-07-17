@@ -1,70 +1,96 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+
 import { PageHeader } from "@/components/layout/page-shell";
-import { GlassCard, StatCard, MatchCard } from "@/components/ui/premium-cards";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { routes } from "@/lib/constants/routes";
-import {
-  mockMatches,
-  mockPlanets,
-  mockDasha,
-  mockTransits,
-  mockMarriageTiming,
-  mockGunaMilan,
-  mockAiInsights,
-  mockNotifications,
-  mockAstrologers,
-  mockReports,
-  mockInvoices,
-  mockBlogPosts,
-  mockFaqs,
-  mockPricingPlans,
-  mockUser,
-  mockBirthDetails,
-  mockPreferences,
-  mockVisitors,
-  mockLikes,
-  mockShortlisted,
-  mockHoroscopeDaily,
-  mockConversations,
-  mockAntardasha,
-} from "@/lib/mock/vedamilan";
+import { authClient, useSession } from "@/lib/auth/client";
 
-export const metadata = { title: "Security" };
+export default function SecuritySettingsPage() {
+  const { data: session } = useSession();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-export default function Page() {
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    const result = await authClient.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: true,
+    });
+    setLoading(false);
+    if (result.error) {
+      setError(result.error.message || "Could not update password");
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setMessage("Password updated. Other sessions were signed out.");
+  }
+
   return (
-    <div className="relative">
+    <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Security"
         description="Password and sessions"
         actions={
           <Button asChild variant="secondary">
-            <Link href={routes.dashboard}>Back to overview</Link>
+            <Link href={routes.settings}>Back to settings</Link>
           </Button>
         }
       />
-      <>
-        <GlassCard className="max-w-lg space-y-4">
+      <GlassCard className="max-w-lg space-y-4">
+        <p className="text-muted-foreground text-sm">Signed in as {session?.user?.email || "…"}</p>
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <label className="text-sm font-medium">Current password</label>
-            <input
+            <Label htmlFor="current">Current password</Label>
+            <Input
+              id="current"
               type="password"
-              className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
-              defaultValue="••••••••••"
+              className="mt-1"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+              autoComplete="current-password"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">New password</label>
-            <input
+            <Label htmlFor="next">New password</Label>
+            <Input
+              id="next"
               type="password"
-              className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+              className="mt-1"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="new-password"
             />
           </div>
-          <Button>Update password</Button>
-        </GlassCard>
-      </>
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          {message ? (
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">{message}</p>
+          ) : null}
+          <Button type="submit" disabled={loading}>
+            {loading ? "Updating…" : "Update password"}
+          </Button>
+        </form>
+        <Button asChild variant="outline" size="sm">
+          <Link href={routes.forgotPassword}>Forgot password instead?</Link>
+        </Button>
+      </GlassCard>
     </div>
   );
 }

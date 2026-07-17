@@ -54,7 +54,9 @@ export default function PricingPage() {
               className="mt-8 w-full"
               variant={plan.highlighted ? "default" : "outline"}
             >
-              <Link href={routes.register}>Choose {plan.name}</Link>
+              <Link href={`${routes.register}?next=${encodeURIComponent(routes.premium)}`}>
+                Choose {plan.name}
+              </Link>
             </Button>
           </GlassCard>
         ))}

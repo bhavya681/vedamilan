@@ -1,9 +1,19 @@
+import { redirect } from "next/navigation";
+
 import { PageTransition } from "@/components/animations/motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { getSession } from "@/lib/auth/session";
+import { routes } from "@/lib/constants/routes";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession();
+  if (!session?.user) {
+    // Cookie present but session invalid — clear via route handler, then login.
+    redirect(`/api/auth/clear-session?next=${encodeURIComponent(routes.dashboard)}`);
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />

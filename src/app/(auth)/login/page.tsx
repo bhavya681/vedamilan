@@ -1,17 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth/client";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { authClient, useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") || routes.dashboard;
+  const safeNext = nextPath.startsWith("/") ? nextPath : routes.dashboard;
+  const { data: session, isPending } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const googleEnabled = Boolean(process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true");
@@ -27,7 +32,7 @@ export default function LoginPage() {
     const { error: signInError } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: routes.dashboard,
+      callbackURL: safeNext,
     });
 
     setLoading(false);
@@ -35,7 +40,7 @@ export default function LoginPage() {
       setError(signInError.message || "Unable to sign in");
       return;
     }
-    router.push(routes.dashboard);
+    router.push(safeNext);
     router.refresh();
   }
 
@@ -43,8 +48,35 @@ export default function LoginPage() {
     setError(null);
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: routes.dashboard,
+      callbackURL: safeNext,
     });
+  }
+
+  if (isPending) {
+    return <p className="text-muted-foreground text-sm">Checking session…</p>;
+  }
+
+  if (session?.user) {
+    return (
+      <div className="space-y-4">
+        <h1 className="font-display text-2xl">Welcome back</h1>
+        <p className="text-muted-foreground text-sm">
+          You&apos;re signed in as{" "}
+          <span className="text-foreground font-medium">{session.user.email}</span>.
+        </p>
+        <Button asChild className="w-full">
+          <Link href={safeNext}>Continue to dashboard</Link>
+        </Button>
+        <SignOutButton className="w-full" label="Sign out" redirectTo={routes.login} />
+        <p className="text-muted-foreground text-center text-sm">
+          Need a new account? Sign out first, then{" "}
+          <Link href={routes.register} className="text-primary font-medium hover:underline">
+            register
+          </Link>
+          .
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -75,11 +107,13 @@ export default function LoginPage() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </Button>
-        <Button asChild type="button" variant="outline" className="w-full">
-          <Link href={routes.otp}>Sign in with OTP</Link>
-        </Button>
         {googleEnabled ? (
-          <Button type="button" variant="secondary" className="w-full" onClick={onGoogle}>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={() => void onGoogle()}
+          >
             Continue with Google
           </Button>
         ) : null}
@@ -91,5 +125,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -87,10 +87,10 @@ export const ENGINE_VERSION = "vedamilan-horoscope-1.0.0";
 
 export function longitudeToSign(longitude: number) {
   const norm = ((longitude % 360) + 360) % 360;
-  const signId = Math.floor(norm / 30);
+  const signId = Math.min(11, Math.max(0, Math.floor(norm / 30)));
   const degreeInSign = norm % 30;
   return {
-    sign: SIGNS[signId],
+    sign: SIGNS[signId] ?? "Aries",
     signId,
     degreeInSign,
     longitude: norm,
@@ -100,11 +100,11 @@ export function longitudeToSign(longitude: number) {
 export function longitudeToNakshatra(longitude: number) {
   const norm = ((longitude % 360) + 360) % 360;
   const span = 360 / 27;
-  const index = Math.floor(norm / span);
+  const index = Math.min(26, Math.max(0, Math.floor(norm / span)));
   const within = norm % span;
   const pada = Math.floor(within / (span / 4)) + 1;
   return {
-    nakshatra: NAKSHATRAS[index],
+    nakshatra: NAKSHATRAS[index] ?? "Ashwini",
     nakshatraIndex: index,
     nakshatraPada: Math.min(4, Math.max(1, pada)) as 1 | 2 | 3 | 4,
   };

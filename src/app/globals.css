@@ -3,60 +3,60 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* VedaMilan AI — Luxury Vedic · Calm · Trustworthy */
+/* VedaMilan AI — Celestial gold emblem · calm · trustworthy */
 :root {
-  --royal-gold: #c8a24a;
-  --deep-saffron: #d97706;
-  --temple-blue: #2563eb;
-  --warm-ivory: #faf8f2;
-  --moon-white: #faf8f2;
-  --midnight-navy: #0b1120;
+  --royal-gold: #d4af37;
+  --deep-saffron: #c47a1a;
+  --temple-blue: #1f3a5f;
+  --warm-ivory: #f7f1e3;
+  --moon-white: #faf6ee;
+  --midnight-navy: #14110e;
   --soft-white: #ffffff;
   --emerald: #059669;
-  --amber: #d97706;
+  --amber: #c47a1a;
   --ruby: #e11d48;
   --rose-gold: #b76e79;
-  --cosmic-blue: #3b82f6;
-  --ai-start: #6366f1;
-  --ai-end: #2563eb;
+  --cosmic-blue: #2a4a6f;
+  --ai-start: #c47a1a;
+  --ai-end: #d4af37;
 
-  --background: #faf8f2;
-  --foreground: #0b1120;
-  --card: rgba(255, 255, 255, 0.78);
-  --card-foreground: #0b1120;
+  --background: #f7f1e3;
+  --foreground: #14110e;
+  --card: rgba(255, 255, 255, 0.82);
+  --card-foreground: #14110e;
   --popover: #ffffff;
-  --popover-foreground: #0b1120;
-  --primary: #c8a24a;
-  --primary-foreground: #0b1120;
-  --secondary: #2563eb;
+  --popover-foreground: #14110e;
+  --primary: #c47a1a;
+  --primary-foreground: #ffffff;
+  --secondary: #1f3a5f;
   --secondary-foreground: #ffffff;
-  --muted: #f3efe6;
-  --muted-foreground: #5c6570;
-  --accent: #f0e8d8;
-  --accent-foreground: #0b1120;
+  --muted: #efe6d4;
+  --muted-foreground: #5c5348;
+  --accent: #ebe0cc;
+  --accent-foreground: #14110e;
   --destructive: #e11d48;
   --destructive-foreground: #ffffff;
-  --border: rgba(11, 17, 32, 0.08);
-  --input: rgba(11, 17, 32, 0.12);
-  --ring: #c8a24a;
+  --border: rgba(20, 17, 14, 0.1);
+  --input: rgba(20, 17, 14, 0.12);
+  --ring: #d4af37;
 
-  --saffron: #d97706;
-  --navy: #0b1120;
-  --gold: #c8a24a;
+  --saffron: #c47a1a;
+  --navy: #14110e;
+  --gold: #d4af37;
   --rose: #b76e79;
-  --ivory: #faf8f2;
-  --ai: #4f46e5;
-  --cosmic: #2563eb;
+  --ivory: #f7f1e3;
+  --ai: #b8860b;
+  --cosmic: #1f3a5f;
   --crimson: #9f1239;
 
-  --radius: 1.25rem;
+  --radius: 1rem;
 
-  --shadow-soft: 0 8px 28px rgba(11, 17, 32, 0.05);
-  --shadow-elevated: 0 28px 64px rgba(11, 17, 32, 0.1);
-  --shadow-gold: 0 14px 36px rgba(200, 162, 74, 0.28);
+  --shadow-soft: 0 8px 28px rgba(20, 17, 14, 0.06);
+  --shadow-elevated: 0 24px 56px rgba(20, 17, 14, 0.1);
+  --shadow-gold: 0 14px 36px rgba(212, 175, 55, 0.28);
   --shadow-rose: 0 12px 28px rgba(183, 110, 121, 0.2);
-  --shadow-dual: 0 16px 40px rgba(200, 162, 74, 0.16), 0 8px 24px rgba(37, 99, 235, 0.08);
-  --shadow-aurora: 0 0 48px rgba(99, 102, 241, 0.14), 0 0 80px rgba(37, 99, 235, 0.1);
+  --shadow-dual: 0 16px 40px rgba(212, 175, 55, 0.18), 0 8px 24px rgba(196, 122, 26, 0.1);
+  --shadow-aurora: 0 0 48px rgba(212, 175, 55, 0.12), 0 0 80px rgba(196, 122, 26, 0.08);
 
   --duration-fast: 160ms;
   --duration-base: 280ms;
@@ -65,39 +65,39 @@
 }
 
 .dark {
-  --background: #0b1120;
-  --foreground: #faf8f2;
-  --card: rgba(18, 24, 40, 0.82);
-  --card-foreground: #faf8f2;
-  --popover: #121828;
-  --popover-foreground: #faf8f2;
-  --primary: #d4af5a;
-  --primary-foreground: #0b1120;
-  --secondary: #3b82f6;
+  --background: #000000;
+  --foreground: #f7f1e3;
+  --card: rgba(22, 18, 14, 0.92);
+  --card-foreground: #f7f1e3;
+  --popover: #12100d;
+  --popover-foreground: #f7f1e3;
+  --primary: #d4af37;
+  --primary-foreground: #14110e;
+  --secondary: #3d5a80;
   --secondary-foreground: #ffffff;
-  --muted: #151b2c;
-  --muted-foreground: #a8b0bc;
-  --accent: #1a2236;
-  --accent-foreground: #faf8f2;
+  --muted: #1a1612;
+  --muted-foreground: #b8aea0;
+  --accent: #221c16;
+  --accent-foreground: #f7f1e3;
   --destructive: #fb7185;
-  --destructive-foreground: #0b1120;
-  --border: rgba(250, 248, 242, 0.1);
-  --input: rgba(250, 248, 242, 0.14);
-  --ring: #d4af5a;
-  --saffron: #f59e0b;
-  --navy: #0b1120;
-  --gold: #d4af5a;
+  --destructive-foreground: #14110e;
+  --border: rgba(247, 241, 227, 0.12);
+  --input: rgba(247, 241, 227, 0.14);
+  --ring: #f0c14b;
+  --saffron: #f0c14b;
+  --navy: #000000;
+  --gold: #d4af37;
   --rose: #d4a0a8;
-  --ivory: #faf8f2;
-  --ai: #818cf8;
-  --cosmic: #60a5fa;
+  --ivory: #f7f1e3;
+  --ai: #f0c14b;
+  --cosmic: #7aa2c9;
   --crimson: #fb7185;
-  --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.35);
-  --shadow-elevated: 0 28px 64px rgba(0, 0, 0, 0.5);
-  --shadow-gold: 0 14px 36px rgba(212, 175, 90, 0.2);
+  --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-elevated: 0 28px 64px rgba(0, 0, 0, 0.55);
+  --shadow-gold: 0 14px 36px rgba(212, 175, 55, 0.22);
   --shadow-rose: 0 12px 28px rgba(212, 160, 168, 0.16);
-  --shadow-dual: 0 16px 40px rgba(212, 175, 90, 0.14), 0 8px 24px rgba(37, 99, 235, 0.12);
-  --shadow-aurora: 0 0 50px rgba(129, 140, 248, 0.18), 0 0 90px rgba(37, 99, 235, 0.12);
+  --shadow-dual: 0 16px 40px rgba(212, 175, 55, 0.16), 0 8px 24px rgba(240, 193, 75, 0.08);
+  --shadow-aurora: 0 0 50px rgba(212, 175, 55, 0.16), 0 0 90px rgba(196, 122, 26, 0.1);
 }
 
 @theme inline {
@@ -244,7 +244,12 @@
   }
 
   .bg-brand-dual {
-    background-image: linear-gradient(135deg, var(--gold) 0%, #e0c070 42%, var(--temple-blue) 100%);
+    background-image: linear-gradient(
+      135deg,
+      var(--deep-saffron) 0%,
+      var(--gold) 55%,
+      #f0c14b 100%
+    );
   }
 
   .bg-compat-dual {
@@ -253,24 +258,40 @@
 
   .bg-aurora {
     background-image:
-      radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.28), transparent 50%),
-      radial-gradient(ellipse at 80% 30%, rgba(37, 99, 235, 0.22), transparent 45%),
-      radial-gradient(ellipse at 50% 80%, rgba(200, 162, 74, 0.16), transparent 50%);
+      radial-gradient(ellipse at 20% 20%, rgba(212, 175, 55, 0.22), transparent 50%),
+      radial-gradient(ellipse at 80% 30%, rgba(196, 122, 26, 0.16), transparent 45%),
+      radial-gradient(ellipse at 50% 80%, rgba(31, 58, 95, 0.12), transparent 50%);
   }
 
   .bg-brand-dual-soft {
     background-image: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--gold) 12%, transparent),
-      color-mix(in srgb, var(--temple-blue) 8%, transparent)
+      color-mix(in srgb, var(--gold) 14%, transparent),
+      color-mix(in srgb, var(--deep-saffron) 8%, transparent)
     );
   }
 
   .text-brand-dual {
-    background-image: linear-gradient(120deg, var(--gold) 0%, #e8c86a 45%, var(--temple-blue) 100%);
+    background-image: linear-gradient(
+      120deg,
+      var(--deep-saffron) 0%,
+      var(--gold) 50%,
+      #f0c14b 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  .text-brand-gold {
+    background-image: linear-gradient(120deg, #a66b12 0%, var(--gold) 45%, #e8c86a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .dark .text-brand-gold {
+    background-image: linear-gradient(120deg, #f0c14b 0%, var(--gold) 50%, #ffe08a 100%);
   }
 
   .text-ai-gradient {
@@ -306,7 +327,7 @@
   }
 
   .mandala-bg {
-    background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='80' cy='80' r='70' stroke='%23C8A24A' stroke-opacity='0.16'/%3E%3Ccircle cx='80' cy='80' r='52' stroke='%232563EB' stroke-opacity='0.12'/%3E%3Ccircle cx='80' cy='80' r='34' stroke='%23C8A24A' stroke-opacity='0.12'/%3E%3Cpath d='M80 10 L90 80 L80 150 L70 80 Z' stroke='%23C8A24A' stroke-opacity='0.14'/%3E%3Cpath d='M10 80 L80 90 L150 80 L80 70 Z' stroke='%232563EB' stroke-opacity='0.12'/%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='80' cy='80' r='70' stroke='%23D4AF37' stroke-opacity='0.18'/%3E%3Ccircle cx='80' cy='80' r='52' stroke='%23C47A1A' stroke-opacity='0.12'/%3E%3Ccircle cx='80' cy='80' r='34' stroke='%23D4AF37' stroke-opacity='0.12'/%3E%3Cpath d='M80 10 L90 80 L80 150 L70 80 Z' stroke='%23D4AF37' stroke-opacity='0.14'/%3E%3Cpath d='M10 80 L80 90 L150 80 L80 70 Z' stroke='%23C47A1A' stroke-opacity='0.12'/%3E%3C/g%3E%3C/svg%3E");
   }
 
   .skeleton-shimmer {

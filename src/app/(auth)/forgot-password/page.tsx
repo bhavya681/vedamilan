@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     setMessage(null);
     setLoading(true);
     const email = String(new FormData(event.currentTarget).get("email") || "");
-    const { error: resetError } = await authClient.forgetPassword({
+    const { error: resetError } = await authClient.requestPasswordReset({
       email,
       redirectTo: routes.resetPassword,
     });

@@ -7,11 +7,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth/client";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { authClient, useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,30 +22,67 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     const form = new FormData(event.currentTarget);
-    const name = String(form.get("name") || "");
-    const email = String(form.get("email") || "");
-    const phone = String(form.get("phone") || "");
+    const name = String(form.get("name") || "").trim();
+    const email = String(form.get("email") || "").trim();
+    const phone = String(form.get("phone") || "").trim();
     const password = String(form.get("password") || "");
 
-    const { error: signUpError } = await authClient.signUp.email({
+    const { data, error: signUpError } = await authClient.signUp.email({
       email,
       password,
       name,
+      ...(phone ? { phone } : {}),
       callbackURL: routes.dashboard,
     });
 
-    setLoading(false);
     if (signUpError) {
+      setLoading(false);
       setError(signUpError.message || "Unable to create account");
       return;
     }
 
-    // Persist phone on profile via upcoming Module 3; store hint locally for verify flow.
-    if (phone) {
-      sessionStorage.setItem("vedamilan.pendingPhone", phone);
+    if (!data?.user) {
+      const { error: signInError } = await authClient.signIn.email({
+        email,
+        password,
+        callbackURL: routes.dashboard,
+      });
+      if (signInError) {
+        setLoading(false);
+        setError(signInError.message || "Account created — please sign in");
+        router.push(routes.login);
+        return;
+      }
     }
-    router.push(routes.verifyEmail);
+
+    setLoading(false);
+    router.push(routes.dashboard);
     router.refresh();
+  }
+
+  if (isPending) {
+    return <p className="text-muted-foreground text-sm">Checking session…</p>;
+  }
+
+  if (session?.user) {
+    return (
+      <div className="space-y-4">
+        <h1 className="font-display text-2xl">You&apos;re already signed in</h1>
+        <p className="text-muted-foreground text-sm">
+          Signed in as <span className="text-foreground font-medium">{session.user.email}</span>.
+          Open your workspace, or sign out to create a different account.
+        </p>
+        <Button asChild className="w-full">
+          <Link href={routes.dashboard}>Go to dashboard</Link>
+        </Button>
+        <SignOutButton className="w-full" label="Sign out to register another account" />
+        <p className="text-muted-foreground text-center text-sm">
+          <Link href={routes.home} className="text-primary hover:underline">
+            Back to home
+          </Link>
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -62,8 +101,8 @@ export default function RegisterPage() {
           <Input id="email" name="email" type="email" autoComplete="email" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" type="tel" autoComplete="tel" required />
+          <Label htmlFor="phone">Phone (optional)</Label>
+          <Input id="phone" name="phone" type="tel" autoComplete="tel" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>

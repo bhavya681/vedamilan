@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin, emailOTP, phoneNumber } from "better-auth/plugins";
+import { admin, emailOTP } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import type { Db, MongoClient } from "mongodb";
 
@@ -77,8 +77,14 @@ function createAuth(db: Db, client: MongoClient) {
         // Built-in roles only unless custom access control (`ac` + `roles`) is defined
         adminRoles: ["admin"],
       }),
+      // Kept for email-verification / forgot-password OTP — passwordless login is disabled in UI
       emailOTP({
+        disableSignUp: true,
         async sendVerificationOTP({ email, otp, type }) {
+          if (type === "sign-in") {
+            logger.info({ email }, "OTP sign-in disabled — ignoring request");
+            return;
+          }
           logger.info({ email, type }, "Email OTP generated");
           if (process.env.NODE_ENV !== "production") {
             console.info(`[dev] Email OTP (${type}) for ${email}: ${otp}`);
@@ -86,19 +92,6 @@ function createAuth(db: Db, client: MongoClient) {
         },
         otpLength: 6,
         expiresIn: 600,
-      }),
-      phoneNumber({
-        sendOTP: async ({ phoneNumber: phone, code }) => {
-          logger.info({ phone }, "SMS OTP generated");
-          if (process.env.NODE_ENV !== "production") {
-            console.info(`[dev] SMS OTP for ${phone}: ${code}`);
-          }
-        },
-        otpLength: 6,
-        expiresIn: 600,
-        signUpOnVerification: {
-          getTempEmail: (phone) => `${phone.replace(/\D/g, "")}@phone.vedamilan.ai`,
-        },
       }),
       nextCookies(),
     ],

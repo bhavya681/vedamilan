@@ -42,7 +42,13 @@ export class CompatibilityService {
 
     const dashaA = await Dasha.findOne({ userId: userAId }).sort({ calculatedAt: -1 }).lean();
     const windows = computeMarriageWindows(
-      (dashaA?.periods as never[]) || [],
+      (dashaA?.periods as unknown as Array<{
+        lord: string;
+        startDate: Date | string;
+        endDate: Date | string;
+        level: string;
+        parentLord?: string | null;
+      }>) || [],
       chartA.manglikStatus || "UNKNOWN",
     );
 
@@ -106,7 +112,13 @@ export class CompatibilityService {
       throw new NotFoundError("Generate kundli and dasha before marriage timing");
     }
     const windows = computeMarriageWindows(
-      (dasha.periods as never[]) || [],
+      (dasha.periods as unknown as Array<{
+        lord: string;
+        startDate: Date | string;
+        endDate: Date | string;
+        level: string;
+        parentLord?: string | null;
+      }>) || [],
       chart.manglikStatus || "UNKNOWN",
     );
     return { windows, manglikStatus: chart.manglikStatus, currentMaha: dasha.currentMaha };

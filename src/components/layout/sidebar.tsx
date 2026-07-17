@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { dashboardNav } from "@/config/navigation";
-import { brand } from "@/lib/constants/brand";
+import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 export function Sidebar({ className }: { className?: string }) {
@@ -20,8 +22,8 @@ export function Sidebar({ className }: { className?: string }) {
       aria-label="Dashboard sidebar"
     >
       <div className="mb-8 px-2">
-        <p className="font-display text-brand-dual text-xl">{brand.shortName}</p>
-        <p className="text-muted-foreground text-xs">Relationship intelligence</p>
+        <BrandLogo href={routes.dashboard} size="sm" />
+        <p className="text-muted-foreground mt-1.5 text-xs">Relationship intelligence</p>
       </div>
       <nav className="space-y-5">
         {groups.map((group) => (
@@ -58,6 +60,15 @@ export function Sidebar({ className }: { className?: string }) {
           </div>
         ))}
       </nav>
+      <div className="mt-8 space-y-2 px-2">
+        <Link
+          href={routes.settings}
+          className="text-muted-foreground hover:text-foreground block px-3 text-sm"
+        >
+          Account settings
+        </Link>
+        <SignOutButton className="w-full" redirectTo={routes.home} />
+      </div>
     </aside>
   );
 }
