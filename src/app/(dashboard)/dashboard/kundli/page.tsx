@@ -7,6 +7,13 @@ import { PageHeader } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  EastIndianKundli,
+  isNorthChart,
+  isSouthChart,
+  NorthIndianKundli,
+  SouthIndianKundli,
+} from "@/features/horoscope/components/kundli-charts";
 import { routes } from "@/lib/constants/routes";
 
 type HoroscopePayload = {
@@ -17,6 +24,9 @@ type HoroscopePayload = {
     manglikStatus?: string;
     planets?: Array<{ planet: string; sign: string; house: number; nakshatra: string }>;
     yogas?: Array<{ name: string; category: string }>;
+    chartNorth?: unknown;
+    chartSouth?: unknown;
+    chartEast?: unknown;
     calculatedAt?: string;
   };
   dasha?: {
@@ -31,6 +41,7 @@ export default function KundliPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [style, setStyle] = useState<"north" | "south" | "east">("north");
 
   async function load() {
     const res = await fetch("/api/horoscope");
@@ -62,6 +73,11 @@ export default function KundliPage() {
   }
 
   const h = data?.horoscope;
+  const north = h?.chartNorth;
+  const south = h?.chartSouth;
+  const east = h?.chartEast;
+  const hasChart = isNorthChart(north) || isSouthChart(south);
+
   const links = [
     { t: "North Indian", h: routes.chartNorth },
     { t: "South Indian", h: routes.chartSouth },
@@ -124,6 +140,49 @@ export default function KundliPage() {
           </p>
         </GlassCard>
       )}
+
+      {hasChart ? (
+        <GlassCard className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-display text-xl">Birth chart</p>
+              <p className="text-muted-foreground text-sm">
+                Traditional kundli box · Su Mo Ma Me Ju Ve Sa Ra Ke
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["north", "North"],
+                  ["south", "South"],
+                  ["east", "East"],
+                ] as const
+              ).map(([key, label]) => (
+                <Button
+                  key={key}
+                  type="button"
+                  size="sm"
+                  variant={style === key ? "default" : "outline"}
+                  onClick={() => setStyle(key)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center py-2">
+            {style === "north" && isNorthChart(north) ? <NorthIndianKundli chart={north} /> : null}
+            {style === "south" && isSouthChart(south) ? <SouthIndianKundli chart={south} /> : null}
+            {style === "east" ? (
+              isSouthChart(east) ? (
+                <EastIndianKundli chart={east} />
+              ) : isSouthChart(south) ? (
+                <EastIndianKundli chart={south} />
+              ) : null
+            ) : null}
+          </div>
+        </GlassCard>
+      ) : null}
 
       {h?.planets?.length ? (
         <GlassCard>

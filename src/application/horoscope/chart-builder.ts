@@ -195,5 +195,6 @@ export function buildSouthChart(planets: ChartPlanet[], lagnaSignId: number) {
 }
 
 export function buildEastChart(planets: ChartPlanet[], lagnaSignId: number) {
-  return buildSouthChart(planets, lagnaSignId);
+  const south = buildSouthChart(planets, lagnaSignId);
+  return { ...south, style: "EAST" as const };
 }

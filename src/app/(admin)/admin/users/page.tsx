@@ -10,9 +10,12 @@ import {
 } from "@/components/ui/table";
 
 const users = [
-  { name: "Arjun Mehta", email: "arjun@example.com", plan: "Free", status: "Active" },
-  { name: "Aditi Sharma", email: "aditi@example.com", plan: "Sangam", status: "Active" },
-  { name: "Priya Nair", email: "priya@example.com", plan: "Essence", status: "Suspended" },
+  { name: "Aditi Sharma", email: "aditi.sharma@email.com", plan: "Sangam", status: "Active" },
+  { name: "Arjun Mehta", email: "arjun.mehta@email.com", plan: "Essence", status: "Active" },
+  { name: "Priya Nair", email: "priya.nair@email.com", plan: "Free", status: "Active" },
+  { name: "Kabir Iyer", email: "kabir.iyer@email.com", plan: "Sangam", status: "Active" },
+  { name: "Meera Joshi", email: "meera.joshi@email.com", plan: "Essence", status: "Active" },
+  { name: "Rohan Desai", email: "rohan.desai@email.com", plan: "Sangam", status: "Active" },
 ];
 
 export default function AdminUsersPage() {

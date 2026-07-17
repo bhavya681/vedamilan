@@ -1,35 +1,33 @@
-/** Realistic demo profiles for VedaMilan AI UI testing (fictional identities). */
+/** Realistic demo profiles for VedaMilan AI frontend demos. */
+
+import { DEMO_MATCHES, DEMO_PRIMARY } from "@/lib/mock/demo-profiles";
 
 export const mockUser = {
-  id: "usr_aditi_01",
-  name: "Aditi Sharma",
-  email: "aditi.sharma@email.com",
+  id: DEMO_PRIMARY.id,
+  name: DEMO_PRIMARY.name,
+  email: DEMO_PRIMARY.email,
   phone: "+91 98111 22034",
-  age: 28,
+  age: DEMO_PRIMARY.age,
   gender: "Female",
-  city: "Bengaluru",
-  state: "Karnataka",
-  religion: "Hindu",
-  caste: "Brahmin",
-  motherTongue: "Hindi",
-  profession: "Software Engineer",
-  company: "Flipkart",
-  education: "B.E. Computer Science, BITS Pilani",
+  city: DEMO_PRIMARY.city,
+  state: DEMO_PRIMARY.state,
+  religion: DEMO_PRIMARY.religion,
+  caste: DEMO_PRIMARY.community,
+  motherTongue: DEMO_PRIMARY.motherTongue,
+  profession: DEMO_PRIMARY.profession,
+  company: DEMO_PRIMARY.company ?? "",
+  education: DEMO_PRIMARY.education,
   height: "5'5\"",
   maritalStatus: "Never Married",
-  about:
-    "Backend engineer who starts mornings with yoga and Sunday temple visits with family. Looking for a grounded partner who values honesty, shared meals, and calm conversations about the future.",
-  photos: [
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
-  ],
+  about: DEMO_PRIMARY.about,
+  photos: [DEMO_PRIMARY.photo],
   membership: "Sangam Premium",
   profileStrength: 88,
   verified: true,
 };
 
 export const mockBirthDetails = {
-  date: "1997-08-14",
+  date: DEMO_PRIMARY.dateOfBirth,
   time: "06:42",
   place: "Jaipur, Rajasthan, India",
   latitude: 26.9124,
@@ -55,183 +53,22 @@ export const mockPreferences = {
   drinking: "Occasionally",
 };
 
-export const mockMatches = [
-  {
-    id: "m_arjun",
-    name: "Arjun Mehta",
-    age: 31,
-    city: "Bengaluru",
-    profession: "Architect",
-    company: "Studio Aakaar",
-    education: "B.Arch, CEPT Ahmedabad",
-    score: 92,
-    aiScore: 89,
-    guna: 30.5,
-    manglik: "No",
-    headline:
-      "Moon–Venus harmony with aligned family values and overlapping career windows in 2026.",
-    photo:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
-    lastActive: "2h ago",
-  },
-  {
-    id: "m_kabir",
-    name: "Kabir Iyer",
-    age: 30,
-    city: "Hyderabad",
-    profession: "Product Manager",
-    company: "Microsoft",
-    education: "MBA, ISB Hyderabad",
-    score: 88,
-    aiScore: 91,
-    guna: 28,
-    manglik: "No",
-    headline:
-      "Strong communication compatibility with complementary dasha periods for introductions.",
-    photo:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
-    lastActive: "5h ago",
-  },
-  {
-    id: "m_rohan",
-    name: "Rohan Desai",
-    age: 32,
-    city: "Mumbai",
-    profession: "Founder",
-    company: "Lumen Health",
-    education: "B.Com, SRCC Delhi",
-    score: 85,
-    aiScore: 84,
-    guna: 27.5,
-    manglik: "Partial",
-    headline: "High values alignment; recommend detailed Nadi review before family introduction.",
-    photo:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80",
-    lastActive: "Yesterday",
-  },
-  {
-    id: "m_vihaan",
-    name: "Vihaan Reddy",
-    age: 33,
-    city: "Bengaluru",
-    profession: "Cardiologist",
-    company: "Apollo Hospitals",
-    education: "MD, AIIMS Delhi",
-    score: 83,
-    aiScore: 82,
-    guna: 26.5,
-    manglik: "No",
-    headline: "Stable Saturn support for long-term bonding; schedules may need intentional pacing.",
-    photo:
-      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=800&q=80",
-    lastActive: "3d ago",
-  },
-  {
-    id: "m_priya",
-    name: "Priya Nair",
-    age: 27,
-    city: "Chennai",
-    profession: "Content Creator",
-    company: "Independent",
-    education: "M.A. Journalism, MICA",
-    score: 90,
-    aiScore: 88,
-    guna: 31,
-    manglik: "No",
-    headline:
-      "Warm Venus themes with travel-friendly dasha windows and shared spiritual curiosity.",
-    photo:
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80",
-    lastActive: "4h ago",
-  },
-  {
-    id: "m_meera",
-    name: "Meera Joshi",
-    age: 28,
-    city: "Pune",
-    profession: "Chartered Accountant",
-    company: "Deloitte",
-    education: "CA, ICAI",
-    score: 86,
-    aiScore: 85,
-    guna: 28.5,
-    manglik: "No",
-    headline: "Steady 7th-house support with shared preference for calm family routines.",
-    photo:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80",
-    lastActive: "6h ago",
-  },
-  {
-    id: "m_ananya",
-    name: "Ananya Banerjee",
-    age: 29,
-    city: "Kolkata",
-    profession: "Civil Lawyer",
-    company: "Independent practice",
-    education: "LL.B, NUJS Kolkata",
-    score: 84,
-    aiScore: 86,
-    guna: 27,
-    manglik: "No",
-    headline:
-      "Strong Mercury rapport for honest dialogue; good timing for thoughtful introductions.",
-    photo:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
-    lastActive: "12h ago",
-  },
-  {
-    id: "m_nikhil",
-    name: "Nikhil Kapoor",
-    age: 34,
-    city: "Delhi NCR",
-    profession: "UX Lead",
-    company: "Swiggy",
-    education: "M.Des, IDC IIT Bombay",
-    score: 81,
-    aiScore: 83,
-    guna: 25.5,
-    manglik: "Partial",
-    headline: "Creative Venus themes with grounded family expectations—worth a guided consult.",
-    photo:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80",
-    lastActive: "2d ago",
-  },
-  {
-    id: "m_isha",
-    name: "Isha Menon",
-    age: 30,
-    city: "Kochi",
-    profession: "Data Scientist",
-    company: "Amazon",
-    education: "M.Tech, NIT Calicut",
-    score: 89,
-    aiScore: 87,
-    guna: 29.5,
-    manglik: "No",
-    headline: "Clear values overlap and supportive Moon dasha for relationship building.",
-    photo:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
-    lastActive: "8h ago",
-  },
-  {
-    id: "m_dev",
-    name: "Dev Malhotra",
-    age: 29,
-    city: "Chandigarh",
-    profession: "Staff Engineer",
-    company: "Google",
-    education: "B.Tech, IIT Delhi",
-    score: 87,
-    aiScore: 90,
-    guna: 29,
-    manglik: "No",
-    headline:
-      "Creative lifestyles resonate; Jupiter transit favors sincere conversations this quarter.",
-    photo:
-      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80",
-    lastActive: "1d ago",
-  },
-];
+export const mockMatches = DEMO_MATCHES.map((m) => ({
+  id: m.id,
+  name: m.name,
+  age: m.age,
+  city: m.city,
+  profession: m.profession,
+  company: m.company ?? "",
+  education: m.education,
+  score: m.score,
+  aiScore: m.aiScore,
+  guna: m.guna,
+  manglik: m.manglik,
+  headline: m.matchHeadline,
+  photo: m.photo,
+  lastActive: m.lastActive,
+}));
 
 export const mockPlanets = [
   {
@@ -474,7 +311,7 @@ export const mockGunaMilan = [
 export const mockAiInsights = [
   {
     id: "ai_1",
-    title: "Why Rohan ranks #1 this week",
+    title: "Why Arjun ranks #1 this week",
     body: "Shared Leo lagna dynamics with complementary Moon signs create emotional fluency. Career timelines overlap in late 2026—ideal for sincere introductions.",
     confidence: 91,
     tags: ["Matchmaking", "Timing"],
@@ -498,7 +335,7 @@ export const mockAiInsights = [
 export const mockConversations = [
   {
     id: "c1",
-    name: "Rohan Mehta",
+    name: "Arjun Mehta",
     preview: "Would love to hear what traditions feel meaningful in your home.",
     time: "10:24",
     unread: 2,
@@ -513,7 +350,7 @@ export const mockConversations = [
       {
         id: "2",
         from: "me",
-        text: "Thank you, Rohan. I appreciated your note on family rituals.",
+        text: "Thank you, Arjun. I appreciated your note on family rituals.",
         time: "09:40",
       },
       {
@@ -548,7 +385,7 @@ export const mockConversations = [
   },
   {
     id: "c3",
-    name: "Dev Kapoor",
+    name: "Dev Malhotra",
     preview: "Coffee next weekend in Indiranagar?",
     time: "Mon",
     unread: 0,
@@ -575,7 +412,7 @@ export const mockNotifications = [
   {
     id: "n2",
     type: "message",
-    title: "Rohan replied",
+    title: "Arjun replied",
     body: "Would love to hear what traditions feel meaningful…",
     time: "1h ago",
     read: false,
@@ -819,17 +656,17 @@ export const mockHoroscopeDaily = {
 };
 
 export const mockVisitors = [
-  { name: "Rohan Mehta", city: "Bengaluru", when: "35m ago", score: 92 },
+  { name: "Arjun Mehta", city: "Bengaluru", when: "35m ago", score: 92 },
   { name: "Kabir Iyer", city: "Hyderabad", when: "2h ago", score: 88 },
   { name: "Vihaan Reddy", city: "Bengaluru", when: "Yesterday", score: 83 },
 ];
 
 export const mockLikes = [
   { name: "Isha Nair", city: "Chennai", mutual: true, score: 90 },
-  { name: "Dev Kapoor", city: "Delhi NCR", mutual: false, score: 87 },
+  { name: "Dev Malhotra", city: "Chandigarh", mutual: false, score: 87 },
 ];
 
 export const mockShortlisted = [
-  { name: "Rohan Mehta", note: "Family intro pending chart share", score: 92 },
+  { name: "Arjun Mehta", note: "Family intro pending chart share", score: 92 },
   { name: "Kabir Iyer", note: "Strong AI coach suggestions", score: 88 },
 ];
