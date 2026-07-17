@@ -7,6 +7,9 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { getSession } from "@/lib/auth/session";
 import { routes } from "@/lib/constants/routes";
 
+/** Session check uses MongoDB — skip static prerender during Vercel build */
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session?.user) {
