@@ -79,7 +79,7 @@ export default function KundliPage() {
     }
     setData(json.data);
     setMessage(
-      "Chart regenerated with sidereal Lahiri ayanamsa (AstroSage-style). Compare Lagna & Moon signs.",
+      "Chart regenerated (sidereal Lahiri · whole-sign houses). Venus/Ketu in the same rashi now share one house.",
     );
   }
 

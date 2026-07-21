@@ -81,8 +81,10 @@ export function KundliChartPage({
             <ul className="text-muted-foreground list-inside list-disc space-y-2 text-sm">
               {pick === "chartNorth" ? (
                 <>
-                  <li>House numbers (1–12) — House 1 / Asc is always at the top.</li>
-                  <li>Planets sit in their bhava with degree in sign.</li>
+                  <li>
+                    House 1 / Asc always at top; count anti-clockwise (4 left, 7 bottom, 10 right).
+                  </li>
+                  <li>Same-sign planets share one house (whole-sign from Lagna).</li>
                   <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
                 </>
               ) : pick === "chartSouth" ? (
@@ -93,8 +95,8 @@ export function KundliChartPage({
                 </>
               ) : (
                 <>
-                  <li>House-numbered diamond (East style) from Lagna.</li>
-                  <li>Planets placed in the matching house with degree.</li>
+                  <li>Fixed rashis — Aries at top; count houses anti-clockwise from Lagna.</li>
+                  <li>Corner number = house from Asc; planets sit in their sign.</li>
                   <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retrograde.</li>
                 </>
               )}

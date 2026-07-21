@@ -6,9 +6,9 @@ import {
   dignityForPlanet,
   dignityMark,
   formatDegreeInSign,
-  houseFromLongitude,
   longitudeToNakshatra,
   longitudeToSign,
+  wholeSignHouse,
 } from "./vedic-constants";
 
 const DISPLAY_NAMES: Record<PlanetKey, string> = {
@@ -101,6 +101,7 @@ export function buildPlanetRows(
   positions: Record<PlanetKey, PlanetPosition>,
   lagnaLongitude: number,
 ): ChartPlanet[] {
+  const lagna = longitudeToSign(lagnaLongitude);
   return (Object.keys(positions) as PlanetKey[]).map((key) => {
     const pos = positions[key];
     const sign = longitudeToSign(pos.longitude);
@@ -110,7 +111,8 @@ export function buildPlanetRows(
       planet: name,
       sign: sign.sign,
       signId: sign.signId,
-      house: houseFromLongitude(pos.longitude, lagnaLongitude),
+      // Rasi / AstroSage D1: whole-sign houses from Lagna rashi (not equal bhava from degree)
+      house: wholeSignHouse(sign.signId, lagna.signId),
       longitude: sign.longitude,
       latitude: pos.latitude,
       speed: pos.speedLongitude,
@@ -335,43 +337,47 @@ export function buildNorthChart(planets: ChartPlanet[], lagnaSignId: number, lag
   for (let i = 1; i <= 12; i += 1) houses[String(i)] = [];
   for (const p of planets) {
     if (!CLASSICAL.has(p.planet)) continue;
-    const key = String(p.house);
-    const bucket = houses[key] ?? (houses[key] = []);
-    bucket.push(toPlanetGlyph(p));
+    // Always derive from sign vs Lagna so same-rashi planets stay together
+    const houseNo = wholeSignHouse(p.signId, lagnaSignId);
+    const bucket = houses[String(houseNo)] ?? (houses[String(houseNo)] = []);
+    bucket.push({ ...toPlanetGlyph(p), house: houseNo });
   }
-  // Sort by degree within house for stable reading
   for (const key of Object.keys(houses)) {
     houses[key]?.sort((a, b) => a.degreeValue - b.degreeValue);
   }
+  const deg = Math.floor(lagnaDegree);
+  const min = Math.floor((lagnaDegree - deg) * 60);
   return {
     style: "NORTH" as const,
     lagnaSignId,
     lagnaDegree,
-    lagnaLabel: `Asc ${Math.floor(lagnaDegree)}°${String(Math.floor((lagnaDegree % 1) * 60)).padStart(2, "0")}'`,
+    lagnaLabel: `Asc ${deg}°${String(min).padStart(2, "0")}'`,
     houses,
   };
 }
 
 export function buildSouthChart(planets: ChartPlanet[], lagnaSignId: number, lagnaDegree = 0) {
+  const deg = Math.floor(lagnaDegree);
+  const min = Math.floor((lagnaDegree - deg) * 60);
   return {
     style: "SOUTH" as const,
     lagnaSignId,
     lagnaDegree,
-    lagnaLabel: `Asc ${Math.floor(lagnaDegree)}°${String(Math.floor((lagnaDegree % 1) * 60)).padStart(2, "0")}'`,
+    lagnaLabel: `Asc ${deg}°${String(min).padStart(2, "0")}'`,
     signs: SIGNS.map((sign, idx) => ({
       sign,
       signId: idx,
-      house: ((idx - lagnaSignId + 12) % 12) + 1,
+      house: wholeSignHouse(idx, lagnaSignId),
       planets: planets
         .filter((p) => p.signId === idx && CLASSICAL.has(p.planet))
-        .map(toPlanetGlyph)
+        .map((p) => ({ ...toPlanetGlyph(p), house: wholeSignHouse(idx, lagnaSignId) }))
         .sort((a, b) => a.degreeValue - b.degreeValue),
     })),
   };
 }
 
+/** East Indian diamond: fixed rashis; house number = count from Lagna sign. */
 export function buildEastChart(planets: ChartPlanet[], lagnaSignId: number, lagnaDegree = 0) {
-  // East diamond uses house-fixed layout (like North) — numbers = houses from Lagna
-  const north = buildNorthChart(planets, lagnaSignId, lagnaDegree);
-  return { ...north, style: "EAST" as const };
+  const south = buildSouthChart(planets, lagnaSignId, lagnaDegree);
+  return { ...south, style: "EAST" as const };
 }

@@ -110,9 +110,20 @@ export function longitudeToNakshatra(longitude: number) {
   };
 }
 
+/** Equal-house bhava from exact Lagna degree (Chalit-style span). */
 export function houseFromLongitude(longitude: number, lagnaLongitude: number): number {
   const norm = (longitude - lagnaLongitude + 360) % 360;
   return Math.floor(norm / 30) + 1;
+}
+
+/**
+ * Whole-sign house (Rasi / AstroSage D1): every planet in a rashi shares one house from Lagna.
+ * House 1 = Lagna sign; House 2 = next sign, etc.
+ */
+export function wholeSignHouse(planetSignId: number, lagnaSignId: number): number {
+  const p = ((planetSignId % 12) + 12) % 12;
+  const l = ((lagnaSignId % 12) + 12) % 12;
+  return ((p - l + 12) % 12) + 1;
 }
 
 export function dignityForPlanet(planet: string, sign: string): string {

@@ -7,6 +7,7 @@ import {
   houseFromLongitude,
   longitudeToNakshatra,
   longitudeToSign,
+  wholeSignHouse,
 } from "@/application/horoscope/vedic-constants";
 import {
   detectManglik,
@@ -25,9 +26,45 @@ describe("Module 4 — Vedic math", () => {
     expect(longitudeToNakshatra(0).nakshatraPada).toBe(1);
   });
 
-  it("computes houses from lagna", () => {
+  it("computes equal and whole-sign houses", () => {
     expect(houseFromLongitude(10, 0)).toBe(1);
     expect(houseFromLongitude(40, 0)).toBe(2);
+    // Same rashi → same whole-sign house from Lagna (AstroSage D1)
+    expect(wholeSignHouse(6, 0)).toBe(7); // Libra from Aries Lagna = H7
+    expect(wholeSignHouse(6, 6)).toBe(1); // Libra Lagna → Libra = H1
+  });
+
+  it("keeps same-sign planets in one north-chart house", () => {
+    const lagnaSignId = 0; // Aries
+    const positions = {
+      sun: { longitude: 10, latitude: 0, distance: 1, speedLongitude: 1 },
+      moon: { longitude: 40, latitude: 0, distance: 1, speedLongitude: 13 },
+      mercury: { longitude: 20, latitude: 0, distance: 1, speedLongitude: 1 },
+      venus: { longitude: 185, latitude: 0, distance: 1, speedLongitude: 1 }, // Libra
+      mars: { longitude: 80, latitude: 0, distance: 1, speedLongitude: 0.5 },
+      jupiter: { longitude: 100, latitude: 0, distance: 1, speedLongitude: 0.1 },
+      saturn: { longitude: 220, latitude: 0, distance: 1, speedLongitude: 0.05 },
+      uranus: { longitude: 1, latitude: 0, distance: 1, speedLongitude: 0 },
+      neptune: { longitude: 2, latitude: 0, distance: 1, speedLongitude: 0 },
+      pluto: { longitude: 3, latitude: 0, distance: 1, speedLongitude: 0 },
+      rahu: { longitude: 5, latitude: 0, distance: 1, speedLongitude: -0.05 },
+      ketu: { longitude: 200, latitude: 0, distance: 1, speedLongitude: -0.05 }, // Libra
+    } as Record<PlanetKey, PlanetPosition>;
+
+    const rows = buildPlanetRows(positions, 5); // late Aries Lagna degree
+    const venus = rows.find((p) => p.planet === "Venus")!;
+    const ketu = rows.find((p) => p.planet === "Ketu")!;
+    expect(venus.sign).toBe("Libra");
+    expect(ketu.sign).toBe("Libra");
+    expect(venus.house).toBe(ketu.house);
+    expect(venus.house).toBe(wholeSignHouse(6, lagnaSignId));
+
+    const north = buildNorthChart(rows, lagnaSignId, 5);
+    const names = (north.houses[String(venus.house)] || []).map((g) =>
+      typeof g === "string" ? g : g.planet,
+    );
+    expect(names).toContain("Venus");
+    expect(names).toContain("Ketu");
   });
 
   it("marks ucch / neech dignity and formats degree", () => {
