@@ -129,12 +129,14 @@ export function GuruChartPanels({
         <Tabs defaultValue="yogas" className="w-full">
           <div className="border-border/40 border-b px-3 pt-3 sm:px-4">
             <TabsList className="mb-0 flex h-auto w-full [scrollbar-width:none] justify-start gap-1 overflow-x-auto bg-transparent p-0 [&::-webkit-scrollbar]:hidden">
-              {[
-                ["yogas", "Yogas"],
-                ["dasha", "Dasha"],
-                ["gochar", "Gochar"],
-                ["planets", "Planets"],
-              ].map(([value, label]) => (
+              {(
+                [
+                  ["yogas", "Yogas"],
+                  ["dasha", "Dasha"],
+                  ["gochar", "Gochar"],
+                  ["planets", "Planets"],
+                ] as const
+              ).map(([value, label]) => (
                 <TabsTrigger
                   key={value}
                   value={value}

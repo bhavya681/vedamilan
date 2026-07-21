@@ -134,9 +134,9 @@ export class HoroscopeService {
       yogas,
       doshas,
       manglikStatus: manglik.status,
-      chartNorth: buildNorthChart(planets, lagna.signId),
-      chartSouth: buildSouthChart(planets, lagna.signId),
-      chartEast: buildEastChart(planets, lagna.signId),
+      chartNorth: buildNorthChart(planets, lagna.signId, lagna.degreeInSign),
+      chartSouth: buildSouthChart(planets, lagna.signId, lagna.degreeInSign),
+      chartEast: buildEastChart(planets, lagna.signId, lagna.degreeInSign),
       engineVersion: ENGINE_VERSION,
       calculatedAt: new Date(),
     });

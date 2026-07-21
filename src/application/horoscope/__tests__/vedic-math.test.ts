@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  dignityForPlanet,
+  dignityMark,
+  formatDegreeInSign,
   houseFromLongitude,
   longitudeToNakshatra,
   longitudeToSign,
 } from "@/application/horoscope/vedic-constants";
-import { detectManglik, buildPlanetRows } from "@/application/horoscope/chart-builder";
+import {
+  detectManglik,
+  buildPlanetRows,
+  buildNorthChart,
+} from "@/application/horoscope/chart-builder";
 import { computeVimshottari } from "@/application/horoscope/dasha-engine";
 import { parseBirthDateTime } from "@/application/horoscope/horoscope.service";
 import type { PlanetKey, PlanetPosition } from "@/lib/services/swiss-ephemeris";
@@ -21,6 +28,38 @@ describe("Module 4 — Vedic math", () => {
   it("computes houses from lagna", () => {
     expect(houseFromLongitude(10, 0)).toBe(1);
     expect(houseFromLongitude(40, 0)).toBe(2);
+  });
+
+  it("marks ucch / neech dignity and formats degree", () => {
+    expect(dignityForPlanet("Sun", "Aries")).toBe("Exalted");
+    expect(dignityForPlanet("Sun", "Libra")).toBe("Debilitated");
+    expect(dignityMark("Exalted")).toBe("↑");
+    expect(dignityMark("Debilitated")).toBe("↓");
+    expect(formatDegreeInSign(35.5)).toMatch(/5°/);
+  });
+
+  it("builds north chart glyphs into houses with Asc metadata", () => {
+    const rows = buildPlanetRows(
+      {
+        sun: { longitude: 10, latitude: 0, distance: 1, speedLongitude: 1 },
+        moon: { longitude: 40, latitude: 0, distance: 1, speedLongitude: 13 },
+        mercury: { longitude: 20, latitude: 0, distance: 1, speedLongitude: 1 },
+        venus: { longitude: 50, latitude: 0, distance: 1, speedLongitude: 1 },
+        mars: { longitude: 80, latitude: 0, distance: 1, speedLongitude: 0.5 },
+        jupiter: { longitude: 100, latitude: 0, distance: 1, speedLongitude: 0.1 },
+        saturn: { longitude: 200, latitude: 0, distance: 1, speedLongitude: 0.05 },
+        uranus: { longitude: 1, latitude: 0, distance: 1, speedLongitude: 0 },
+        neptune: { longitude: 2, latitude: 0, distance: 1, speedLongitude: 0 },
+        pluto: { longitude: 3, latitude: 0, distance: 1, speedLongitude: 0 },
+        rahu: { longitude: 120, latitude: 0, distance: 1, speedLongitude: -0.05 },
+        ketu: { longitude: 300, latitude: 0, distance: 1, speedLongitude: -0.05 },
+      } as Record<PlanetKey, PlanetPosition>,
+      0,
+    );
+    const north = buildNorthChart(rows, 0, 12.5);
+    expect(north.houses["1"]?.length).toBeGreaterThan(0);
+    expect(north.houses["1"]?.[0]?.degree).toBeTruthy();
+    expect(north.lagnaLabel).toContain("Asc");
   });
 
   it("detects manglik when Mars in 7th", () => {

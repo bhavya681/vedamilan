@@ -8,6 +8,7 @@ import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import {
   EastIndianKundli,
+  isEastChart,
   isNorthChart,
   isSouthChart,
   NorthIndianKundli,
@@ -34,7 +35,7 @@ export function KundliChartPage({
     body = <NorthIndianKundli chart={chart} />;
   } else if (pick === "chartSouth" && isSouthChart(chart)) {
     body = <SouthIndianKundli chart={chart} />;
-  } else if (pick === "chartEast" && isSouthChart(chart)) {
+  } else if (pick === "chartEast" && isEastChart(chart)) {
     body = <EastIndianKundli chart={chart} />;
   }
 
@@ -80,21 +81,21 @@ export function KundliChartPage({
             <ul className="text-muted-foreground list-inside list-disc space-y-2 text-sm">
               {pick === "chartNorth" ? (
                 <>
-                  <li>House 1 (Asc) is always at the top diamond.</li>
-                  <li>Houses run anti-clockwise around the chart.</li>
-                  <li>Planet abbreviations: Su Mo Ma Me Ju Ve Sa Ra Ke.</li>
+                  <li>House numbers (1–12) — House 1 / Asc is always at the top.</li>
+                  <li>Planets sit in their bhava with degree in sign.</li>
+                  <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
                 </>
               ) : pick === "chartSouth" ? (
                 <>
-                  <li>Signs are fixed — Aries is top row, second cell.</li>
-                  <li>Ascendant is highlighted in the lagna sign cell.</li>
-                  <li>Planets sit in their rashi (sign) boxes.</li>
+                  <li>Fixed rashis — Aries is top row, second cell.</li>
+                  <li>Corner number = house from Lagna; abbr = sign.</li>
+                  <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro with degree.</li>
                 </>
               ) : (
                 <>
-                  <li>Diamond layout with fixed zodiac signs.</li>
-                  <li>Ascendant is marked in the lagna sign.</li>
-                  <li>Common East-Indian / Bengali reading style.</li>
+                  <li>House-numbered diamond (East style) from Lagna.</li>
+                  <li>Planets placed in the matching house with degree.</li>
+                  <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retrograde.</li>
                 </>
               )}
             </ul>
@@ -116,10 +117,17 @@ export function KundliChartPage({
                   )
                   .map((p) => (
                     <div key={p.planet} className="text-sm">
-                      <span className="font-medium">{p.planet}</span>
+                      <span className="font-medium">
+                        {p.planet}
+                        {p.dignity === "Exalted" ? " ↑" : ""}
+                        {p.dignity === "Debilitated" ? " ↓" : ""}
+                        {p.dignity === "Own" ? " ◉" : ""}
+                        {p.isRetrograde ? " ℞" : ""}
+                      </span>
                       <span className="text-muted-foreground">
                         {" "}
                         · {p.sign} · H{p.house}
+                        {p.dignity && p.dignity !== "Neutral" ? ` · ${p.dignity}` : ""}
                       </span>
                     </div>
                   ))}

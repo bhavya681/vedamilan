@@ -125,6 +125,15 @@ export function dignityForPlanet(planet: string, sign: string): string {
     Venus: "Pisces",
     Saturn: "Libra",
   };
+  const debilitation: Record<string, string> = {
+    Sun: "Libra",
+    Moon: "Scorpio",
+    Mars: "Cancer",
+    Mercury: "Pisces",
+    Jupiter: "Capricorn",
+    Venus: "Virgo",
+    Saturn: "Aries",
+  };
   const own: Record<string, string[]> = {
     Sun: ["Leo"],
     Moon: ["Cancer"],
@@ -135,6 +144,23 @@ export function dignityForPlanet(planet: string, sign: string): string {
     Saturn: ["Capricorn", "Aquarius"],
   };
   if (exaltation[planet] === sign) return "Exalted";
+  if (debilitation[planet] === sign) return "Debilitated";
   if (own[planet]?.includes(sign)) return "Own";
   return "Neutral";
+}
+
+/** AstroSage-style dignity mark: Ucch ↑ · Neech ↓ · Own ◉ */
+export function dignityMark(dignity: string | null | undefined): string {
+  if (dignity === "Exalted") return "↑";
+  if (dignity === "Debilitated") return "↓";
+  if (dignity === "Own") return "◉";
+  return "";
+}
+
+export function formatDegreeInSign(longitude: number): string {
+  const deg = ((longitude % 360) + 360) % 360;
+  const inSign = deg % 30;
+  const d = Math.floor(inSign);
+  const m = Math.floor((inSign - d) * 60);
+  return `${d}°${String(m).padStart(2, "0")}'`;
 }

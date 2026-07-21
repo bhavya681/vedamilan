@@ -4,6 +4,8 @@ import {
   HOUSE_LORDS,
   SIGNS,
   dignityForPlanet,
+  dignityMark,
+  formatDegreeInSign,
   houseFromLongitude,
   longitudeToNakshatra,
   longitudeToSign,
@@ -37,6 +39,63 @@ export type ChartPlanet = {
   nakshatraPada: number;
   dignity: string | null;
 };
+
+/** Compact glyph stored inside chart boxes (AstroSage-style). */
+export type ChartPlanetGlyph = {
+  planet: string;
+  abbr: string;
+  label: string;
+  degree: string;
+  degreeValue: number;
+  dignity: string | null;
+  mark: string;
+  isRetrograde: boolean;
+  house: number;
+  signId: number;
+};
+
+const PLANET_ABBR: Record<string, string> = {
+  Sun: "Su",
+  Moon: "Mo",
+  Mars: "Ma",
+  Mercury: "Me",
+  Jupiter: "Ju",
+  Venus: "Ve",
+  Saturn: "Sa",
+  Rahu: "Ra",
+  Ketu: "Ke",
+};
+
+const CLASSICAL = new Set([
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Rahu",
+  "Ketu",
+]);
+
+export function toPlanetGlyph(p: ChartPlanet): ChartPlanetGlyph {
+  const abbr = PLANET_ABBR[p.planet] ?? p.planet.slice(0, 2);
+  const mark = dignityMark(p.dignity);
+  const degree = formatDegreeInSign(p.longitude);
+  const retro = p.isRetrograde ? "℞" : "";
+  return {
+    planet: p.planet,
+    abbr,
+    label: `${abbr}${mark}${retro}`,
+    degree,
+    degreeValue: (((p.longitude % 360) + 360) % 360) % 30,
+    dignity: p.dignity,
+    mark,
+    isRetrograde: p.isRetrograde,
+    house: p.house,
+    signId: p.signId,
+  };
+}
 
 export function buildPlanetRows(
   positions: Record<PlanetKey, PlanetPosition>,
@@ -271,30 +330,48 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
   });
 }
 
-export function buildNorthChart(planets: ChartPlanet[], lagnaSignId: number) {
-  const houses: Record<string, string[]> = {};
+export function buildNorthChart(planets: ChartPlanet[], lagnaSignId: number, lagnaDegree = 0) {
+  const houses: Record<string, ChartPlanetGlyph[]> = {};
   for (let i = 1; i <= 12; i += 1) houses[String(i)] = [];
   for (const p of planets) {
+    if (!CLASSICAL.has(p.planet)) continue;
     const key = String(p.house);
     const bucket = houses[key] ?? (houses[key] = []);
-    bucket.push(p.planet);
+    bucket.push(toPlanetGlyph(p));
   }
-  return { style: "NORTH", lagnaSignId, houses };
+  // Sort by degree within house for stable reading
+  for (const key of Object.keys(houses)) {
+    houses[key]?.sort((a, b) => a.degreeValue - b.degreeValue);
+  }
+  return {
+    style: "NORTH" as const,
+    lagnaSignId,
+    lagnaDegree,
+    lagnaLabel: `Asc ${Math.floor(lagnaDegree)}°${String(Math.floor((lagnaDegree % 1) * 60)).padStart(2, "0")}'`,
+    houses,
+  };
 }
 
-export function buildSouthChart(planets: ChartPlanet[], lagnaSignId: number) {
+export function buildSouthChart(planets: ChartPlanet[], lagnaSignId: number, lagnaDegree = 0) {
   return {
-    style: "SOUTH",
+    style: "SOUTH" as const,
     lagnaSignId,
+    lagnaDegree,
+    lagnaLabel: `Asc ${Math.floor(lagnaDegree)}°${String(Math.floor((lagnaDegree % 1) * 60)).padStart(2, "0")}'`,
     signs: SIGNS.map((sign, idx) => ({
       sign,
       signId: idx,
-      planets: planets.filter((p) => p.signId === idx).map((p) => p.planet),
+      house: ((idx - lagnaSignId + 12) % 12) + 1,
+      planets: planets
+        .filter((p) => p.signId === idx && CLASSICAL.has(p.planet))
+        .map(toPlanetGlyph)
+        .sort((a, b) => a.degreeValue - b.degreeValue),
     })),
   };
 }
 
-export function buildEastChart(planets: ChartPlanet[], lagnaSignId: number) {
-  const south = buildSouthChart(planets, lagnaSignId);
-  return { ...south, style: "EAST" as const };
+export function buildEastChart(planets: ChartPlanet[], lagnaSignId: number, lagnaDegree = 0) {
+  // East diamond uses house-fixed layout (like North) — numbers = houses from Lagna
+  const north = buildNorthChart(planets, lagnaSignId, lagnaDegree);
+  return { ...north, style: "EAST" as const };
 }

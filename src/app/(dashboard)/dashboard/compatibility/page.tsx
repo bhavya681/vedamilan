@@ -225,12 +225,14 @@ export default function CompatibilityPage() {
 
           <Tabs value={view} onValueChange={setView}>
             <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
-              {[
-                ["deep", "Deep modules"],
-                ["shukra", "Shukra Milan"],
-                ["guna", "Ashta Koota"],
-                ["scores", "Scoreboard"],
-              ].map(([value, label]) => (
+              {(
+                [
+                  ["deep", "Deep modules"],
+                  ["shukra", "Shukra Milan"],
+                  ["guna", "Ashta Koota"],
+                  ["scores", "Scoreboard"],
+                ] as const
+              ).map(([value, label]) => (
                 <TabsTrigger
                   key={value}
                   value={value}

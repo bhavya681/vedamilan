@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   EastIndianKundli,
+  isEastChart,
   isNorthChart,
   isSouthChart,
   NorthIndianKundli,
@@ -22,7 +23,15 @@ type HoroscopePayload = {
     moonSign?: string;
     sunSign?: string;
     manglikStatus?: string;
-    planets?: Array<{ planet: string; sign: string; house: number; nakshatra: string }>;
+    planets?: Array<{
+      planet: string;
+      sign: string;
+      house: number;
+      nakshatra: string;
+      dignity?: string | null;
+      isRetrograde?: boolean;
+      longitude?: number;
+    }>;
     yogas?: Array<{ name: string; category: string }>;
     chartNorth?: unknown;
     chartSouth?: unknown;
@@ -78,7 +87,7 @@ export default function KundliPage() {
   const north = h?.chartNorth;
   const south = h?.chartSouth;
   const east = h?.chartEast;
-  const hasChart = isNorthChart(north) || isSouthChart(south);
+  const hasChart = isNorthChart(north) || isSouthChart(south) || isEastChart(east);
 
   const links = [
     { t: "North Indian", h: routes.chartNorth },
@@ -175,13 +184,7 @@ export default function KundliPage() {
           <div className="flex justify-center py-2">
             {style === "north" && isNorthChart(north) ? <NorthIndianKundli chart={north} /> : null}
             {style === "south" && isSouthChart(south) ? <SouthIndianKundli chart={south} /> : null}
-            {style === "east" ? (
-              isSouthChart(east) ? (
-                <EastIndianKundli chart={east} />
-              ) : isSouthChart(south) ? (
-                <EastIndianKundli chart={south} />
-              ) : null
-            ) : null}
+            {style === "east" && isEastChart(east) ? <EastIndianKundli chart={east} /> : null}
           </div>
         </GlassCard>
       ) : null}
@@ -195,9 +198,16 @@ export default function KundliPage() {
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {h.planets.slice(0, 12).map((p) => (
               <div key={p.planet} className="border-border/50 rounded-xl border px-3 py-2 text-sm">
-                <p className="font-medium">{p.planet}</p>
+                <p className="font-medium">
+                  {p.planet}
+                  {p.dignity === "Exalted" ? " ↑" : ""}
+                  {p.dignity === "Debilitated" ? " ↓" : ""}
+                  {p.dignity === "Own" ? " ◉" : ""}
+                  {p.isRetrograde ? " ℞" : ""}
+                </p>
                 <p className="text-muted-foreground">
                   {p.sign} · H{p.house} · {p.nakshatra}
+                  {p.dignity && p.dignity !== "Neutral" ? ` · ${p.dignity}` : ""}
                 </p>
               </div>
             ))}

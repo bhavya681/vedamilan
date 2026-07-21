@@ -19,36 +19,42 @@ function moonFromChart(horoscope: {
 }
 
 function toDeepChart(horoscope: {
-  lagnaSign?: string;
-  moonSign?: string;
-  sunSign?: string;
-  manglikStatus?: string;
-  planets?: Array<Record<string, unknown>>;
-  houseLords?: Record<string, string> | Map<string, string> | null;
+  lagnaSign?: string | null;
+  moonSign?: string | null;
+  sunSign?: string | null;
+  manglikStatus?: string | null;
+  planets?: unknown;
+  houseLords?: unknown;
 }): DeepChartInput {
   const lordsRaw = horoscope.houseLords;
   const houseLords: Record<string, string> = {};
   if (lordsRaw instanceof Map) {
     for (const [k, v] of lordsRaw.entries()) houseLords[String(k)] = String(v);
   } else if (lordsRaw && typeof lordsRaw === "object") {
-    for (const [k, v] of Object.entries(lordsRaw)) houseLords[String(k)] = String(v);
+    for (const [k, v] of Object.entries(lordsRaw as Record<string, unknown>)) {
+      houseLords[String(k)] = String(v);
+    }
   }
 
-  const planets: ChartPlanetLite[] = (horoscope.planets || []).map((p) => ({
-    planet: String(p.planet || ""),
-    sign: String(p.sign || "Aries"),
-    house: Number(p.house || 1),
-    longitude: typeof p.longitude === "number" ? p.longitude : undefined,
-    isRetrograde: Boolean(p.isRetrograde),
-    dignity: (p.dignity as string | null | undefined) ?? null,
-    nakshatra: p.nakshatra ? String(p.nakshatra) : undefined,
-  }));
+  const rawPlanets = Array.isArray(horoscope.planets) ? horoscope.planets : [];
+  const planets: ChartPlanetLite[] = rawPlanets.map((item) => {
+    const p = item as Record<string, unknown>;
+    return {
+      planet: String(p.planet || ""),
+      sign: String(p.sign || "Aries"),
+      house: Number(p.house || 1),
+      longitude: typeof p.longitude === "number" ? p.longitude : undefined,
+      isRetrograde: Boolean(p.isRetrograde),
+      dignity: (p.dignity as string | null | undefined) ?? null,
+      nakshatra: p.nakshatra ? String(p.nakshatra) : undefined,
+    };
+  });
 
   return {
     lagnaSign: horoscope.lagnaSign || "Aries",
     moonSign: horoscope.moonSign || "Aries",
     sunSign: horoscope.sunSign || "Aries",
-    manglikStatus: horoscope.manglikStatus,
+    manglikStatus: horoscope.manglikStatus || undefined,
     planets,
     houseLords,
   };

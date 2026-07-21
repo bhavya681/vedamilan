@@ -236,11 +236,12 @@ export async function connectMongo(): Promise<typeof mongoose> {
 
   try {
     await globalForMongo.mongoosePromise;
-    if (mongoose.connection.readyState !== 1) {
+    const readyState = mongoose.connection.readyState as number;
+    if (readyState !== 1) {
       globalForMongo.mongoosePromise = undefined;
-      throw new Error(`MongoDB connect finished with readyState=${mongoose.connection.readyState}`);
+      throw new Error(`MongoDB connect finished with readyState=${readyState}`);
     }
-    logger.info({ readyState: mongoose.connection.readyState }, "MongoDB connected");
+    logger.info({ readyState }, "MongoDB connected");
     return mongoose;
   } catch (error) {
     globalForMongo.mongoosePromise = undefined;
