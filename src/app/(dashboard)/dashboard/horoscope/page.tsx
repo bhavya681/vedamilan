@@ -2,18 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Loader2, Sparkles } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { routes } from "@/lib/constants/routes";
 
 export default function HoroscopePage() {
   const [moonSign, setMoonSign] = useState<string | null>(null);
+  const [dasha, setDasha] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [scores, setScores] = useState({ love: 0, career: 0, health: 0, spirit: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -32,10 +37,14 @@ export default function HoroscopePage() {
       const ai = await aiRes.json();
       if (!chart.success || !chart.data?.horoscope) {
         setError("Generate your kundli to unlock daily horoscope guidance.");
+        setLoading(false);
         return;
       }
       const h = chart.data.horoscope;
       setMoonSign(h.moonSign);
+      const maha = chart.data.dasha?.currentMaha;
+      const antar = chart.data.dasha?.currentAntar;
+      setDasha(maha ? `${maha}${antar ? ` / ${antar}` : ""}` : null);
       const seed =
         (h.moonSign?.length || 0) +
         (chart.data.dasha?.currentMaha?.length || 0) +
@@ -51,8 +60,12 @@ export default function HoroscopePage() {
           ? ai.data.answer
           : `Moon in ${h.moonSign}. Review kundli and AI Insights for deeper guidance.`,
       );
+      setLoading(false);
     }
-    void load().catch(() => setError("Failed to load horoscope"));
+    void load().catch(() => {
+      setError("Failed to load horoscope");
+      setLoading(false);
+    });
   }, []);
 
   return (
@@ -62,9 +75,14 @@ export default function HoroscopePage() {
         title="Daily horoscope"
         description="Guidance grounded in your stored Vedic chart"
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.kundli}>Kundli</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href={routes.kundli}>Kundli</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.aiInsights}>Ask Guru</Link>
+            </Button>
+          </div>
         }
       />
       {error ? (
@@ -78,30 +96,69 @@ export default function HoroscopePage() {
           }
         />
       ) : (
-        <GlassCard glow>
-          <h2 className="font-display text-3xl">{moonSign || "…"} · Today</h2>
-          <p className="text-muted-foreground mt-4 text-sm leading-relaxed whitespace-pre-wrap">
-            {summary || "Loading…"}
-          </p>
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {(
-              [
-                ["Love", scores.love],
-                ["Career", scores.career],
-                ["Health", scores.health],
-                ["Spirit", scores.spirit],
-              ] as const
-            ).map(([label, value]) => (
-              <div key={label}>
-                <div className="mb-2 flex justify-between text-xs">
-                  <span className="text-muted-foreground">{label}</span>
-                  <span>{value}%</span>
+        <div className="space-y-4">
+          <GlassCard glow className="overflow-hidden p-0">
+            <div className="border-border/40 from-card via-card to-muted/25 relative border-b bg-gradient-to-r px-5 py-5 sm:px-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--gold)_14%,transparent),transparent_55%)]" />
+              <div className="relative flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Sparkles className="text-gold h-4 w-4" />
+                    <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
+                      Today&apos;s focus
+                    </p>
+                  </div>
+                  <h2 className="font-display mt-2 text-3xl tracking-tight sm:text-4xl">
+                    {moonSign || "…"} · Moon day
+                  </h2>
+                  {dasha ? (
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      Current dasha · <span className="text-foreground font-medium">{dasha}</span>
+                    </p>
+                  ) : null}
                 </div>
-                <Progress value={value} />
+                <Badge className="bg-primary/12 text-foreground hover:bg-primary/12 border-0">
+                  Chart-backed
+                </Badge>
               </div>
-            ))}
-          </div>
-        </GlassCard>
+            </div>
+
+            <div className="px-5 py-5 sm:px-6 sm:py-6">
+              {loading || !summary ? (
+                <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Preparing today&apos;s reading…
+                </div>
+              ) : (
+                <GuruMarkdown content={summary} tone="assistant" />
+              )}
+            </div>
+          </GlassCard>
+
+          <GlassCard>
+            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.16em] uppercase">
+              Day tone meters
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {(
+                [
+                  ["Love", scores.love],
+                  ["Career", scores.career],
+                  ["Health", scores.health],
+                  ["Spirit", scores.spirit],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label}>
+                  <div className="mb-2 flex justify-between text-xs">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="font-medium">{value}%</span>
+                  </div>
+                  <Progress value={value} className="h-1.5" />
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        </div>
       )}
     </div>
   );

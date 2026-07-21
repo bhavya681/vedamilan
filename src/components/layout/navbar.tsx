@@ -46,26 +46,36 @@ export function Navbar({
     <header
       className={cn(
         "z-40 transition-all duration-300",
-        isOverlay ? "fixed inset-x-0 top-0" : "sticky top-0",
+        isOverlay ? "fixed inset-x-0 top-0" : "relative",
         floating
           ? "border-transparent bg-transparent"
-          : "border-border/40 bg-background/75 border-b backdrop-blur-xl",
+          : "border-border/50 bg-background/90 dark:bg-background/85 border-b backdrop-blur-xl",
         className,
       )}
     >
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <div
+        className={cn(
+          "flex h-14 w-full items-center justify-between gap-3 px-4 sm:h-16 sm:px-5 lg:px-6",
+          !isDashboard && "mx-auto max-w-7xl lg:px-8",
+        )}
+      >
         <div className="flex min-w-0 items-center gap-2">
           {isDashboard ? <MobileDashboardMenu /> : null}
           <BrandLogo
             href={isAuthed ? routes.dashboard : routes.home}
             size="md"
             priority
-            className={floating ? "[&_span]:text-ivory" : undefined}
+            className={cn(floating ? "[&_span]:text-ivory" : undefined, isDashboard && "md:hidden")}
           />
+          {isDashboard ? (
+            <p className="text-muted-foreground hidden truncate text-sm font-medium md:block">
+              Workspace
+            </p>
+          ) : null}
         </div>
 
         {!isDashboard ? (
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-6 md:flex lg:gap-8" aria-label="Primary">
             {mainNav.map((item) => (
               <Link
                 key={item.href}
@@ -83,22 +93,22 @@ export function Navbar({
           </nav>
         ) : (
           <nav
-            className="text-muted-foreground hidden items-center gap-4 text-sm md:flex"
+            className="text-muted-foreground hidden items-center gap-4 text-sm lg:flex"
             aria-label="Quick"
           >
-            <Link href={routes.matches} className="hover:text-foreground">
+            <Link href={routes.matches} className="hover:text-foreground transition-colors">
               Matches
             </Link>
-            <Link href={routes.aiInsights} className="hover:text-foreground">
-              AI
+            <Link href={routes.aiInsights} className="hover:text-foreground transition-colors">
+              AI Insights
             </Link>
-            <Link href={routes.settings} className="hover:text-foreground">
+            <Link href={routes.settings} className="hover:text-foreground transition-colors">
               Settings
             </Link>
           </nav>
         )}
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <ThemeToggle
             className={cn(floating && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
           />
@@ -152,8 +162,8 @@ export function Navbar({
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="p-0">
-                <SheetHeader className="border-border/60 border-b p-4 text-left">
+              <SheetContent side="right" className="bg-background p-0">
+                <SheetHeader className="border-border/50 border-b p-4 text-left">
                   <SheetTitle>
                     <BrandLogo href={routes.home} size="sm" />
                   </SheetTitle>

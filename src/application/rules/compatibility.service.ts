@@ -3,7 +3,9 @@ import { connectMongo } from "@/infrastructure/database/mongodb";
 import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 import { pairKey, scoreAshtaKoota } from "./ashta-koota";
+import { scoreDeepCompatibility, type DeepChartInput } from "./deep-compatibility";
 import { computeMarriageWindows } from "./marriage-timing";
+import type { ChartPlanetLite } from "./shukra-milan";
 
 function moonFromChart(horoscope: {
   moonSign?: string;
@@ -13,6 +15,42 @@ function moonFromChart(horoscope: {
   return {
     moonSign: horoscope.moonSign || moon?.sign || "Aries",
     nakshatra: moon?.nakshatra || "Ashwini",
+  };
+}
+
+function toDeepChart(horoscope: {
+  lagnaSign?: string;
+  moonSign?: string;
+  sunSign?: string;
+  manglikStatus?: string;
+  planets?: Array<Record<string, unknown>>;
+  houseLords?: Record<string, string> | Map<string, string> | null;
+}): DeepChartInput {
+  const lordsRaw = horoscope.houseLords;
+  const houseLords: Record<string, string> = {};
+  if (lordsRaw instanceof Map) {
+    for (const [k, v] of lordsRaw.entries()) houseLords[String(k)] = String(v);
+  } else if (lordsRaw && typeof lordsRaw === "object") {
+    for (const [k, v] of Object.entries(lordsRaw)) houseLords[String(k)] = String(v);
+  }
+
+  const planets: ChartPlanetLite[] = (horoscope.planets || []).map((p) => ({
+    planet: String(p.planet || ""),
+    sign: String(p.sign || "Aries"),
+    house: Number(p.house || 1),
+    longitude: typeof p.longitude === "number" ? p.longitude : undefined,
+    isRetrograde: Boolean(p.isRetrograde),
+    dignity: (p.dignity as string | null | undefined) ?? null,
+    nakshatra: p.nakshatra ? String(p.nakshatra) : undefined,
+  }));
+
+  return {
+    lagnaSign: horoscope.lagnaSign || "Aries",
+    moonSign: horoscope.moonSign || "Aries",
+    sunSign: horoscope.sunSign || "Aries",
+    manglikStatus: horoscope.manglikStatus,
+    planets,
+    houseLords,
   };
 }
 
@@ -40,6 +78,14 @@ export class CompatibilityService {
       manglikB: chartB.manglikStatus || "UNKNOWN",
     });
 
+    const deep = scoreDeepCompatibility({
+      chartA: toDeepChart(chartA),
+      chartB: toDeepChart(chartB),
+      gunaBreakdown: scored.gunaBreakdown,
+      totalGuna: scored.totalGuna,
+      maxGuna: scored.maxGuna,
+    });
+
     const dashaA = await Dasha.findOne({ userId: userAId }).sort({ calculatedAt: -1 }).lean();
     const windows = computeMarriageWindows(
       (dashaA?.periods as unknown as Array<{
@@ -53,6 +99,13 @@ export class CompatibilityService {
     );
 
     const key = pairKey(userAId, userBId);
+    const mergedStrengths = [
+      ...new Set([...(deep.topStrengths || []).slice(0, 6), ...(scored.strengths || [])]),
+    ].slice(0, 12);
+    const mergedChallenges = [
+      ...new Set([...(deep.topChallenges || []).slice(0, 6), ...(scored.challenges || [])]),
+    ].slice(0, 12);
+
     const doc = await CompatibilityReport.findOneAndUpdate(
       { pairKey: key },
       {
@@ -66,9 +119,22 @@ export class CompatibilityService {
           manglikCompatibility: scored.manglikCompatibility,
           nadiDosha: scored.nadiDosha,
           bhakootDosha: scored.bhakootDosha,
-          overallScore: scored.overallScore,
-          strengths: scored.strengths,
-          challenges: scored.challenges,
+          overallScore: deep.overallScore,
+          deepOverallScore: deep.overallScore,
+          decisionSummary: deep.decisionSummary,
+          decisionReason: deep.decisionReason,
+          shukraMilan: deep.shukraMilan,
+          deepAnalysis: {
+            chartValidation: deep.chartValidation,
+            modules: deep.modules,
+            conflicts: deep.conflicts,
+            remedies: deep.remedies,
+            topStrengths: deep.topStrengths,
+            topChallenges: deep.topChallenges,
+          },
+          categoryScores: deep.categoryScores,
+          strengths: mergedStrengths,
+          challenges: mergedChallenges,
           marriageWindows: windows,
           engineVersion: ENGINE_VERSION,
           calculatedAt: new Date(),

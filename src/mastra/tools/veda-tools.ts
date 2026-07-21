@@ -5,6 +5,7 @@ import { Horoscope, Dasha, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { compatibilityService } from "@/application/rules/compatibility.service";
 import { matchmakingService } from "@/application/matchmaking/matchmaking.service";
+import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 
 /**
  * Tools only read calculated engine/DB data.
@@ -14,7 +15,7 @@ import { matchmakingService } from "@/application/matchmaking/matchmaking.servic
 export const getHoroscopeTool = createTool({
   id: "get-horoscope-chart",
   description:
-    "Load the user's stored Vedic kundli chart and dasha from the calculation engine. Never invent planets.",
+    "Load the user's stored Vedic kundli chart, yogas (including Raja Yoga), doshas, and dasha from the calculation engine. Never invent planets.",
   inputSchema: z.object({
     userId: z.string().describe("Authenticated user id"),
   }),
@@ -30,10 +31,12 @@ export const getHoroscopeTool = createTool({
         message: "No kundli chart stored. Generate from birth details first.",
       };
     }
+    const yogas = chart.yogas || [];
     return {
       found: true as const,
       chart: {
         lagnaSign: chart.lagnaSign,
+        lagnaDegree: chart.lagnaDegree,
         moonSign: chart.moonSign,
         sunSign: chart.sunSign,
         manglikStatus: chart.manglikStatus,
@@ -43,26 +46,59 @@ export const getHoroscopeTool = createTool({
           house: p.house,
           nakshatra: p.nakshatra,
           pada: p.nakshatraPada,
+          dignity: p.dignity,
+          isRetrograde: p.isRetrograde,
           longitude: p.longitude,
         })),
-        yogas: chart.yogas || [],
+        yogas,
+        rajaYogas: yogas.filter((y) =>
+          /raja|gajakesari|dharma.?karma|budhaditya/i.test(y.code + y.name),
+        ),
         doshas: chart.doshas || [],
       },
       dasha: dasha
         ? {
+            system: dasha.system,
             currentMaha: dasha.currentMaha,
             currentAntar: dasha.currentAntar,
-            periods: (dasha.periods || []).slice(0, 12),
+            balanceAtBirth: dasha.balanceAtBirth,
+            periods: (dasha.periods || []).slice(0, 16).map((p) => ({
+              lord: p.lord,
+              level: p.level,
+              parentLord: p.parentLord,
+              startDate: p.startDate,
+              endDate: p.endDate,
+            })),
           }
         : null,
     };
   },
 });
 
+export const getGocharTool = createTool({
+  id: "get-gochar-transits",
+  description:
+    "Load current Gochar (transit) planets relative to the member's natal Lagna. Use for timing and present-sky questions.",
+  inputSchema: z.object({
+    userId: z.string(),
+  }),
+  execute: async ({ userId }) => {
+    try {
+      const gochar = await computeGocharForUser(userId);
+      return { found: true as const, gochar };
+    } catch {
+      return {
+        found: false as const,
+        message: "Generate kundli and birth details before reading Gochar.",
+      };
+    }
+  },
+});
+
 export const getCompatibilityTool = createTool({
   id: "get-compatibility-report",
   description:
-    "Load or compute Ashta Koota compatibility from the deterministic rule engine for two users.",
+    "Load or compute deep compatibility (Shukra Milan + Ashta Koota + weighted modules) from the deterministic rule engine for two users.",
   inputSchema: z.object({
     userId: z.string(),
     candidateUserId: z.string().optional(),
@@ -73,19 +109,28 @@ export const getCompatibilityTool = createTool({
       return { mode: "list" as const, reports: reports.slice(0, 5) };
     }
     const result = await compatibilityService.compare(userId, candidateUserId);
+    const report = result.report as Record<string, unknown>;
     return {
       mode: "compare" as const,
       report: {
-        totalGuna: result.report.totalGuna,
-        maxGuna: result.report.maxGuna,
-        overallScore: result.report.overallScore,
-        manglikCompatibility: result.report.manglikCompatibility,
-        nadiDosha: result.report.nadiDosha,
-        bhakootDosha: result.report.bhakootDosha,
-        strengths: result.report.strengths,
-        challenges: result.report.challenges,
-        gunaBreakdown: result.report.gunaBreakdown,
-        marriageWindows: result.report.marriageWindows?.slice?.(0, 5) || [],
+        totalGuna: report.totalGuna,
+        maxGuna: report.maxGuna,
+        overallScore: report.overallScore,
+        deepOverallScore: report.deepOverallScore,
+        decisionSummary: report.decisionSummary,
+        decisionReason: report.decisionReason,
+        manglikCompatibility: report.manglikCompatibility,
+        nadiDosha: report.nadiDosha,
+        bhakootDosha: report.bhakootDosha,
+        strengths: report.strengths,
+        challenges: report.challenges,
+        gunaBreakdown: report.gunaBreakdown,
+        shukraMilan: report.shukraMilan,
+        categoryScores: report.categoryScores,
+        deepAnalysis: report.deepAnalysis,
+        marriageWindows: Array.isArray(report.marriageWindows)
+          ? report.marriageWindows.slice(0, 5)
+          : [],
       },
     };
   },

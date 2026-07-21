@@ -1,15 +1,31 @@
 import "dotenv/config";
 
 import { connectMongo, disconnectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
-import { Profile, PartnerPreferences } from "@/infrastructure/database/models";
-import { DEMO_MEMBERS } from "@/lib/mock/demo-profiles";
+import {
+  Profile,
+  PartnerPreferences,
+  BirthDetails,
+  Horoscope,
+  Dasha,
+  Match,
+  Like,
+  Visitor,
+  Shortlist,
+  CompatibilityReport,
+  Chat,
+  Message,
+  Notification,
+} from "@/infrastructure/database/models";
+import { DEMO_MEMBERS, PRESERVE_USER_EMAILS } from "@/lib/mock/demo-profiles";
 import { ensureSeedFaqs, ensureSeedPlans } from "@/repositories";
 import { getAuth } from "@/lib/auth";
+import { horoscopeService } from "@/application/horoscope/horoscope.service";
 import { logger } from "@/lib/utils/logger";
 
 function photo(url: string, primary = true) {
+  const slug = url.split("/").pop()?.split("?")[0] || "photo";
   return {
-    cloudinaryPublicId: `demo/${url.split("/").pop()?.split("?")[0] || "photo"}`,
+    cloudinaryPublicId: `demo/${slug}`.slice(0, 180),
     url,
     secureUrl: url,
     width: 800,
@@ -18,6 +34,41 @@ function photo(url: string, primary = true) {
     sortOrder: 0,
     visibility: "MEMBERS" as const,
   };
+}
+
+function inferCountry(member: (typeof DEMO_MEMBERS)[number]): string {
+  if (member.country) return member.country;
+  const place = member.birth.placeName.toLowerCase();
+  if (place.includes("ireland")) return "Ireland";
+  if (place.includes("nigeria")) return "Nigeria";
+  if (place.includes("russia") || place.includes("dagestan")) return "Russia";
+  if (place.includes("mexico")) return "Mexico";
+  if (place.includes("china") || place.includes("hebei") || place.includes("harbin"))
+    return "China";
+  if (place.includes("usa") || place.includes("united states") || place.includes(", us")) {
+    return "United States";
+  }
+  if (place.includes("australia") || place.includes("adelaide") || place.includes("melbourne")) {
+    return "Australia";
+  }
+  if (place.includes("canada") || place.includes("vancouver")) return "Canada";
+  if (
+    place.includes("uk") ||
+    place.includes("england") ||
+    place.includes("london") ||
+    place.includes("oxford")
+  ) {
+    return "United Kingdom";
+  }
+  if (place.includes("cuba") || place.includes("havana")) return "Cuba";
+  if (place.includes("new zealand") || place.includes("auckland")) return "New Zealand";
+  if (place.includes("hawaii") || place.includes("honolulu")) return "United States";
+  if (place.includes("spain") || place.includes("madrid")) return "Spain";
+  return "India";
+}
+
+function preserveEmailSet() {
+  return new Set(["admin@vedamilan.ai", ...PRESERVE_USER_EMAILS.map((e) => e.toLowerCase())]);
 }
 
 async function ensureAuthUser(input: {
@@ -33,12 +84,16 @@ async function ensureAuthUser(input: {
     if (input.role && existing.role !== input.role) {
       await db.collection("user").updateOne({ _id: existing._id }, { $set: { role: input.role } });
     }
-    await db
-      .collection("user")
-      .updateOne(
-        { _id: existing._id },
-        { $set: { name: input.name, email: input.email.toLowerCase() } },
-      );
+    await db.collection("user").updateOne(
+      { _id: existing._id },
+      {
+        $set: {
+          name: input.name,
+          email: input.email.toLowerCase(),
+          emailVerified: true,
+        },
+      },
+    );
     return String(existing.id || existing._id);
   }
 
@@ -51,6 +106,10 @@ async function ensureAuthUser(input: {
   });
 
   const userId = result.user.id;
+  await db.collection("user").updateOne({ id: userId }, { $set: { emailVerified: true } });
+  await db
+    .collection("user")
+    .updateOne({ _id: result.user.id as never }, { $set: { emailVerified: true } });
   if (input.role) {
     await db.collection("user").updateOne({ id: userId }, { $set: { role: input.role } });
     await db
@@ -60,27 +119,55 @@ async function ensureAuthUser(input: {
   return userId;
 }
 
-/** Remove previous fictional demo members so the roster stays clean. */
-async function clearOldDemoUsers(keepEmails: Set<string>) {
+async function purgeUserData(userId: string) {
   const db = getMongoDb();
-  const demoUsers = await db
-    .collection("user")
-    .find({
-      email: { $regex: /@email\.com$/i },
-      role: { $ne: "admin" },
-    })
-    .toArray();
+  await Promise.all([
+    Profile.deleteMany({ userId }),
+    PartnerPreferences.deleteMany({ userId }),
+    BirthDetails.deleteMany({ userId }),
+    Horoscope.deleteMany({ userId }),
+    Dasha.deleteMany({ userId }),
+    Match.deleteMany({ $or: [{ userId }, { candidateUserId: userId }] } as never),
+    Like.deleteMany({ $or: [{ fromUserId: userId }, { toUserId: userId }] } as never),
+    Visitor.deleteMany({
+      $or: [{ visitorUserId: userId }, { profileUserId: userId }],
+    } as never),
+    Shortlist.deleteMany({ $or: [{ userId }, { targetUserId: userId }] } as never),
+    CompatibilityReport.deleteMany({
+      $or: [{ userAId: userId }, { userBId: userId }],
+    } as never),
+    Chat.deleteMany({ participantIds: userId } as never),
+    Message.deleteMany({ senderId: userId } as never),
+    Notification.deleteMany({ userId }),
+    db.collection("session").deleteMany({ userId }),
+    db.collection("account").deleteMany({ userId }),
+  ]);
+}
 
-  for (const user of demoUsers) {
+/** Remove every auth user except preserved emails + wipe orphan profile graphs. */
+async function wipeNonPreservedUsers() {
+  const db = getMongoDb();
+  const keep = preserveEmailSet();
+  const users = await db.collection("user").find({}).toArray();
+  const keepIds = new Set<string>();
+
+  for (const user of users) {
     const email = String(user.email || "").toLowerCase();
-    if (keepEmails.has(email)) continue;
     const userId = String(user.id || user._id);
-    await Profile.deleteMany({ userId });
-    await PartnerPreferences.deleteMany({ userId });
-    await db.collection("session").deleteMany({ userId });
-    await db.collection("account").deleteMany({ userId });
+    if (keep.has(email)) {
+      keepIds.add(userId);
+      continue;
+    }
+    await purgeUserData(userId);
     await db.collection("user").deleteOne({ _id: user._id });
-    logger.info({ email }, "Removed stale demo user");
+    logger.info({ email }, "Removed user for reseeding");
+  }
+
+  // Orphan profiles / charts left from earlier seeds
+  const orphanProfiles = await Profile.find({ userId: { $nin: [...keepIds] } }).lean();
+  for (const profile of orphanProfiles) {
+    await purgeUserData(String(profile.userId));
+    logger.info({ userId: profile.userId }, "Removed orphan profile graph");
   }
 }
 
@@ -92,6 +179,7 @@ async function upsertProfile(userId: string, member: (typeof DEMO_MEMBERS)[numbe
     gender: member.gender,
     dateOfBirth: new Date(member.dateOfBirth),
     heightCm: member.heightCm,
+    maritalStatus: member.maritalStatus,
     religion: member.religion,
     community: member.community,
     motherTongue: member.motherTongue,
@@ -99,36 +187,65 @@ async function upsertProfile(userId: string, member: (typeof DEMO_MEMBERS)[numbe
     education: member.education,
     profession: member.profession,
     company: member.company,
+    incomeRange: member.incomeRange ?? null,
     city: member.city,
     state: member.state,
-    country: "India",
+    country: inferCountry(member),
     location: { type: "Point" as const, coordinates: member.coordinates },
     lifestyle: member.lifestyle,
     photos: [photo(member.photo)],
+    isVerified: member.isVerified ?? false,
+    verificationStatus: member.isVerified ? ("VERIFIED" as const) : ("NONE" as const),
     isProfileComplete: true,
     visibility: "MEMBERS" as const,
     status: "ACTIVE" as const,
     deletedAt: null,
   };
 
-  const existing = await Profile.findOne({ userId });
-  if (existing) {
-    await Profile.updateOne({ userId }, { $set: payload as never });
-    return;
-  }
-  await Profile.create(payload as never);
+  await Profile.findOneAndUpdate(
+    { userId },
+    { $set: payload as never },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+}
+
+async function upsertBirthAndKundli(userId: string, member: (typeof DEMO_MEMBERS)[number]) {
+  await BirthDetails.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        userId,
+        birthDate: new Date(member.birth.birthDate),
+        birthTime: member.birth.birthTime,
+        birthTimeUnknown: member.birth.birthTimeUnknown,
+        placeName: member.birth.placeName,
+        latitude: member.birth.latitude,
+        longitude: member.birth.longitude,
+        timezone: member.birth.timezone,
+        ayanamsha: "LAHIRI",
+        chartStylePreference: "NORTH",
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  await Horoscope.deleteMany({ userId });
+  await Dasha.deleteMany({ userId });
+  await horoscopeService.generateForUser(userId);
 }
 
 async function seed() {
+  if (!process.env.BETTER_AUTH_SECRET) {
+    process.env.BETTER_AUTH_SECRET = "vedamilan-local-dev-secret-key-32chars";
+    logger.warn("BETTER_AUTH_SECRET missing — using temporary local seed secret");
+  }
+
   await connectMongo();
   await ensureSeedPlans();
   await ensureSeedFaqs();
-
-  const keepEmails = new Set([
-    "admin@vedamilan.ai",
-    ...DEMO_MEMBERS.map((m) => m.email.toLowerCase()),
-  ]);
-  await clearOldDemoUsers(keepEmails);
+  await wipeNonPreservedUsers();
 
   const ids: Record<string, string> = {};
 
@@ -140,6 +257,9 @@ async function seed() {
   });
   ids["admin@vedamilan.ai"] = adminId;
 
+  let kundliOk = 0;
+  let kundliFail = 0;
+
   for (const member of DEMO_MEMBERS) {
     const userId = await ensureAuthUser({
       email: member.email,
@@ -148,27 +268,70 @@ async function seed() {
     });
     ids[member.email] = userId;
     await upsertProfile(userId, member);
-  }
 
-  const primaryId = ids["aditi.sharma@email.com"];
-  if (primaryId) {
-    await PartnerPreferences.findOneAndUpdate(
-      { userId: primaryId },
-      {
-        $set: {
-          userId: primaryId,
-          ageMin: 27,
-          ageMax: 36,
-          religions: ["Hindu", "Muslim"],
-          cities: ["Bengaluru", "Mumbai", "Delhi NCR", "Pune", "Hyderabad", "Chennai", "Kochi"],
-          minCompatibilityScore: 18,
+    if (member.prefs) {
+      await PartnerPreferences.findOneAndUpdate(
+        { userId },
+        {
+          $set: {
+            userId,
+            ageMin: member.prefs.ageMin,
+            ageMax: member.prefs.ageMax,
+            religions: member.prefs.religions,
+            cities: member.prefs.cities,
+            minCompatibilityScore: member.prefs.minCompatibilityScore,
+            maritalStatuses: ["NEVER_MARRIED"],
+            countries: ["India"],
+          },
         },
-      },
-      { upsert: true },
-    );
+        { upsert: true },
+      );
+    } else {
+      await PartnerPreferences.findOneAndUpdate(
+        { userId },
+        {
+          $set: {
+            userId,
+            ageMin: Math.max(21, member.age - 8),
+            ageMax: member.age + 8,
+            religions: [member.religion],
+            cities: [member.city, "Mumbai", "Bengaluru", "Delhi NCR", "Hyderabad"],
+            minCompatibilityScore: 18,
+            maritalStatuses: ["NEVER_MARRIED"],
+            countries: ["India"],
+          },
+        },
+        { upsert: true },
+      );
+    }
+
+    try {
+      await upsertBirthAndKundli(userId, member);
+      kundliOk += 1;
+      logger.info({ name: member.name }, "Kundli generated");
+    } catch (error) {
+      kundliFail += 1;
+      logger.error({ err: error, name: member.name }, "Kundli generation failed");
+    }
   }
 
-  logger.info({ count: DEMO_MEMBERS.length, ids }, "Realistic demo users seeded");
+  const preserved = await getMongoDb()
+    .collection("user")
+    .find({ email: { $in: [...PRESERVE_USER_EMAILS] } })
+    .project({ email: 1, name: 1, id: 1 })
+    .toArray();
+
+  logger.info(
+    {
+      seeded: DEMO_MEMBERS.length,
+      celebrities: DEMO_MEMBERS.filter((m) => m.isCelebrity).length,
+      kundliOk,
+      kundliFail,
+      preserved: preserved.map((u) => u.email),
+    },
+    "Reseed complete — preserved your accounts untouched",
+  );
+
   await disconnectMongo();
 }
 

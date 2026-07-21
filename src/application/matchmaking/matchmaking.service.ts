@@ -117,6 +117,8 @@ export class MatchmakingService {
       userId: { $ne: userId },
       status: "ACTIVE",
       visibility: { $ne: "HIDDEN" },
+      // Profile picture is mandatory for discovery
+      "photos.0": { $exists: true },
     };
 
     const city = filters.city;

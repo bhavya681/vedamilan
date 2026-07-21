@@ -26,7 +26,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="border-border/50 bg-background/90 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+        className="border-border/50 bg-background/95 dark:bg-background/90 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl md:hidden dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)]"
         aria-label="Primary workspace"
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-1">
@@ -40,8 +40,10 @@ export function MobileBottomNav() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium transition-colors",
-                    active ? "bg-primary/15 text-foreground" : "text-muted-foreground",
+                    "flex flex-col items-center gap-1 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
+                    active
+                      ? "bg-primary/12 text-foreground dark:bg-primary/18"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-current={active ? "page" : undefined}
                 >
@@ -55,8 +57,10 @@ export function MobileBottomNav() {
             <button
               type="button"
               className={cn(
-                "flex w-full flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-medium transition-colors",
-                moreOpen ? "bg-primary/15 text-foreground" : "text-muted-foreground",
+                "flex w-full flex-col items-center gap-1 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
+                moreOpen
+                  ? "bg-primary/12 text-foreground dark:bg-primary/18"
+                  : "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => setMoreOpen(true)}
               aria-label="More dashboard links"
@@ -69,29 +73,42 @@ export function MobileBottomNav() {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto rounded-t-3xl pb-8">
+        <SheetContent
+          side="bottom"
+          className="bg-background border-border/50 scrollbar-premium max-h-[min(80vh,36rem)] overflow-y-auto rounded-t-3xl pb-8"
+        >
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Workspace</SheetTitle>
           </SheetHeader>
           <div className="mt-4 space-y-4">
             {groups.map((group) => (
               <div key={group}>
-                <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-[0.18em] uppercase">
+                <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-[0.16em] uppercase">
                   {group}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {dashboardNav
                     .filter((item) => (item.group ?? "Menu") === group)
-                    .map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMoreOpen(false)}
-                        className="bg-muted/50 hover:bg-muted rounded-xl px-3 py-3 text-sm font-medium"
-                      >
-                        {item.title}
-                      </Link>
-                    ))}
+                    .map((item) => {
+                      const active =
+                        pathname === item.href ||
+                        (item.href !== routes.dashboard && pathname.startsWith(item.href));
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMoreOpen(false)}
+                          className={cn(
+                            "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                            active
+                              ? "bg-primary/12 text-foreground dark:bg-primary/18"
+                              : "bg-muted/50 hover:bg-muted text-foreground/90 dark:bg-muted/40",
+                          )}
+                        >
+                          {item.title}
+                        </Link>
+                      );
+                    })}
                 </div>
               </div>
             ))}

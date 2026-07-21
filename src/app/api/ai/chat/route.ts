@@ -9,18 +9,21 @@ import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
 export const dynamic = "force-dynamic";
 
 const schema = z.object({
-  agent: z.enum([
-    "HOROSCOPE",
-    "COMPATIBILITY",
-    "MARRIAGE_TIMING",
-    "RELATIONSHIP_COACH",
-    "PROFILE_ANALYSIS",
-    "SEARCH",
-    "RECOMMENDATION",
-    "NOTIFICATION",
-    "REPORT",
-    "SUPPORT",
-  ]),
+  agent: z
+    .enum([
+      "ASTROLOGER_GURU",
+      "HOROSCOPE",
+      "COMPATIBILITY",
+      "MARRIAGE_TIMING",
+      "RELATIONSHIP_COACH",
+      "PROFILE_ANALYSIS",
+      "SEARCH",
+      "RECOMMENDATION",
+      "NOTIFICATION",
+      "REPORT",
+      "SUPPORT",
+    ])
+    .default("ASTROLOGER_GURU"),
   message: z.string().min(1).max(4000),
   conversationId: z.string().optional(),
   candidateUserId: z.string().optional(),

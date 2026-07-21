@@ -134,6 +134,7 @@ const aiConversationSchema = new Schema(
     agent: {
       type: String,
       enum: [
+        "ASTROLOGER_GURU",
         "HOROSCOPE",
         "COMPATIBILITY",
         "MARRIAGE_TIMING",

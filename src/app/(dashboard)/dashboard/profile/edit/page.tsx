@@ -7,6 +7,10 @@ import { PageHeader } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/constants/routes";
+import {
+  ProfilePhotoUploader,
+  type ProfilePhotoItem,
+} from "@/features/profile/components/profile-photo-uploader";
 
 type ProfileBundle = {
   profile: {
@@ -18,8 +22,13 @@ type ProfileBundle = {
     religion?: string | null;
     heightCm?: number | null;
     visibility?: string;
-    completion?: { score: number };
-    photos?: Array<{ secureUrl: string; cloudinaryPublicId: string; isPrimary?: boolean }>;
+    completion?: {
+      score: number;
+      isComplete?: boolean;
+      requiresPhoto?: boolean;
+      missing?: string[];
+    };
+    photos?: ProfilePhotoItem[];
   };
   user?: { name?: string };
 };
@@ -44,6 +53,13 @@ export default function EditProfilePage() {
     event.preventDefault();
     setError(null);
     setMessage(null);
+
+    const photos = bundle?.profile.photos || [];
+    if (photos.length === 0) {
+      setError("Add a profile picture before saving. Upload a file or paste an image link.");
+      return;
+    }
+
     setLoading(true);
     const form = new FormData(event.currentTarget);
     const payload = {
@@ -67,123 +83,120 @@ export default function EditProfilePage() {
       setError(json.error?.message || "Save failed");
       return;
     }
-    setBundle((prev) => (prev ? { ...prev, profile: { ...prev.profile, ...json.data } } : prev));
+    setBundle((prev) =>
+      prev
+        ? {
+            ...prev,
+            profile: {
+              ...prev.profile,
+              ...json.data,
+              photos: prev.profile.photos,
+            },
+          }
+        : prev,
+    );
     setMessage(`Saved. Profile strength ${json.data.completion?.score ?? ""}%`);
   }
 
-  async function onUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setMessage(null);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = String(reader.result || "");
-      const res = await fetch("/api/profile/photos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dataUrl, makePrimary: true }),
-      });
-      const json = await res.json();
-      if (!json.success) {
-        setError(json.error?.message || "Upload failed — configure Cloudinary env vars");
-        return;
-      }
-      setMessage("Photo uploaded");
-      const refreshed = await fetch("/api/profile").then((r) => r.json());
-      if (refreshed.success) setBundle(refreshed.data);
-    };
-    reader.readAsDataURL(file);
-  }
-
   const p = bundle?.profile;
+  const photos = p?.photos || [];
 
   return (
     <div className="relative">
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Edit Profile"
-        description="Refine how you are discovered"
+        description="Your photo comes first — then the details that help the right people find you."
         actions={
           <Button asChild variant="secondary">
             <Link href={routes.profile}>Back to profile</Link>
           </Button>
         }
       />
-      <GlassCard className="max-w-2xl space-y-4">
+      <GlassCard className="max-w-2xl space-y-6">
         {!bundle && !error ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
         {message ? <p className="text-emerald text-sm">{message}</p> : null}
+
         {p ? (
-          <form className="space-y-4" onSubmit={onSave}>
-            {(
-              [
-                ["headline", "Headline", p.headline || ""],
-                ["profession", "Profession", p.profession || ""],
-                ["city", "City", p.city || ""],
-                ["education", "Education", p.education || ""],
-                ["religion", "Religion", p.religion || ""],
-                ["heightCm", "Height (cm)", p.heightCm ?? ""],
-              ] as const
-            ).map(([name, label, value]) => (
-              <div key={name}>
-                <label className="text-sm font-medium" htmlFor={name}>
-                  {label}
+          <>
+            <ProfilePhotoUploader
+              photos={photos}
+              required
+              onChanged={(next) =>
+                setBundle((prev) =>
+                  prev ? { ...prev, profile: { ...prev.profile, photos: next } } : prev,
+                )
+              }
+              onMessage={setMessage}
+              onError={setError}
+            />
+
+            {photos.length === 0 ? (
+              <div className="border-destructive/30 bg-destructive/5 text-destructive rounded-2xl border px-4 py-3 text-sm">
+                Profile picture is mandatory. Members without a photo stay hidden from matches.
+              </div>
+            ) : null}
+
+            <form className="space-y-4 border-t pt-6" onSubmit={onSave}>
+              {(
+                [
+                  ["headline", "Headline", p.headline || ""],
+                  ["profession", "Profession", p.profession || ""],
+                  ["city", "City", p.city || ""],
+                  ["education", "Education", p.education || ""],
+                  ["religion", "Religion", p.religion || ""],
+                  ["heightCm", "Height (cm)", p.heightCm ?? ""],
+                ] as const
+              ).map(([name, label, value]) => (
+                <div key={name}>
+                  <label className="text-sm font-medium" htmlFor={name}>
+                    {label}
+                  </label>
+                  <input
+                    id={name}
+                    name={name}
+                    className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+                    defaultValue={value as string | number}
+                  />
+                </div>
+              ))}
+              <div>
+                <label className="text-sm font-medium" htmlFor="visibility">
+                  Visibility
                 </label>
-                <input
-                  id={name}
-                  name={name}
+                <select
+                  id="visibility"
+                  name="visibility"
                   className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
-                  defaultValue={value as string | number}
+                  defaultValue={p.visibility || "MEMBERS"}
+                >
+                  <option value="PUBLIC">Public</option>
+                  <option value="MEMBERS">Members</option>
+                  <option value="HIDDEN">Hidden</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium" htmlFor="about">
+                  About
+                </label>
+                <textarea
+                  id="about"
+                  name="about"
+                  className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+                  rows={4}
+                  defaultValue={p.about || ""}
                 />
               </div>
-            ))}
-            <div>
-              <label className="text-sm font-medium" htmlFor="visibility">
-                Visibility
-              </label>
-              <select
-                id="visibility"
-                name="visibility"
-                className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
-                defaultValue={p.visibility || "MEMBERS"}
-              >
-                <option value="PUBLIC">Public</option>
-                <option value="MEMBERS">Members</option>
-                <option value="HIDDEN">Hidden</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="about">
-                About
-              </label>
-              <textarea
-                id="about"
-                name="about"
-                className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
-                rows={4}
-                defaultValue={p.about || ""}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium" htmlFor="photo">
-                Upload photo
-              </label>
-              <input
-                id="photo"
-                type="file"
-                accept="image/*"
-                className="mt-1 block w-full text-sm"
-                onChange={onUpload}
-              />
-              <p className="text-muted-foreground mt-1 text-xs">
-                Requires Cloudinary credentials. Current photos: {p.photos?.length ?? 0}
-              </p>
-            </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : "Save changes"}
-            </Button>
-          </form>
+              <Button type="submit" disabled={loading || photos.length === 0}>
+                {loading
+                  ? "Saving…"
+                  : photos.length === 0
+                    ? "Add photo to continue"
+                    : "Save changes"}
+              </Button>
+            </form>
+          </>
         ) : null}
       </GlassCard>
     </div>

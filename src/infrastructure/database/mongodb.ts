@@ -83,7 +83,10 @@ function parseDohTxtAnswers(answers: DohAnswer[]): string[] {
     .map((answer) => answer.data.replace(/^"|"$/g, "").replace(/"\s+"/g, ""));
 }
 
-async function resolveAtlasSrvRecords(srvName: string): Promise<{
+async function resolveAtlasSrvRecords(
+  srvName: string,
+  clusterHost: string,
+): Promise<{
   srvRecords: SrvRecord[];
   txtRecords: string[];
 }> {
@@ -92,7 +95,7 @@ async function resolveAtlasSrvRecords(srvName: string): Promise<{
   try {
     const [srvRecords, txtRecords] = await Promise.all([
       dnsPromises.resolveSrv(srvName),
-      dnsPromises.resolveTxt(srvName).catch(() => [] as string[][]),
+      dnsPromises.resolveTxt(clusterHost).catch(() => [] as string[][]),
     ]);
 
     return {
@@ -100,11 +103,15 @@ async function resolveAtlasSrvRecords(srvName: string): Promise<{
       txtRecords: txtRecords.flat(),
     };
   } catch (nodeDnsError) {
-    logger.warn({ err: nodeDnsError }, "Node DNS SRV lookup failed; trying DNS-over-HTTPS");
+    // Common on Windows / corporate DNS — DoH still resolves Atlas SRV reliably.
+    logger.warn(
+      { err: nodeDnsError },
+      "Node DNS SRV lookup failed; falling back to DNS-over-HTTPS (connection should still succeed)",
+    );
 
     const [srvAnswers, txtAnswers] = await Promise.all([
       queryDoh(srvName, "SRV"),
-      queryDoh(srvName, "TXT").catch(() => [] as DohAnswer[]),
+      queryDoh(clusterHost, "TXT").catch(() => [] as DohAnswer[]),
     ]);
 
     return {
@@ -124,6 +131,9 @@ function buildStandardMongoUri(
   const basePath = pathAndQuery.split("?")[0] ?? "";
   const params = new URLSearchParams(pathAndQuery.includes("?") ? pathAndQuery.split("?")[1] : "");
   params.set("ssl", "true");
+  params.set("tls", "true");
+  if (!params.has("retryWrites")) params.set("retryWrites", "true");
+  if (!params.has("w")) params.set("w", "majority");
 
   for (const txt of txtRecords.flat().join("&").split("&")) {
     const [key, value] = txt.split("=");
@@ -169,7 +179,7 @@ async function resolveMongoSrvUri(srvUri: string): Promise<string> {
   }
 
   const srvName = `_mongodb._tcp.${hostPart}`;
-  const { srvRecords, txtRecords } = await resolveAtlasSrvRecords(srvName);
+  const { srvRecords, txtRecords } = await resolveAtlasSrvRecords(srvName, hostPart);
 
   if (!srvRecords.length) {
     throw new Error(`No MongoDB SRV records found for ${hostPart}`);
@@ -203,23 +213,46 @@ export async function connectMongo(): Promise<typeof mongoose> {
     return mongoose;
   }
 
+  // Drop a stale resolved/rejected promise after disconnect or a failed attempt
+  // so the next call always opens a fresh connection.
+  if (mongoose.connection.readyState === 0) {
+    globalForMongo.mongoosePromise = undefined;
+  }
+
   if (!globalForMongo.mongoosePromise) {
     const uri = await getResolvedMongoUri();
-    globalForMongo.mongoosePromise = mongoose.connect(uri, {
-      maxPoolSize: 20,
-      minPoolSize: 2,
-      serverSelectionTimeoutMS: 15_000,
-      autoIndex: process.env.NODE_ENV !== "production",
-    });
+    globalForMongo.mongoosePromise = mongoose
+      .connect(uri, {
+        maxPoolSize: 20,
+        minPoolSize: 2,
+        serverSelectionTimeoutMS: 15_000,
+        autoIndex: process.env.NODE_ENV !== "production",
+      })
+      .catch((error) => {
+        globalForMongo.mongoosePromise = undefined;
+        throw error;
+      });
   }
 
   try {
     await globalForMongo.mongoosePromise;
+    if (mongoose.connection.readyState !== 1) {
+      globalForMongo.mongoosePromise = undefined;
+      throw new Error(`MongoDB connect finished with readyState=${mongoose.connection.readyState}`);
+    }
     logger.info({ readyState: mongoose.connection.readyState }, "MongoDB connected");
     return mongoose;
   } catch (error) {
     globalForMongo.mongoosePromise = undefined;
-    logger.error({ err: error }, "MongoDB connection failed");
+    const message = error instanceof Error ? error.message : String(error);
+    if (/IP that isn't whitelisted|whitelist|ServerSelectionError/i.test(message)) {
+      logger.error(
+        { err: error },
+        "MongoDB connection failed — check Atlas Network Access (IP allowlist), DB user password, and that the cluster is not paused",
+      );
+    } else {
+      logger.error({ err: error }, "MongoDB connection failed");
+    }
     throw error;
   }
 }

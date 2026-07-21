@@ -6,7 +6,7 @@ import type {
   PartnerPreferencesInput,
   ProfileUpdateInput,
 } from "@/lib/validators/profile";
-import { NotFoundError } from "@/lib/utils/error-handler";
+import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 
 const COMPLETION_WEIGHTS: Array<{
   key: string;
@@ -14,7 +14,7 @@ const COMPLETION_WEIGHTS: Array<{
   check: (p: Record<string, unknown>) => boolean;
 }> = [
   { key: "about", weight: 15, check: (p) => Boolean(p.about && String(p.about).length > 40) },
-  { key: "photos", weight: 20, check: (p) => Array.isArray(p.photos) && p.photos.length > 0 },
+  { key: "photos", weight: 25, check: (p) => Array.isArray(p.photos) && p.photos.length > 0 },
   { key: "city", weight: 10, check: (p) => Boolean(p.city) },
   { key: "profession", weight: 10, check: (p) => Boolean(p.profession) },
   { key: "education", weight: 10, check: (p) => Boolean(p.education) },
@@ -26,17 +26,17 @@ const COMPLETION_WEIGHTS: Array<{
     weight: 5,
     check: (p) => Array.isArray(p.languages) && p.languages.length > 0,
   },
-  {
-    key: "lifestyle",
-    weight: 5,
-    check: (p) => Boolean((p.lifestyle as { diet?: string } | undefined)?.diet),
-  },
 ];
+
+function hasProfilePhoto(profile: Record<string, unknown>): boolean {
+  return Array.isArray(profile.photos) && profile.photos.length > 0;
+}
 
 export function calculateProfileCompletion(profile: Record<string, unknown>): {
   score: number;
   isComplete: boolean;
   missing: string[];
+  requiresPhoto: boolean;
 } {
   let score = 0;
   const missing: string[] = [];
@@ -44,7 +44,25 @@ export function calculateProfileCompletion(profile: Record<string, unknown>): {
     if (item.check(profile)) score += item.weight;
     else missing.push(item.key);
   }
-  return { score, isComplete: score >= 80, missing };
+  const requiresPhoto = !hasProfilePhoto(profile);
+  // Profile picture is mandatory — never mark complete without at least one photo.
+  const isComplete = score >= 80 && !requiresPhoto;
+  return { score, isComplete, missing, requiresPhoto };
+}
+
+const MAX_PROFILE_PHOTOS = 6;
+
+function assertHttpsImageUrl(raw: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw.trim());
+  } catch {
+    throw new ValidationError("Enter a valid image URL");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new ValidationError("Image links must use HTTPS");
+  }
+  return parsed;
 }
 
 function ageFromDob(dob?: Date | string | null): number | null {
@@ -132,42 +150,126 @@ export class ProfileService {
     return { ...updated, completion, age: ageFromDob(updated.dateOfBirth as Date | null) };
   }
 
-  async uploadPhoto(userId: string, dataUrl: string, makePrimary = false) {
-    await this.ensureConnected();
-    await this.getOrCreateProfile(userId);
+  private async attachPhoto(
+    userId: string,
+    photo: {
+      cloudinaryPublicId: string;
+      url: string;
+      secureUrl: string;
+      width?: number | null;
+      height?: number | null;
+    },
+    makePrimary = false,
+  ) {
+    const profile = await Profile.findOne({ userId });
+    if (!profile) throw new NotFoundError("Profile not found");
 
-    const uploaded = await cloudinaryService.uploadImage({
-      data: dataUrl,
-      folder: `vedamilan/profiles/${userId}`,
-    });
+    if (profile.photos.length >= MAX_PROFILE_PHOTOS) {
+      throw new ValidationError(`You can add up to ${MAX_PROFILE_PHOTOS} photos`);
+    }
 
-    const photo = {
-      cloudinaryPublicId: uploaded.public_id,
-      url: uploaded.url,
-      secureUrl: uploaded.secure_url,
-      width: uploaded.width,
-      height: uploaded.height,
-      isPrimary: makePrimary,
+    const entry = {
+      ...photo,
+      isPrimary: makePrimary || profile.photos.length === 0,
       sortOrder: 0,
       visibility: "MEMBERS" as const,
     };
 
-    const profile = await Profile.findOne({ userId });
-    if (!profile) throw new NotFoundError("Profile not found");
-
-    if (makePrimary || profile.photos.length === 0) {
+    if (entry.isPrimary) {
       profile.photos.forEach((p) => {
         p.isPrimary = false;
       });
-      photo.isPrimary = true;
     }
 
-    profile.photos.unshift(photo as never);
+    profile.photos.unshift(entry as never);
     const completion = calculateProfileCompletion(profile.toObject() as Record<string, unknown>);
     profile.isProfileComplete = completion.isComplete;
     await profile.save();
 
-    return { photo, completion, photos: profile.photos };
+    return { photo: entry, completion, photos: profile.photos };
+  }
+
+  async uploadPhoto(userId: string, dataUrl: string, makePrimary = false) {
+    await this.ensureConnected();
+    await this.getOrCreateProfile(userId);
+
+    if (!dataUrl.startsWith("data:image/")) {
+      throw new ValidationError("Expected a valid image file");
+    }
+
+    if (cloudinaryService.isConfigured()) {
+      const uploaded = await cloudinaryService.uploadImage({
+        data: dataUrl,
+        folder: `vedamilan/profiles/${userId}`,
+      });
+      return this.attachPhoto(
+        userId,
+        {
+          cloudinaryPublicId: uploaded.public_id,
+          url: uploaded.url,
+          secureUrl: uploaded.secure_url,
+          width: uploaded.width,
+          height: uploaded.height,
+        },
+        makePrimary,
+      );
+    }
+
+    // Local / demo fallback when Cloudinary is not configured
+    const stamp = Date.now();
+    return this.attachPhoto(
+      userId,
+      {
+        cloudinaryPublicId: `local/${userId}/${stamp}`,
+        url: dataUrl,
+        secureUrl: dataUrl,
+        width: null,
+        height: null,
+      },
+      makePrimary,
+    );
+  }
+
+  async addPhotoFromUrl(userId: string, imageUrl: string, makePrimary = false) {
+    await this.ensureConnected();
+    await this.getOrCreateProfile(userId);
+
+    const parsed = assertHttpsImageUrl(imageUrl);
+    const href = parsed.toString();
+
+    if (cloudinaryService.isConfigured()) {
+      try {
+        const uploaded = await cloudinaryService.uploadImage({
+          data: href,
+          folder: `vedamilan/profiles/${userId}`,
+        });
+        return this.attachPhoto(
+          userId,
+          {
+            cloudinaryPublicId: uploaded.public_id,
+            url: uploaded.url,
+            secureUrl: uploaded.secure_url,
+            width: uploaded.width,
+            height: uploaded.height,
+          },
+          makePrimary,
+        );
+      } catch {
+        // Fall through to direct URL storage if remote fetch fails
+      }
+    }
+
+    return this.attachPhoto(
+      userId,
+      {
+        cloudinaryPublicId: `remote/${userId}/${Buffer.from(href).toString("base64url").slice(0, 48)}`,
+        url: href,
+        secureUrl: href,
+        width: null,
+        height: null,
+      },
+      makePrimary,
+    );
   }
 
   async deletePhoto(userId: string, publicId: string) {
@@ -175,14 +277,27 @@ export class ProfileService {
     const profile = await Profile.findOne({ userId });
     if (!profile) throw new NotFoundError("Profile not found");
 
+    if (profile.photos.length <= 1) {
+      throw new ValidationError(
+        "Profile picture is required. Add another photo before removing this one.",
+      );
+    }
+
     const before = profile.photos.length;
+    const removing = profile.photos.find((p) => p.cloudinaryPublicId === publicId);
     profile.photos = profile.photos.filter((p) => p.cloudinaryPublicId !== publicId) as never;
     if (profile.photos.length === before) throw new NotFoundError("Photo not found");
 
-    try {
-      await cloudinaryService.deleteAsset(publicId);
-    } catch {
-      // Continue DB cleanup even if Cloudinary delete fails
+    if (
+      removing?.cloudinaryPublicId &&
+      !removing.cloudinaryPublicId.startsWith("local/") &&
+      !removing.cloudinaryPublicId.startsWith("remote/")
+    ) {
+      try {
+        await cloudinaryService.deleteAsset(publicId);
+      } catch {
+        // Continue DB cleanup even if Cloudinary delete fails
+      }
     }
 
     if (profile.photos.length > 0 && !profile.photos.some((p) => p.isPrimary)) {

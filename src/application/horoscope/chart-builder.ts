@@ -128,9 +128,93 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
     description: string;
   }> = [];
 
-  const jupiter = planets.find((p) => p.planet === "Jupiter");
-  const venus = planets.find((p) => p.planet === "Venus");
-  const moon = planets.find((p) => p.planet === "Moon");
+  const byName = (name: string) => planets.find((p) => p.planet === name);
+  const jupiter = byName("Jupiter");
+  const venus = byName("Venus");
+  const moon = byName("Moon");
+  const mercury = byName("Mercury");
+  const sun = byName("Sun");
+  const mars = byName("Mars");
+
+  const lagnaSignId = Math.max(0, SIGNS.indexOf(lagnaSign as (typeof SIGNS)[number]));
+  const houseLords = buildHouseLords(lagnaSignId);
+  const kendra = new Set([1, 4, 7, 10]);
+  const trikona = new Set([1, 5, 9]);
+
+  const lordOf = (house: number) => houseLords[String(house)];
+  const placement = (lordName: string | undefined) =>
+    lordName ? planets.find((p) => p.planet === lordName) : undefined;
+
+  // Classical Raja Yoga hint: kendra lord + trikona lord association (same house / mutual aspect proxy via same/adjacent house)
+  const kendraLords = [1, 4, 7, 10].map(lordOf).filter(Boolean) as string[];
+  const trikonaLords = [1, 5, 9].map(lordOf).filter(Boolean) as string[];
+  for (const kLord of kendraLords) {
+    for (const tLord of trikonaLords) {
+      if (kLord === tLord) continue;
+      const k = placement(kLord);
+      const t = placement(tLord);
+      if (!k || !t) continue;
+      const conjunct = k.house === t.house;
+      // Simplified association: conjunction or mutual kendra/trikona placement
+      if (
+        conjunct ||
+        (kendra.has(k.house) && trikona.has(t.house)) ||
+        (trikona.has(k.house) && kendra.has(t.house))
+      ) {
+        yogas.push({
+          code: "RAJA_YOGA",
+          name: "Raja Yoga",
+          category: "CAREER",
+          strength: conjunct ? 85 : 72,
+          description: `${kLord} (kendra themes) and ${tLord} (trikona themes) associate via houses ${k.house} & ${t.house}${conjunct ? " (conjunction)" : ""}. Classically supports recognition, authority, and life elevation when dasha supports.`,
+        });
+        break;
+      }
+    }
+    if (yogas.some((y) => y.code === "RAJA_YOGA")) break;
+  }
+
+  // Gajakesari: Jupiter in kendra from Moon
+  if (jupiter && moon) {
+    const fromMoon = ((jupiter.house - moon.house + 12) % 12) + 1;
+    if ([1, 4, 7, 10].includes(fromMoon) || jupiter.house === moon.house) {
+      yogas.push({
+        code: "GAJAKESARI",
+        name: "Gajakesari Yoga",
+        category: "WEALTH",
+        strength: 78,
+        description: `Jupiter stands in a kendra from Moon (Moon house ${moon.house}, Jupiter house ${jupiter.house}). Favors wisdom, reputation, and steady prosperity themes.`,
+      });
+    }
+  }
+
+  // Budhaditya: Sun–Mercury conjunction
+  if (sun && mercury && sun.house === mercury.house) {
+    yogas.push({
+      code: "BUDHADITYA",
+      name: "Budhaditya Yoga",
+      category: "CAREER",
+      strength: 70,
+      description: `Sun and Mercury conjunct in house ${sun.house} (${sun.sign}). Supports intellect, communication, and professional clarity.`,
+    });
+  }
+
+  // Dharma-Karma: 9th & 10th lords associated
+  const ninth = placement(lordOf(9));
+  const tenth = placement(lordOf(10));
+  if (
+    ninth &&
+    tenth &&
+    (ninth.house === tenth.house || (kendra.has(ninth.house) && trikona.has(tenth.house)))
+  ) {
+    yogas.push({
+      code: "DHARMA_KARMA",
+      name: "Dharma-Karma Adhipati Yoga",
+      category: "CAREER",
+      strength: 80,
+      description: `9th-lord and 10th-lord themes associate (houses ${ninth.house} & ${tenth.house}). Classic support for purposeful vocation and public standing.`,
+    });
+  }
 
   if (jupiter && [1, 4, 5, 7, 9, 10].includes(jupiter.house)) {
     yogas.push({
@@ -138,7 +222,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
       name: "Benefic Jupiter placement",
       category: "GENERAL",
       strength: 70,
-      description: `Jupiter in house ${jupiter.house} supports growth themes.`,
+      description: `Jupiter in house ${jupiter.house} supports growth, counsel, and dharmic expansion.`,
     });
   }
   if (venus && [1, 2, 4, 5, 7, 11].includes(venus.house)) {
@@ -147,7 +231,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
       name: "Venus relationship support",
       category: "MARRIAGE",
       strength: 65,
-      description: `Venus in house ${venus.house} favors relational harmony themes.`,
+      description: `Venus in house ${venus.house} favors affection, aesthetics, and relational harmony.`,
     });
   }
   if (moon && moon.dignity === "Own") {
@@ -156,7 +240,16 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
       name: "Moon in own sign",
       category: "HEALTH",
       strength: 60,
-      description: "Moon in Cancer supports emotional steadiness.",
+      description: "Moon in Cancer supports emotional steadiness and nurturing capacity.",
+    });
+  }
+  if (mars && [1, 10].includes(mars.house) && mars.dignity !== "Debilitated") {
+    yogas.push({
+      code: "RUCHAKA_HINT",
+      name: "Ruchaka-like Mars strength",
+      category: "CAREER",
+      strength: 62,
+      description: `Mars in house ${mars.house} (${mars.sign}) shows assertive drive and competitive stamina.`,
     });
   }
   if (lagnaSign) {
@@ -165,10 +258,17 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string) {
       name: "Ascendant established",
       category: "GENERAL",
       strength: 50,
-      description: `Lagna set as ${lagnaSign}.`,
+      description: `Lagna set as ${lagnaSign} — personality and path are read from this rising sign.`,
     });
   }
-  return yogas;
+
+  // Deduplicate by code
+  const seen = new Set<string>();
+  return yogas.filter((y) => {
+    if (seen.has(y.code)) return false;
+    seen.add(y.code);
+    return true;
+  });
 }
 
 export function buildNorthChart(planets: ChartPlanet[], lagnaSignId: number) {

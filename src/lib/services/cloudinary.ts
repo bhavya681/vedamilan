@@ -13,6 +13,14 @@ export type CloudinaryUploadInput = {
 export class CloudinaryService {
   private configured = false;
 
+  isConfigured(): boolean {
+    return Boolean(
+      (process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET,
+    );
+  }
+
   private ensureConfigured(): void {
     if (this.configured) return;
 

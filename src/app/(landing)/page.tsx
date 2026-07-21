@@ -13,23 +13,27 @@ import { PricingSection } from "@/features/payments/components/pricing-section";
 import { FaqSection } from "@/features/matchmaking/components/faq-section";
 import { AnimatedStatsSection } from "@/features/matchmaking/components/animated-stats";
 import { FinalCtaSection } from "@/features/matchmaking/components/final-cta";
+import { HomeGuideChat } from "@/features/ai/components/home-guide-chat";
 
 export default function LandingPage() {
   return (
-    <main id="main-content">
-      <HeroSection />
-      <LandingSearchSection />
-      <AnimatedStatsSection />
-      <HowItWorksSection />
-      <FeaturesGridSection />
-      <AiDemoSection />
-      <CompatibilityPreviewSection />
-      <MarriageTimingPreview />
-      <SuccessStoriesStrip />
-      <TestimonialsSection />
-      <PricingSection />
-      <FaqSection />
-      <FinalCtaSection />
-    </main>
+    <>
+      <main id="main-content">
+        <HeroSection />
+        <LandingSearchSection />
+        <AnimatedStatsSection />
+        <HowItWorksSection />
+        <FeaturesGridSection />
+        <AiDemoSection />
+        <CompatibilityPreviewSection />
+        <MarriageTimingPreview />
+        <SuccessStoriesStrip />
+        <TestimonialsSection />
+        <PricingSection />
+        <FaqSection />
+        <FinalCtaSection />
+      </main>
+      <HomeGuideChat />
+    </>
   );
 }

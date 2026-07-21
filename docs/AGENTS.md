@@ -6,6 +6,7 @@ AI **never** calculates astrology. Deterministic rule engines and stored charts 
 
 | Agent key          | Purpose                       | Tools                          |
 | ------------------ | ----------------------------- | ------------------------------ |
+| ASTROLOGER_GURU    | Jyotish Guru chat (main UI)   | chart + gochar + timing + more |
 | HOROSCOPE          | Explain kundli / dasha        | `get-horoscope-chart`          |
 | COMPATIBILITY      | Explain Ashta Koota           | `get-compatibility-report`     |
 | MARRIAGE_TIMING    | Explain dasha windows         | `get-marriage-timing`          |
@@ -19,8 +20,8 @@ AI **never** calculates astrology. Deterministic rule engines and stored charts 
 
 ## APIs
 
-- `GET /api/ai/insights` — bundled explainable insights
-- `GET/POST /api/ai/chat` — agent conversation (persisted in `ai_conversations`)
+- `GET /api/ai/insights` — chart panels (Raja Yogas, Dasha, Gochar) + opening guru message
+- `GET/POST /api/ai/chat` — agent conversation (persisted in `ai_conversations`; default agent `ASTROLOGER_GURU`)
 
 ## Models
 

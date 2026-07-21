@@ -26,10 +26,14 @@ Better Auth + MongoDB adapter. Auth collections `user`, `session`, `account`, `v
 
 After `npm run db:seed` (requires `MONGODB_URI` + `BETTER_AUTH_SECRET`):
 
-| Email                   | Password          | Role  |
-| ----------------------- | ----------------- | ----- |
-| admin@vedamilan.ai      | VedaMilanAdmin!23 | admin |
-| ananya.sharma@email.com | AnanyaDemo!23     | user  |
+| Email                                          | Password          | Role                          |
+| ---------------------------------------------- | ----------------- | ----------------------------- |
+| admin@vedamilan.ai                             | VedaMilanAdmin!23 | admin                         |
+| aditi.sharma@email.com                         | AditiDemo!23      | user (primary fictional demo) |
+| `*.@demo.vedamilan.ai`                         | DemoCeleb!23      | celebrity showcase demos      |
+| Your real accounts (`bbw3238@gmail.com`, etc.) | unchanged         | preserved by seed             |
+
+Seed also writes birth details + generates kundli charts for every demo member.
 
 ## Hard rule
 

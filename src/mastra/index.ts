@@ -4,6 +4,7 @@ import { vedaAgents } from "./agents/veda-agents";
 
 export const mastra = new Mastra({
   agents: {
+    astrologerGuruAgent: vedaAgents.ASTROLOGER_GURU,
     horoscopeAgent: vedaAgents.HOROSCOPE,
     compatibilityAgent: vedaAgents.COMPATIBILITY,
     marriageTimingAgent: vedaAgents.MARRIAGE_TIMING,

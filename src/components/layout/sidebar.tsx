@@ -9,6 +9,13 @@ import { dashboardNav } from "@/config/navigation";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
+function isNavActive(pathname: string, href: string) {
+  if (pathname === href) return true;
+  if (href === "/dashboard") return false;
+  if (href === "/dashboard/matches" && pathname.startsWith("/dashboard/matches")) return true;
+  return pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const groups = [...new Set(dashboardNav.map((item) => item.group ?? "Menu"))];
@@ -16,58 +23,54 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "border-border/60 bg-card/40 hidden w-64 shrink-0 overflow-y-auto border-r p-4 backdrop-blur-md lg:block",
+        "border-border/50 bg-card/90 dark:bg-card/95 hidden h-full w-[15.5rem] shrink-0 flex-col border-r backdrop-blur-xl md:flex xl:w-64",
         className,
       )}
       aria-label="Dashboard sidebar"
     >
-      <div className="mb-8 px-2">
+      <div className="border-border/40 shrink-0 border-b px-4 py-4 xl:px-5">
         <BrandLogo href={routes.dashboard} size="sm" />
-        <p className="text-muted-foreground mt-1.5 text-xs">Relationship intelligence</p>
+        <p className="text-muted-foreground mt-1.5 text-[11px] tracking-wide">
+          Relationship intelligence
+        </p>
       </div>
-      <nav className="space-y-5">
-        {groups.map((group) => (
-          <div key={group}>
-            <p className="text-muted-foreground mb-2 px-3 text-[10px] font-semibold tracking-[0.18em] uppercase">
-              {group}
-            </p>
-            <div className="space-y-1">
-              {dashboardNav
-                .filter((item) => (item.group ?? "Menu") === group)
-                .map((item) => {
-                  const active =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)) ||
-                    (item.href === "/dashboard/matches" &&
-                      pathname.startsWith("/dashboard/matches"));
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "block rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-primary/15 text-foreground shadow-soft"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                      aria-current={active ? "page" : undefined}
-                    >
-                      {item.title}
-                    </Link>
-                  );
-                })}
+
+      <nav className="scrollbar-premium min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 xl:px-3.5">
+        <div className="space-y-5">
+          {groups.map((group) => (
+            <div key={group}>
+              <p className="text-muted-foreground/80 mb-2 px-2.5 text-[10px] font-semibold tracking-[0.16em] uppercase">
+                {group}
+              </p>
+              <div className="space-y-0.5">
+                {dashboardNav
+                  .filter((item) => (item.group ?? "Menu") === group)
+                  .map((item) => {
+                    const active = isNavActive(pathname, item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "relative block rounded-xl px-2.5 py-2 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-primary/12 text-foreground shadow-soft before:bg-primary dark:bg-primary/18 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full"
+                            : "text-muted-foreground hover:bg-muted/80 hover:text-foreground dark:hover:bg-muted/60",
+                        )}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </nav>
-      <div className="mt-8 space-y-2 px-2">
-        <Link
-          href={routes.settings}
-          className="text-muted-foreground hover:text-foreground block px-3 text-sm"
-        >
-          Account settings
-        </Link>
-        <SignOutButton className="w-full" redirectTo={routes.home} />
+
+      <div className="border-border/40 bg-background/40 dark:bg-background/30 shrink-0 border-t px-3 py-3 xl:px-3.5">
+        <SignOutButton className="w-full" size="sm" redirectTo={routes.home} />
       </div>
     </aside>
   );

@@ -6,21 +6,38 @@ import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/util
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+type PhotoBody = {
+  dataUrl?: string;
+  imageUrl?: string;
+  makePrimary?: boolean;
+};
+
 export async function POST(request: Request) {
   try {
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
     });
-    const body = (await request.json()) as { dataUrl?: string; makePrimary?: boolean };
-    if (!body.dataUrl || !body.dataUrl.startsWith("data:image/")) {
-      throw new ValidationError("Expected dataUrl as a base64 image data URI");
+    const body = (await request.json()) as PhotoBody;
+    const makePrimary = Boolean(body.makePrimary);
+
+    if (body.dataUrl) {
+      if (!body.dataUrl.startsWith("data:image/")) {
+        throw new ValidationError("Upload a valid image file");
+      }
+      const result = await profileService.uploadPhoto(session.user.id, body.dataUrl, makePrimary);
+      return successResponse(result, { status: 201 });
     }
-    const result = await profileService.uploadPhoto(
-      session.user.id,
-      body.dataUrl,
-      Boolean(body.makePrimary),
-    );
-    return successResponse(result, { status: 201 });
+
+    if (body.imageUrl) {
+      const result = await profileService.addPhotoFromUrl(
+        session.user.id,
+        body.imageUrl,
+        makePrimary,
+      );
+      return successResponse(result, { status: 201 });
+    }
+
+    throw new ValidationError("Provide an image file upload or an HTTPS image link");
   } catch (error) {
     return handleRouteError(error);
   }

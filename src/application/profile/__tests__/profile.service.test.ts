@@ -26,10 +26,26 @@ describe("Module 3 — profile completion", () => {
       dateOfBirth: new Date("1996-01-01"),
       heightCm: 165,
       languages: ["English"],
-      lifestyle: { diet: "Vegetarian" },
     });
     expect(result.score).toBe(100);
     expect(result.isComplete).toBe(true);
+    expect(result.requiresPhoto).toBe(false);
+  });
+
+  it("never marks complete without a photo", () => {
+    const result = calculateProfileCompletion({
+      about: "A".repeat(50),
+      city: "Bengaluru",
+      profession: "Designer",
+      education: "NID",
+      religion: "Hindu",
+      dateOfBirth: new Date("1996-01-01"),
+      heightCm: 165,
+      languages: ["English"],
+    });
+    expect(result.requiresPhoto).toBe(true);
+    expect(result.isComplete).toBe(false);
+    expect(result.missing).toContain("photos");
   });
 });
 

@@ -48,11 +48,25 @@ export default async function ProfilePage() {
                 src={primaryPhoto}
                 alt=""
                 fill
+                unoptimized={
+                  primaryPhoto.startsWith("data:") ||
+                  (!primaryPhoto.includes("res.cloudinary.com") &&
+                    !primaryPhoto.includes("images.unsplash.com") &&
+                    !primaryPhoto.includes("upload.wikimedia.org"))
+                }
                 sizes="(max-width: 1024px) 100vw, 60vw"
                 className="object-cover opacity-90"
               />
             ) : (
-              <div className="from-navy absolute inset-0 bg-gradient-to-br to-[#1a3a6b]" />
+              <div className="from-navy absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br to-[#1a3a6b] p-6 text-center">
+                <p className="text-ivory/90 text-sm font-medium">Profile picture required</p>
+                <p className="text-ivory/65 max-w-sm text-xs">
+                  Add a clear photo to complete your profile and appear in matches.
+                </p>
+                <Button asChild size="sm" variant="secondary">
+                  <Link href={routes.editProfile}>Upload photo</Link>
+                </Button>
+              </div>
             )}
             <div className="from-navy via-navy/20 absolute inset-0 bg-gradient-to-t to-transparent" />
             <div className="text-ivory absolute inset-x-0 bottom-0 p-6 sm:p-8">
@@ -131,8 +145,10 @@ export default async function ProfilePage() {
           <StatCard
             label="Photos"
             value={String(profile.photos?.length ?? 0)}
-            hint="Cloudinary-backed gallery"
-            tone="ai"
+            hint={
+              profile.photos?.length ? "Primary portrait set" : "Required — add a photo to go live"
+            }
+            tone={profile.photos?.length ? "ai" : "rose"}
           />
           <GlassCard>
             <p className="text-sm font-medium">Next steps</p>
