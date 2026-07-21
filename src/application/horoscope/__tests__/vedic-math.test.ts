@@ -7,6 +7,7 @@ import {
 } from "@/application/horoscope/vedic-constants";
 import { detectManglik, buildPlanetRows } from "@/application/horoscope/chart-builder";
 import { computeVimshottari } from "@/application/horoscope/dasha-engine";
+import { parseBirthDateTime } from "@/application/horoscope/horoscope.service";
 import type { PlanetKey, PlanetPosition } from "@/lib/services/swiss-ephemeris";
 
 describe("Module 4 — Vedic math", () => {
@@ -39,6 +40,12 @@ describe("Module 4 — Vedic math", () => {
       },
     ];
     expect(detectManglik(planets).status).toBe("MANGLIK");
+  });
+
+  it("converts Asia/Kolkata civil time to UTC (IST = UTC+5:30)", () => {
+    const birthDate = new Date(Date.UTC(1995, 4, 15)); // 1995-05-15 calendar day
+    const utc = parseBirthDateTime(birthDate, "12:00:00", "Asia/Kolkata");
+    expect(utc.toISOString()).toBe("1995-05-15T06:30:00.000Z");
   });
 
   it("builds planet rows and vimshottari periods", () => {

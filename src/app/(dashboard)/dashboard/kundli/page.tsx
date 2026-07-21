@@ -69,7 +69,9 @@ export default function KundliPage() {
       return;
     }
     setData(json.data);
-    setMessage("Chart generated and stored.");
+    setMessage(
+      "Chart regenerated with sidereal Lahiri ayanamsa (AstroSage-style). Compare Lagna & Moon signs.",
+    );
   }
 
   const h = data?.horoscope;
@@ -94,11 +96,11 @@ export default function KundliPage() {
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Kundli"
-        description="Your Vedic chart workspace"
+        description="Sidereal Lahiri (AstroSage-style) · Swiss Ephemeris rule engine"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button type="button" onClick={generate} disabled={loading}>
-              {loading ? "Generating…" : "Generate chart"}
+              {loading ? "Generating…" : h ? "Regenerate chart" : "Generate chart"}
             </Button>
             <Button asChild variant="secondary">
               <Link href={routes.birthDetails}>Birth details</Link>
@@ -135,8 +137,8 @@ export default function KundliPage() {
       ) : (
         <GlassCard>
           <p className="text-muted-foreground text-sm">
-            No stored chart yet. Save birth details, then generate. Calculations use Swiss Ephemeris
-            — AI never computes astrology.
+            No stored chart yet. Save birth details, then generate. Engine uses Swiss Ephemeris with
+            sidereal Lahiri ayanamsa (same family as AstroSage) — AI never computes astrology.
           </p>
         </GlassCard>
       )}

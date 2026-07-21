@@ -1,6 +1,9 @@
 /**
  * Server-only Swiss Ephemeris wrapper.
  * Do not import this module from Client Components.
+ *
+ * Vedic (AstroSage-style) charts use the **sidereal** zodiac with **Lahiri** ayanamsa.
+ * Tropical longitudes without ayanamsa will typically shift Lagna/Moon by ~1 sign today.
  */
 import sweph from "sweph";
 
@@ -33,6 +36,8 @@ export type HouseSystemResult = {
   ascmc: number[];
 };
 
+export type AyanamshaMode = "LAHIRI" | "RAMAN" | "KRISHNAMURTI" | "FAGAN_BRADLEY";
+
 const PLANET_BODIES: Record<Exclude<PlanetKey, "ketu">, number> = {
   sun: sweph.constants.SE_SUN,
   moon: sweph.constants.SE_MOON,
@@ -47,8 +52,16 @@ const PLANET_BODIES: Record<Exclude<PlanetKey, "ketu">, number> = {
   rahu: sweph.constants.SE_TRUE_NODE,
 };
 
+const AYANAMSHA_MAP: Record<AyanamshaMode, number> = {
+  LAHIRI: sweph.constants.SE_SIDM_LAHIRI,
+  RAMAN: sweph.constants.SE_SIDM_RAMAN,
+  KRISHNAMURTI: sweph.constants.SE_SIDM_KRISHNAMURTI,
+  FAGAN_BRADLEY: sweph.constants.SE_SIDM_FAGAN_BRADLEY,
+};
+
 export class SwissEphemerisService {
   private initialized = false;
+  private ayanamsha: AyanamshaMode = "LAHIRI";
 
   initialize(ephePath?: string): void {
     if (this.initialized) return;
@@ -56,8 +69,9 @@ export class SwissEphemerisService {
     try {
       const path = ephePath || process.env.SWISS_EPHEMERIS_PATH || "./ephe";
       sweph.set_ephe_path(path);
+      this.setAyanamsha("LAHIRI");
       this.initialized = true;
-      logger.info({ path }, "Swiss Ephemeris initialized");
+      logger.info({ path, ayanamsha: this.ayanamsha }, "Swiss Ephemeris initialized (sidereal)");
     } catch (error) {
       throw new AppError(
         "SWISS_EPHEMERIS_INIT_FAILED",
@@ -66,6 +80,17 @@ export class SwissEphemerisService {
         error,
       );
     }
+  }
+
+  setAyanamsha(mode: AyanamshaMode = "LAHIRI"): void {
+    const sidMode = AYANAMSHA_MAP[mode] ?? sweph.constants.SE_SIDM_LAHIRI;
+    sweph.set_sid_mode(sidMode, 0, 0);
+    this.ayanamsha = mode;
+  }
+
+  getAyanamsa(jd: number): number {
+    this.ensureInitialized();
+    return sweph.get_ayanamsa_ut(jd);
   }
 
   julDay(date: Date, calendar: "g" | "j" = "g"): number {
@@ -85,9 +110,11 @@ export class SwissEphemerisService {
 
   calculatePlanets(jd: number): Record<PlanetKey, PlanetPosition> {
     this.ensureInitialized();
-    // Prefer Swiss Ephemeris files; fall back to built-in Moshier (no ephe pack required).
-    const preferred = sweph.constants.SEFLG_SWIEPH | sweph.constants.SEFLG_SPEED;
-    const fallback = sweph.constants.SEFLG_MOSEPH | sweph.constants.SEFLG_SPEED;
+    // Sidereal (Lahiri by default) — matches AstroSage / Indian Vedic apps
+    const preferred =
+      sweph.constants.SEFLG_SWIEPH | sweph.constants.SEFLG_SPEED | sweph.constants.SEFLG_SIDEREAL;
+    const fallback =
+      sweph.constants.SEFLG_MOSEPH | sweph.constants.SEFLG_SPEED | sweph.constants.SEFLG_SIDEREAL;
     const result = {} as Record<PlanetKey, PlanetPosition>;
 
     (Object.keys(PLANET_BODIES) as Array<Exclude<PlanetKey, "ketu">>).forEach((key) => {
@@ -126,7 +153,8 @@ export class SwissEphemerisService {
 
   calculateHouses(jd: number, latitude: number, longitude: number, hsys = "P"): HouseSystemResult {
     this.ensureInitialized();
-    const houses = sweph.houses_ex2(jd, 0, latitude, longitude, hsys);
+    // SEFLG_SIDEREAL so Ascendant / cusps are sidereal (Lahiri), not tropical
+    const houses = sweph.houses_ex2(jd, sweph.constants.SEFLG_SIDEREAL, latitude, longitude, hsys);
     if (houses.flag !== sweph.constants.OK) {
       throw new AppError(
         "SWISS_EPHEMERIS_HOUSES_FAILED",
