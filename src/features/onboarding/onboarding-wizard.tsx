@@ -117,13 +117,21 @@ export function OnboardingWizard() {
     if (chartRes.success && chartRes.data?.horoscope) {
       setChart(chartRes.data.horoscope);
     }
-    // Resume step if partially done
-    if (p?.onboardingCompletedAt) {
-      router.replace(routes.dashboard);
-      return;
-    }
-    if (chartRes.success && chartRes.data?.horoscope) setStep(3);
-    else if (birth?.birthDate) setStep(2);
+    // Resume step if partially done — never skip required setup
+    if (
+      chartRes.success &&
+      chartRes.data?.horoscope &&
+      birth?.birthDate &&
+      p?.city &&
+      p?.photos?.length
+    ) {
+      const gender = String(p?.gender || "").toUpperCase();
+      if ((gender === "MALE" || gender === "FEMALE") && p?.onboardingCompletedAt) {
+        router.replace(routes.dashboard);
+        return;
+      }
+      setStep(3);
+    } else if (birth?.birthDate) setStep(2);
     else if (p?.city && p?.profession) setStep(1);
   }, [router]);
 
@@ -141,19 +149,6 @@ export function OnboardingWizard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completeOnboarding: true }),
     });
-  }
-
-  async function finishLater() {
-    setBusy(true);
-    setError(null);
-    try {
-      await markComplete();
-      router.push(routes.dashboard);
-    } catch {
-      setError("Could not save progress");
-    } finally {
-      setBusy(false);
-    }
   }
 
   async function saveAbout() {
@@ -481,15 +476,6 @@ export function OnboardingWizard() {
               >
                 {busy ? "Saving…" : "Continue"}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                disabled={busy}
-                onClick={() => void finishLater()}
-              >
-                Save and finish later
-              </Button>
             </div>
           </>
         ) : null}
@@ -594,15 +580,6 @@ export function OnboardingWizard() {
                 onClick={() => void saveBirthAndGenerate()}
               >
                 {busy ? "Working…" : "Generate My Kundli"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                disabled={busy}
-                onClick={() => void finishLater()}
-              >
-                Save and finish later
               </Button>
             </div>
           </>

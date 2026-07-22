@@ -9,7 +9,11 @@ import {
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
-import { normalizePagination, toPaginatedResult } from "@/repositories/pagination";
+import {
+  normalizePagination,
+  toPaginatedResult,
+  type PaginatedResult,
+} from "@/repositories/pagination";
 import { ObjectId } from "mongodb";
 
 function userIdQuery(userIds: string[]) {
@@ -70,6 +74,13 @@ export type RankedMatch = {
   cardSummary: string;
   gunaBreakdown: Array<{ koota: string; score: number; max: number; note: string }>;
   rank: number;
+};
+
+export type MatchSearchResult = PaginatedResult<RankedMatch> & {
+  self: {
+    hasChart: boolean;
+    city: string | null | undefined;
+  };
 };
 
 function ageFromDob(dob?: Date | string | null): number | null {
@@ -202,7 +213,7 @@ export function oppositeGender(gender?: string | null): "MALE" | "FEMALE" | null
 }
 
 export class MatchmakingService {
-  async search(userId: string, filters: MatchFilters = {}) {
+  async search(userId: string, filters: MatchFilters = {}): Promise<MatchSearchResult> {
     await connectMongo();
     const { page, limit, skip } = normalizePagination(filters);
 
@@ -218,7 +229,7 @@ export class MatchmakingService {
     // Without a known binary gender we must not recommend anyone (avoids same-gender leaks).
     if (!targetGender) {
       return {
-        ...toPaginatedResult([], page, limit, 0),
+        ...toPaginatedResult<RankedMatch>([], 0, page, limit),
         self: {
           hasChart: false,
           city: selfProfile?.city ?? null,
@@ -616,7 +627,7 @@ export class MatchmakingService {
     }));
   }
 
-  async recommend(userId: string) {
+  async recommend(userId: string): Promise<MatchSearchResult> {
     return this.search(userId, {
       limit: 60,
       page: 1,

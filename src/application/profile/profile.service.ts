@@ -13,12 +13,20 @@ const COMPLETION_WEIGHTS: Array<{
   weight: number;
   check: (p: Record<string, unknown>) => boolean;
 }> = [
-  { key: "about", weight: 15, check: (p) => Boolean(p.about && String(p.about).length > 40) },
+  {
+    key: "gender",
+    weight: 10,
+    check: (p) => {
+      const g = String(p.gender || "").toUpperCase();
+      return g === "MALE" || g === "FEMALE";
+    },
+  },
+  { key: "about", weight: 10, check: (p) => Boolean(p.about && String(p.about).length > 40) },
   { key: "photos", weight: 25, check: (p) => Array.isArray(p.photos) && p.photos.length > 0 },
   { key: "city", weight: 10, check: (p) => Boolean(p.city) },
   { key: "profession", weight: 10, check: (p) => Boolean(p.profession) },
   { key: "education", weight: 10, check: (p) => Boolean(p.education) },
-  { key: "religion", weight: 10, check: (p) => Boolean(p.religion) },
+  { key: "religion", weight: 5, check: (p) => Boolean(p.religion) },
   { key: "dateOfBirth", weight: 10, check: (p) => Boolean(p.dateOfBirth) },
   { key: "heightCm", weight: 5, check: (p) => Boolean(p.heightCm) },
   {
@@ -150,6 +158,11 @@ export class ProfileService {
       payload.name = rest.name.trim();
     }
     if (completeOnboarding === true) {
+      const existing = await Profile.findOne({ userId }).lean();
+      const gender = String(rest.gender || existing?.gender || "").toUpperCase();
+      if (gender !== "MALE" && gender !== "FEMALE") {
+        throw new ValidationError("Select Male or Female before finishing setup");
+      }
       payload.onboardingCompletedAt = new Date();
     }
 

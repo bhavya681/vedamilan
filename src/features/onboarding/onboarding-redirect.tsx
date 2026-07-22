@@ -3,29 +3,33 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { routes } from "@/lib/constants/routes";
 
-const SKIP_PREFIXES = [
+/** Routes allowed while onboarding is incomplete */
+const ALLOW_WHILE_INCOMPLETE = [
   routes.onboarding,
+  routes.birthDetails,
+  routes.kundli,
+  routes.editProfile,
+  routes.preferences,
   routes.settings,
   routes.security,
   routes.privacySettings,
-  routes.birthDetails,
-  routes.editProfile,
-  routes.preferences,
-  routes.kundli,
 ];
 
 /**
- * Soft gate: incomplete onboarding users (no flag + missing birth/chart)
- * are guided to /dashboard/onboarding. Skipped after "finish later".
+ * Hard gate: members must complete profile basics, birth details, and kundli
+ * before using matches / compatibility / home content.
  */
 export function OnboardingRedirect() {
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (SKIP_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+    if (ALLOW_WHILE_INCOMPLETE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+      return;
+    }
 
     let cancelled = false;
     void (async () => {
@@ -35,15 +39,25 @@ export function OnboardingRedirect() {
           fetch("/api/horoscope").then((r) => r.json()),
         ]);
         if (cancelled || !profileRes.success) return;
+
         const profile = profileRes.data?.profile;
-        if (profile?.onboardingCompletedAt) return;
-        const hasBirth = Boolean(profileRes.data?.birthDetails?.birthDate);
-        const hasChart = Boolean(chartRes.success && chartRes.data?.horoscope);
-        if (!hasBirth || !hasChart) {
+        const readiness = evaluateOnboardingReadiness({
+          gender: profile?.gender,
+          city: profile?.city,
+          profession: profile?.profession,
+          education: profile?.education,
+          dateOfBirth: profile?.dateOfBirth,
+          photos: profile?.photos,
+          completionScore: profile?.completion?.score,
+          hasBirthDetails: Boolean(profileRes.data?.birthDetails?.birthDate),
+          hasChart: Boolean(chartRes.success && chartRes.data?.horoscope),
+        });
+
+        if (!readiness.ready) {
           router.replace(routes.onboarding);
         }
       } catch {
-        /* ignore — do not block dashboard on network blips */
+        /* ignore network blips */
       }
     })();
 

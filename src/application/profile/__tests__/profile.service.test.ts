@@ -19,6 +19,7 @@ describe("Module 3 — profile completion", () => {
     const result = calculateProfileCompletion({
       about: "A".repeat(50),
       photos: [{ url: "x" }],
+      gender: "MALE",
       city: "Bengaluru",
       profession: "Designer",
       education: "NID",
