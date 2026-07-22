@@ -30,7 +30,9 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [setupHint, setSetupHint] = useState<"birth" | "kundli" | "profile" | null>(null);
+  const [setupHint, setSetupHint] = useState<"birth" | "kundli" | "profile" | "gender" | null>(
+    null,
+  );
   const [shortlisting, setShortlisting] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
@@ -57,10 +59,13 @@ export default function MatchesPage() {
       const data = (recJson.data?.data || []) as MatchItem[];
       setMatches(data);
 
+      const gender = profileJson.data?.profile?.gender as string | undefined;
+      const hasGender = gender === "MALE" || gender === "FEMALE";
       const hasBirth = Boolean(profileJson.success && profileJson.data?.birthDetails?.birthDate);
       const hasChart = Boolean(chartJson.success && chartJson.data?.horoscope);
       const completion = profileJson.data?.profile?.completion?.score ?? 0;
-      if (!hasBirth) setSetupHint("birth");
+      if (!hasGender) setSetupHint("gender");
+      else if (!hasBirth) setSetupHint("birth");
       else if (!hasChart) setSetupHint("kundli");
       else if (completion < 40) setSetupHint("profile");
       else setSetupHint(null);
@@ -156,39 +161,45 @@ export default function MatchesPage() {
       ) : (
         <EmptyState
           title={
-            setupHint === "birth"
-              ? "Add your birth details to unlock deeper matches"
-              : setupHint === "kundli"
-                ? "Generate your Kundli to unlock Vedic matching"
-                : "Your match journey is waiting"
+            setupHint === "gender"
+              ? "Set your gender to see suited matches"
+              : setupHint === "birth"
+                ? "Add your birth details to unlock deeper matches"
+                : setupHint === "kundli"
+                  ? "Generate your Kundli to unlock Vedic matching"
+                  : "Your match journey is waiting"
           }
           description={
-            setupHint === "birth"
-              ? "Birth details help us calculate compatibility with care."
-              : setupHint === "kundli"
-                ? "Your chart powers Ashta Koota and relationship scoring."
-                : "Check back as more members join, or broaden your search."
+            setupHint === "gender"
+              ? "We only suggest opposite-gender profiles for matrimonial matching."
+              : setupHint === "birth"
+                ? "Birth details help us calculate compatibility with care."
+                : setupHint === "kundli"
+                  ? "Your chart powers Ashta Koota and relationship scoring."
+                  : "Check back as more members join, or broaden your search."
           }
           action={
             <Button asChild>
               <Link
                 href={
-                  setupHint === "birth"
-                    ? routes.birthDetails
-                    : setupHint === "kundli"
-                      ? routes.kundli
-                      : setupHint === "profile"
-                        ? routes.onboarding
+                  setupHint === "gender" || setupHint === "profile"
+                    ? routes.onboarding
+                    : setupHint === "birth"
+                      ? routes.birthDetails
+                      : setupHint === "kundli"
+                        ? routes.kundli
                         : routes.search
                 }
               >
-                {setupHint === "birth"
-                  ? "Add birth details"
-                  : setupHint === "kundli"
-                    ? "Generate Kundli"
-                    : setupHint === "profile"
-                      ? "Help us understand you"
-                      : "Open Search"}
+                {setupHint === "gender"
+                  ? "Set gender"
+                  : setupHint === "birth"
+                    ? "Add birth details"
+                    : setupHint === "kundli"
+                      ? "Generate Kundli"
+                      : setupHint === "profile"
+                        ? "Help us understand you"
+                        : "Open Search"}
               </Link>
             </Button>
           }

@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         : undefined,
       page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
       limit: searchParams.get("limit") ? Number(searchParams.get("limit")) : 20,
+      applyPreferences: searchParams.get("applyPreferences") !== "false",
     });
     return successResponse(result);
   } catch (error) {

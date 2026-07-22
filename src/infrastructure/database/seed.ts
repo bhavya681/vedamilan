@@ -61,6 +61,9 @@ function inferCountry(member: (typeof DEMO_MEMBERS)[number]): string {
     return "United Kingdom";
   }
   if (place.includes("cuba") || place.includes("havana")) return "Cuba";
+  if (place.includes("barbados") || place.includes("bridgetown") || place.includes("saint michael"))
+    return "Barbados";
+  if (place.includes("japan") || place.includes("osaka") || place.includes("tokyo")) return "Japan";
   if (place.includes("new zealand") || place.includes("auckland")) return "New Zealand";
   if (place.includes("hawaii") || place.includes("honolulu")) return "United States";
   if (place.includes("spain") || place.includes("madrid")) return "Spain";

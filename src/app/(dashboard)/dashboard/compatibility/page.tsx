@@ -182,10 +182,14 @@ export default function CompatibilityPage() {
     const candidate = new URLSearchParams(window.location.search).get("candidate");
     if (candidate) setCandidateUserId(candidate);
     void loadReports().catch(() => setError("Failed to load compatibility"));
-    void fetch("/api/recommendations")
+    // Full opposite-gender roster (celebs + members) for personalized compatibility picks
+    void fetch("/api/matches?limit=80&applyPreferences=false&minCompatibility=0")
       .then((r) => r.json())
       .then((json) => {
-        if (json.success) setCandidates(json.data?.data || []);
+        if (json.success) {
+          const rows = (json.data?.data || []) as RecMatch[];
+          setCandidates(rows);
+        }
       })
       .catch(() => undefined);
   }, []);
@@ -277,12 +281,12 @@ export default function CompatibilityPage() {
           <div>
             <h2 className="font-display text-xl sm:text-2xl">Who would you like to understand?</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Start with someone from your matches.
+              Opposite-gender connections with Vedic charts — including new international profiles.
             </p>
           </div>
           {candidates.length ? (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {candidates.slice(0, 8).map((c) => (
+            <div className="scrollbar-hidden grid max-h-[28rem] gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+              {candidates.map((c) => (
                 <button
                   key={c.userId}
                   type="button"

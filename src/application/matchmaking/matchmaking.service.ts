@@ -182,9 +182,22 @@ function displayName(names: Map<string, string>, userId: string) {
 }
 
 /** Matrimonial default: males see females, females see males. */
+export function normalizeGender(
+  gender?: string | null,
+): "MALE" | "FEMALE" | "OTHER" | "UNDISCLOSED" | null {
+  if (!gender) return null;
+  const g = String(gender).trim().toUpperCase();
+  if (g === "MALE" || g === "M" || g === "MAN" || g === "BOY") return "MALE";
+  if (g === "FEMALE" || g === "F" || g === "WOMAN" || g === "GIRL") return "FEMALE";
+  if (g === "OTHER") return "OTHER";
+  if (g === "UNDISCLOSED") return "UNDISCLOSED";
+  return null;
+}
+
 export function oppositeGender(gender?: string | null): "MALE" | "FEMALE" | null {
-  if (gender === "MALE") return "FEMALE";
-  if (gender === "FEMALE") return "MALE";
+  const g = normalizeGender(gender);
+  if (g === "MALE") return "FEMALE";
+  if (g === "FEMALE") return "MALE";
   return null;
 }
 
@@ -199,48 +212,66 @@ export class MatchmakingService {
         : null;
 
     const selfProfile = await Profile.findOne({ userId }).lean();
-    const targetGender = oppositeGender(selfProfile?.gender);
+    const selfGender = normalizeGender(selfProfile?.gender);
+    const targetGender = oppositeGender(selfGender);
+
+    // Without a known binary gender we must not recommend anyone (avoids same-gender leaks).
+    if (!targetGender) {
+      return {
+        ...toPaginatedResult([], page, limit, 0),
+        self: {
+          hasChart: false,
+          city: selfProfile?.city ?? null,
+        },
+      };
+    }
 
     const query: Record<string, unknown> = {
       userId: { $ne: userId },
       status: "ACTIVE",
       visibility: { $ne: "HIDDEN" },
+      // Strict opposite-gender discovery only
+      gender: targetGender,
       // Profile picture is mandatory for discovery
       "photos.0": { $exists: true },
     };
 
-    // Same-gender profiles are never suggested for matchmaking
-    if (targetGender) {
-      query.gender = targetGender;
-    }
-
     const city = filters.city;
     if (city && city !== "all") {
       query.city = city;
-    } else if (city !== "all" && filters.applyPreferences !== false && prefs?.cities?.[0]) {
-      query.city = prefs.cities[0];
     }
+    // Do not hard-filter by preference city/religion — that hides international / celeb demos.
+    // Explicit search filters still apply; age/manglik/minGuna prefs remain as soft post-filters.
     if (filters.religion) {
       query.religion = filters.religion;
-    } else if (filters.applyPreferences !== false && prefs?.religions?.[0]) {
-      query.religion = prefs.religions[0];
     }
     if (filters.profession) query.profession = new RegExp(filters.profession, "i");
     if (filters.education) query.education = new RegExp(filters.education, "i");
     if (filters.language) query.languages = filters.language;
 
-    const minHeight = filters.minHeightCm ?? prefs?.heightMinCm ?? undefined;
-    const maxHeight = filters.maxHeightCm ?? prefs?.heightMaxCm ?? undefined;
+    const minHeight =
+      filters.minHeightCm ??
+      (filters.applyPreferences !== false ? prefs?.heightMinCm : undefined) ??
+      undefined;
+    const maxHeight =
+      filters.maxHeightCm ??
+      (filters.applyPreferences !== false ? prefs?.heightMaxCm : undefined) ??
+      undefined;
     if (minHeight || maxHeight) {
       query.heightCm = {};
       if (minHeight) (query.heightCm as Record<string, number>).$gte = minHeight;
       if (maxHeight) (query.heightCm as Record<string, number>).$lte = maxHeight;
     }
 
-    const [selfChart, candidates] = await Promise.all([
+    const [selfChart, rawCandidates] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
       Profile.find(query).limit(200).lean(),
     ]);
+
+    // Defensive: never surface same-gender or undisclosed candidates even if data is inconsistent
+    const candidates = rawCandidates.filter(
+      (profile) => normalizeGender(profile.gender) === targetGender,
+    );
 
     const selfMoon = selfChart ? moonMeta(selfChart) : null;
     const candidateIds = candidates.map((c) => c.userId);
@@ -587,10 +618,11 @@ export class MatchmakingService {
 
   async recommend(userId: string) {
     return this.search(userId, {
-      limit: 10,
+      limit: 60,
       page: 1,
       minCompatibility: 0,
-      applyPreferences: true,
+      // Gender-wise Vedic discovery — do not hard-lock to preference city/religion
+      applyPreferences: false,
     });
   }
 }

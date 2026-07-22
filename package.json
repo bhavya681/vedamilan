@@ -15,6 +15,7 @@
     "db:seed": "tsx src/infrastructure/database/seed.ts",
     "db:indexes": "tsx src/infrastructure/database/ensure-indexes.ts",
     "db:backfill-names": "tsx src/infrastructure/database/backfill-profile-names.ts",
+    "db:cleanup-genders": "tsx src/infrastructure/database/cleanup-genders-duplicates.ts",
     "test": "vitest run",
     "test:db": "vitest run src/infrastructure/database src/repositories",
     "test:auth": "vitest run src/lib/auth",

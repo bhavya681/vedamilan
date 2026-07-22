@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { scoreAshtaKoota } from "@/application/rules/ashta-koota";
-import { oppositeGender } from "@/application/matchmaking/matchmaking.service";
+import { normalizeGender, oppositeGender } from "@/application/matchmaking/matchmaking.service";
 
 describe("Module 6 — matchmaking ranking", () => {
   it("suggests opposite gender only", () => {
     expect(oppositeGender("MALE")).toBe("FEMALE");
     expect(oppositeGender("FEMALE")).toBe("MALE");
+    expect(oppositeGender("male")).toBe("FEMALE");
     expect(oppositeGender("OTHER")).toBeNull();
     expect(oppositeGender("UNDISCLOSED")).toBeNull();
+    expect(normalizeGender("Woman")).toBe("FEMALE");
+    expect(normalizeGender("m")).toBe("MALE");
   });
 
   it("ranks higher Ashta Koota scores first", () => {
