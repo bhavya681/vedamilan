@@ -174,6 +174,7 @@ async function wipeNonPreservedUsers() {
 async function upsertProfile(userId: string, member: (typeof DEMO_MEMBERS)[number]) {
   const payload = {
     userId,
+    name: member.name,
     headline: member.headline,
     about: member.about,
     gender: member.gender,

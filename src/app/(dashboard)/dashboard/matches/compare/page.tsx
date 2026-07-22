@@ -131,6 +131,12 @@ function CompareMatchesInner() {
               <Card key={profile.userId} className="glass-panel">
                 <CardHeader>
                   <CardTitle className="font-display text-2xl">{profile.name}</CardTitle>
+                  {profile.headline &&
+                  !String(profile.headline).toLowerCase().endsWith("'s profile") ? (
+                    <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                      {profile.headline}
+                    </p>
+                  ) : null}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Progress value={profile.compatibilityScore} />
@@ -140,7 +146,9 @@ function CompareMatchesInner() {
                       Guna {profile.totalGuna}/{profile.maxGuna}
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground text-sm">{profile.headline}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {[profile.age, profile.city, profile.profession].filter(Boolean).join(" · ")}
+                  </p>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`${routes.matchProfile}?id=${profile.userId}`}>Open profile</Link>
                   </Button>

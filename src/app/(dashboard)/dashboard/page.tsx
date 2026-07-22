@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-import { PageHeader, AuroraBackground, EmptyState } from "@/components/layout/page-shell";
+import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MatchCard, GlassCard } from "@/components/ui/premium-cards";
+import { MatchCard } from "@/components/ui/premium-cards";
 import { routes } from "@/lib/constants/routes";
 
 type Bundle = {
@@ -24,7 +24,9 @@ type Bundle = {
     city: string | null;
     profession: string | null;
     compatibilityScore: number;
-    headline: string;
+    headline: string | null;
+    cardSummary?: string;
+    reasons?: string[];
     photo: string | null;
   }>;
   insight: string | null;
@@ -33,9 +35,20 @@ type Bundle = {
   nextSetupLabel: string;
 };
 
+function greetingForHour(hour: number) {
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function DashboardPage() {
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [greeting, setGreeting] = useState("Hello");
+
+  useEffect(() => {
+    setGreeting(greetingForHour(new Date().getHours()));
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -58,14 +71,14 @@ export default function DashboardPage() {
           ai.success && ai.data.insights?.[0]?.body
             ? ai.data.insights[0].body
             : hasChart
-              ? "Open AI Insights for a plain-language reading of your chart."
+              ? "Open Insights for a plain-language reading of your chart."
               : null;
 
         let nextSetupHref: string = routes.onboarding;
-        let nextSetupLabel = "Continue Setup";
+        let nextSetupLabel = "Continue setup";
         if (completion < 40) {
           nextSetupHref = routes.onboarding;
-          nextSetupLabel = "Complete your profile";
+          nextSetupLabel = "Help us understand you";
         } else if (!hasBirth) {
           nextSetupHref = routes.birthDetails;
           nextSetupLabel = "Add your birth details";
@@ -81,8 +94,8 @@ export default function DashboardPage() {
           hasChart,
           moonSign: chartRes.data?.horoscope?.moonSign || null,
           currentMaha: chartRes.data?.dasha?.currentMaha || null,
-          matches: matchItems.slice(0, 4),
-          insight: insight ? String(insight).slice(0, 420) : null,
+          matches: matchItems.slice(0, 3),
+          insight: insight ? String(insight).slice(0, 320) : null,
           unread: notes.success ? notes.data.unread || 0 : 0,
           nextSetupHref,
           nextSetupLabel,
@@ -98,21 +111,18 @@ export default function DashboardPage() {
   const needsSetup = Boolean(bundle && (!bundle.hasChart || bundle.completion < 60));
 
   return (
-    <div className="relative space-y-6 sm:space-y-8">
-      <AuroraBackground className="opacity-50" />
-
+    <div className="relative space-y-8 sm:space-y-10">
       <PageHeader
-        eyebrow={needsSetup ? "Welcome" : "Your compatibility journey"}
-        title={`Namaste, ${firstName}`}
+        title={`${greeting}, ${firstName}`}
         description={
           needsSetup
-            ? "A few steps unlock personalized matches and Vedic compatibility."
-            : "Discover people aligned with you — astrology supports the decision."
+            ? "A few thoughtful steps unlock personalized matches and deeper compatibility."
+            : "Your journey toward meaningful compatibility continues."
         }
         actions={
           <Button asChild className="w-full sm:w-auto">
             <Link href={needsSetup ? (bundle?.nextSetupHref ?? routes.onboarding) : routes.matches}>
-              {needsSetup ? bundle?.nextSetupLabel || "Continue Setup" : "View matches"}
+              {needsSetup ? bundle?.nextSetupLabel || "Continue setup" : "View matches"}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -122,11 +132,11 @@ export default function DashboardPage() {
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       {needsSetup ? (
-        <GlassCard className="relative space-y-4">
+        <section className="border-border/70 bg-card shadow-soft space-y-4 rounded-2xl border p-5 sm:p-6">
           <div>
-            <h2 className="font-display text-2xl">Complete your VedaMilan profile</h2>
+            <h2 className="font-display text-2xl">Help us understand you</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              More details help us find more relevant matches.
+              The more we know, the more meaningful your matches become.
             </p>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -135,26 +145,34 @@ export default function DashboardPage() {
           </div>
           <Progress value={bundle?.completion ?? 0} />
           <ul className="text-muted-foreground space-y-1.5 text-sm">
-            <li>{(bundle?.completion ?? 0) >= 40 ? "✓" : "○"} Basic information</li>
-            <li>{bundle?.hasBirth ? "✓" : "○"} Birth details</li>
-            <li>{bundle?.hasChart ? "✓" : "○"} Kundli</li>
-            <li>{(bundle?.matches.length ?? 0) > 0 ? "✓" : "○"} First recommendations</li>
+            <li>{(bundle?.completion ?? 0) >= 40 ? "·" : "·"} Basic information</li>
+            <li className={bundle?.hasBirth ? "text-foreground" : undefined}>
+              {bundle?.hasBirth ? "Birth details added" : "Birth details needed"}
+            </li>
+            <li className={bundle?.hasChart ? "text-foreground" : undefined}>
+              {bundle?.hasChart ? "Kundli ready" : "Kundli needed"}
+            </li>
           </ul>
           <Button asChild>
             <Link href={bundle?.nextSetupHref ?? routes.onboarding}>{bundle?.nextSetupLabel}</Link>
           </Button>
-        </GlassCard>
+        </section>
       ) : (
         <>
-          <div className="relative space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="font-display text-2xl">Recommended for you</h2>
+          <section className="space-y-4">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="font-display text-2xl">People to consider</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  A few aligned profiles to start with.
+                </p>
+              </div>
               <Button asChild variant="outline" size="sm">
                 <Link href={routes.matches}>See all</Link>
               </Button>
             </div>
             {bundle?.matches?.length ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {bundle.matches.map((m) => (
                   <MatchCard
                     key={m.userId}
@@ -163,8 +181,9 @@ export default function DashboardPage() {
                     city={m.city || "—"}
                     profession={m.profession || "—"}
                     score={m.compatibilityScore}
-                    aiScore={m.compatibilityScore}
-                    headline={m.headline}
+                    headline={
+                      m.reasons?.[0] || m.cardSummary || m.headline || "Explore this connection"
+                    }
                     photo={m.photo || undefined}
                     href={`${routes.matchProfile}?id=${m.userId}`}
                   />
@@ -172,8 +191,8 @@ export default function DashboardPage() {
               </div>
             ) : (
               <EmptyState
-                title="No matches yet"
-                description="We need a few more details — or more members — to surface meaningful matches."
+                title="Finding meaningful connections"
+                description="We need a few more details — or more members — to surface aligned people."
                 action={
                   <Button asChild>
                     <Link href={routes.search}>Explore Search</Link>
@@ -181,48 +200,37 @@ export default function DashboardPage() {
                 }
               />
             )}
-          </div>
+          </section>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <GlassCard>
-              <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                Moon
+          <section className="border-border/60 grid gap-6 border-t pt-8 md:grid-cols-2">
+            <div>
+              <p className="text-muted-foreground text-sm">Your Vedic note</p>
+              <p className="font-display mt-2 text-3xl">{bundle?.moonSign || "—"}</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Moon · Dasha {bundle?.currentMaha || "—"}
               </p>
-              <p className="font-display mt-2 text-2xl">{bundle?.moonSign || "—"}</p>
               <Button asChild variant="link" className="mt-2 h-auto px-0">
-                <Link href={routes.kundli}>Open Kundli</Link>
+                <Link href={routes.kundli}>Open your Kundli</Link>
               </Button>
-            </GlassCard>
-            <GlassCard>
-              <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                Dasha
-              </p>
-              <p className="font-display mt-2 text-2xl">{bundle?.currentMaha || "—"}</p>
-            </GlassCard>
-            <GlassCard>
-              <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                Alerts
-              </p>
-              <p className="font-display mt-2 text-2xl">{bundle?.unread ?? 0}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-sm">Activity</p>
+              <p className="font-display mt-2 text-3xl">{bundle?.unread ?? 0}</p>
+              <p className="text-muted-foreground mt-1 text-sm">Unread notifications</p>
               <Button asChild variant="link" className="mt-2 h-auto px-0">
-                <Link href={routes.notifications}>Notifications</Link>
+                <Link href={routes.notifications}>View activity</Link>
               </Button>
-            </GlassCard>
-          </div>
+            </div>
+          </section>
 
           {bundle?.insight ? (
-            <GlassCard>
-              <p className="text-ai flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase">
-                <Sparkles className="h-3.5 w-3.5" />
-                Astrology insight
-              </p>
-              <p className="text-muted-foreground mt-3 text-sm leading-relaxed whitespace-pre-wrap">
-                {bundle.insight}
-              </p>
-              <Button asChild variant="secondary" size="sm" className="mt-4">
-                <Link href={routes.aiInsights}>Ask AI about my chart</Link>
+            <section className="border-border/70 bg-card shadow-soft rounded-2xl border p-5 sm:p-6">
+              <p className="text-muted-foreground text-sm">Compatibility insight</p>
+              <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
+              <Button asChild variant="outline" size="sm" className="mt-4">
+                <Link href={routes.aiInsights}>Ask AI Guru</Link>
               </Button>
-            </GlassCard>
+            </section>
           ) : null}
         </>
       )}

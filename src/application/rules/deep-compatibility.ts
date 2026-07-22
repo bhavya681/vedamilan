@@ -515,7 +515,7 @@ export function scoreDeepCompatibility(input: {
               ? "High Challenge"
               : "Not Recommended";
 
-  const decisionReason = `Weighted modules (Personality, Moon, Shukra Milan, 7th, D9, Ashta Koota, intimacy, family, goals, communication, longevity) average to ${overallScore}%. This is a guided assessment — not a guarantee. Strengths should be practiced; soft areas need agreements.`;
+  const decisionReason = `This ${decisionSummary} verdict is a weighted blend of Personality, Moon, Shukra Milan, 7th house, Navamsa (D9), Ashta Koota, intimacy, family, life goals, communication, and longevity — never a single koota or rule. Modules average to ${overallScore}%. Guided assessment, not a guarantee; practice strengths and agree on soft areas.`;
 
   const topStrengths = modules
     .filter((m) => m.score >= 70)

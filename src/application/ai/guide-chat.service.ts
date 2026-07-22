@@ -24,7 +24,7 @@ const TOPICS: GuideTopic[] = [
 ### Three steps
 1. **Create an account** and complete your profile (photo required).
 2. **Save birth details** (date, time, place) so we can generate your kundli.
-3. **Explore matches**, run **Ashta Koota** compatibility, and ask the **Jyotish Guru** for chart-backed insights.
+3. **Explore matches**, run **Ashta Koota** compatibility, and ask **AI Guru** for chart-backed insights.
 
 Start here: [Register](${routes.register}) → [Birth details](${routes.birthDetails}) after login.`,
   },
@@ -38,7 +38,7 @@ Start here: [Register](${routes.register}) → [Birth details](${routes.birthDet
 2. Generate / refresh your kundli from the dashboard.
 3. View North/South/East charts, planets, nakshatra, dasha, and transit pages.
 
-AI (Jyotish Guru) only **explains** engine output — it does not recalculate positions.
+AI (**AI Guru**) only **explains** engine output — it does not recalculate positions.
 
 Default ayanamsa: **Lahiri**.`,
   },
@@ -78,8 +78,8 @@ Reports stay in your dashboard so you can revisit and compare thoughtfully.`,
   },
   {
     keys: ["ai", "guru", "insight", "chat", "coach", "astrologer"],
-    title: "AI insights (Jyotish Guru)",
-    answer: `Inside the app, **AI Insights** is your Jyotish Guru chat.
+    title: "AI Guru",
+    answer: `Inside the app, **AI Insights** is your **AI Guru** chat.
 
 Ask about:
 - Raja Yogas and chart themes
@@ -87,7 +87,7 @@ Ask about:
 - Gochar (transits)
 - Marriage timing windows
 
-Answers are grounded in **your stored kundli data**. On this home helper, I explain how the product works — for personal chart readings, sign in and open AI Insights.`,
+Answers are grounded in **your stored kundli data**. On this home helper, I explain how the product works — for personal chart readings, sign in and open AI Guru.`,
   },
   {
     keys: ["price", "pricing", "plan", "premium", "billing", "payment", "subscription"],
@@ -144,7 +144,7 @@ Try asking about:
 - Kundli & birth details
 - Matching & search
 - Compatibility (Guna Milan)
-- AI Insights / Jyotish Guru
+- AI Guru / chart insights
 - Pricing or privacy
 
 Or jump in: [Register](${routes.register}) · [Pricing](${routes.pricing}) · [FAQ](${routes.faq}) · [Help](${routes.help})`;

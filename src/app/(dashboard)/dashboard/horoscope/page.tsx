@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { routes } from "@/lib/constants/routes";
 
@@ -80,7 +81,7 @@ export default function HoroscopePage() {
               <Link href={routes.kundli}>Kundli</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routes.aiInsights}>Ask Guru</Link>
+              <Link href={routes.aiInsights}>Ask AI Guru</Link>
             </Button>
           </div>
         }
@@ -103,10 +104,8 @@ export default function HoroscopePage() {
               <div className="relative flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Sparkles className="text-gold h-4 w-4" />
-                    <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
-                      Today&apos;s focus
-                    </p>
+                    <AiGuruAvatar size="sm" />
+                    <AiGuruLabel />
                   </div>
                   <h2 className="font-display mt-2 text-3xl tracking-tight sm:text-4xl">
                     {moonSign || "…"} · Moon day
@@ -118,7 +117,7 @@ export default function HoroscopePage() {
                   ) : null}
                 </div>
                 <Badge className="bg-primary/12 text-foreground hover:bg-primary/12 border-0">
-                  Chart-backed
+                  {AI_GURU_NAME}
                 </Badge>
               </div>
             </div>

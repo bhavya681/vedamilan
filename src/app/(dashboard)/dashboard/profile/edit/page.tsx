@@ -14,6 +14,7 @@ import {
 
 type ProfileBundle = {
   profile: {
+    name?: string;
     headline?: string;
     about?: string;
     profession?: string | null;
@@ -63,6 +64,7 @@ export default function EditProfilePage() {
     setLoading(true);
     const form = new FormData(event.currentTarget);
     const payload = {
+      name: String(form.get("name") || "").trim(),
       headline: String(form.get("headline") || ""),
       profession: String(form.get("profession") || ""),
       city: String(form.get("city") || ""),
@@ -141,7 +143,8 @@ export default function EditProfilePage() {
             <form className="space-y-4 border-t pt-6" onSubmit={onSave}>
               {(
                 [
-                  ["headline", "Headline", p.headline || ""],
+                  ["name", "Name", p.name || bundle?.user?.name || ""],
+                  ["headline", "Headline (shown under your name)", p.headline || ""],
                   ["profession", "Profession", p.profession || ""],
                   ["city", "City", p.city || ""],
                   ["education", "Education", p.education || ""],

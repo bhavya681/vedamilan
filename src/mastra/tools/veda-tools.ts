@@ -138,7 +138,8 @@ export const getCompatibilityTool = createTool({
 
 export const getMarriageTimingTool = createTool({
   id: "get-marriage-timing",
-  description: "Load marriage timing windows from the dasha rule engine for the user.",
+  description:
+    "Load multi-factor marriage timing (Mahadasha, Antardasha, live Gochar, partner-arrival and marriage windows). Never invent dates.",
   inputSchema: z.object({
     userId: z.string(),
   }),
@@ -147,7 +148,12 @@ export const getMarriageTimingTool = createTool({
     return {
       manglikStatus: timing.manglikStatus,
       currentMaha: timing.currentMaha,
+      currentAntar: timing.currentAntar,
+      seventhLord: timing.seventhLord,
       windows: (timing.windows || []).slice(0, 8),
+      partnerArrivalWindows: (timing.partnerArrivalWindows || []).slice(0, 4),
+      timingPrediction: timing.timingPrediction,
+      gochar: timing.gochar,
     };
   },
 });

@@ -5,6 +5,10 @@ export type GunaItem = {
   score: number;
   max: number;
   note: string;
+  /** Subtle visual cue for UI */
+  emoji?: string;
+  /** Extra label — e.g. Yoni animal pair */
+  visual?: string;
 };
 
 export type CompatibilityInput = {
@@ -15,6 +19,84 @@ export type CompatibilityInput = {
   manglikA: string;
   manglikB: string;
 };
+
+export type YoniAnimal = {
+  name: string;
+  emoji: string;
+  energy: string;
+};
+
+/** Classical nakshatra → Yoni animal mapping */
+const YONI_BY_NAKSHATRA: YoniAnimal[] = [
+  { name: "Horse", emoji: "🐴", energy: "Swift & pioneering" }, // Ashwini
+  { name: "Elephant", emoji: "🐘", energy: "Steady & enduring" }, // Bharani
+  { name: "Sheep", emoji: "🐑", energy: "Gentle & protective" }, // Krittika
+  { name: "Serpent", emoji: "🐍", energy: "Intense & magnetic" }, // Rohini
+  { name: "Serpent", emoji: "🐍", energy: "Curious & searching" }, // Mrigashira
+  { name: "Dog", emoji: "🐕", energy: "Loyal & fierce" }, // Ardra
+  { name: "Cat", emoji: "🐈", energy: "Independent & soft" }, // Punarvasu
+  { name: "Goat", emoji: "🐐", energy: "Nurturing & sure-footed" }, // Pushya
+  { name: "Cat", emoji: "🐈", energy: "Intuitive & private" }, // Ashlesha
+  { name: "Rat", emoji: "🐀", energy: "Resourceful & quick" }, // Magha
+  { name: "Rat", emoji: "🐀", energy: "Playful & social" }, // Purva Phalguni
+  { name: "Cow", emoji: "🐄", energy: "Grounded & giving" }, // Uttara Phalguni
+  { name: "Buffalo", emoji: "🐃", energy: "Strong & skilled" }, // Hasta
+  { name: "Tiger", emoji: "🐅", energy: "Bold & creative" }, // Chitra
+  { name: "Buffalo", emoji: "🐃", energy: "Independent & airy" }, // Swati
+  { name: "Tiger", emoji: "🐅", energy: "Goal-driven & vivid" }, // Vishakha
+  { name: "Deer", emoji: "🦌", energy: "Sensitive & devoted" }, // Anuradha
+  { name: "Deer", emoji: "🦌", energy: "Protective & deep" }, // Jyeshtha
+  { name: "Dog", emoji: "🐕", energy: "Investigative & bold" }, // Mula
+  { name: "Monkey", emoji: "🐒", energy: "Adaptive & lively" }, // Purva Ashadha
+  { name: "Mongoose", emoji: "🦡", energy: "Courageous & clear" }, // Uttara Ashadha
+  { name: "Monkey", emoji: "🐒", energy: "Wise & connecting" }, // Shravana
+  { name: "Lion", emoji: "🦁", energy: "Proud & rhythmic" }, // Dhanishta
+  { name: "Horse", emoji: "🐴", energy: "Visionary & free" }, // Shatabhisha
+  { name: "Lion", emoji: "🦁", energy: "Fiery & purposeful" }, // Purva Bhadrapada
+  { name: "Cow", emoji: "🐄", energy: "Calm & compassionate" }, // Uttara Bhadrapada
+  { name: "Elephant", emoji: "🐘", energy: "Complete & nurturing" }, // Revati
+];
+
+/** Same-animal friend pairs / enemies simplified for harmony language */
+const YONI_FRIENDS: Record<string, string[]> = {
+  Horse: ["Horse", "Sheep"],
+  Elephant: ["Elephant", "Sheep"],
+  Sheep: ["Sheep", "Horse", "Elephant", "Cow"],
+  Serpent: ["Serpent"],
+  Dog: ["Dog"],
+  Cat: ["Cat"],
+  Goat: ["Goat", "Monkey"],
+  Rat: ["Rat"],
+  Cow: ["Cow", "Sheep", "Tiger"],
+  Buffalo: ["Buffalo"],
+  Tiger: ["Tiger", "Cow"],
+  Deer: ["Deer", "Dog"],
+  Monkey: ["Monkey", "Goat", "Sheep"],
+  Mongoose: ["Mongoose"],
+  Lion: ["Lion", "Elephant"],
+};
+
+export function yoniAnimalForNakshatra(nakshatra: string): YoniAnimal {
+  const idx = NAKSHATRAS.indexOf(nakshatra as (typeof NAKSHATRAS)[number]);
+  return YONI_BY_NAKSHATRA[idx >= 0 ? idx : 0] ?? YONI_BY_NAKSHATRA[0]!;
+}
+
+function yoniPairScore(a: YoniAnimal, b: YoniAnimal): number {
+  if (a.name === b.name) return 4;
+  if (YONI_FRIENDS[a.name]?.includes(b.name) || YONI_FRIENDS[b.name]?.includes(a.name)) return 3;
+  // Soft opposition patterns (classical-inspired simplifications)
+  const opposed = new Set([
+    "Horse|Buffalo",
+    "Elephant|Lion",
+    "Cat|Rat",
+    "Dog|Deer",
+    "Serpent|Mongoose",
+    "Tiger|Cow",
+  ]);
+  const key = [a.name, b.name].sort().join("|");
+  if (opposed.has(key)) return 1;
+  return 2;
+}
 
 function signIndex(sign: string): number {
   const idx = SIGNS.indexOf(sign as (typeof SIGNS)[number]);
@@ -37,6 +119,7 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
   overallScore: number;
   strengths: string[];
   challenges: string[];
+  yoni: { you: YoniAnimal; them: YoniAnimal; score: number; harmony: string };
 } {
   const sA = signIndex(input.moonSignA);
   const sB = signIndex(input.moonSignB);
@@ -45,15 +128,12 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
   const diff = Math.abs(sA - sB);
   const circ = Math.min(diff, 12 - diff);
 
-  // Varna (1) — simplified by moon sign element class
   const varnaRank = [1, 2, 3, 4] as const;
   const varnaOf = (i: number) => varnaRank[i % 4] ?? 1;
   const varnaScore = varnaOf(sA) >= varnaOf(sB) ? 1 : 0;
 
-  // Vashya (2)
   const vashyaScore = circ <= 3 ? 2 : circ <= 5 ? 1 : 0;
 
-  // Tara (3) — count from A to B in nakshatra wheel
   const taraCount = ((nB - nA + 27) % 27) + 1;
   const taraGroup = ((taraCount - 1) % 9) + 1;
   const taraScore = [1, 2, 4, 6, 8, 9].includes(taraGroup)
@@ -62,10 +142,18 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
       ? 1.5
       : 0;
 
-  // Yoni (4) — pair friendliness by nakshatra mod
-  const yoniScore = nA % 7 === nB % 7 ? 4 : Math.abs((nA % 7) - (nB % 7)) <= 2 ? 3 : 2;
+  const yoniA = yoniAnimalForNakshatra(input.nakshatraA);
+  const yoniB = yoniAnimalForNakshatra(input.nakshatraB);
+  const yoniScore = yoniPairScore(yoniA, yoniB);
+  const yoniHarmony =
+    yoniScore >= 4
+      ? "Same instinctive nature — natural physical ease"
+      : yoniScore >= 3
+        ? "Friendly energies — warm attraction potential"
+        : yoniScore >= 2
+          ? "Different instincts — curiosity with patience"
+          : "Contrasting energies — mindful intimacy needed";
 
-  // Graha Maitri (5) — moon sign lords friendship
   const lords = [
     "Mars",
     "Venus",
@@ -100,42 +188,87 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
           ? 3
           : 1;
 
-  // Gana (6) — Deva/Manushya/Rakshasa by nakshatra groups
   const gana = (i: number) => (i % 3 === 0 ? "D" : i % 3 === 1 ? "M" : "R");
   const gA = gana(nA);
   const gB = gana(nB);
   const ganaScore =
     gA === gB ? 6 : (gA === "D" && gB === "M") || (gA === "M" && gB === "D") ? 5 : 1;
+  const ganaLabel =
+    gA === "D" && gB === "D"
+      ? "Deva ↔ Deva"
+      : gA === "M" && gB === "M"
+        ? "Manushya ↔ Manushya"
+        : gA === "R" && gB === "R"
+          ? "Rakshasa ↔ Rakshasa"
+          : `${gA === "D" ? "Deva" : gA === "M" ? "Manushya" : "Rakshasa"} ↔ ${gB === "D" ? "Deva" : gB === "M" ? "Manushya" : "Rakshasa"}`;
 
-  // Bhakoot (7)
   const bhakootHostile = circ === 2 || circ === 5 || circ === 6;
   const bhakootScore = bhakootHostile ? 0 : 7;
   const bhakootDosha = bhakootHostile;
 
-  // Nadi (8)
   const nadiA = nA % 3;
   const nadiB = nB % 3;
   const nadiDosha = nadiA === nadiB;
   const nadiScore = nadiDosha ? 0 : 8;
 
   const gunaBreakdown: GunaItem[] = [
-    { koota: "Varna", score: varnaScore, max: 1, note: "Spiritual temperament alignment." },
-    { koota: "Vashya", score: vashyaScore, max: 2, note: "Mutual influence balance." },
-    { koota: "Tara", score: taraScore, max: 3, note: "Birth-star harmony." },
-    { koota: "Yoni", score: yoniScore, max: 4, note: "Instinctive comfort." },
-    { koota: "Graha Maitri", score: grahaScore, max: 5, note: "Mental friendship of Moon lords." },
-    { koota: "Gana", score: ganaScore, max: 6, note: "Temperament pairing." },
+    {
+      koota: "Varna",
+      score: varnaScore,
+      max: 1,
+      note: "Spiritual temperament alignment.",
+      emoji: "🕉️",
+    },
+    {
+      koota: "Vashya",
+      score: vashyaScore,
+      max: 2,
+      note: "Mutual influence balance.",
+      emoji: "🤝",
+    },
+    {
+      koota: "Tara",
+      score: taraScore,
+      max: 3,
+      note: "Birth-star harmony.",
+      emoji: "⭐",
+    },
+    {
+      koota: "Yoni",
+      score: yoniScore,
+      max: 4,
+      note: `${yoniHarmony}. ${yoniA.name} (${yoniA.energy}) with ${yoniB.name} (${yoniB.energy}).`,
+      emoji: `${yoniA.emoji}${yoniB.emoji}`,
+      visual: `${yoniA.emoji} ${yoniA.name}  ↔  ${yoniB.emoji} ${yoniB.name}`,
+    },
+    {
+      koota: "Graha Maitri",
+      score: grahaScore,
+      max: 5,
+      note: "Mental friendship of Moon lords.",
+      emoji: "🌙",
+    },
+    {
+      koota: "Gana",
+      score: ganaScore,
+      max: 6,
+      note: `Temperament pairing — ${ganaLabel}.`,
+      emoji: "🎭",
+      visual: ganaLabel,
+    },
     {
       koota: "Bhakoot",
       score: bhakootScore,
       max: 7,
       note: bhakootDosha ? "Relative Moon signs need care." : "Relative Moon signs supportive.",
+      emoji: "🌕",
     },
     {
       koota: "Nadi",
       score: nadiScore,
       max: 8,
       note: nadiDosha ? "Same Nadi indicated." : "No Nadi dosha indicated.",
+      emoji: nadiDosha ? "⚠️" : "💚",
     },
   ];
 
@@ -170,6 +303,12 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
     overallScore,
     strengths,
     challenges,
+    yoni: {
+      you: yoniA,
+      them: yoniB,
+      score: yoniScore,
+      harmony: yoniHarmony,
+    },
   };
 }
 

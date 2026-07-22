@@ -73,9 +73,15 @@ export default async function ProfilePage() {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="font-display text-3xl sm:text-4xl">
-                    {session.user.name || "Member"}
+                    {profile.name || session.user.name || "Member"}
                   </h2>
-                  <p className="text-ivory/75 mt-2 text-sm">
+                  {profile.headline &&
+                  !String(profile.headline).toLowerCase().endsWith("'s profile") ? (
+                    <p className="text-ivory/85 mt-1.5 max-w-xl text-sm leading-relaxed sm:text-base">
+                      {profile.headline}
+                    </p>
+                  ) : null}
+                  <p className="text-ivory/70 mt-2 text-sm">
                     {[profile.age, profile.city, profile.profession].filter(Boolean).join(" · ") ||
                       "Complete your profile to appear in discovery"}
                   </p>

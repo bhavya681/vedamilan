@@ -8,6 +8,8 @@ const gunaItemSchema = new Schema(
     score: { type: Number, required: true },
     max: { type: Number, required: true },
     note: { type: String, default: "" },
+    emoji: { type: String, default: null },
+    visual: { type: String, default: null },
   },
   { _id: false },
 );
@@ -33,6 +35,8 @@ const compatibilityReportSchema = new Schema(
     strengths: { type: [String], default: [] },
     challenges: { type: [String], default: [] },
     marriageWindows: { type: [Schema.Types.Mixed], default: [] },
+    /** Multi-factor dasha + gochar + bond timing dossier */
+    timingPrediction: { type: Schema.Types.Mixed, default: null },
     engineVersion: { type: String, required: true },
     calculatedAt: { type: Date, default: Date.now },
   },

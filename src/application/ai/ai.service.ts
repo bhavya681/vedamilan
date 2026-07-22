@@ -388,7 +388,7 @@ export class AiService {
           "Please give me a warm opening overview of my chart, yogas, dasha, and current gochar.",
         )
       : withVedicDisclaimer(
-          "Namaste. Generate your kundli from Birth Details so I can read your Lagna, Moon, Raja Yogas, Dasha, and Gochar as your Jyotish Guru.",
+          "Namaste. Generate your kundli from Birth Details so I can read your Lagna, Moon, Raja Yogas, Dasha, and Gochar as your AI Guru.",
         );
 
     return {

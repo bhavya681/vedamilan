@@ -8,6 +8,17 @@ import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  MoodBadge,
+  SoftEmoji,
+  YoniEnergyCard,
+  kootaEmoji,
+  moodFromScore,
+} from "@/features/compatibility/compatibility-visuals";
+import {
+  TimingPredictionPanel,
+  type TimingPredictionView,
+} from "@/features/compatibility/timing-prediction-panel";
 import { routes } from "@/lib/constants/routes";
 
 type Report = {
@@ -19,7 +30,14 @@ type Report = {
   decisionSummary?: string;
   decisionReason?: string;
   manglikCompatibility?: string;
-  gunaBreakdown?: Array<{ koota: string; score: number; max: number; note: string }>;
+  gunaBreakdown?: Array<{
+    koota: string;
+    score: number;
+    max: number;
+    note: string;
+    emoji?: string | null;
+    visual?: string | null;
+  }>;
   strengths?: string[];
   challenges?: string[];
   userAId?: string;
@@ -31,6 +49,7 @@ type Report = {
     modules?: Array<{ title: string; score: number; observation: string }>;
     remedies?: string[];
   };
+  timingPrediction?: TimingPredictionView | null;
 };
 
 export default function CompatibilityReportPage() {
@@ -107,6 +126,11 @@ export default function CompatibilityReportPage() {
                   {report.shukraMilan?.averageScore ?? "—"}/10 · Guna {report.totalGuna}/
                   {report.maxGuna} · Manglik {report.manglikCompatibility}
                 </p>
+                {typeof (report.deepOverallScore ?? report.overallScore) === "number" ? (
+                  <div className="mt-3">
+                    <MoodBadge score={report.deepOverallScore ?? report.overallScore ?? 0} />
+                  </div>
+                ) : null}
               </div>
               {report.decisionSummary ? (
                 <Badge className="bg-primary/15 text-foreground hover:bg-primary/15">
@@ -142,9 +166,13 @@ export default function CompatibilityReportPage() {
               </div>
             ) : null}
             <Button asChild className="mt-6" variant="secondary">
-              <Link href={routes.aiInsights}>Ask AI to explain</Link>
+              <Link href={routes.aiInsights}>Ask AI Guru to explain</Link>
             </Button>
           </GlassCard>
+
+          {report.timingPrediction ? (
+            <TimingPredictionPanel timing={report.timingPrediction} pairMode />
+          ) : null}
 
           {report.categoryScores ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -159,26 +187,52 @@ export default function CompatibilityReportPage() {
                     "trust",
                   ].includes(k),
                 )
-                .map(([k, v]) => (
-                  <GlassCard key={k}>
-                    <p className="text-muted-foreground text-[10px] uppercase">
-                      {k.replace(/([A-Z])/g, " $1")}
-                    </p>
-                    <p className="font-display mt-1 text-2xl">{v}%</p>
-                    <Progress value={v} className="mt-2 h-1.5" />
-                  </GlassCard>
-                ))}
+                .map(([k, v]) => {
+                  const mood = moodFromScore(v);
+                  return (
+                    <GlassCard key={k}>
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-muted-foreground text-[10px] uppercase">
+                          {k.replace(/([A-Z])/g, " $1")}
+                        </p>
+                        <SoftEmoji emoji={mood.emoji} size="sm" pulse={false} />
+                      </div>
+                      <p className="font-display mt-1 text-2xl">{v}%</p>
+                      <Progress value={v} className="mt-2 h-1.5" />
+                    </GlassCard>
+                  );
+                })}
             </div>
           ) : null}
+
+          {(() => {
+            const yoni = report.gunaBreakdown?.find((g) => g.koota === "Yoni");
+            if (!yoni) return null;
+            return (
+              <YoniEnergyCard
+                visual={yoni.visual}
+                emoji={yoni.emoji}
+                note={yoni.note}
+                score={yoni.score}
+                max={yoni.max}
+              />
+            );
+          })()}
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {(report.gunaBreakdown || []).map((g) => (
               <GlassCard key={g.koota}>
-                <p className="text-muted-foreground text-[10px] uppercase">{g.koota}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-muted-foreground text-[10px] uppercase">{g.koota}</p>
+                  <SoftEmoji emoji={kootaEmoji(g.koota, g.emoji)} size="sm" />
+                </div>
                 <p className="font-display text-rose mt-1 text-2xl">
                   {g.score}
                   <span className="text-muted-foreground text-sm">/{g.max}</span>
                 </p>
+                {g.visual && g.koota !== "Yoni" ? (
+                  <p className="text-foreground/80 mt-1.5 text-[11px] font-medium">{g.visual}</p>
+                ) : null}
                 <p className="text-muted-foreground mt-2 text-xs">{g.note}</p>
               </GlassCard>
             ))}

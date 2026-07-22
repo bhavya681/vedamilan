@@ -1,24 +1,24 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Loader2, MessageCircle, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Send, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { cn } from "@/lib/utils/cn";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const OPENING =
-  "Namaste — I'm your **VedaMilan guide**. Ask how the app works: kundli, matching, compatibility, AI Insights, pricing, or privacy. I'll point you to the right steps.";
+const OPENING = `Namaste — I am **${AI_GURU_NAME}**. Ask how VedaMilan works: kundli, matching, compatibility, insights, pricing, or privacy. I will guide you with calm clarity.`;
 
 const PROMPTS = [
   "How does VedaMilan work?",
   "How do I generate my kundli?",
   "How does matching work?",
   "What is compatibility / Guna Milan?",
-  "What can the AI Jyotish Guru do?",
+  `What can ${AI_GURU_NAME} help me with?`,
 ];
 
 export function HomeGuideChat() {
@@ -66,7 +66,7 @@ export function HomeGuideChat() {
       });
       const json = await res.json();
       if (!json.success) {
-        setError(json.error?.message || "Guide could not reply right now");
+        setError(json.error?.message || `${AI_GURU_NAME} could not reply right now`);
         setBusy(false);
         return;
       }
@@ -96,14 +96,13 @@ export function HomeGuideChat() {
           open && "pointer-events-none opacity-0",
         )}
       >
-        <MessageCircle className="text-gold h-4 w-4" />
-        <span className="text-sm font-medium">Ask AI</span>
+        <AiGuruAvatar size="sm" className="border-gold/40" />
+        <span className="text-sm font-medium">Ask {AI_GURU_NAME}</span>
       </Button>
 
-      {/* Backdrop */}
       <button
         type="button"
-        aria-label="Close guide chat"
+        aria-label={`Close ${AI_GURU_NAME}`}
         tabIndex={open ? 0 : -1}
         onClick={() => setOpen(false)}
         className={cn(
@@ -112,7 +111,6 @@ export function HomeGuideChat() {
         )}
       />
 
-      {/* Right panel */}
       <aside
         ref={panelRef}
         id="home-guide-chat"
@@ -127,15 +125,13 @@ export function HomeGuideChat() {
         <header className="from-navy to-cosmic text-ivory relative shrink-0 overflow-hidden border-b bg-gradient-to-r via-[#1a140f] px-4 py-4">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.2),transparent_55%)]" />
           <div className="relative flex items-start gap-3">
-            <div className="border-gold/30 bg-gold/15 text-gold mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border">
-              <Sparkles className="h-4 w-4" />
-            </div>
+            <AiGuruAvatar size="lg" className="border-gold/40 mt-0.5" />
             <div className="min-w-0 flex-1 pr-8">
               <h2 id="home-guide-title" className="font-display text-xl">
-                VedaMilan Guide
+                {AI_GURU_NAME}
               </h2>
               <p className="text-ivory/65 mt-1 text-xs">
-                Ask how the app works — kundli, matching, AI & more
+                Sacred guidance for kundli, matching & the path ahead
               </p>
             </div>
             <button
@@ -156,8 +152,9 @@ export function HomeGuideChat() {
               return (
                 <div
                   key={`${m.role}-${i}`}
-                  className={cn("flex", isUser ? "justify-end" : "justify-start")}
+                  className={cn("flex gap-2", isUser ? "justify-end" : "justify-start")}
                 >
+                  {!isUser ? <AiGuruAvatar size="sm" className="mt-0.5" /> : null}
                   <div
                     className={cn(
                       "max-w-[92%] rounded-2xl px-3.5 py-2.5",
@@ -166,11 +163,7 @@ export function HomeGuideChat() {
                         : "border-border/50 bg-card rounded-bl-md border shadow-sm",
                     )}
                   >
-                    {!isUser ? (
-                      <p className="text-gold mb-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        Guide
-                      </p>
-                    ) : null}
+                    {!isUser ? <AiGuruLabel className="mb-1.5" /> : null}
                     <GuruMarkdown content={m.content} tone={isUser ? "user" : "assistant"} />
                   </div>
                 </div>
@@ -178,8 +171,8 @@ export function HomeGuideChat() {
             })}
             {busy ? (
               <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Thinking…
+                <AiGuruAvatar size="sm" busy />
+                {AI_GURU_NAME} is reflecting…
               </div>
             ) : null}
             {error ? <p className="text-destructive text-xs">{error}</p> : null}
@@ -206,7 +199,7 @@ export function HomeGuideChat() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={2}
-              placeholder="Ask how matching, kundli, or AI works…"
+              placeholder={`Ask ${AI_GURU_NAME} about matching, kundli, or the app…`}
               className="border-input bg-background focus-visible:ring-gold/40 max-h-28 min-h-[48px] flex-1 resize-none rounded-2xl border px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

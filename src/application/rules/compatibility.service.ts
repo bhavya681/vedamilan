@@ -1,11 +1,17 @@
 import { CompatibilityReport, Dasha, Horoscope, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
+import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 import { pairKey, scoreAshtaKoota } from "./ashta-koota";
 import { scoreDeepCompatibility, type DeepChartInput } from "./deep-compatibility";
-import { computeMarriageWindows } from "./marriage-timing";
-import type { ChartPlanetLite } from "./shukra-milan";
+import { seventhLord, type ChartPlanetLite } from "./shukra-milan";
+import {
+  computeMarriageWindows,
+  predictPairTiming,
+  predictSelfTiming,
+  type TimingPrediction,
+} from "./timing-prediction";
 
 function moonFromChart(horoscope: {
   moonSign?: string;
@@ -60,6 +66,26 @@ function toDeepChart(horoscope: {
   };
 }
 
+type PeriodRow = {
+  lord: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  level: string;
+  parentLord?: string | null;
+};
+
+function periodsFrom(dasha: { periods?: unknown } | null | undefined): PeriodRow[] {
+  return (dasha?.periods as PeriodRow[] | undefined) || [];
+}
+
+async function safeGochar(userId: string) {
+  try {
+    return await computeGocharForUser(userId);
+  } catch {
+    return null;
+  }
+}
+
 export class CompatibilityService {
   async compare(userAId: string, userBId: string) {
     if (userAId === userBId) throw new ValidationError("Cannot compare a profile with itself");
@@ -109,17 +135,50 @@ export class CompatibilityService {
       maxGuna: scored.maxGuna,
     });
 
-    const dashaA = await Dasha.findOne({ userId: userAId }).sort({ calculatedAt: -1 }).lean();
-    const windows = computeMarriageWindows(
-      (dashaA?.periods as unknown as Array<{
-        lord: string;
-        startDate: Date | string;
-        endDate: Date | string;
-        level: string;
-        parentLord?: string | null;
-      }>) || [],
-      chartA.manglikStatus || "UNKNOWN",
+    const [dashaA, dashaB, gocharA] = await Promise.all([
+      Dasha.findOne({ userId: userAId }).sort({ calculatedAt: -1 }).lean(),
+      Dasha.findOne({ userId: userBId }).sort({ calculatedAt: -1 }).lean(),
+      safeGochar(userAId),
+    ]);
+
+    const periodsA = periodsFrom(dashaA);
+    const periodsB = periodsFrom(dashaB);
+    const seventhYou = seventhLord(chartA.lagnaSign || "Aries");
+    const seventhThem = seventhLord(chartB.lagnaSign || "Aries");
+
+    const timingPrediction: TimingPrediction = predictPairTiming({
+      periodsYou: periodsA,
+      periodsThem: periodsB,
+      gocharPlanetsYou: gocharA?.planets,
+      gocharHighlightsYou: gocharA?.highlights,
+      manglikYou: chartA.manglikStatus || "UNKNOWN",
+      manglikThem: chartB.manglikStatus || "UNKNOWN",
+      seventhLordYou: seventhYou,
+      seventhLordThem: seventhThem,
+      overallCompatibilityScore: deep.overallScore,
+      decisionSummary: deep.decisionSummary,
+      currentMahaYou: dashaA?.currentMaha || null,
+      currentAntarYou: dashaA?.currentAntar || null,
+      currentMahaThem: dashaB?.currentMaha || null,
+      currentAntarThem: dashaB?.currentAntar || null,
+    });
+
+    const windows = timingPrediction.bestMarriageWindows.map(
+      ({ label, window, reason, score, dashaLabel, startDate, endDate, approxNote, kind }) => ({
+        label,
+        window,
+        reason,
+        score,
+        dashaLabel,
+        startDate,
+        endDate,
+        approxNote,
+        kind,
+      }),
     );
+
+    // Decision reason always cites multi-module bond — never a single koota
+    const decisionReason = `${deep.decisionReason} Timing read (dasha + gochar + bond): ${timingPrediction.marryNowTitle} (${timingPrediction.marryNowScore}/100).`;
 
     const key = pairKey(userAId, userBId);
     const mergedStrengths = [
@@ -145,7 +204,7 @@ export class CompatibilityService {
           overallScore: deep.overallScore,
           deepOverallScore: deep.overallScore,
           decisionSummary: deep.decisionSummary,
-          decisionReason: deep.decisionReason,
+          decisionReason,
           shukraMilan: deep.shukraMilan,
           deepAnalysis: {
             chartValidation: deep.chartValidation,
@@ -159,6 +218,7 @@ export class CompatibilityService {
           strengths: mergedStrengths,
           challenges: mergedChallenges,
           marriageWindows: windows,
+          timingPrediction,
           engineVersion: ENGINE_VERSION,
           calculatedAt: new Date(),
           deletedAt: null,
@@ -174,6 +234,7 @@ export class CompatibilityService {
         a: { userId: userAId, city: profileA?.city, profession: profileA?.profession },
         b: { userId: userBId, city: profileB?.city, profession: profileB?.profession },
       },
+      timingPrediction,
     };
   }
 
@@ -195,17 +256,44 @@ export class CompatibilityService {
     if (!chart || !dasha) {
       throw new NotFoundError("Generate kundli and dasha before marriage timing");
     }
-    const windows = computeMarriageWindows(
-      (dasha.periods as unknown as Array<{
-        lord: string;
-        startDate: Date | string;
-        endDate: Date | string;
-        level: string;
-        parentLord?: string | null;
-      }>) || [],
-      chart.manglikStatus || "UNKNOWN",
-    );
-    return { windows, manglikStatus: chart.manglikStatus, currentMaha: dasha.currentMaha };
+
+    const gochar = await safeGochar(userId);
+    const seventh = seventhLord(chart.lagnaSign || "Aries");
+    const timingPrediction = predictSelfTiming({
+      periods: periodsFrom(dasha),
+      gocharPlanets: gochar?.planets,
+      gocharHighlights: gochar?.highlights,
+      manglikStatus: chart.manglikStatus || "UNKNOWN",
+      seventhLord: seventh,
+      currentMaha: dasha.currentMaha || null,
+      currentAntar: dasha.currentAntar || null,
+    });
+
+    const windows = computeMarriageWindows(periodsFrom(dasha), chart.manglikStatus || "UNKNOWN");
+
+    return {
+      windows: timingPrediction.bestMarriageWindows.map(({ label, window, reason, score }) => ({
+        label,
+        window,
+        reason,
+        score,
+      })),
+      partnerArrivalWindows: timingPrediction.partnerArrivalWindows,
+      manglikStatus: chart.manglikStatus,
+      currentMaha: dasha.currentMaha,
+      currentAntar: dasha.currentAntar,
+      seventhLord: seventh,
+      timingPrediction,
+      gochar: gochar
+        ? {
+            asOf: gochar.asOf,
+            highlights: gochar.highlights,
+            natalLagna: gochar.natalLagna,
+          }
+        : null,
+      /** @deprecated use timingPrediction.bestMarriageWindows */
+      legacyWindows: windows,
+    };
   }
 }
 

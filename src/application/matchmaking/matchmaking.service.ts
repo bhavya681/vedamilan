@@ -8,8 +8,27 @@ import {
   PartnerPreferences,
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
-import { scoreAshtaKoota } from "@/application/rules/ashta-koota";
+import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
 import { normalizePagination, toPaginatedResult } from "@/repositories/pagination";
+import { ObjectId } from "mongodb";
+
+function userIdQuery(userIds: string[]) {
+  const objectIds = userIds
+    .filter((id) => ObjectId.isValid(id) && String(new ObjectId(id)) === id)
+    .map((id) => new ObjectId(id));
+
+  return {
+    $or: [
+      { id: { $in: userIds } },
+      { _id: { $in: userIds as never[] } },
+      ...(objectIds.length ? [{ _id: { $in: objectIds } }] : []),
+    ],
+  };
+}
+
+function canonicalUserId(user: { id?: string; _id?: unknown }) {
+  return String(user.id || user._id);
+}
 
 export type MatchFilters = {
   q?: string;
@@ -47,7 +66,8 @@ export type RankedMatch = {
   photo: string | null;
   reasons: string[];
   about: string | null;
-  headline: string;
+  headline: string | null;
+  cardSummary: string;
   gunaBreakdown: Array<{ koota: string; score: number; max: number; note: string }>;
   rank: number;
 };
@@ -79,28 +99,86 @@ function moonMeta(horoscope: {
 async function resolveUserNames(userIds: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (userIds.length === 0) return map;
-  const db = getMongoDb();
-  const users = await db
-    .collection("user")
-    .find({
-      $or: [{ id: { $in: userIds } }, { _id: { $in: userIds as never[] } }],
-    })
-    .project({ id: 1, name: 1, _id: 1 })
-    .toArray();
-  for (const u of users) {
-    const id = String((u as { id?: string }).id || u._id);
-    const name = String((u as { name?: string }).name || "Member");
-    map.set(id, name);
+
+  const profiles = await Profile.find({ userId: { $in: userIds } })
+    .select("userId name headline")
+    .lean();
+
+  const needsBackfill: Array<{ userId: string; name: string }> = [];
+
+  for (const p of profiles) {
+    const fromProfile = String(p.name || "").trim();
+    if (fromProfile) {
+      map.set(p.userId, fromProfile);
+      continue;
+    }
+    const fromHeadline = nameFromPlaceholderHeadline(p.headline);
+    if (fromHeadline) {
+      map.set(p.userId, fromHeadline);
+      needsBackfill.push({ userId: p.userId, name: fromHeadline });
+    }
   }
+
+  const missing = userIds.filter((id) => !map.has(id));
+  if (missing.length > 0) {
+    const db = getMongoDb();
+    const users = await db
+      .collection("user")
+      .find(userIdQuery(missing))
+      .project({ id: 1, name: 1, _id: 1 })
+      .toArray();
+
+    for (const u of users) {
+      const raw = String((u as { name?: string }).name || "").trim();
+      if (!raw) continue;
+      const keys = new Set<string>([
+        canonicalUserId(u as { id?: string; _id?: unknown }),
+        String(u._id),
+      ]);
+      if ((u as { id?: string }).id) keys.add(String((u as { id: string }).id));
+      for (const key of keys) {
+        if (!key) continue;
+        map.set(key, raw);
+        needsBackfill.push({ userId: key, name: raw });
+      }
+    }
+  }
+
+  if (needsBackfill.length > 0) {
+    const unique = new Map(needsBackfill.map((item) => [item.userId, item.name]));
+    await Promise.all(
+      [...unique.entries()].map(([userId, name]) =>
+        Profile.updateOne(
+          { userId, $or: [{ name: { $exists: false } }, { name: "" }, { name: null }] },
+          { $set: { name } },
+        ),
+      ),
+    );
+  }
+
   return map;
 }
 
-function displayName(
-  names: Map<string, string>,
-  userId: string,
-  profile: { headline?: string | null; profession?: string | null },
-) {
-  return names.get(userId) || profile.headline || profile.profession || "Member";
+function nameFromPlaceholderHeadline(headline?: string | null): string | null {
+  const value = String(headline || "").trim();
+  if (!value) return null;
+  const match = value.match(/^(.+?)['’]s profile$/i);
+  return match?.[1]?.trim() || null;
+}
+
+/** True profile tagline — ignore placeholder "${name}'s profile" seeds. */
+export function sanitizeHeadline(headline?: string | null, name?: string | null): string | null {
+  const value = String(headline || "").trim();
+  if (!value) return null;
+  const lower = value.toLowerCase();
+  if (lower.endsWith("'s profile") || lower.endsWith("’s profile")) return null;
+  if (name && lower === `${name.trim().toLowerCase()}'s profile`) return null;
+  return value;
+}
+
+/** Prefer profile/user display name — never invent from profession. */
+function displayName(names: Map<string, string>, userId: string) {
+  return names.get(userId)?.trim() || "Member";
 }
 
 /** Matrimonial default: males see females, females see males. */
@@ -199,21 +277,23 @@ export class MatchmakingService {
       let reasons: string[] = [];
       let gunaBreakdown: RankedMatch["gunaBreakdown"] = [];
 
-      if (selfMoon && chart) {
+      if (selfMoon && chart && selfChart) {
         const other = moonMeta(chart);
-        const scored = scoreAshtaKoota({
+        const blended = scoreMatchBlend({
           moonSignA: selfMoon.moonSign,
           moonSignB: other.moonSign,
           nakshatraA: selfMoon.nakshatra,
           nakshatraB: other.nakshatra,
           manglikA: selfMoon.manglik,
           manglikB: other.manglik,
+          planetsA: toPlanetsLite(selfChart),
+          planetsB: toPlanetsLite(chart),
         });
-        compatibilityScore = scored.overallScore;
-        totalGuna = scored.totalGuna;
-        maxGuna = scored.maxGuna;
-        reasons = scored.strengths.slice(0, 3);
-        gunaBreakdown = scored.gunaBreakdown;
+        compatibilityScore = blended.compatibilityScore;
+        totalGuna = blended.totalGuna;
+        maxGuna = blended.maxGuna;
+        reasons = blended.strengths.slice(0, 3);
+        gunaBreakdown = blended.gunaBreakdown;
       } else {
         reasons = ["Complete both kundlis for Vedic ranking"];
       }
@@ -222,7 +302,8 @@ export class MatchmakingService {
         profile.photos?.find((p) => p.isPrimary)?.secureUrl ||
         profile.photos?.[0]?.secureUrl ||
         null;
-      const name = displayName(names, profile.userId, profile);
+      const name = displayName(names, profile.userId);
+      const tagline = sanitizeHeadline(profile.headline, name);
 
       return {
         userId: profile.userId,
@@ -242,7 +323,8 @@ export class MatchmakingService {
         photo,
         reasons,
         about: profile.about ?? null,
-        headline: reasons[0] || profile.headline || profile.about || "Profile available",
+        headline: tagline,
+        cardSummary: reasons[0] || tagline || profile.about || "Explore this connection",
         gunaBreakdown,
       };
     });
@@ -318,26 +400,31 @@ export class MatchmakingService {
 
     await this.recordVisit(viewerUserId, candidateUserId);
 
-    let scored = null;
+    let scored: ReturnType<typeof scoreMatchBlend> | null = null;
     const selfChart = await Horoscope.findOne({ userId: viewerUserId })
       .sort({ calculatedAt: -1 })
       .lean();
     if (selfChart && chart) {
       const a = moonMeta(selfChart);
       const b = moonMeta(chart);
-      scored = scoreAshtaKoota({
+      scored = scoreMatchBlend({
         moonSignA: a.moonSign,
         moonSignB: b.moonSign,
         nakshatraA: a.nakshatra,
         nakshatraB: b.nakshatra,
         manglikA: a.manglik,
         manglikB: b.manglik,
+        planetsA: toPlanetsLite(selfChart),
+        planetsB: toPlanetsLite(chart),
       });
     }
 
+    const name = displayName(names, candidateUserId);
+    const headline = sanitizeHeadline(profile.headline, name);
+
     return {
       userId: candidateUserId,
-      name: displayName(names, candidateUserId, profile),
+      name,
       age: ageFromDob(profile.dateOfBirth as Date | null),
       city: profile.city,
       profession: profile.profession,
@@ -347,12 +434,12 @@ export class MatchmakingService {
       languages: profile.languages,
       heightCm: profile.heightCm,
       about: profile.about,
-      headline: profile.headline,
+      headline,
       photos: profile.photos,
       manglik: chart?.manglikStatus || "UNKNOWN",
       nakshatra: chart ? moonMeta(chart).nakshatra : null,
       moonSign: chart?.moonSign || null,
-      compatibilityScore: scored?.overallScore ?? match?.compatibilityScore ?? 0,
+      compatibilityScore: scored?.compatibilityScore ?? match?.compatibilityScore ?? 0,
       totalGuna: scored?.totalGuna ?? 0,
       maxGuna: scored?.maxGuna ?? 36,
       gunaBreakdown: scored?.gunaBreakdown ?? [],
@@ -430,7 +517,7 @@ export class MatchmakingService {
     >();
     for (const p of profiles) {
       map.set(p.userId, {
-        name: displayName(names, p.userId, p),
+        name: displayName(names, p.userId),
         city: p.city ?? null,
         profession: p.profession ?? null,
         photo: p.photos?.find((ph) => ph.isPrimary)?.secureUrl || p.photos?.[0]?.secureUrl || null,

@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Search, SearchX } from "lucide-react";
+import { Search } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
-import { MatchCard, GlassCard } from "@/components/ui/premium-cards";
+import { MatchCard, SkeletonCard } from "@/components/ui/premium-cards";
 import { routes } from "@/lib/constants/routes";
 
 type MatchItem = {
@@ -20,7 +19,8 @@ type MatchItem = {
   compatibilityScore: number;
   totalGuna: number;
   manglik: string;
-  headline: string;
+  headline: string | null;
+  cardSummary?: string;
   photo: string | null;
   reasons: string[];
   gunaBreakdown: Array<{ koota: string; score: number; max: number }>;
@@ -86,21 +86,20 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
-        eyebrow="Discover"
-        title="Recommended for you"
-        description="People aligned with your preferences and Vedic compatibility."
+        title="Potential connections"
+        description="People who may align with your preferences and Vedic compatibility."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href={routes.search}>
                 <Search className="mr-1.5 h-4 w-4" />
                 Search
               </Link>
             </Button>
-            <Button asChild variant="outline">
-              <Link href={routes.compatibility}>Check compatibility</Link>
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href={routes.compatibility}>Explore compatibility</Link>
             </Button>
           </div>
         }
@@ -109,70 +108,63 @@ export default function MatchesPage() {
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Finding recommended matches…</p>
+        <div className="space-y-4">
+          <p className="text-muted-foreground text-sm">Finding meaningful connections…</p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <SkeletonCard className="aspect-[4/5] h-auto" />
+            <SkeletonCard className="aspect-[4/5] h-auto" />
+            <SkeletonCard className="aspect-[4/5] h-auto max-xl:hidden" />
+          </div>
+        </div>
       ) : matches.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {matches.map((match, index) => (
-            <motion.div
-              key={match.userId}
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.04 * index, duration: 0.35 }}
-            >
-              <GlassCard className="space-y-3 p-4">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {matches.map((match, index) => {
+            const reason =
+              match.reasons?.[0] ||
+              match.cardSummary ||
+              match.headline ||
+              "Explore this connection";
+            return (
+              <motion.div
+                key={match.userId}
+                initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: reduceMotion ? 0 : 0.04 * index, duration: 0.35 }}
+                className="space-y-2"
+              >
                 <MatchCard
                   name={match.name}
                   age={match.age ?? 0}
                   city={match.city || "—"}
                   profession={match.profession || "—"}
                   score={match.compatibilityScore}
-                  aiScore={match.compatibilityScore}
-                  headline={match.headline}
+                  headline={reason}
                   photo={match.photo || undefined}
                   href={`${routes.matchProfile}?id=${match.userId}`}
                   shortlisting={shortlisting === match.userId}
                   onShortlist={() => void shortlist(match.userId)}
                 />
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{match.compatibilityScore}% Match</Badge>
-                  {match.totalGuna != null ? (
-                    <Badge variant="outline">{match.totalGuna}/36 Guna</Badge>
-                  ) : null}
-                </div>
-                {match.reasons?.length ? (
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold tracking-wide uppercase">Why this match?</p>
-                    <ul className="text-muted-foreground list-inside list-disc text-sm">
-                      {match.reasons.slice(0, 3).map((r) => (
-                        <li key={r}>{r}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : match.headline ? (
-                  <p className="text-muted-foreground text-sm">{match.headline}</p>
-                ) : null}
                 <Button asChild variant="link" className="h-auto px-0 text-sm">
                   <Link href={`${routes.compatibility}?candidate=${match.userId}`}>
-                    View detailed compatibility
+                    Explore compatibility
                   </Link>
                 </Button>
-              </GlassCard>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <EmptyState
-          icon={<SearchX className="h-8 w-8" />}
           title={
             setupHint === "birth"
-              ? "We need a few more details to find meaningful matches"
+              ? "Add your birth details to unlock deeper matches"
               : setupHint === "kundli"
                 ? "Generate your Kundli to unlock Vedic matching"
-                : "No matches yet"
+                : "Your match journey is waiting"
           }
           description={
             setupHint === "birth"
-              ? "Add birth details so we can calculate compatibility."
+              ? "Birth details help us calculate compatibility with care."
               : setupHint === "kundli"
                 ? "Your chart powers Ashta Koota and relationship scoring."
                 : "Check back as more members join, or broaden your search."
@@ -195,7 +187,7 @@ export default function MatchesPage() {
                   : setupHint === "kundli"
                     ? "Generate Kundli"
                     : setupHint === "profile"
-                      ? "Complete profile"
+                      ? "Help us understand you"
                       : "Open Search"}
               </Link>
             </Button>

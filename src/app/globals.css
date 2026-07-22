@@ -3,14 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* VedaMilan AI — Celestial gold emblem · calm · trustworthy */
+/* VedaMilan AI — Modern Vedic Romance · calm · trustworthy */
 :root {
   --royal-gold: #d4af37;
   --deep-saffron: #c47a1a;
   --temple-blue: #1f3a5f;
   --warm-ivory: #f7f1e3;
   --moon-white: #faf6ee;
-  --midnight-navy: #14110e;
+  --soft-charcoal: #14110e;
   --soft-white: #ffffff;
   --emerald: #059669;
   --amber: #c47a1a;
@@ -22,7 +22,7 @@
 
   --background: #f7f1e3;
   --foreground: #14110e;
-  --card: rgba(255, 255, 255, 0.82);
+  --card: #faf6ee;
   --card-foreground: #14110e;
   --popover: #ffffff;
   --popover-foreground: #14110e;
@@ -34,13 +34,14 @@
   --muted-foreground: #5c5348;
   --accent: #ebe0cc;
   --accent-foreground: #14110e;
-  --destructive: #e11d48;
+  --destructive: #c41e3a;
   --destructive-foreground: #ffffff;
   --border: rgba(20, 17, 14, 0.1);
   --input: rgba(20, 17, 14, 0.12);
   --ring: #d4af37;
 
   --saffron: #c47a1a;
+  /* Ink for photo overlays / deep surfaces — charcoal, not temple blue */
   --navy: #14110e;
   --gold: #d4af37;
   --rose: #b76e79;
@@ -49,14 +50,14 @@
   --cosmic: #1f3a5f;
   --crimson: #9f1239;
 
-  --radius: 1rem;
+  --radius: 0.75rem;
 
-  --shadow-soft: 0 8px 28px rgba(20, 17, 14, 0.06);
-  --shadow-elevated: 0 24px 56px rgba(20, 17, 14, 0.1);
-  --shadow-gold: 0 14px 36px rgba(212, 175, 55, 0.28);
-  --shadow-rose: 0 12px 28px rgba(183, 110, 121, 0.2);
-  --shadow-dual: 0 16px 40px rgba(212, 175, 55, 0.18), 0 8px 24px rgba(196, 122, 26, 0.1);
-  --shadow-aurora: 0 0 48px rgba(212, 175, 55, 0.12), 0 0 80px rgba(196, 122, 26, 0.08);
+  --shadow-soft: 0 4px 18px rgba(20, 17, 14, 0.05);
+  --shadow-elevated: 0 16px 40px rgba(20, 17, 14, 0.08);
+  --shadow-gold: 0 10px 28px rgba(212, 175, 55, 0.18);
+  --shadow-rose: 0 10px 24px rgba(183, 110, 121, 0.14);
+  --shadow-dual: 0 10px 28px rgba(196, 122, 26, 0.12);
+  --shadow-aurora: 0 0 40px rgba(212, 175, 55, 0.1);
 
   --duration-fast: 160ms;
   --duration-base: 280ms;
@@ -65,39 +66,40 @@
 }
 
 .dark {
-  --background: #000000;
+  /* Celestial charcoal — not pure black */
+  --background: #0c0a08;
   --foreground: #f7f1e3;
-  --card: rgba(22, 18, 14, 0.92);
+  --card: #16120e;
   --card-foreground: #f7f1e3;
-  --popover: #12100d;
+  --popover: #14110e;
   --popover-foreground: #f7f1e3;
   --primary: #d4af37;
   --primary-foreground: #14110e;
-  --secondary: #3d5a80;
-  --secondary-foreground: #ffffff;
+  --secondary: #2a4a6f;
+  --secondary-foreground: #f7f1e3;
   --muted: #1a1612;
   --muted-foreground: #b8aea0;
   --accent: #221c16;
   --accent-foreground: #f7f1e3;
-  --destructive: #fb7185;
-  --destructive-foreground: #14110e;
-  --border: rgba(247, 241, 227, 0.12);
-  --input: rgba(247, 241, 227, 0.14);
-  --ring: #f0c14b;
-  --saffron: #f0c14b;
-  --navy: #000000;
+  --destructive: #e11d48;
+  --destructive-foreground: #f7f1e3;
+  --border: rgba(247, 241, 227, 0.1);
+  --input: rgba(247, 241, 227, 0.12);
+  --ring: #d4af37;
+  --saffron: #e0a84a;
+  --navy: #0c0a08;
   --gold: #d4af37;
   --rose: #d4a0a8;
   --ivory: #f7f1e3;
-  --ai: #f0c14b;
-  --cosmic: #7aa2c9;
+  --ai: #e0a84a;
+  --cosmic: #5a7fa8;
   --crimson: #fb7185;
-  --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.45);
-  --shadow-elevated: 0 28px 64px rgba(0, 0, 0, 0.55);
-  --shadow-gold: 0 14px 36px rgba(212, 175, 55, 0.22);
-  --shadow-rose: 0 12px 28px rgba(212, 160, 168, 0.16);
-  --shadow-dual: 0 16px 40px rgba(212, 175, 55, 0.16), 0 8px 24px rgba(240, 193, 75, 0.08);
-  --shadow-aurora: 0 0 50px rgba(212, 175, 55, 0.16), 0 0 90px rgba(196, 122, 26, 0.1);
+  --shadow-soft: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 20px 48px rgba(0, 0, 0, 0.45);
+  --shadow-gold: 0 10px 28px rgba(212, 175, 55, 0.14);
+  --shadow-rose: 0 10px 24px rgba(212, 160, 168, 0.12);
+  --shadow-dual: 0 10px 28px rgba(212, 175, 55, 0.1);
+  --shadow-aurora: 0 0 40px rgba(212, 175, 55, 0.1);
 }
 
 @theme inline {
@@ -130,11 +132,11 @@
   --color-crimson: var(--crimson);
   --color-emerald: var(--emerald);
   --color-amber: var(--amber);
-  --radius-sm: calc(var(--radius) - 10px);
-  --radius-md: calc(var(--radius) - 6px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-2xl: calc(var(--radius) + 8px);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
   --shadow-soft: var(--shadow-soft);
@@ -189,6 +191,20 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -202,17 +218,41 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), ui-sans-serif, sans-serif;
     background-image:
-      radial-gradient(ellipse 90% 50% at 0% -10%, rgba(200, 162, 74, 0.1), transparent 50%),
-      radial-gradient(ellipse 70% 45% at 100% 0%, rgba(37, 99, 235, 0.07), transparent 48%),
-      radial-gradient(ellipse 55% 40% at 50% 100%, rgba(183, 110, 121, 0.05), transparent 55%);
+      radial-gradient(
+        ellipse 90% 50% at 0% -10%,
+        color-mix(in srgb, var(--gold) 10%, transparent),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse 70% 45% at 100% 0%,
+        color-mix(in srgb, var(--cosmic) 6%, transparent),
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 50% 100%,
+        color-mix(in srgb, var(--rose) 4%, transparent),
+        transparent 55%
+      );
     min-height: 100dvh;
   }
 
   .dark body {
     background-image:
-      radial-gradient(ellipse 90% 50% at 0% -10%, rgba(212, 175, 55, 0.08), transparent 50%),
-      radial-gradient(ellipse 70% 45% at 100% 0%, rgba(61, 90, 128, 0.12), transparent 48%),
-      radial-gradient(ellipse 55% 40% at 50% 100%, rgba(183, 110, 121, 0.06), transparent 55%);
+      radial-gradient(
+        ellipse 90% 50% at 0% -10%,
+        color-mix(in srgb, var(--gold) 7%, transparent),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse 70% 45% at 100% 0%,
+        color-mix(in srgb, var(--cosmic) 10%, transparent),
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse 55% 40% at 50% 100%,
+        color-mix(in srgb, var(--rose) 5%, transparent),
+        transparent 55%
+      );
   }
 
   .font-display {
@@ -229,7 +269,6 @@
     outline-offset: 2px;
   }
 
-  /* Professional click affordance across the product */
   a[href],
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -260,10 +299,9 @@
     cursor: not-allowed;
   }
 
-  /* Global thin scrollbar (Firefox + legacy fallback) */
   * {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--gold) 45%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 35%, transparent) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -276,26 +314,14 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--gold) 38%, var(--muted-foreground) 20%);
+    background: color-mix(in srgb, var(--muted-foreground) 32%, transparent);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--gold) 62%, var(--muted-foreground) 10%);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  .dark *::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--gold) 42%, transparent);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-
-  .dark *::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in srgb, var(--gold) 68%, transparent);
+    background: color-mix(in srgb, var(--muted-foreground) 48%, transparent);
     border: 2px solid transparent;
     background-clip: padding-box;
   }
@@ -322,12 +348,7 @@
   }
 
   .bg-brand-dual {
-    background-image: linear-gradient(
-      135deg,
-      var(--deep-saffron) 0%,
-      var(--gold) 55%,
-      #f0c14b 100%
-    );
+    background-color: var(--primary);
   }
 
   .bg-compat-dual {
@@ -336,61 +357,58 @@
 
   .bg-aurora {
     background-image:
-      radial-gradient(ellipse at 20% 20%, rgba(212, 175, 55, 0.22), transparent 50%),
-      radial-gradient(ellipse at 80% 30%, rgba(196, 122, 26, 0.16), transparent 45%),
-      radial-gradient(ellipse at 50% 80%, rgba(31, 58, 95, 0.12), transparent 50%);
+      radial-gradient(
+        ellipse at 20% 20%,
+        color-mix(in srgb, var(--gold) 14%, transparent),
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 80% 30%,
+        color-mix(in srgb, var(--primary) 10%, transparent),
+        transparent 45%
+      ),
+      radial-gradient(
+        ellipse at 50% 80%,
+        color-mix(in srgb, var(--cosmic) 8%, transparent),
+        transparent 50%
+      );
   }
 
   .bg-brand-dual-soft {
     background-image: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--gold) 14%, transparent),
-      color-mix(in srgb, var(--deep-saffron) 8%, transparent)
+      color-mix(in srgb, var(--gold) 10%, transparent),
+      color-mix(in srgb, var(--deep-saffron) 6%, transparent)
     );
   }
 
   .text-brand-dual {
-    background-image: linear-gradient(
-      120deg,
-      var(--deep-saffron) 0%,
-      var(--gold) 50%,
-      #f0c14b 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--primary);
   }
 
   .text-brand-gold {
-    background-image: linear-gradient(120deg, #a66b12 0%, var(--gold) 45%, #e8c86a 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--gold);
   }
 
   .dark .text-brand-gold {
-    background-image: linear-gradient(120deg, #f0c14b 0%, var(--gold) 50%, #ffe08a 100%);
+    color: color-mix(in srgb, var(--gold) 88%, white);
   }
 
   .text-ai-gradient {
-    background-image: linear-gradient(120deg, var(--ai-start), var(--ai-end));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--ai);
   }
 
+  /* Glass — overlays / floating AI only */
   .glass-panel {
-    @apply border-border/40 bg-card/80 shadow-soft border backdrop-blur-2xl;
+    @apply border-border/50 bg-card/90 shadow-soft border backdrop-blur-xl;
   }
 
   .glass-elevated {
-    @apply shadow-elevated border border-white/25 bg-white/12 backdrop-blur-2xl dark:border-white/10 dark:bg-white/5;
+    @apply shadow-elevated border border-white/20 bg-white/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
   }
 
   .glow-border {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--gold) 32%, transparent),
-      0 0 28px color-mix(in srgb, var(--gold) 14%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 28%, transparent);
   }
 
   .text-balance {
@@ -412,19 +430,24 @@
     background: linear-gradient(
       90deg,
       var(--muted) 25%,
-      color-mix(in srgb, var(--gold) 12%, var(--muted)) 50%,
+      color-mix(in srgb, var(--gold) 8%, var(--muted)) 50%,
       var(--muted) 75%
     );
     background-size: 200% 100%;
     animation: shimmer 2.4s linear infinite;
   }
 
-  /* Premium smooth scroll containers */
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer {
+      animation: none;
+    }
+  }
+
   .scrollbar-premium {
     scroll-behavior: smooth;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--gold) 50%, transparent) transparent;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
   }
 
   .scrollbar-premium::-webkit-scrollbar {
@@ -438,23 +461,11 @@
   }
 
   .scrollbar-premium::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--gold) 55%, transparent),
-      color-mix(in srgb, var(--primary) 45%, transparent)
-    );
+    background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
     border-radius: 999px;
     border: 1px solid transparent;
     background-clip: padding-box;
     min-height: 40px;
-  }
-
-  .scrollbar-premium::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--gold) 78%, transparent),
-      color-mix(in srgb, var(--primary) 65%, transparent)
-    );
   }
 
   .scrollbar-premium::-webkit-scrollbar-corner {

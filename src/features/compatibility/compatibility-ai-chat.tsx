@@ -1,10 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { ArrowUp, Loader2, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowUp, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AI_GURU_NAME,
+  AiGuruAvatar,
+  AiGuruHeader,
+  AiGuruLabel,
+} from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { cn } from "@/lib/utils/cn";
 
@@ -15,35 +21,26 @@ type ChatMessage = {
 };
 
 const SUGGESTED = [
-  "How is our overall marriage potential?",
-  "How might she/he think and feel in a relationship?",
-  "What are our biggest strengths as a couple?",
+  "Why is this person a strong match for me?",
+  "What does our emotional alignment look like?",
   "Where should we communicate carefully?",
-  "What does Shukra Milan say about our bond?",
+  "Should I explore this connection further?",
 ];
 
 function Bubble({ role, content }: { role: string; content: string }) {
   const isUser = role === "user";
   return (
     <div className={cn("flex w-full gap-2", isUser ? "justify-end" : "justify-start")}>
-      {!isUser ? (
-        <div className="from-gold/25 to-primary/20 text-gold mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br sm:h-8 sm:w-8">
-          <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-        </div>
-      ) : null}
+      {!isUser ? <AiGuruAvatar size="sm" className="mt-0.5" /> : null}
       <div
         className={cn(
           "max-w-[min(100%,20rem)] px-3 py-2 text-[13px] leading-relaxed sm:max-w-[min(100%,28rem)] sm:px-3.5 sm:py-2.5 sm:text-sm md:max-w-[min(100%,36rem)]",
           isUser
             ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
-            : "border-border/50 bg-card rounded-2xl rounded-bl-md border",
+            : "border-border/60 bg-card rounded-2xl rounded-bl-md border",
         )}
       >
-        {!isUser ? (
-          <p className="text-gold mb-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
-            Compatibility AI
-          </p>
-        ) : null}
+        {!isUser ? <AiGuruLabel className="mb-1.5" /> : null}
         <GuruMarkdown content={content} tone={isUser ? "user" : "assistant"} />
       </div>
     </div>
@@ -61,8 +58,8 @@ export function CompatibilityAiChat({
     {
       role: "assistant",
       content: partnerName
-        ? `I can explain your compatibility with **${partnerName}** using the calculated report — marriage outlook, emotional style, strengths, and areas to discuss. What would you like to understand?`
-        : "Ask anything about this compatibility report — marriage outlook, emotional style, strengths, or challenges. Answers stay grounded in your calculated charts.",
+        ? `Namaste. I am **${AI_GURU_NAME}**. I can help you understand your compatibility with **${partnerName}** — emotional patterns, strengths, and areas worth discussing with care.`
+        : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — emotional patterns, strengths, or areas worth discussing. My guidance stays grounded in your calculated charts.`,
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -82,8 +79,8 @@ export function CompatibilityAiChat({
       {
         role: "assistant",
         content: partnerName
-          ? `I can explain your compatibility with **${partnerName}** using the calculated report — marriage outlook, emotional style, strengths, and areas to discuss. What would you like to understand?`
-          : "Ask anything about this compatibility report — marriage outlook, emotional style, strengths, or challenges.",
+          ? `Namaste. I am **${AI_GURU_NAME}**. I can help you understand your compatibility with **${partnerName}** — emotional patterns, strengths, and areas worth discussing with care.`
+          : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — emotional patterns, strengths, or areas worth discussing.`,
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -111,7 +108,7 @@ export function CompatibilityAiChat({
       });
       const json = await res.json();
       if (!json.success) {
-        setError(json.error?.message || "AI could not respond right now");
+        setError(json.error?.message || `${AI_GURU_NAME} could not respond right now`);
         setBusy(false);
         return;
       }
@@ -143,17 +140,15 @@ export function CompatibilityAiChat({
   const userAsked = messages.some((m) => m.role === "user");
 
   return (
-    <section className="border-border/50 bg-card/40 flex h-[min(58dvh,520px)] flex-col overflow-hidden rounded-2xl border sm:h-[min(62dvh,600px)] sm:rounded-[1.5rem] md:h-[min(68dvh,680px)] lg:h-[min(70dvh,720px)]">
-      <header className="border-border/40 flex shrink-0 items-center gap-2.5 border-b px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
-        <div className="from-gold/30 to-primary/20 text-gold flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br sm:h-10 sm:w-10">
-          <MessageCircle className="h-4 w-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-base leading-tight sm:text-lg">Ask about this match</p>
-          <p className="text-muted-foreground truncate text-[11px] sm:text-xs">
-            Chart-backed · AI explains, engines calculate
-          </p>
-        </div>
+    <section className="border-border/70 bg-card shadow-soft flex h-[min(58dvh,520px)] flex-col overflow-hidden rounded-2xl border sm:h-[min(62dvh,600px)] md:h-[min(68dvh,680px)]">
+      <header className="border-border/50 shrink-0 border-b px-3 py-3 sm:px-4">
+        <AiGuruHeader
+          subtitle={
+            partnerName
+              ? `Compatibility guidance for you and ${partnerName}`
+              : "Sacred Vedic guidance for this connection"
+          }
+        />
       </header>
 
       <ScrollArea className="min-h-0 flex-1">
@@ -167,8 +162,8 @@ export function CompatibilityAiChat({
           ))}
           {busy ? (
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Reading both charts…
+              <AiGuruAvatar size="sm" busy />
+              <span>{AI_GURU_NAME} is reading both charts…</span>
             </div>
           ) : null}
           <div ref={bottomRef} />
@@ -177,7 +172,7 @@ export function CompatibilityAiChat({
 
       {error ? <p className="text-destructive px-3 pb-2 text-xs sm:px-4">{error}</p> : null}
 
-      <div className="border-border/40 shrink-0 border-t px-2.5 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-2.5 sm:pb-3">
+      <div className="border-border/50 shrink-0 border-t px-2.5 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pt-2.5 sm:pb-3">
         {!userAsked ? (
           <div className="scrollbar-hidden mb-2 flex gap-2 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch]">
             {SUGGESTED.map((prompt) => (
@@ -186,7 +181,7 @@ export function CompatibilityAiChat({
                 type="button"
                 disabled={busy}
                 onClick={() => void sendMessage(prompt)}
-                className="border-border/60 bg-card hover:border-gold/40 hover:bg-gold/8 max-w-[14rem] shrink-0 rounded-full border px-2.5 py-1.5 text-left text-[10px] leading-snug transition disabled:opacity-50 sm:max-w-none sm:px-3 sm:text-[11px]"
+                className="border-border/60 bg-background hover:border-primary/35 hover:bg-primary/5 max-w-[14rem] shrink-0 rounded-xl border px-3 py-1.5 text-left text-[11px] leading-snug transition disabled:opacity-50 sm:max-w-none"
               >
                 {prompt}
               </button>
@@ -195,12 +190,12 @@ export function CompatibilityAiChat({
         ) : null}
         <form
           onSubmit={onSubmit}
-          className="border-border/50 bg-background focus-within:border-gold/40 flex items-end gap-1.5 rounded-2xl border p-1 sm:gap-2 sm:p-1.5"
+          className="border-border/60 bg-background focus-within:border-primary/35 flex items-end gap-1.5 rounded-xl border p-1 sm:gap-2 sm:p-1.5"
         >
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Ask about marriage, emotions, family…"
+            placeholder={`Ask ${AI_GURU_NAME} about this connection…`}
             rows={1}
             className="placeholder:text-muted-foreground/70 max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-2.5 py-2 text-sm focus-visible:outline-none sm:min-h-[42px] sm:px-3 sm:py-2.5"
             onKeyDown={(e) => {
@@ -214,7 +209,7 @@ export function CompatibilityAiChat({
             type="submit"
             size="icon"
             disabled={busy || !draft.trim()}
-            className="mb-0.5 h-9 w-9 shrink-0 rounded-full"
+            className="mb-0.5 h-9 w-9 shrink-0"
             aria-label="Send"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}

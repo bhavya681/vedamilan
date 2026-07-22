@@ -10,6 +10,34 @@ export type DashaPeriod = {
 
 const MS_PER_YEAR = 365.2425 * 24 * 60 * 60 * 1000;
 
+/** Expand Antardasha sub-periods for one Mahadasha (classical Vimshottari proportions). */
+export function expandAntardashas(maha: {
+  lord: string;
+  startDate: Date;
+  endDate: Date;
+}): DashaPeriod[] {
+  const antar: DashaPeriod[] = [];
+  let antarCursor = new Date(maha.startDate);
+  const startIdx = VIMSHOTTARI_LORDS.indexOf(maha.lord as (typeof VIMSHOTTARI_LORDS)[number]);
+  const mahaYears = (maha.endDate.getTime() - maha.startDate.getTime()) / MS_PER_YEAR;
+
+  for (let i = 0; i < 9; i += 1) {
+    const aLord = VIMSHOTTARI_LORDS[(startIdx + i) % 9] ?? "Ketu";
+    const portion = (VIMSHOTTARI_YEARS[aLord] / 120) * mahaYears;
+    const end = new Date(antarCursor.getTime() + portion * MS_PER_YEAR);
+    antar.push({
+      lord: aLord,
+      startDate: new Date(antarCursor),
+      endDate: end,
+      level: "ANTAR",
+      parentLord: maha.lord,
+    });
+    antarCursor = end;
+  }
+
+  return antar;
+}
+
 export function computeVimshottari(
   moonLongitude: number,
   birthDate: Date,
@@ -54,33 +82,23 @@ export function computeVimshottari(
     cursor = end;
   }
 
-  // Antardasha for current/first maha only (compact persistence)
-  const firstMaha = periods[0]!;
-  const antar: DashaPeriod[] = [];
-  let antarCursor = new Date(firstMaha.startDate);
-  const startIdx = VIMSHOTTARI_LORDS.indexOf(firstMaha.lord as (typeof VIMSHOTTARI_LORDS)[number]);
-  for (let i = 0; i < 9; i += 1) {
-    const aLord = VIMSHOTTARI_LORDS[(startIdx + i) % 9] ?? "Ketu";
-    const portion =
-      (VIMSHOTTARI_YEARS[aLord] / 120) *
-      ((firstMaha.endDate.getTime() - firstMaha.startDate.getTime()) / MS_PER_YEAR);
-    const end = new Date(antarCursor.getTime() + portion * MS_PER_YEAR);
-    antar.push({
-      lord: aLord,
-      startDate: new Date(antarCursor),
-      endDate: end,
-      level: "ANTAR",
-      parentLord: firstMaha.lord,
-    });
-    antarCursor = end;
-  }
+  // Antardasha for every Mahadasha — needed for approximate marriage windows
+  const antar: DashaPeriod[] = periods.flatMap((maha) => expandAntardashas(maha));
 
   const all = [...periods, ...antar];
   const now = new Date();
   const currentMaha =
     periods.find((p) => p.startDate <= now && p.endDate > now)?.lord ?? periods[0]?.lord ?? null;
+  const currentMahaPeriod =
+    periods.find((p) => p.lord === currentMaha && p.startDate <= now && p.endDate > now) ||
+    periods.find((p) => p.startDate <= now && p.endDate > now);
+  const currentAntarPool = currentMahaPeriod
+    ? antar.filter((a) => a.parentLord === currentMahaPeriod.lord)
+    : antar;
   const currentAntar =
-    antar.find((p) => p.startDate <= now && p.endDate > now)?.lord ?? antar[0]?.lord ?? null;
+    currentAntarPool.find((p) => p.startDate <= now && p.endDate > now)?.lord ??
+    currentAntarPool[0]?.lord ??
+    null;
 
   return {
     balanceAtBirth: {

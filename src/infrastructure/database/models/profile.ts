@@ -23,6 +23,8 @@ const photoSchema = new Schema(
 const profileSchema = new Schema(
   {
     userId: { type: String, required: true, unique: true, index: true },
+    /** Display name synced from the User account (and editable on profile). */
+    name: { type: String, default: "", maxlength: 120, index: true },
     headline: { type: String, default: "", maxlength: 160 },
     about: { type: String, default: "", maxlength: 4000 },
     gender: {

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { GlassCard, MatchCard } from "@/components/ui/premium-cards";
+import { MatchCard } from "@/components/ui/premium-cards";
 import {
   ProfilePhotoUploader,
   type ProfilePhotoItem,
@@ -18,11 +18,11 @@ import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 const STEPS = [
-  "About You",
-  "Birth Details",
-  "Your Kundli",
-  "Your Preferences",
-  "Your Matches",
+  "Getting to know you",
+  "Understanding your chart",
+  "Your Vedic profile",
+  "Finding your alignment",
+  "Potential connections",
 ] as const;
 
 type ChartSummary = {
@@ -184,6 +184,7 @@ export function OnboardingWizard() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: form.name.trim(),
           gender: form.gender,
           dateOfBirth: form.dateOfBirth,
           city: form.city,
@@ -194,7 +195,6 @@ export function OnboardingWizard() {
           religion: form.religion || null,
           community: form.community || null,
           about: form.about || undefined,
-          headline: form.name ? `${form.name}'s profile` : undefined,
         }),
       });
       const json = await res.json();
@@ -311,24 +311,42 @@ export function OnboardingWizard() {
   const progressPct = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 py-2">
-      <div className="space-y-2 text-center">
-        <p className="text-primary text-xs font-semibold tracking-wide uppercase">Welcome</p>
-        <h1 className="font-display text-3xl">Let&apos;s find your best match.</h1>
-        <p className="text-muted-foreground text-sm">
-          Step {step + 1} of {STEPS.length} · {STEPS[step]}
+    <div className="mx-auto max-w-xl space-y-6 py-2 sm:max-w-2xl">
+      <div className="space-y-3 text-center sm:text-left">
+        <p className="text-muted-foreground text-sm">{STEPS[step]}</p>
+        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
+          {step === 0
+            ? "Let's understand you"
+            : step === 1
+              ? "When and where were you born?"
+              : step === 2
+                ? "Understanding your chart"
+                : step === 3
+                  ? "Tell us what you're looking for"
+                  : "People who may align with you"}
+        </h1>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {step === 0
+            ? "A few essentials so we can introduce you thoughtfully."
+            : step === 1
+              ? "Birth details unlock deeper Vedic compatibility."
+              : step === 2
+                ? "We're preparing your Ascendant, Moon, and relationship patterns."
+                : step === 3
+                  ? "Preferences help us surface more meaningful connections."
+                  : "Based on your profile and Vedic chart."}
         </p>
-        <Progress value={progressPct} className="mx-auto max-w-sm" />
+        <Progress value={progressPct} className="mx-auto max-w-sm sm:mx-0" />
       </div>
 
-      {error ? <p className="text-destructive text-center text-sm">{error}</p> : null}
+      {error ? <p className="text-destructive text-center text-sm sm:text-left">{error}</p> : null}
 
-      <GlassCard className="space-y-5 p-5 sm:p-6">
+      <div className="border-border/70 bg-card shadow-soft space-y-5 rounded-2xl border p-5 sm:p-6">
         {step === 0 ? (
           <>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">What should we call you?</Label>
                 <Input
                   id="name"
                   value={form.name}
@@ -594,7 +612,7 @@ export function OnboardingWizard() {
           <>
             {genPhase < 6 ? (
               <div className="space-y-4 py-4 text-center">
-                <p className="font-display text-xl">Calculating your Vedic chart…</p>
+                <p className="font-display text-xl">Calculating planetary positions…</p>
                 <ul className="text-muted-foreground mx-auto max-w-xs space-y-2 text-left text-sm">
                   {[
                     "Birth details verified",
@@ -611,7 +629,7 @@ export function OnboardingWizard() {
               </div>
             ) : (
               <div className="space-y-4">
-                <h2 className="font-display text-center text-xl">Your Vedic profile is ready.</h2>
+                <h2 className="font-display text-center text-xl">Your Vedic profile is ready</h2>
                 <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
                   {[
                     ["Ascendant", chart?.lagnaSign],
@@ -641,9 +659,9 @@ export function OnboardingWizard() {
         {step === 3 ? (
           <>
             <div className="space-y-2">
-              <h2 className="font-display text-xl">Who are you looking for?</h2>
+              <h2 className="font-display text-xl">What are you looking for?</h2>
               <p className="text-muted-foreground text-sm">
-                A few preferences help us recommend better matches.
+                A few preferences help us recommend more meaningful connections.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -690,7 +708,7 @@ export function OnboardingWizard() {
                 disabled={busy}
                 onClick={() => void savePrefs()}
               >
-                {busy ? "Finding matches…" : "See My Matches"}
+                {busy ? "Finding meaningful connections…" : "See potential connections"}
               </Button>
               <Button
                 type="button"
@@ -714,12 +732,6 @@ export function OnboardingWizard() {
 
         {step === 4 ? (
           <>
-            <div className="space-y-2 text-center">
-              <h2 className="font-display text-xl">Recommended for you</h2>
-              <p className="text-muted-foreground text-sm">
-                Based on your profile and Vedic chart.
-              </p>
-            </div>
             {matches.length ? (
               <div className="grid gap-3 sm:grid-cols-2">
                 {matches.slice(0, 4).map((m) => (
@@ -730,8 +742,7 @@ export function OnboardingWizard() {
                     city={m.city || "—"}
                     profession={m.profession || "—"}
                     score={m.compatibilityScore}
-                    aiScore={m.compatibilityScore}
-                    headline={m.headline || "Recommended for you"}
+                    headline={m.headline || "Strong potential alignment"}
                     photo={m.photo || undefined}
                     href={`${routes.matchProfile}?id=${m.userId}`}
                   />
@@ -748,11 +759,11 @@ export function OnboardingWizard() {
               disabled={busy}
               onClick={() => void finishToMatches()}
             >
-              {busy ? "Opening…" : "Go to Matches"}
+              {busy ? "Opening…" : "Continue to Matches"}
             </Button>
           </>
         ) : null}
-      </GlassCard>
+      </div>
     </div>
   );
 }

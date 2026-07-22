@@ -5,19 +5,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-brand-dual text-primary-foreground shadow-dual hover:brightness-110 active:scale-[0.98]",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-soft hover:brightness-110 active:scale-[0.98]",
+        default: "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90",
         outline:
-          "border border-primary/35 bg-transparent text-foreground hover:border-primary/55 hover:bg-primary/8",
+          "border border-border bg-transparent text-foreground hover:border-primary/40 hover:bg-primary/5",
         ghost: "hover:bg-muted hover:text-foreground",
-        destructive: "bg-destructive text-destructive-foreground hover:brightness-110",
-        ai: "bg-[linear-gradient(135deg,#6366f1,#2563eb)] text-white shadow-aurora hover:brightness-110 active:scale-[0.98]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        ai: "border border-gold/35 bg-gold/10 text-foreground hover:border-gold/50 hover:bg-gold/15",
         link: "rounded-none text-primary underline-offset-4 hover:underline",
       },
       size: {

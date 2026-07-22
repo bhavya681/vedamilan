@@ -36,16 +36,16 @@ export const footerNav: Record<string, NavItem[]> = {
   ],
 };
 
-/** Primary dashboard paths first — people & relationships before theory */
+/** Primary: people & connection. Secondary: Vedic depth & account. */
 export const dashboardNav: NavItem[] = [
   { title: "Home", href: routes.dashboard, group: "Main" },
   { title: "Matches", href: routes.matches, group: "Main" },
-  { title: "Search", href: routes.search, group: "Main" },
   { title: "Messages", href: routes.chat, group: "Main" },
-  { title: "My Kundli", href: routes.kundli, group: "Vedic" },
-  { title: "Compatibility", href: routes.compatibility, group: "Vedic" },
-  { title: "Horoscope", href: routes.horoscope, group: "Vedic" },
-  { title: "Calendar", href: routes.calendar, group: "Vedic" },
+  { title: "My Kundli", href: routes.kundli, group: "Main" },
+  { title: "Search", href: routes.search, group: "Discover" },
+  { title: "Compatibility", href: routes.compatibility, group: "Discover" },
+  { title: "Horoscope", href: routes.horoscope, group: "Discover" },
+  { title: "Calendar", href: routes.calendar, group: "Discover" },
   { title: "Shortlist", href: routes.shortlisted, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },
   { title: "Consultation", href: routes.consultation, group: "Account" },

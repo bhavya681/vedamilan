@@ -84,13 +84,18 @@ export class ProfileService {
   async getOrCreateProfile(userId: string, seed?: { name?: string }) {
     await this.ensureConnected();
     let profile = await Profile.findOne({ userId });
+    const seedName = String(seed?.name || "").trim();
     if (!profile) {
       profile = await Profile.create({
         userId,
-        headline: seed?.name ? `${seed.name}'s profile` : "",
+        name: seedName,
+        headline: "",
         about: "",
         visibility: "MEMBERS",
       });
+    } else if (seedName && !String(profile.name || "").trim()) {
+      profile.name = seedName;
+      await profile.save();
     }
     return profile.toObject();
   }
@@ -118,12 +123,17 @@ export class ProfileService {
     return {
       profile: {
         ...profile,
+        name: String(profile.name || seed?.name || "").trim(),
         age: ageFromDob(profile.dateOfBirth as Date | null),
         completion,
       },
       preferences: preferences ?? null,
       birthDetails: birthDetails ?? null,
-      user: { id: userId, name: seed?.name, email: seed?.email },
+      user: {
+        id: userId,
+        name: String(profile.name || seed?.name || "").trim() || seed?.name,
+        email: seed?.email,
+      },
     };
   }
 
@@ -136,6 +146,9 @@ export class ProfileService {
     if (rest.dateOfBirth) {
       payload.dateOfBirth = new Date(rest.dateOfBirth);
     }
+    if (typeof rest.name === "string") {
+      payload.name = rest.name.trim();
+    }
     if (completeOnboarding === true) {
       payload.onboardingCompletedAt = new Date();
     }
@@ -147,6 +160,18 @@ export class ProfileService {
     ).lean();
 
     if (!updated) throw new NotFoundError("Profile not found");
+
+    if (typeof payload.name === "string" && payload.name) {
+      const { getMongoDb } = await import("@/infrastructure/database/mongodb");
+      const { ObjectId } = await import("mongodb");
+      const userIdFilter: object[] = [{ id: userId }, { _id: userId as never }];
+      if (ObjectId.isValid(userId) && String(new ObjectId(userId)) === userId) {
+        userIdFilter.push({ _id: new ObjectId(userId) });
+      }
+      await getMongoDb()
+        .collection("user")
+        .updateOne({ $or: userIdFilter }, { $set: { name: payload.name } });
+    }
 
     const completion = calculateProfileCompletion(updated as Record<string, unknown>);
     await Profile.updateOne({ userId }, { isProfileComplete: completion.isComplete });

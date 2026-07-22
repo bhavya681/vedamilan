@@ -7,6 +7,7 @@ import { SearchX } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { MatchCard, GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
+import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { routes } from "@/lib/constants/routes";
 
 type MatchItem = {
@@ -86,11 +87,17 @@ export default function RecommendationsPage() {
       {loading ? <p className="text-muted-foreground text-sm">Loading recommendations…</p> : null}
 
       {narrative ? (
-        <GlassCard className="glow-border">
-          <p className="font-display text-xl">AI guidance</p>
-          <p className="text-muted-foreground mt-2 text-sm leading-relaxed whitespace-pre-wrap">
-            {narrative}
-          </p>
+        <GlassCard>
+          <div className="flex items-start gap-3">
+            <AiGuruAvatar size="md" />
+            <div className="min-w-0 flex-1">
+              <AiGuruLabel />
+              <p className="font-display mt-1 text-xl">{AI_GURU_NAME} guidance</p>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed whitespace-pre-wrap">
+                {narrative}
+              </p>
+            </div>
+          </div>
         </GlassCard>
       ) : null}
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
+
+import { SoftEmoji, moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { cn } from "@/lib/utils/cn";
 
 export type PairPerson = {
@@ -8,50 +11,39 @@ export type PairPerson = {
   label?: string;
 };
 
-function moodForScore(score: number): {
-  emoji: string;
-  title: string;
-  blurb: string;
-  tone: "excellent" | "strong" | "balanced" | "cautious" | "challenging";
-} {
-  if (score >= 85) {
-    return {
-      emoji: "✨",
-      title: "Radiant alignment",
-      blurb: "Charts suggest warm chemistry and strong long-term potential.",
-      tone: "excellent",
-    };
-  }
-  if (score >= 70) {
-    return {
-      emoji: "😊",
-      title: "Warm & promising",
-      blurb: "A supportive match with clear strengths to build on together.",
-      tone: "strong",
-    };
-  }
-  if (score >= 55) {
-    return {
-      emoji: "🙂",
-      title: "Steady potential",
-      blurb: "Solid foundation — thoughtful communication will deepen harmony.",
-      tone: "balanced",
-    };
-  }
-  if (score >= 40) {
-    return {
-      emoji: "🤔",
-      title: "Proceed mindfully",
-      blurb: "Some friction areas appear. Explore them honestly before committing.",
-      tone: "cautious",
-    };
-  }
-  return {
-    emoji: "🌧️",
-    title: "Challenging mix",
-    blurb: "Charts show tension. Understanding differences is essential.",
-    tone: "challenging",
-  };
+function ConvergenceMotif({ tone }: { tone: string }) {
+  const stroke =
+    tone === "excellent"
+      ? "stroke-emerald/50"
+      : tone === "strong"
+        ? "stroke-gold/55"
+        : tone === "balanced"
+          ? "stroke-primary/45"
+          : tone === "cautious"
+            ? "stroke-saffron/50"
+            : "stroke-rose/45";
+
+  return (
+    <svg
+      viewBox="0 0 120 48"
+      className="text-muted-foreground/40 mx-auto h-8 w-28 sm:h-10 sm:w-32"
+      aria-hidden
+    >
+      <path
+        d="M8 24 C 32 8, 48 8, 60 24 C 72 40, 88 40, 112 24"
+        fill="none"
+        strokeWidth="1.25"
+        className={cn(stroke)}
+      />
+      <path
+        d="M8 24 C 32 40, 48 40, 60 24 C 72 8, 88 8, 112 24"
+        fill="none"
+        strokeWidth="1.25"
+        className={cn(stroke)}
+      />
+      <circle cx="60" cy="24" r="3.5" className="fill-gold/80" />
+    </svg>
+  );
 }
 
 function Avatar({
@@ -92,12 +84,70 @@ function Avatar({
       </div>
       <div className="w-full max-w-[5.5rem] text-center sm:max-w-[8rem] md:max-w-[10rem]">
         <p className="truncate text-xs font-medium sm:text-sm">{person.name}</p>
-        {person.label ? (
-          <p className="text-muted-foreground text-[9px] tracking-wide uppercase sm:text-[10px]">
-            {person.label}
-          </p>
-        ) : null}
+        {person.label ? <p className="text-muted-foreground text-[11px]">{person.label}</p> : null}
       </div>
+    </div>
+  );
+}
+
+function MoodCenter({
+  score,
+  decisionSummary,
+  compact = false,
+}: {
+  score: number;
+  decisionSummary?: string | null;
+  compact?: boolean;
+}) {
+  const mood = moodFromScore(score);
+  const reduceMotion = useReducedMotion();
+  const toneRing =
+    mood.tone === "excellent"
+      ? "bg-emerald/12 ring-emerald/30"
+      : mood.tone === "strong"
+        ? "bg-gold/12 ring-gold/35"
+        : mood.tone === "balanced"
+          ? "bg-primary/10 ring-primary/25"
+          : mood.tone === "cautious"
+            ? "bg-saffron/12 ring-saffron/30"
+            : "bg-rose/10 ring-rose/25";
+
+  return (
+    <div className="flex max-w-sm min-w-0 flex-1 flex-col items-center px-2 text-center lg:max-w-md">
+      <ConvergenceMotif tone={mood.tone} />
+      <motion.div
+        className={cn(
+          "mt-3 flex items-center justify-center rounded-full ring-1",
+          toneRing,
+          compact ? "h-14 w-14" : "h-16 w-16 lg:h-[4.5rem] lg:w-[4.5rem]",
+        )}
+        initial={reduceMotion ? false : { scale: 0.86, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      >
+        <SoftEmoji emoji={mood.emoji} size={compact ? "lg" : "xl"} />
+      </motion.div>
+      <p
+        className={cn(
+          "font-display text-foreground mt-3 leading-none",
+          compact ? "text-4xl sm:text-5xl" : "text-5xl lg:text-6xl",
+        )}
+      >
+        {score}%
+      </p>
+      <p
+        className={cn(
+          "font-display mt-3 tracking-tight",
+          compact ? "text-xl sm:text-2xl" : "text-2xl lg:text-3xl",
+        )}
+      >
+        {mood.title}
+      </p>
+      {decisionSummary ? (
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{decisionSummary}</p>
+      ) : (
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{mood.blurb}</p>
+      )}
     </div>
   );
 }
@@ -115,83 +165,29 @@ export function CompatibilityPairMood({
   decisionSummary?: string | null;
   className?: string;
 }) {
-  const mood = moodForScore(score);
-
   return (
     <div
       className={cn(
-        "border-border/40 from-card via-gold/5 to-card relative overflow-hidden rounded-2xl border bg-gradient-to-b px-3 py-5 sm:rounded-[1.75rem] sm:px-6 sm:py-7 md:px-8 md:py-8",
+        "border-border/70 bg-card shadow-soft relative overflow-hidden rounded-2xl border px-3 py-6 sm:px-6 sm:py-8 md:px-8",
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--gold)_12%,transparent),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_srgb,var(--gold)_8%,transparent),transparent_65%)]" />
 
-      {/* Mobile: avatars on top row, mood below. md+: classic triad */}
-      <div className="relative flex flex-col items-center gap-4 md:hidden">
+      <div className="relative flex flex-col items-center gap-5 md:hidden">
         <div className="flex w-full items-start justify-between gap-2 px-1">
           <Avatar person={you} side="left" size="md" />
-          <div className="flex flex-col items-center pt-1">
-            <div
-              className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full text-2xl shadow-sm",
-                mood.tone === "excellent" && "bg-emerald/15 ring-emerald/25 ring-1",
-                mood.tone === "strong" && "bg-gold/15 ring-gold/30 ring-1",
-                mood.tone === "balanced" && "bg-primary/10 ring-primary/20 ring-1",
-                mood.tone === "cautious" && "bg-saffron/15 ring-saffron/25 ring-1",
-                mood.tone === "challenging" && "bg-rose/10 ring-rose/20 ring-1",
-              )}
-              aria-hidden
-            >
-              {mood.emoji}
-            </div>
-            <span className="text-muted-foreground mt-1 text-[10px]">vs</span>
+          <div className="flex flex-1 justify-center pt-2">
+            <ConvergenceMotif tone={moodFromScore(score).tone} />
           </div>
           <Avatar person={them} side="right" size="md" />
         </div>
-
-        <div className="w-full max-w-md space-y-2 text-center">
-          <p className="font-display text-gold text-4xl leading-none tracking-tight sm:text-5xl">
-            {score}%
-          </p>
-          <p className="text-sm font-semibold tracking-tight sm:text-base">{mood.title}</p>
-          {decisionSummary ? (
-            <p className="text-muted-foreground px-2 text-xs leading-relaxed sm:text-sm">
-              {decisionSummary}
-            </p>
-          ) : null}
-          <p className="text-muted-foreground px-2 text-xs leading-relaxed sm:text-sm">
-            {mood.blurb}
-          </p>
-        </div>
+        <MoodCenter score={score} decisionSummary={decisionSummary} compact />
       </div>
 
-      {/* Tablet / desktop triad */}
-      <div className="relative hidden items-center justify-center gap-4 md:flex lg:gap-8">
+      <div className="relative hidden items-center justify-center gap-4 md:flex lg:gap-10">
         <Avatar person={you} side="left" size="lg" />
-
-        <div className="flex max-w-sm min-w-0 flex-1 flex-col items-center px-2 text-center lg:max-w-md">
-          <div
-            className={cn(
-              "mb-2 flex h-14 w-14 items-center justify-center rounded-full text-3xl shadow-sm lg:h-16 lg:w-16 lg:text-4xl",
-              mood.tone === "excellent" && "bg-emerald/15 ring-emerald/25 ring-1",
-              mood.tone === "strong" && "bg-gold/15 ring-gold/30 ring-1",
-              mood.tone === "balanced" && "bg-primary/10 ring-primary/20 ring-1",
-              mood.tone === "cautious" && "bg-saffron/15 ring-saffron/25 ring-1",
-              mood.tone === "challenging" && "bg-rose/10 ring-rose/20 ring-1",
-            )}
-            aria-hidden
-          >
-            {mood.emoji}
-          </div>
-          <p className="font-display text-gold text-5xl leading-none lg:text-6xl">{score}%</p>
-          <p className="mt-2 text-base font-semibold tracking-tight lg:text-lg">{mood.title}</p>
-          {decisionSummary ? (
-            <p className="text-muted-foreground mt-1 text-sm">{decisionSummary}</p>
-          ) : null}
-          <div className="via-border mt-3 h-px w-16 bg-gradient-to-r from-transparent to-transparent" />
-          <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{mood.blurb}</p>
-        </div>
-
+        <MoodCenter score={score} decisionSummary={decisionSummary} />
         <Avatar person={them} side="right" size="lg" />
       </div>
     </div>

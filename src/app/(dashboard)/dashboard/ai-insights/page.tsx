@@ -2,15 +2,20 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { ArrowUp, Loader2, MessageCircle, Sparkles, Stars, Telescope } from "lucide-react";
+import { ArrowUp, Loader2, MessageCircle, Telescope } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
+import {
+  AI_GURU_NAME,
+  AiGuruAvatar,
+  AiGuruHeader,
+  AiGuruLabel,
+} from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { GuruChartPanels, type ChartPanelsData } from "@/features/ai/components/guru-chart-panels";
 
@@ -35,11 +40,7 @@ function MessageBubble({ role, content }: { role: string; content: string }) {
         isUser ? "justify-end" : "justify-start",
       )}
     >
-      {!isUser ? (
-        <div className="from-gold/25 to-primary/20 text-gold ring-gold/20 mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ring-1">
-          <Stars className="h-4 w-4" />
-        </div>
-      ) : null}
+      {!isUser ? <AiGuruAvatar size="md" className="mt-0.5" /> : null}
       <div
         className={cn(
           "max-w-[min(100%,38rem)] px-4 py-3",
@@ -50,9 +51,7 @@ function MessageBubble({ role, content }: { role: string; content: string }) {
       >
         {!isUser ? (
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-gold text-[10px] font-semibold tracking-[0.16em] uppercase">
-              Jyotish Guru
-            </span>
+            <AiGuruLabel />
             <span className="bg-border/80 h-px flex-1" />
           </div>
         ) : null}
@@ -65,15 +64,15 @@ function MessageBubble({ role, content }: { role: string; content: string }) {
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3">
-      <div className="from-gold/25 to-primary/20 text-gold ring-gold/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ring-1">
-        <Loader2 className="h-4 w-4 animate-spin" />
-      </div>
+      <AiGuruAvatar size="md" busy />
       <div className="border-border/50 bg-card/95 dark:bg-card/80 shadow-soft rounded-[1.35rem] rounded-bl-md border px-4 py-3.5">
         <div className="flex items-center gap-1.5">
           <span className="bg-gold/70 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0ms]" />
           <span className="bg-gold/70 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:150ms]" />
           <span className="bg-gold/70 h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:300ms]" />
-          <span className="text-muted-foreground ml-2 text-xs">Reading your kundli…</span>
+          <span className="text-muted-foreground ml-2 text-xs">
+            {AI_GURU_NAME} is reading your kundli…
+          </span>
         </div>
       </div>
     </div>
@@ -165,7 +164,7 @@ export default function AiInsightsPage() {
       .then((r) => r.json())
       .then((json) => {
         if (!json.success) {
-          setError(json.error?.message || "Failed to load Jyotish insights");
+          setError(json.error?.message || `Failed to load ${AI_GURU_NAME} insights`);
           return;
         }
         const data = json.data as InsightsPayload;
@@ -178,7 +177,7 @@ export default function AiInsightsPage() {
           },
         ]);
       })
-      .catch(() => setError("Failed to load Jyotish insights"))
+      .catch(() => setError(`Failed to load ${AI_GURU_NAME} insights`))
       .finally(() => setLoading(false));
   }, []);
 
@@ -208,7 +207,7 @@ export default function AiInsightsPage() {
       });
       const json = await res.json();
       if (!json.success) {
-        setError(json.error?.message || "Guru could not respond right now");
+        setError(json.error?.message || `${AI_GURU_NAME} could not respond right now`);
         setBusy(false);
         return;
       }
@@ -244,26 +243,15 @@ export default function AiInsightsPage() {
       {/* Header */}
       <header className="border-border/40 from-card via-card to-muted/30 dark:to-muted/20 relative shrink-0 border-b bg-gradient-to-r px-4 py-3.5 sm:px-5">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--gold)_14%,transparent),transparent_55%)]" />
-        <div className="relative flex items-center gap-3">
-          <div className="from-gold/30 via-primary/20 to-cosmic/20 text-gold ring-gold/25 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ring-1">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-xl leading-none tracking-tight sm:text-2xl">
-                Jyotish Guru
-              </h2>
-              <Badge className="border-emerald/20 bg-emerald/10 text-emerald hover:bg-emerald/10 gap-1 border text-[10px]">
-                <span className="bg-emerald h-1.5 w-1.5 animate-pulse rounded-full" />
-                Online
-              </Badge>
-            </div>
-            <p className="text-muted-foreground mt-1.5 truncate text-xs">
-              {bundle?.hasChart
+        <div className="relative">
+          <AiGuruHeader
+            online
+            subtitle={
+              bundle?.hasChart
                 ? `Lagna ${bundle.chartSummary?.lagnaSign} · Moon ${bundle.chartSummary?.moonSign} · Sun ${bundle.chartSummary?.sunSign}`
-                : "Generate kundli to unlock full chart-backed guidance"}
-            </p>
-          </div>
+                : "Generate kundli to unlock full chart-backed guidance"
+            }
+          />
         </div>
       </header>
 
@@ -274,8 +262,8 @@ export default function AiInsightsPage() {
           <div className="relative space-y-5 px-3 py-5 sm:space-y-6 sm:px-5">
             {!userAsked && !loading ? (
               <div className="border-border/40 from-gold/5 mx-auto mb-2 max-w-md rounded-2xl border border-dashed bg-gradient-to-b to-transparent px-4 py-5 text-center">
-                <Stars className="text-gold mx-auto h-6 w-6 opacity-80" />
-                <p className="font-display mt-3 text-lg">Ask with intention</p>
+                <AiGuruAvatar size="lg" className="mx-auto" />
+                <p className="font-display mt-3 text-lg">Ask {AI_GURU_NAME} with intention</p>
                 <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
                   Yogas, dasha periods, gochar, or marriage themes — answers cite your stored chart.
                 </p>
@@ -318,9 +306,8 @@ export default function AiInsightsPage() {
     <div className="relative space-y-4 sm:space-y-5">
       <PageHeader
         className="mb-4 sm:mb-5"
-        eyebrow="Jyotish Guru"
-        title="AI Astrologer"
-        description="Chat with chart-backed guidance — yogas, dasha & gochar beside you."
+        title={AI_GURU_NAME}
+        description="Sacred Vedic guidance — yogas, dasha & gochar beside you, grounded in your chart."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary" size="sm">

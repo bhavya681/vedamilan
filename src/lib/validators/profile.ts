@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const profileUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
   headline: z.string().max(160).optional(),
   about: z.string().max(4000).optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER", "UNDISCLOSED"]).optional(),

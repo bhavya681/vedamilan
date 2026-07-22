@@ -6,7 +6,10 @@ export function GlassPanel({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("glass-panel rounded-2xl", className)} {...props}>
+    <div
+      className={cn("border-border/70 bg-card shadow-soft rounded-2xl border", className)}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -107,9 +110,8 @@ export function ProgressRing({
         />
         <defs>
           <linearGradient id="progress-gold" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#C9A227" />
-            <stop offset="50%" stopColor="#7C5CFC" />
-            <stop offset="100%" stopColor="#1F4E68" />
+            <stop offset="0%" stopColor="#C47A1A" />
+            <stop offset="100%" stopColor="#D4AF37" />
           </linearGradient>
         </defs>
       </svg>

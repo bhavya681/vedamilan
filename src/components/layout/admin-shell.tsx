@@ -34,7 +34,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "relative block rounded-xl px-2.5 py-2 text-sm font-medium transition-colors",
                     active
-                      ? "bg-primary/12 text-foreground shadow-soft before:bg-primary dark:bg-primary/18 before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full"
+                      ? "bg-primary/12 text-foreground dark:bg-primary/18"
                       : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
                   )}
                   aria-current={active ? "page" : undefined}
