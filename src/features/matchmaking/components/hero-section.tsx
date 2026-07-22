@@ -115,18 +115,18 @@ export function HeroSection() {
             id="hero-heading"
             className="font-display text-ivory mt-5 max-w-2xl text-2xl leading-[1.2] text-balance sm:text-4xl md:text-5xl"
           >
-            Find alignment with Vedic clarity and calm AI.
+            Find a life partner aligned with you.
           </h1>
 
           <p className="text-ivory/78 mt-5 max-w-xl text-sm leading-relaxed sm:text-lg">
-            Matchmaking, kundli, compatibility, marriage timing, and expert guidance—designed as a
-            premium OS for intentional unions.
+            VedaMilan combines Vedic astrology, compatibility analysis, and intelligent matchmaking
+            to help you discover meaningful connections.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button asChild size="lg" className="h-12 min-w-[180px]">
               <Link href={routes.register}>
-                Begin your journey
+                Find Your Match
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -136,7 +136,7 @@ export function HeroSection() {
               variant="outline"
               className="border-ivory/30 bg-ivory/5 text-ivory hover:bg-ivory/12 h-12 backdrop-blur-md"
             >
-              <Link href="/#compatibility">See compatibility</Link>
+              <Link href="/#features">Explore How It Works</Link>
             </Button>
           </div>
 

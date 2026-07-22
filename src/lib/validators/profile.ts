@@ -31,6 +31,8 @@ export const profileUpdateSchema = z.object({
     })
     .optional(),
   visibility: z.enum(["PUBLIC", "MEMBERS", "HIDDEN"]).optional(),
+  /** Pass true to mark guided onboarding finished (or skipped). */
+  completeOnboarding: z.boolean().optional(),
 });
 
 export const partnerPreferencesSchema = z.object({

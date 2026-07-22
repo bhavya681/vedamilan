@@ -71,6 +71,8 @@ const profileSchema = new Schema(
       index: true,
     },
     isProfileComplete: { type: Boolean, default: false },
+    /** Set when user finishes or skips the guided onboarding wizard */
+    onboardingCompletedAt: { type: Date, default: null },
   },
   baseSchemaOptions,
 );

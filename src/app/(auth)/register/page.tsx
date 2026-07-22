@@ -32,7 +32,7 @@ export default function RegisterPage() {
       password,
       name,
       ...(phone ? { phone } : {}),
-      callbackURL: routes.dashboard,
+      callbackURL: routes.onboarding,
     });
 
     if (signUpError) {
@@ -45,7 +45,7 @@ export default function RegisterPage() {
       const { error: signInError } = await authClient.signIn.email({
         email,
         password,
-        callbackURL: routes.dashboard,
+        callbackURL: routes.onboarding,
       });
       if (signInError) {
         setLoading(false);
@@ -56,7 +56,7 @@ export default function RegisterPage() {
     }
 
     setLoading(false);
-    router.push(routes.dashboard);
+    router.push(routes.onboarding);
     router.refresh();
   }
 
@@ -73,7 +73,7 @@ export default function RegisterPage() {
           Open your workspace, or sign out to create a different account.
         </p>
         <Button asChild className="w-full">
-          <Link href={routes.dashboard}>Go to dashboard</Link>
+          <Link href={routes.onboarding}>Continue setup</Link>
         </Button>
         <SignOutButton className="w-full" label="Sign out to register another account" />
         <p className="text-muted-foreground text-center text-sm">

@@ -11,25 +11,35 @@ import { routes } from "@/lib/constants/routes";
 type Birth = {
   birthDate?: string | Date;
   birthTime?: string;
+  birthTimeUnknown?: boolean;
   placeName?: string;
   latitude?: number;
   longitude?: number;
   timezone?: string;
   chartStylePreference?: string;
+  updatedAt?: string;
 };
 
 export default function BirthDetailsPage() {
   const [birth, setBirth] = useState<Birth | null>(null);
+  const [hasChart, setHasChart] = useState(false);
+  const [timeUnknown, setTimeUnknown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showRegen, setShowRegen] = useState(false);
 
   useEffect(() => {
-    void fetch("/api/birth-details")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success) setBirth(json.data || {});
-        else setError(json.error?.message || "Failed to load");
+    void Promise.all([
+      fetch("/api/birth-details").then((r) => r.json()),
+      fetch("/api/horoscope").then((r) => r.json()),
+    ])
+      .then(([birthJson, chartJson]) => {
+        if (birthJson.success) {
+          setBirth(birthJson.data || {});
+          setTimeUnknown(Boolean(birthJson.data?.birthTimeUnknown));
+        } else setError(birthJson.error?.message || "Failed to load");
+        setHasChart(Boolean(chartJson.success && chartJson.data?.horoscope));
       })
       .catch(() => setError("Failed to load birth details"));
   }, []);
@@ -40,9 +50,11 @@ export default function BirthDetailsPage() {
     setError(null);
     setMessage(null);
     const form = new FormData(event.currentTarget);
+    const rawTime = String(form.get("birthTime") || "12:00");
     const payload = {
       birthDate: String(form.get("birthDate")),
-      birthTime: String(form.get("birthTime")),
+      birthTime: timeUnknown ? "12:00:00" : rawTime.length === 5 ? `${rawTime}:00` : rawTime,
+      birthTimeUnknown: timeUnknown,
       placeName: String(form.get("placeName")),
       latitude: Number(form.get("latitude")),
       longitude: Number(form.get("longitude")),
@@ -61,26 +73,44 @@ export default function BirthDetailsPage() {
       return;
     }
     setBirth(json.data);
-    setMessage("Birth details saved — ready for horoscope engine (Module 4)");
+    setMessage("Birth details saved.");
+    if (hasChart) setShowRegen(true);
   }
 
   const dateValue = birth?.birthDate ? new Date(birth.birthDate).toISOString().slice(0, 10) : "";
 
   return (
-    <div className="relative">
+    <div className="relative space-y-4">
       <PageHeader
-        eyebrow="VedaMilan AI"
-        title="Birth Details"
-        description="Precise time and place unlock authentic Vedic charts"
+        eyebrow="Setup"
+        title="Birth details"
+        description="Your birth date, exact time, and location help us calculate your Vedic birth chart."
         actions={
           <Button asChild variant="secondary">
             <Link href={routes.kundli}>Open kundli</Link>
           </Button>
         }
       />
+
+      {showRegen ? (
+        <GlassCard className="border-primary/30 bg-primary/5 space-y-3">
+          <p className="font-medium">Your birth details changed.</p>
+          <p className="text-muted-foreground text-sm">
+            Your Kundli and compatibility results may need to be recalculated.
+          </p>
+          <Button asChild>
+            <Link href={routes.kundli}>Regenerate Kundli</Link>
+          </Button>
+        </GlassCard>
+      ) : null}
+
       <GlassCard className="max-w-2xl space-y-4">
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
         {message ? <p className="text-emerald text-sm">{message}</p> : null}
+        <p className="text-muted-foreground text-sm">
+          Exact birth time improves Ascendant, houses, and relationship indicators. Don&apos;t know
+          it? You can still continue with limited chart accuracy.
+        </p>
         {birth === null && !error ? (
           <p className="text-muted-foreground text-sm">Loading…</p>
         ) : (
@@ -106,15 +136,23 @@ export default function BirthDetailsPage() {
                 id="birthTime"
                 name="birthTime"
                 type="time"
-                required
                 step={1}
-                className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+                disabled={timeUnknown}
+                className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2 disabled:opacity-50"
                 defaultValue={(birth?.birthTime || "12:00:00").slice(0, 8)}
               />
+              <label className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={timeUnknown}
+                  onChange={(e) => setTimeUnknown(e.target.checked)}
+                />
+                I don&apos;t know my exact birth time
+              </label>
             </div>
             <div>
               <label className="text-sm font-medium" htmlFor="placeName">
-                Place
+                Birth location
               </label>
               <input
                 id="placeName"
@@ -180,9 +218,14 @@ export default function BirthDetailsPage() {
                 <option value="EAST">East Indian</option>
               </select>
             </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving…" : "Save birth details"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving…" : "Save birth details"}
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={routes.kundli}>{hasChart ? "View kundli" : "Generate My Kundli"}</Link>
+              </Button>
+            </div>
           </form>
         )}
       </GlassCard>

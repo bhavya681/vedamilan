@@ -19,6 +19,7 @@ export const routes = {
   verifyEmail: "/verify-email",
 
   dashboard: "/dashboard",
+  onboarding: "/dashboard/onboarding",
   profile: "/dashboard/profile",
   editProfile: "/dashboard/profile/edit",
   preferences: "/dashboard/preferences",

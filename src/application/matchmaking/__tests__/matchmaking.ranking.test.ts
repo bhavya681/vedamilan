@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { scoreAshtaKoota } from "@/application/rules/ashta-koota";
+import { oppositeGender } from "@/application/matchmaking/matchmaking.service";
 
 describe("Module 6 — matchmaking ranking", () => {
+  it("suggests opposite gender only", () => {
+    expect(oppositeGender("MALE")).toBe("FEMALE");
+    expect(oppositeGender("FEMALE")).toBe("MALE");
+    expect(oppositeGender("OTHER")).toBeNull();
+    expect(oppositeGender("UNDISCLOSED")).toBeNull();
+  });
+
   it("ranks higher Ashta Koota scores first", () => {
     const a = scoreAshtaKoota({
       moonSignA: "Cancer",

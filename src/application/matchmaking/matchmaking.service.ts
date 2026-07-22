@@ -103,6 +103,13 @@ function displayName(
   return names.get(userId) || profile.headline || profile.profession || "Member";
 }
 
+/** Matrimonial default: males see females, females see males. */
+export function oppositeGender(gender?: string | null): "MALE" | "FEMALE" | null {
+  if (gender === "MALE") return "FEMALE";
+  if (gender === "FEMALE") return "MALE";
+  return null;
+}
+
 export class MatchmakingService {
   async search(userId: string, filters: MatchFilters = {}) {
     await connectMongo();
@@ -113,6 +120,9 @@ export class MatchmakingService {
         ? await PartnerPreferences.findOne({ userId }).lean()
         : null;
 
+    const selfProfile = await Profile.findOne({ userId }).lean();
+    const targetGender = oppositeGender(selfProfile?.gender);
+
     const query: Record<string, unknown> = {
       userId: { $ne: userId },
       status: "ACTIVE",
@@ -120,6 +130,11 @@ export class MatchmakingService {
       // Profile picture is mandatory for discovery
       "photos.0": { $exists: true },
     };
+
+    // Same-gender profiles are never suggested for matchmaking
+    if (targetGender) {
+      query.gender = targetGender;
+    }
 
     const city = filters.city;
     if (city && city !== "all") {
@@ -144,8 +159,7 @@ export class MatchmakingService {
       if (maxHeight) (query.heightCm as Record<string, number>).$lte = maxHeight;
     }
 
-    const [selfProfile, selfChart, candidates] = await Promise.all([
-      Profile.findOne({ userId }).lean(),
+    const [selfChart, candidates] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
       Profile.find(query).limit(200).lean(),
     ]);

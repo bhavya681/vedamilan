@@ -36,21 +36,20 @@ export const footerNav: Record<string, NavItem[]> = {
   ],
 };
 
-/** Primary dashboard paths first — fewer clicks to core jobs */
+/** Primary dashboard paths first — people & relationships before theory */
 export const dashboardNav: NavItem[] = [
   { title: "Home", href: routes.dashboard, group: "Main" },
   { title: "Matches", href: routes.matches, group: "Main" },
   { title: "Search", href: routes.search, group: "Main" },
   { title: "Messages", href: routes.chat, group: "Main" },
-  { title: "Kundli", href: routes.kundli, group: "Vedic" },
+  { title: "My Kundli", href: routes.kundli, group: "Vedic" },
   { title: "Compatibility", href: routes.compatibility, group: "Vedic" },
   { title: "Horoscope", href: routes.horoscope, group: "Vedic" },
   { title: "Calendar", href: routes.calendar, group: "Vedic" },
-  { title: "AI Insights", href: routes.aiInsights, group: "More" },
-  { title: "Shortlisted", href: routes.shortlisted, group: "More" },
-  { title: "Consultation", href: routes.consultation, group: "More" },
-  { title: "Notifications", href: routes.notifications, group: "More" },
+  { title: "Shortlist", href: routes.shortlisted, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },
+  { title: "Consultation", href: routes.consultation, group: "Account" },
+  { title: "Notifications", href: routes.notifications, group: "Account" },
   { title: "Settings", href: routes.settings, group: "Account" },
 ];
 

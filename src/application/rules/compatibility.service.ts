@@ -65,6 +65,23 @@ export class CompatibilityService {
     if (userAId === userBId) throw new ValidationError("Cannot compare a profile with itself");
     await connectMongo();
 
+    const [profileA, profileB] = await Promise.all([
+      Profile.findOne({ userId: userAId }).lean(),
+      Profile.findOne({ userId: userBId }).lean(),
+    ]);
+
+    const genderA = profileA?.gender;
+    const genderB = profileB?.gender;
+    if (
+      (genderA === "MALE" || genderA === "FEMALE") &&
+      (genderB === "MALE" || genderB === "FEMALE") &&
+      genderA === genderB
+    ) {
+      throw new ValidationError(
+        "Compatibility is only available between male and female profiles. Same-gender matching is not supported.",
+      );
+    }
+
     const [chartA, chartB] = await Promise.all([
       Horoscope.findOne({ userId: userAId }).sort({ calculatedAt: -1 }).lean(),
       Horoscope.findOne({ userId: userBId }).sort({ calculatedAt: -1 }).lean(),
@@ -150,11 +167,6 @@ export class CompatibilityService {
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },
     ).lean();
-
-    const [profileA, profileB] = await Promise.all([
-      Profile.findOne({ userId: userAId }).lean(),
-      Profile.findOne({ userId: userBId }).lean(),
-    ]);
 
     return {
       report: doc,

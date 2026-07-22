@@ -131,9 +131,13 @@ export class ProfileService {
     await this.ensureConnected();
     await this.getOrCreateProfile(userId);
 
-    const payload: Record<string, unknown> = { ...input };
-    if (input.dateOfBirth) {
-      payload.dateOfBirth = new Date(input.dateOfBirth);
+    const { completeOnboarding, ...rest } = input;
+    const payload: Record<string, unknown> = { ...rest };
+    if (rest.dateOfBirth) {
+      payload.dateOfBirth = new Date(rest.dateOfBirth);
+    }
+    if (completeOnboarding === true) {
+      payload.onboardingCompletedAt = new Date();
     }
 
     const updated = await Profile.findOneAndUpdate(

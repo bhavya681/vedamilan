@@ -4,6 +4,7 @@ import { PageTransition } from "@/components/animations/motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { OnboardingRedirect } from "@/features/onboarding/onboarding-redirect";
 import { getSession } from "@/lib/auth/session";
 import { routes } from "@/lib/constants/routes";
 
@@ -19,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="bg-background flex h-dvh max-h-dvh flex-col overflow-hidden">
+      <OnboardingRedirect />
       <Navbar className="shrink-0" />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
