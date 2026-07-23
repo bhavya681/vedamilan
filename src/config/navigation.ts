@@ -47,6 +47,7 @@ export const dashboardNav: NavItem[] = [
   { title: "Compatibility", href: routes.compatibility, group: "Discover" },
   { title: "Horoscope", href: routes.horoscope, group: "Discover" },
   { title: "Calendar", href: routes.calendar, group: "Discover" },
+  { title: "My profile", href: routes.profile, group: "Account" },
   { title: "Shortlist", href: routes.shortlisted, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },
   { title: "Consultation", href: routes.consultation, group: "Account" },
