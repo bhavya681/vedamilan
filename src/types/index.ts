@@ -1,4 +1,10 @@
 export type ThemeMode = "light" | "dark" | "system";
+export type {
+  AppearanceMode,
+  AppearanceExpression,
+  AppearanceThemeId,
+  AppearancePreferences,
+} from "@/lib/appearance/types";
 
 export type UserRole = "member" | "premium" | "moderator" | "admin";
 

@@ -135,6 +135,9 @@ export default function SettingsPage() {
                 <Link href={routes.editProfile}>Full profile editor</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
+                <Link href={routes.appearance}>Appearance</Link>
+              </Button>
+              <Button asChild type="button" variant="ghost">
                 <Link href={routes.privacySettings}>Privacy</Link>
               </Button>
               <Button asChild type="button" variant="ghost">

@@ -6,9 +6,11 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/hooks/use-mounted";
 import { cn } from "@/lib/utils/cn";
+import { useAppearance } from "@/components/providers/appearance-provider";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const { setPreferences } = useAppearance();
   const mounted = useMounted();
 
   if (!mounted) {
@@ -27,7 +29,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       size="icon"
       className={cn(className)}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => setPreferences({ mode: isDark ? "light" : "dark" })}
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>

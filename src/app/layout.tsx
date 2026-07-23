@@ -75,6 +75,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
   return (
     <html lang="en" suppressHydrationWarning className={`${display.variable} ${body.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var r=localStorage.getItem("vedamilan.appearance.v1");if(!r)return;var p=JSON.parse(r);var d=document.documentElement;if(p.theme)d.setAttribute("data-theme",p.theme);if(p.expression)d.setAttribute("data-expression",p.expression);if(p.borderIntensity)d.setAttribute("data-border",p.borderIntensity);if(p.accentOverride)d.setAttribute("data-accent",p.accentOverride);if(p.reducedMotion)d.setAttribute("data-reduced-motion","true");}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen font-sans antialiased">
         <script
           type="application/ld+json"

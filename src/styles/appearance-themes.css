@@ -1,0 +1,286 @@
+/* Curated appearance themes — override semantic tokens only. Layout/typography stay VedaMilan. */
+
+:root {
+  --border-strength: 0.1;
+  --surface-elevated: #ffffff;
+  --surface-muted: #efe6d4;
+}
+
+.dark {
+  --border-strength: 0.1;
+  --surface-elevated: #1a1612;
+  --surface-muted: #1a1612;
+}
+
+html[data-border="soft"] {
+  --border: rgba(20, 17, 14, calc(var(--border-strength) * 0.7));
+  --input: rgba(20, 17, 14, calc(var(--border-strength) * 0.85));
+}
+html.dark[data-border="soft"] {
+  --border: rgba(247, 241, 227, calc(var(--border-strength) * 0.7));
+  --input: rgba(247, 241, 227, calc(var(--border-strength) * 0.85));
+}
+html[data-border="strong"] {
+  --border: rgba(20, 17, 14, calc(var(--border-strength) * 1.55));
+  --input: rgba(20, 17, 14, calc(var(--border-strength) * 1.7));
+}
+html.dark[data-border="strong"] {
+  --border: rgba(247, 241, 227, calc(var(--border-strength) * 1.55));
+  --input: rgba(247, 241, 227, calc(var(--border-strength) * 1.7));
+}
+
+/* —— Theme presets (light) —— */
+html[data-theme="veda-gold"] {
+  --primary: #c47a1a;
+  --primary-foreground: #ffffff;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #c47a1a;
+  --ai: #b8860b;
+  --rose: #b76e79;
+  --shadow-gold: 0 10px 28px rgba(212, 175, 55, 0.18);
+  --shadow-dual: 0 10px 28px rgba(196, 122, 26, 0.12);
+}
+
+html[data-theme="rose-serenity"] {
+  --primary: #b76e79;
+  --primary-foreground: #ffffff;
+  --ring: #c9a0a8;
+  --gold: #c9a27a;
+  --saffron: #b76e79;
+  --ai: #b76e79;
+  --rose: #a85d6a;
+  --accent: #f3e8e6;
+  --muted: #f0e6e2;
+  --shadow-gold: 0 10px 28px rgba(183, 110, 121, 0.16);
+  --shadow-dual: 0 10px 28px rgba(183, 110, 121, 0.12);
+  --shadow-rose: 0 10px 24px rgba(183, 110, 121, 0.16);
+}
+
+html[data-theme="crimson-heritage"] {
+  --primary: #8b2942;
+  --primary-foreground: #ffffff;
+  --ring: #a33b55;
+  --gold: #c9a27a;
+  --saffron: #a33b55;
+  --ai: #8b2942;
+  --rose: #8b2942;
+  --crimson: #8b2942;
+  --shadow-gold: 0 10px 28px rgba(139, 41, 66, 0.16);
+  --shadow-dual: 0 10px 28px rgba(139, 41, 66, 0.12);
+}
+
+html[data-theme="saffron-veda"] {
+  --primary: #b86a12;
+  --primary-foreground: #ffffff;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #b86a12;
+  --ai: #b86a12;
+  --secondary: #3d2a14;
+  --shadow-gold: 0 10px 28px rgba(184, 106, 18, 0.18);
+  --shadow-dual: 0 10px 28px rgba(212, 175, 55, 0.14);
+}
+
+html[data-theme="emerald-harmony"] {
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --ring: #c9a227;
+  --gold: #c9a227;
+  --saffron: #0f766e;
+  --ai: #0f766e;
+  --emerald: #0f766e;
+  --secondary: #1f3a5f;
+  --shadow-gold: 0 10px 28px rgba(15, 118, 110, 0.16);
+  --shadow-dual: 0 10px 28px rgba(201, 162, 39, 0.12);
+}
+
+html[data-theme="midnight-veda"] {
+  --primary: #b8860b;
+  --primary-foreground: #ffffff;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #c47a1a;
+  --ai: #d4af37;
+  --background: #f3eee4;
+  --card: #faf6ee;
+  --muted: #ebe4d6;
+}
+
+/* —— Theme presets (dark) —— */
+html.dark[data-theme="veda-gold"] {
+  --primary: #d4af37;
+  --primary-foreground: #14110e;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #e0a84a;
+  --ai: #e0a84a;
+}
+
+html.dark[data-theme="rose-serenity"] {
+  --primary: #d4a0a8;
+  --primary-foreground: #14110e;
+  --ring: #d4a0a8;
+  --gold: #d4b896;
+  --saffron: #d4a0a8;
+  --ai: #d4a0a8;
+  --rose: #d4a0a8;
+  --accent: #2a1e1f;
+  --muted: #22181a;
+}
+
+html.dark[data-theme="crimson-heritage"] {
+  --primary: #c45a72;
+  --primary-foreground: #14110e;
+  --ring: #c45a72;
+  --gold: #d4b896;
+  --saffron: #c45a72;
+  --ai: #c45a72;
+  --crimson: #c45a72;
+  --background: #0a0808;
+  --card: #161012;
+}
+
+html.dark[data-theme="saffron-veda"] {
+  --primary: #e0a84a;
+  --primary-foreground: #14110e;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #e0a84a;
+  --ai: #e0a84a;
+  --background: #100c08;
+  --card: #18120c;
+}
+
+html.dark[data-theme="emerald-harmony"] {
+  --primary: #2dd4bf;
+  --primary-foreground: #0c0a08;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #2dd4bf;
+  --ai: #2dd4bf;
+  --emerald: #2dd4bf;
+}
+
+html.dark[data-theme="midnight-veda"] {
+  --background: #080706;
+  --foreground: #f7f1e3;
+  --card: #12100e;
+  --card-foreground: #f7f1e3;
+  --muted: #181512;
+  --muted-foreground: #b8aea0;
+  --primary: #d4af37;
+  --primary-foreground: #0c0a08;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --saffron: #e0a84a;
+  --ai: #d4af37;
+  --secondary: #2a4a6f;
+  --border: rgba(247, 241, 227, 0.09);
+}
+
+/* —— Personal expression (tint on classic Veda Gold only; curated themes stay pure) —— */
+html[data-theme="veda-gold"][data-expression="feminine"] {
+  --primary: #b76e79;
+  --primary-foreground: #ffffff;
+  --ring: #c9a0a8;
+  --ai: #b76e79;
+}
+html.dark[data-theme="veda-gold"][data-expression="feminine"] {
+  --primary: #d4a0a8;
+  --primary-foreground: #14110e;
+  --ring: #d4a0a8;
+  --ai: #d4a0a8;
+}
+
+html[data-theme="veda-gold"][data-expression="masculine"] {
+  --primary: #8b2942;
+  --primary-foreground: #ffffff;
+  --ring: #a33b55;
+  --ai: #8b2942;
+}
+html.dark[data-theme="veda-gold"][data-expression="masculine"] {
+  --primary: #c45a72;
+  --primary-foreground: #14110e;
+  --ring: #c45a72;
+  --ai: #c45a72;
+}
+
+/* —— Advanced curated accent overrides —— */
+html[data-accent="gold"] {
+  --primary: #c47a1a;
+  --ring: #d4af37;
+  --ai: #b8860b;
+}
+html.dark[data-accent="gold"] {
+  --primary: #d4af37;
+  --primary-foreground: #14110e;
+  --ring: #d4af37;
+  --ai: #e0a84a;
+}
+html[data-accent="saffron"] {
+  --primary: #b86a12;
+  --ring: #d4af37;
+  --ai: #b86a12;
+}
+html.dark[data-accent="saffron"] {
+  --primary: #e0a84a;
+  --primary-foreground: #14110e;
+}
+html[data-accent="rose"] {
+  --primary: #b76e79;
+  --ring: #c9a0a8;
+  --ai: #b76e79;
+}
+html.dark[data-accent="rose"] {
+  --primary: #d4a0a8;
+  --primary-foreground: #14110e;
+}
+html[data-accent="burgundy"] {
+  --primary: #8b2942;
+  --ring: #a33b55;
+  --ai: #8b2942;
+}
+html.dark[data-accent="burgundy"] {
+  --primary: #c45a72;
+  --primary-foreground: #14110e;
+}
+html[data-accent="emerald"] {
+  --primary: #0f766e;
+  --ring: #c9a227;
+  --ai: #0f766e;
+}
+html.dark[data-accent="emerald"] {
+  --primary: #2dd4bf;
+  --primary-foreground: #0c0a08;
+}
+html[data-accent="temple"] {
+  --primary: #1f3a5f;
+  --ring: #d4af37;
+  --ai: #1f3a5f;
+}
+html.dark[data-accent="temple"] {
+  --primary: #5a7fa8;
+  --primary-foreground: #0c0a08;
+}
+
+/* Smooth token transitions — respect reduced motion */
+html:not([data-reduced-motion="true"]) body,
+html:not([data-reduced-motion="true"]) .bg-background,
+html:not([data-reduced-motion="true"]) .bg-card,
+html:not([data-reduced-motion="true"]) .bg-primary,
+html:not([data-reduced-motion="true"]) .border-border {
+  transition:
+    background-color 220ms var(--ease-out-expo),
+    border-color 220ms var(--ease-out-expo),
+    color 220ms var(--ease-out-expo),
+    box-shadow 220ms var(--ease-out-expo);
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

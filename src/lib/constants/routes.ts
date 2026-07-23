@@ -74,6 +74,7 @@ export const routes = {
   settings: "/dashboard/settings",
   security: "/dashboard/settings/security",
   privacySettings: "/dashboard/settings/privacy",
+  appearance: "/dashboard/settings/appearance",
 
   admin: "/admin",
   adminUsers: "/admin/users",

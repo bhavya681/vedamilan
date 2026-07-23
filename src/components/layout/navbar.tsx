@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bell, Heart, Menu, MessageCircle, Search } from "lucide-react";
+import { Bell, Heart, Menu, MessageCircle, Palette, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -180,6 +180,16 @@ export function Navbar({
                     </span>
                     <span className="max-w-[7rem] truncate text-sm font-medium">{userName}</span>
                   </Link>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground hidden lg:inline-flex"
+                  >
+                    <Link href={routes.appearance} aria-label="Appearance settings">
+                      <Palette className="h-4 w-4" />
+                    </Link>
+                  </Button>
                 </>
               ) : (
                 <Button asChild className="shadow-gold hidden sm:inline-flex">

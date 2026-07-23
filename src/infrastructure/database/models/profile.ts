@@ -75,6 +75,34 @@ const profileSchema = new Schema(
     isProfileComplete: { type: Boolean, default: false },
     /** Set when user finishes or skips the guided onboarding wizard */
     onboardingCompletedAt: { type: Date, default: null },
+    /** Visual personalization — independent of matchmaking / gender */
+    appearance: {
+      mode: { type: String, enum: ["light", "dark", "system"], default: "system" },
+      expression: {
+        type: String,
+        enum: ["feminine", "masculine", "neutral"],
+        default: "neutral",
+      },
+      theme: {
+        type: String,
+        enum: [
+          "veda-gold",
+          "rose-serenity",
+          "crimson-heritage",
+          "saffron-veda",
+          "emerald-harmony",
+          "midnight-veda",
+        ],
+        default: "veda-gold",
+      },
+      accentOverride: { type: String, default: null },
+      borderIntensity: {
+        type: String,
+        enum: ["soft", "medium", "strong"],
+        default: "medium",
+      },
+      reducedMotion: { type: Boolean, default: false },
+    },
   },
   baseSchemaOptions,
 );
