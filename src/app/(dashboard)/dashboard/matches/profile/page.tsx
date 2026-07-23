@@ -3,11 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { MoodBadge } from "@/features/compatibility/compatibility-visuals";
+import { RelationshipActions } from "@/features/relationship/relationship-actions";
 import { routes } from "@/lib/constants/routes";
 
 type Candidate = {
@@ -31,7 +32,6 @@ type Candidate = {
 
 export default function MatchProfilePage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const id = searchParams.get("id");
   const [profile, setProfile] = useState<Candidate | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,20 +55,6 @@ export default function MatchProfilePage() {
       .catch(() => setError("Failed to load profile"));
   }, [id]);
 
-  async function sendInterest() {
-    if (!id) return;
-    setBusy(true);
-    setMessage(null);
-    const res = await fetch("/api/likes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toUserId: id, type: "INTEREST" }),
-    });
-    const json = await res.json();
-    setBusy(false);
-    setMessage(json.success ? "Interest sent." : json.error?.message || "Failed");
-  }
-
   async function shortlist() {
     if (!id) return;
     setBusy(true);
@@ -83,22 +69,18 @@ export default function MatchProfilePage() {
     setMessage(json.success ? "Added to shortlist." : json.error?.message || "Failed");
   }
 
-  async function startChat() {
+  async function block() {
     if (!id) return;
+    if (!window.confirm("Block this member? They won't be able to contact you.")) return;
     setBusy(true);
-    setMessage(null);
-    const res = await fetch("/api/chats", {
+    const res = await fetch("/api/blocks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ otherUserId: id }),
+      body: JSON.stringify({ blockedId: id }),
     });
     const json = await res.json();
     setBusy(false);
-    if (!json.success) {
-      setMessage(json.error?.message || "Could not start chat");
-      return;
-    }
-    router.push(routes.chat);
+    setMessage(json.success ? "Member blocked." : json.error?.message || "Failed");
   }
 
   const photo =
@@ -118,16 +100,40 @@ export default function MatchProfilePage() {
     <div className="relative space-y-6">
       <PageHeader
         title={profile?.name || "Profile"}
-        description="Get to know this person before you connect."
+        description="Understand alignment, then express interest with intention."
         actions={
-          <Button asChild variant="outline">
-            <Link href={routes.matches}>Back to matches</Link>
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button asChild variant="outline">
+              <Link href={routes.connections}>Connections</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.matches}>Back to matches</Link>
+            </Button>
+          </div>
         }
       />
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+
+      {!profile && !error ? (
+        <div
+          className="border-border/60 overflow-hidden rounded-2xl border"
+          role="status"
+          aria-label="Loading profile"
+        >
+          <div className="skeleton-shimmer aspect-[16/10] w-full sm:aspect-[21/9]" />
+          <div className="space-y-4 p-5 sm:p-8">
+            <div className="skeleton-shimmer h-4 w-24 rounded-full" />
+            <div className="skeleton-shimmer h-3 w-full rounded-full" />
+            <div className="skeleton-shimmer h-3 w-5/6 rounded-full" />
+            <div className="flex gap-2 pt-2">
+              <div className="skeleton-shimmer h-10 w-28 rounded-xl" />
+              <div className="skeleton-shimmer h-10 w-28 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {profile ? (
         <article className="border-border/70 bg-card shadow-soft overflow-hidden rounded-2xl border">
@@ -139,6 +145,7 @@ export default function MatchProfilePage() {
                 fill
                 unoptimized={
                   photo.startsWith("data:") ||
+                  photo.startsWith("/") ||
                   (!photo.includes("res.cloudinary.com") &&
                     !photo.includes("images.unsplash.com") &&
                     !photo.includes("upload.wikimedia.org"))
@@ -184,17 +191,21 @@ export default function MatchProfilePage() {
               <div>
                 <p className="text-muted-foreground text-sm">Why you may connect</p>
                 <ul className="mt-2 space-y-1.5 text-sm leading-relaxed">
-                  {profile.strengths.slice(0, 5).map((s) => (
+                  {profile.strengths.slice(0, 3).map((s) => (
                     <li key={s}>· {s}</li>
                   ))}
                 </ul>
               </div>
             ) : null}
 
+            {id ? (
+              <div className="border-border/60 space-y-3 border-t pt-5">
+                <p className="text-sm font-medium">Next step</p>
+                <RelationshipActions otherUserId={id} />
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button type="button" disabled={busy} onClick={() => void sendInterest()}>
-                Send interest
-              </Button>
               <Button
                 type="button"
                 variant="secondary"
@@ -203,24 +214,15 @@ export default function MatchProfilePage() {
               >
                 Shortlist
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={busy || !id}
-                onClick={() => void startChat()}
-              >
-                Message
-              </Button>
               <Button asChild variant="outline">
-                <Link href={`${routes.compatibility}?candidate=${profile.userId}`}>
-                  Explore compatibility
-                </Link>
+                <Link href={`${routes.compatibility}?candidate=${id}`}>See full compatibility</Link>
+              </Button>
+              <Button type="button" variant="ghost" disabled={busy} onClick={() => void block()}>
+                Block
               </Button>
             </div>
           </div>
         </article>
-      ) : !error ? (
-        <p className="text-muted-foreground text-sm">Loading profile…</p>
       ) : null}
     </div>
   );

@@ -49,6 +49,7 @@ export const routes = {
   visitors: "/dashboard/visitors",
   likes: "/dashboard/likes",
   shortlisted: "/dashboard/shortlisted",
+  connections: "/dashboard/connections",
 
   messages: "/dashboard/messages",
   chat: "/dashboard/chat",

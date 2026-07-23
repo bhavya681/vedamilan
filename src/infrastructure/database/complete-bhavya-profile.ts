@@ -48,9 +48,9 @@ async function completeForEmail(email: string) {
     userId,
     name,
     gender: "MALE" as const,
-    dateOfBirth: new Date("1998-06-15"),
+    dateOfBirth: new Date("2003-10-11"),
     heightCm: 178,
-    city: "Mumbai",
+    city: "Boisar",
     state: "Maharashtra",
     country: "India",
     profession: "Software Engineer",
@@ -71,7 +71,8 @@ async function completeForEmail(email: string) {
     visibility: "MEMBERS" as const,
     status: "ACTIVE" as const,
     deletedAt: null,
-    location: { type: "Point" as const, coordinates: [72.8777, 19.076] },
+    // Boisar, Palghar
+    location: { type: "Point" as const, coordinates: [72.7561, 19.8036] },
   };
 
   await Profile.findOneAndUpdate(
@@ -90,12 +91,12 @@ async function completeForEmail(email: string) {
     {
       $set: {
         userId,
-        birthDate: new Date("1998-06-15"),
-        birthTime: "10:30:00",
+        birthDate: new Date(Date.UTC(2003, 9, 11)),
+        birthTime: "20:05:00",
         birthTimeUnknown: false,
-        placeName: "Mumbai, Maharashtra, India",
-        latitude: 19.076,
-        longitude: 72.8777,
+        placeName: "Boisar, Palghar, Maharashtra, India",
+        latitude: 19.8036,
+        longitude: 72.7561,
         timezone: "Asia/Kolkata",
         ayanamsha: "LAHIRI",
         chartStylePreference: "NORTH",
@@ -108,15 +109,25 @@ async function completeForEmail(email: string) {
 
   await Horoscope.deleteMany({ userId });
   await Dasha.deleteMany({ userId });
-  await horoscopeService.generateForUser(userId);
+  const chart = await horoscopeService.generateForUser(userId);
 
   await db.collection("user").updateOne(userLookup(userId), {
     $set: { name, emailVerified: true },
   });
 
   logger.info(
-    { email, userId, completion: completion.score, isComplete: completion.isComplete },
-    "Bhavya profile completed",
+    {
+      email,
+      userId,
+      completion: completion.score,
+      isComplete: completion.isComplete,
+      lagna: chart.horoscope.lagnaSign,
+      lagnaNak: (chart.horoscope as { lagnaNakshatra?: string }).lagnaNakshatra,
+      moon: chart.horoscope.moonSign,
+      rahuHouse: chart.horoscope.planets?.find((p: { planet: string }) => p.planet === "Rahu")
+        ?.house,
+    },
+    "Bhavya profile completed (AstroSage-parity birth)",
   );
 }
 

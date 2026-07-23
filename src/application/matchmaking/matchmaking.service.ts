@@ -74,6 +74,7 @@ export type RankedMatch = {
   cardSummary: string;
   gunaBreakdown: Array<{ koota: string; score: number; max: number; note: string }>;
   rank: number;
+  recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
 };
 
 export type MatchSearchResult = PaginatedResult<RankedMatch> & {
@@ -393,7 +394,14 @@ export class MatchmakingService {
       ranked = ranked.filter((m) => m.compatibilityScore >= minCompatPct);
     }
 
-    ranked.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+    // Kundli-first ranking: highest Vedic blend, then Guna, then name stability
+    ranked.sort((a, b) => {
+      if (b.compatibilityScore !== a.compatibilityScore) {
+        return b.compatibilityScore - a.compatibilityScore;
+      }
+      if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
+      return a.name.localeCompare(b.name);
+    });
     const pageItems: RankedMatch[] = ranked.slice(skip, skip + limit).map((item, index) => ({
       ...item,
       rank: skip + index + 1,
@@ -627,14 +635,95 @@ export class MatchmakingService {
     }));
   }
 
-  async recommend(userId: string): Promise<MatchSearchResult> {
-    return this.search(userId, {
-      limit: 60,
+  /**
+   * Kundli-first recommendations: only charted pairs, sorted by best compatibility.
+   * Soft preference alignment is a tie-breaker — never overrides Vedic score order.
+   */
+  async recommend(userId: string): Promise<MatchSearchResult & { hasSelfChart: boolean }> {
+    await connectMongo();
+    const selfChart = await Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean();
+    if (!selfChart) {
+      return {
+        ...toPaginatedResult<RankedMatch>([], 0, 1, 60),
+        self: { hasChart: false, city: null },
+        hasSelfChart: false,
+      };
+    }
+
+    const prefs = await PartnerPreferences.findOne({ userId }).lean();
+    const result = await this.search(userId, {
+      limit: 100,
       page: 1,
       minCompatibility: 0,
-      // Gender-wise Vedic discovery — do not hard-lock to preference city/religion
       applyPreferences: false,
     });
+
+    // Only suggest people who also have a kundli (scoreable Vedic match)
+    const charted = result.data.filter(
+      (m) => m.compatibilityScore > 0 && m.totalGuna > 0 && m.nakshatra,
+    );
+
+    const withPriority = charted
+      .map((m) => {
+        let preferenceBoost = 0;
+        if (prefs) {
+          if (prefs.ageMin != null && m.age != null && m.age >= prefs.ageMin) preferenceBoost += 1;
+          if (prefs.ageMax != null && m.age != null && m.age <= prefs.ageMax) preferenceBoost += 1;
+          if (prefs.cities?.length && m.city && prefs.cities.includes(m.city)) {
+            preferenceBoost += 2;
+          }
+          if (prefs.religions?.length && m.religion && prefs.religions.includes(m.religion)) {
+            preferenceBoost += 1;
+          }
+        }
+        return { ...m, preferenceBoost };
+      })
+      .sort((a, b) => {
+        // Primary: kundli compatibility score
+        if (b.compatibilityScore !== a.compatibilityScore) {
+          return b.compatibilityScore - a.compatibilityScore;
+        }
+        // Secondary: Ashta Guna total
+        if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
+        // Tertiary: soft preference alignment
+        if (b.preferenceBoost !== a.preferenceBoost) {
+          return b.preferenceBoost - a.preferenceBoost;
+        }
+        return a.name.localeCompare(b.name);
+      })
+      .map(({ preferenceBoost: _boost, ...m }, index) => {
+        const tier: NonNullable<RankedMatch["recommendationTier"]> =
+          m.compatibilityScore >= 80
+            ? "BEST"
+            : m.compatibilityScore >= 68
+              ? "STRONG"
+              : m.compatibilityScore >= 55
+                ? "GOOD"
+                : "EXPLORE";
+        const kundliReason =
+          m.totalGuna >= 28
+            ? `Strong Ashta Koota (${m.totalGuna}/${m.maxGuna})`
+            : m.totalGuna >= 24
+              ? `Solid Guna Milan (${m.totalGuna}/${m.maxGuna})`
+              : m.reasons?.[0] || `Chart compatibility ${m.compatibilityScore}%`;
+        return {
+          ...m,
+          rank: index + 1,
+          recommendationTier: tier,
+          reasons: [kundliReason, ...(m.reasons || []).filter((r) => r !== kundliReason)].slice(
+            0,
+            3,
+          ),
+          cardSummary: kundliReason,
+        };
+      });
+
+    return {
+      ...toPaginatedResult(withPriority, withPriority.length, 1, 60),
+      data: withPriority.slice(0, 60),
+      self: { hasChart: true, city: result.self.city },
+      hasSelfChart: true,
+    };
   }
 }
 

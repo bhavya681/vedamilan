@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { SoftEmoji, moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Solid surface — default product container. Pass glass for overlays only. */
 export function GlassCard({
@@ -76,6 +77,9 @@ export function MatchCard({
   href = routes.matchProfile,
   onShortlist,
   shortlisting,
+  onInterest,
+  interested,
+  interestBusy,
 }: {
   name: string;
   age: number;
@@ -89,6 +93,9 @@ export function MatchCard({
   href?: string;
   onShortlist?: () => void;
   shortlisting?: boolean;
+  onInterest?: () => void;
+  interested?: boolean;
+  interestBusy?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const mood = moodFromScore(score);
@@ -107,6 +114,7 @@ export function MatchCard({
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            unoptimized={Boolean(photo?.startsWith("/"))}
           />
         ) : (
           <div className="bg-brand-dual-soft absolute inset-0" />
@@ -133,6 +141,22 @@ export function MatchCard({
             <Button asChild size="sm" className="flex-1">
               <Link href={href}>View profile</Link>
             </Button>
+            {onInterest ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-ivory/25 text-ivory hover:bg-ivory/10"
+                type="button"
+                disabled={interestBusy || interested}
+                onClick={onInterest}
+                aria-label={interested ? "Interest sent" : "Interested"}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {interested ? "Interested ✓" : "Interested"}
+                </span>
+              </Button>
+            ) : null}
             <Button
               size="icon"
               variant="outline"
@@ -152,5 +176,5 @@ export function MatchCard({
 }
 
 export function SkeletonCard({ className }: { className?: string }) {
-  return <div className={cn("skeleton-shimmer h-40 rounded-2xl", className)} aria-hidden />;
+  return <Skeleton className={cn("h-40 rounded-2xl", className)} />;
 }

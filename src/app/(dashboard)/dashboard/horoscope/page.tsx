@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
+import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 export default function HoroscopePage() {
@@ -124,9 +124,8 @@ export default function HoroscopePage() {
 
             <div className="px-5 py-5 sm:px-6 sm:py-6">
               {loading || !summary ? (
-                <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Preparing today&apos;s reading…
+                <div className="space-y-3" role="status" aria-label="Preparing reading">
+                  <PanelSkeleton lines={4} className="border-0 p-0 shadow-none" />
                 </div>
               ) : (
                 <GuruMarkdown content={summary} tone="assistant" />

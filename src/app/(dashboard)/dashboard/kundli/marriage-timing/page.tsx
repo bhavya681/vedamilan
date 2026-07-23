@@ -10,6 +10,7 @@ import {
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
 import { routes } from "@/lib/constants/routes";
+import { PanelSkeleton } from "@/components/ui/page-skeletons";
 
 export default function MarriageTimingPage() {
   const [timing, setTiming] = useState<TimingPredictionView | null>(null);
@@ -44,7 +45,7 @@ export default function MarriageTimingPage() {
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Reading dasha and gochar…</p> : null}
+      {loading ? <PanelSkeleton lines={6} /> : null}
       {!loading && !error ? <TimingPredictionPanel timing={timing} pairMode={false} /> : null}
     </div>
   );

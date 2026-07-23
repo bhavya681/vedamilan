@@ -6,6 +6,7 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ContentReveal, PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { useHoroscope } from "@/hooks/use-horoscope";
 
@@ -26,7 +27,7 @@ export default function PlanetsPage() {
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+      {loading ? <PanelSkeleton lines={6} /> : null}
       {!loading && planets.length === 0 ? (
         <EmptyState
           title="No chart yet"
@@ -37,8 +38,8 @@ export default function PlanetsPage() {
             </Button>
           }
         />
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      ) : !loading ? (
+        <ContentReveal className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {planets.map((p) => (
             <GlassCard key={p.planet}>
               <div className="flex items-center justify-between gap-2">
@@ -53,8 +54,8 @@ export default function PlanetsPage() {
               {p.dignity ? <p className="text-ai mt-2 text-xs">{p.dignity}</p> : null}
             </GlassCard>
           ))}
-        </div>
-      )}
+        </ContentReveal>
+      ) : null}
     </div>
   );
 }

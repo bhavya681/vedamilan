@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Sparkles, Stars, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
-import { MatchCard, SkeletonCard } from "@/components/ui/premium-cards";
+import { MatchCard } from "@/components/ui/premium-cards";
+import { ContentReveal, MatchesPageSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 type MatchItem = {
@@ -18,36 +19,78 @@ type MatchItem = {
   profession: string | null;
   compatibilityScore: number;
   totalGuna: number;
+  maxGuna?: number;
   manglik: string;
   headline: string | null;
   cardSummary?: string;
   photo: string | null;
   reasons: string[];
   gunaBreakdown: Array<{ koota: string; score: number; max: number }>;
+  recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
+  rank?: number;
 };
+
+type InterestPerson = {
+  otherUserId: string;
+  name: string;
+  photo?: string | null;
+  city?: string | null;
+  profession?: string | null;
+  age?: number | null;
+  mutual?: boolean;
+};
+
+function whyMatch(match: MatchItem) {
+  return (
+    match.reasons?.[0] ||
+    match.cardSummary ||
+    match.headline ||
+    "Recommended from your kundli compatibility"
+  );
+}
+
+function tierLabel(tier?: MatchItem["recommendationTier"]) {
+  switch (tier) {
+    case "BEST":
+      return "Best kundli match";
+    case "STRONG":
+      return "Strong alignment";
+    case "GOOD":
+      return "Good compatibility";
+    default:
+      return "Worth exploring";
+  }
+}
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [hasSelfChart, setHasSelfChart] = useState(true);
+  const [interestedInYou, setInterestedInYou] = useState<InterestPerson[]>([]);
+  const [mutual, setMutual] = useState<InterestPerson[]>([]);
+  const [sentInterestIds, setSentInterestIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [setupHint, setSetupHint] = useState<"birth" | "kundli" | "profile" | "gender" | null>(
     null,
   );
   const [shortlisting, setShortlisting] = useState<string | null>(null);
+  const [interestBusy, setInterestBusy] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [recRes, profileRes, chartRes] = await Promise.all([
+      const [recRes, profileRes, chartRes, interestRes] = await Promise.all([
         fetch("/api/recommendations"),
         fetch("/api/profile"),
         fetch("/api/horoscope"),
+        fetch("/api/interests"),
       ]);
       const recJson = await recRes.json();
       const profileJson = await profileRes.json();
       const chartJson = await chartRes.json();
+      const interestJson = await interestRes.json();
       setLoading(false);
 
       if (!recJson.success) {
@@ -57,7 +100,18 @@ export default function MatchesPage() {
       }
 
       const data = (recJson.data?.data || []) as MatchItem[];
+      // Already kundli-sorted from API — keep order
       setMatches(data);
+      setHasSelfChart(recJson.data?.hasSelfChart !== false && Boolean(chartJson.data?.horoscope));
+
+      if (interestJson.success) {
+        const received = (interestJson.data.received || []) as InterestPerson[];
+        const mutualList = (interestJson.data.mutual || []) as InterestPerson[];
+        const sent = (interestJson.data.sent || []) as InterestPerson[];
+        setInterestedInYou(received.filter((r) => !r.mutual));
+        setMutual(mutualList);
+        setSentInterestIds(new Set(sent.map((s) => s.otherUserId)));
+      }
 
       const gender = profileJson.data?.profile?.gender as string | undefined;
       const hasGender = gender === "MALE" || gender === "FEMALE";
@@ -80,6 +134,30 @@ export default function MatchesPage() {
     void load();
   }, [load]);
 
+  const best = useMemo(
+    () =>
+      matches
+        .filter(
+          (m) => (m.recommendationTier || (m.compatibilityScore >= 80 ? "BEST" : "")) === "BEST",
+        )
+        .slice(0, 9),
+    [matches],
+  );
+  const strong = useMemo(
+    () =>
+      matches
+        .filter((m) => {
+          const tier = m.recommendationTier || (m.compatibilityScore >= 68 ? "STRONG" : "");
+          return tier === "STRONG";
+        })
+        .slice(0, 9),
+    [matches],
+  );
+  const more = useMemo(() => {
+    const topIds = new Set([...best, ...strong].map((m) => m.userId));
+    return matches.filter((m) => !topIds.has(m.userId)).slice(0, 12);
+  }, [matches, best, strong]);
+
   async function shortlist(userId: string) {
     setShortlisting(userId);
     await fetch("/api/shortlist", {
@@ -90,21 +168,85 @@ export default function MatchesPage() {
     setShortlisting(null);
   }
 
+  async function expressInterest(userId: string) {
+    setInterestBusy(userId);
+    const res = await fetch("/api/interests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ toUserId: userId }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setSentInterestIds((prev) => new Set(prev).add(userId));
+      if (json.data?.state === "MUTUAL_INTEREST") {
+        await load();
+      }
+    }
+    setInterestBusy(null);
+  }
+
+  function renderGrid(items: MatchItem[]) {
+    return (
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {items.map((match, index) => (
+          <motion.div
+            key={match.userId}
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: reduceMotion ? 0 : 0.04 * index, duration: 0.35 }}
+            className="space-y-2"
+          >
+            <MatchCard
+              name={match.name}
+              age={match.age ?? 0}
+              city={match.city || "—"}
+              profession={match.profession || "—"}
+              score={match.compatibilityScore}
+              headline={whyMatch(match)}
+              photo={match.photo || undefined}
+              href={`${routes.matchProfile}?id=${match.userId}`}
+              shortlisting={shortlisting === match.userId}
+              onShortlist={() => void shortlist(match.userId)}
+              interested={sentInterestIds.has(match.userId)}
+              interestBusy={interestBusy === match.userId}
+              onInterest={() => void expressInterest(match.userId)}
+            />
+            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 text-xs">
+              {match.rank ? <span>#{match.rank}</span> : null}
+              <span>{tierLabel(match.recommendationTier)}</span>
+              <span>
+                Guna {match.totalGuna}/{match.maxGuna || 36}
+              </span>
+            </div>
+            <Button asChild variant="link" className="h-auto px-0 text-sm">
+              <Link href={`${routes.compatibility}?candidate=${match.userId}`}>
+                See full compatibility
+              </Link>
+            </Button>
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Potential connections"
-        description="People who may align with your preferences and Vedic compatibility."
+        description="Prioritized by your kundli — highest Vedic compatibility first."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href={routes.connections}>
+                <Users className="mr-1.5 h-4 w-4" />
+                Connections
+              </Link>
+            </Button>
             <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href={routes.search}>
                 <Search className="mr-1.5 h-4 w-4" />
                 Search
               </Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full sm:w-auto">
-              <Link href={routes.compatibility}>Explore compatibility</Link>
             </Button>
           </div>
         }
@@ -113,70 +255,122 @@ export default function MatchesPage() {
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       {loading ? (
-        <div className="space-y-4">
-          <p className="text-muted-foreground text-sm">Finding meaningful connections…</p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <SkeletonCard className="aspect-[4/5] h-auto" />
-            <SkeletonCard className="aspect-[4/5] h-auto" />
-            <SkeletonCard className="aspect-[4/5] h-auto max-xl:hidden" />
-          </div>
-        </div>
+        <MatchesPageSkeleton />
+      ) : !hasSelfChart || setupHint === "kundli" || setupHint === "birth" ? (
+        <EmptyState
+          title="Generate your Kundli to unlock ranked matches"
+          description="We compare Moon, Nakshatra, Ashta Koota, and Shukra factors so the most compatible people appear first."
+          action={
+            <Button asChild>
+              <Link href={setupHint === "birth" ? routes.birthDetails : routes.kundli}>
+                {setupHint === "birth" ? "Add birth details" : "Generate Kundli"}
+              </Link>
+            </Button>
+          }
+        />
       ) : matches.length > 0 ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {matches.map((match, index) => {
-            const reason =
-              match.reasons?.[0] ||
-              match.cardSummary ||
-              match.headline ||
-              "Explore this connection";
-            return (
-              <motion.div
-                key={match.userId}
-                initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: reduceMotion ? 0 : 0.04 * index, duration: 0.35 }}
-                className="space-y-2"
-              >
-                <MatchCard
-                  name={match.name}
-                  age={match.age ?? 0}
-                  city={match.city || "—"}
-                  profession={match.profession || "—"}
-                  score={match.compatibilityScore}
-                  headline={reason}
-                  photo={match.photo || undefined}
-                  href={`${routes.matchProfile}?id=${match.userId}`}
-                  shortlisting={shortlisting === match.userId}
-                  onShortlist={() => void shortlist(match.userId)}
-                />
-                <Button asChild variant="link" className="h-auto px-0 text-sm">
-                  <Link href={`${routes.compatibility}?candidate=${match.userId}`}>
-                    Explore compatibility
-                  </Link>
-                </Button>
-              </motion.div>
-            );
-          })}
-        </div>
+        <ContentReveal className="space-y-10">
+          {mutual.length || interestedInYou.length ? (
+            <section className="space-y-4">
+              {mutual.length ? (
+                <div className="border-gold/30 bg-gold/5 space-y-3 rounded-2xl border p-4 sm:p-5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="text-gold h-4 w-4" />
+                    <h2 className="font-display text-xl">Mutual Interest</h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {mutual.map((p) => (
+                      <Button key={p.otherUserId} asChild size="sm" variant="secondary">
+                        <Link href={`${routes.matchProfile}?id=${p.otherUserId}`}>
+                          {p.name} · Connect
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {interestedInYou.length ? (
+                <div className="space-y-2">
+                  <h2 className="font-display text-xl">People interested in you</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {interestedInYou.slice(0, 8).map((p) => (
+                      <Button key={p.otherUserId} asChild size="sm" variant="outline">
+                        <Link href={`${routes.matchProfile}?id=${p.otherUserId}`}>{p.name}</Link>
+                      </Button>
+                    ))}
+                    <Button asChild size="sm" variant="link">
+                      <Link href={routes.connections}>See all</Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {best.length ? (
+            <section className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Stars className="text-gold h-5 w-5" />
+                  <h2 className="font-display text-2xl">Best kundli matches</h2>
+                </div>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Highest chart compatibility with your Moon, Nakshatra, and Ashta Koota (80%+).
+                </p>
+              </div>
+              {renderGrid(best)}
+            </section>
+          ) : null}
+
+          {strong.length ? (
+            <section className="space-y-4">
+              <div>
+                <h2 className="font-display text-2xl">Strong Vedic alignment</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Solid multi-factor scores from your birth charts (68–79%).
+                </p>
+              </div>
+              {renderGrid(strong)}
+            </section>
+          ) : null}
+
+          {more.length ? (
+            <section className="space-y-4">
+              <div>
+                <h2 className="font-display text-2xl">More suggestions</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Still ranked by your kundli — explore when you want a wider view.
+                </p>
+              </div>
+              {renderGrid(more)}
+            </section>
+          ) : null}
+
+          {!best.length && !strong.length && more.length === 0 ? (
+            <section className="space-y-4">
+              <div>
+                <h2 className="font-display text-2xl">Recommended for you</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Ranked by Vedic compatibility from your kundli.
+                </p>
+              </div>
+              {renderGrid(matches.slice(0, 12))}
+            </section>
+          ) : null}
+        </ContentReveal>
       ) : (
         <EmptyState
           title={
             setupHint === "gender"
               ? "Set your gender to see suited matches"
-              : setupHint === "birth"
-                ? "Add your birth details to unlock deeper matches"
-                : setupHint === "kundli"
-                  ? "Generate your Kundli to unlock Vedic matching"
-                  : "Your match journey is waiting"
+              : setupHint === "profile"
+                ? "Help us understand you"
+                : "Waiting for charted matches"
           }
           description={
             setupHint === "gender"
               ? "We only suggest opposite-gender profiles for matrimonial matching."
-              : setupHint === "birth"
-                ? "Birth details help us calculate compatibility with care."
-                : setupHint === "kundli"
-                  ? "Your chart powers Ashta Koota and relationship scoring."
-                  : "Check back as more members join, or broaden your search."
+              : "Members with kundlis appear here, ranked by compatibility with your chart."
           }
           action={
             <Button asChild>
@@ -184,22 +378,14 @@ export default function MatchesPage() {
                 href={
                   setupHint === "gender" || setupHint === "profile"
                     ? routes.onboarding
-                    : setupHint === "birth"
-                      ? routes.birthDetails
-                      : setupHint === "kundli"
-                        ? routes.kundli
-                        : routes.search
+                    : routes.search
                 }
               >
                 {setupHint === "gender"
                   ? "Set gender"
-                  : setupHint === "birth"
-                    ? "Add birth details"
-                    : setupHint === "kundli"
-                      ? "Generate Kundli"
-                      : setupHint === "profile"
-                        ? "Help us understand you"
-                        : "Open Search"}
+                  : setupHint === "profile"
+                    ? "Complete profile"
+                    : "Open Search"}
               </Link>
             </Button>
           }

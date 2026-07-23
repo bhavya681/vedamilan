@@ -83,7 +83,7 @@ export const HOUSE_LORDS: Record<(typeof SIGNS)[number], string> = {
   Pisces: "Jupiter",
 };
 
-export const ENGINE_VERSION = "vedamilan-horoscope-1.1.0-sidereal-lahiri";
+export const ENGINE_VERSION = "vedamilan-horoscope-1.2.0-sidereal-lahiri-lagna-nak";
 
 export function longitudeToSign(longitude: number) {
   const norm = ((longitude % 360) + 360) % 360;

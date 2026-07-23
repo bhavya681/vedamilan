@@ -271,9 +271,10 @@ export default function AiInsightsPage() {
             ) : null}
 
             {loading ? (
-              <div className="text-muted-foreground flex items-center justify-center gap-2 py-10 text-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Preparing your chart context…
+              <div className="space-y-3 py-6" role="status" aria-label="Preparing chart context">
+                <div className="skeleton-shimmer mx-auto h-3 w-48 rounded-full" />
+                <div className="skeleton-shimmer mx-auto h-3 w-64 max-w-full rounded-full" />
+                <div className="skeleton-shimmer mx-auto h-3 w-40 rounded-full" />
               </div>
             ) : null}
 

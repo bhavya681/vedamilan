@@ -9,6 +9,7 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ContentReveal, ListSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 type VisitorRow = {
@@ -57,7 +58,7 @@ export default function VisitorsPage() {
       />
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+      {loading ? <ListSkeleton rows={4} /> : null}
 
       {!loading && visitors.length === 0 ? (
         <EmptyState
@@ -66,7 +67,7 @@ export default function VisitorsPage() {
           description="When members view your profile, they appear here."
         />
       ) : (
-        <div className="space-y-3">
+        <ContentReveal className="space-y-3">
           {visitors.map((v) => (
             <GlassCard key={v._id} className="flex items-center justify-between">
               <div>
@@ -87,7 +88,7 @@ export default function VisitorsPage() {
               </div>
             </GlassCard>
           ))}
-        </div>
+        </ContentReveal>
       )}
     </div>
   );

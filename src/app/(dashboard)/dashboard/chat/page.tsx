@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Mic, Phone, Send, Sparkles, Video } from "lucide-react";
 import Pusher from "pusher-js";
 
@@ -13,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { authClient } from "@/lib/auth/client";
+import { ChatSkeleton } from "@/components/ui/page-skeletons";
 
 type ChatListItem = {
   id: string;
@@ -34,6 +36,8 @@ type ChatMessage = {
 };
 
 export default function ChatPage() {
+  const searchParams = useSearchParams();
+  const withUserId = searchParams.get("with");
   const { data: session } = authClient.useSession();
   const meId = session?.user?.id || "";
   const [chats, setChats] = useState<ChatListItem[]>([]);
@@ -43,7 +47,9 @@ export default function ChatPage() {
   const [typing, setTyping] = useState(false);
   const [iceBreakers, setIceBreakers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [booting, setBooting] = useState(true);
   const typingTimer = useRef<number | null>(null);
+  const openedWith = useRef<string | null>(null);
 
   const active = useMemo(
     () => chats.find((item) => item.id === activeId) || chats[0],
@@ -55,12 +61,12 @@ export default function ChatPage() {
     const json = await res.json();
     if (!json.success) {
       setError(json.error?.message || "Failed to load chats");
-      return;
+      return [] as ChatListItem[];
     }
-    const list = json.data.chats || [];
+    const list = (json.data.chats || []) as ChatListItem[];
     setChats(list);
-    if (!activeId && list[0]) setActiveId(list[0].id);
-  }, [activeId]);
+    return list;
+  }, []);
 
   const loadMessages = useCallback(async (chatId: string) => {
     const res = await fetch(`/api/chats/${chatId}/messages?limit=80`);
@@ -73,8 +79,39 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    void loadChats().catch(() => setError("Failed to load chats"));
-  }, [loadChats]);
+    void (async () => {
+      try {
+        let list = await loadChats();
+        if (withUserId && openedWith.current !== withUserId) {
+          openedWith.current = withUserId;
+          const existing = list.find((c) => c.otherUserId === withUserId);
+          if (existing) {
+            setActiveId(existing.id);
+          } else {
+            const createRes = await fetch("/api/chats", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ otherUserId: withUserId }),
+            });
+            const createJson = await createRes.json();
+            if (!createJson.success) {
+              setError(createJson.error?.message || "Messaging requires a connection");
+            } else {
+              list = await loadChats();
+              const created = list.find((c) => c.otherUserId === withUserId);
+              if (created) setActiveId(created.id);
+            }
+          }
+        } else if (!activeId && list[0]) {
+          setActiveId(list[0].id);
+        }
+      } catch {
+        setError("Failed to load chats");
+      } finally {
+        setBooting(false);
+      }
+    })();
+  }, [loadChats, withUserId, activeId]);
 
   useEffect(() => {
     if (!activeId) return;
@@ -174,6 +211,10 @@ export default function ChatPage() {
     }
   }
 
+  if (booting) {
+    return <ChatSkeleton />;
+  }
+
   return (
     <div className="grid h-[calc(100vh-10rem)] gap-4 lg:grid-cols-[280px_1fr]">
       <aside className="glass-panel overflow-hidden rounded-2xl">
@@ -184,8 +225,7 @@ export default function ChatPage() {
           <div className="space-y-1 p-2">
             {chats.length === 0 ? (
               <p className="text-muted-foreground p-3 text-sm">
-                No conversations yet. Open a match profile and send interest, then start a chat from
-                Messages.
+                No conversations yet. Connect with someone first, then message from Connections.
               </p>
             ) : null}
             {chats.map((conversation) => (

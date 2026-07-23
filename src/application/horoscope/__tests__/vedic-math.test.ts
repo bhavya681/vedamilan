@@ -150,3 +150,26 @@ describe("Module 4 — Vedic math", () => {
     expect(dasha.balanceAtBirth.lord).toBeTruthy();
   });
 });
+
+describe("AstroSage parity — 11 Oct 2003 20:05 Boisar", () => {
+  it("yields Aries Lagna (Bharani), Aries Moon, Rahu in H1", async () => {
+    const { swissEphemerisService } = await import("@/lib/services/swiss-ephemeris");
+    swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
+    swissEphemerisService.setAyanamsha("LAHIRI");
+
+    const utc = parseBirthDateTime(new Date(Date.UTC(2003, 9, 11)), "20:05:00", "Asia/Kolkata");
+    const jd = swissEphemerisService.julDay(utc);
+    const houses = swissEphemerisService.calculateHouses(jd, 19.8036, 72.7561, "P");
+    const lagnaLon = houses.ascmc[0] ?? 0;
+    const lagna = longitudeToSign(lagnaLon);
+    const lagnaNak = longitudeToNakshatra(lagnaLon);
+    const rows = buildPlanetRows(swissEphemerisService.calculatePlanets(jd), lagnaLon);
+    const moon = rows.find((p) => p.planet === "Moon")!;
+    const rahu = rows.find((p) => p.planet === "Rahu")!;
+
+    expect(lagna.sign).toBe("Aries");
+    expect(lagnaNak.nakshatra).toBe("Bharani");
+    expect(moon.sign).toBe("Aries");
+    expect(rahu.house).toBe(1);
+  });
+});

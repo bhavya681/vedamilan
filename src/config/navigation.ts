@@ -40,6 +40,7 @@ export const footerNav: Record<string, NavItem[]> = {
 export const dashboardNav: NavItem[] = [
   { title: "Home", href: routes.dashboard, group: "Main" },
   { title: "Matches", href: routes.matches, group: "Main" },
+  { title: "Connections", href: routes.connections, group: "Main" },
   { title: "Messages", href: routes.chat, group: "Main" },
   { title: "My Kundli", href: routes.kundli, group: "Main" },
   { title: "Search", href: routes.search, group: "Discover" },

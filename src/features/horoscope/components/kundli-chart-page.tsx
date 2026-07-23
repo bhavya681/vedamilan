@@ -14,6 +14,7 @@ import {
   NorthIndianKundli,
   SouthIndianKundli,
 } from "@/features/horoscope/components/kundli-charts";
+import { ChartSkeleton, ContentReveal } from "@/components/ui/page-skeletons";
 import { useHoroscope } from "@/hooks/use-horoscope";
 import { routes } from "@/lib/constants/routes";
 
@@ -57,7 +58,7 @@ export function KundliChartPage({
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading chart…</p> : null}
+      {loading ? <ChartSkeleton /> : null}
       {!loading && !body ? (
         <EmptyState
           title="No chart layout yet"
@@ -68,8 +69,8 @@ export function KundliChartPage({
             </Button>
           }
         />
-      ) : body ? (
-        <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
+      ) : body && !loading ? (
+        <ContentReveal className="grid gap-6 lg:grid-cols-[auto_1fr]">
           <GlassCard className="flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
             {body}
             <p className="text-muted-foreground text-center text-xs">
@@ -136,7 +137,7 @@ export function KundliChartPage({
               </div>
             ) : null}
           </GlassCard>
-        </div>
+        </ContentReveal>
       ) : null}
     </div>
   );

@@ -180,7 +180,15 @@ function CompareMatchesInner() {
 
 export default function CompareMatchesPage() {
   return (
-    <Suspense fallback={<p className="text-muted-foreground text-sm">Loading compare…</p>}>
+    <Suspense
+      fallback={
+        <div className="space-y-4 p-2" role="status" aria-label="Loading compare">
+          <div className="skeleton-shimmer h-10 w-64 max-w-full rounded-2xl" />
+          <div className="skeleton-shimmer h-40 w-full rounded-2xl" />
+          <div className="skeleton-shimmer h-40 w-full rounded-2xl" />
+        </div>
+      }
+    >
       <CompareMatchesInner />
     </Suspense>
   );

@@ -7,6 +7,7 @@ import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { routes } from "@/lib/constants/routes";
+import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { useHoroscope } from "@/hooks/use-horoscope";
 
 export default function NakshatraPage() {
@@ -27,7 +28,7 @@ export default function NakshatraPage() {
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+      {loading ? <PanelSkeleton lines={5} /> : null}
       {!loading && !moon ? (
         <EmptyState
           title="No nakshatra data"
@@ -47,6 +48,17 @@ export default function NakshatraPage() {
               {moon?.sign} · Pada {moon?.nakshatraPada ?? "—"}
             </p>
           </GlassCard>
+          {data?.horoscope?.lagnaNakshatra ? (
+            <GlassCard>
+              <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                Lagna nakshatra
+              </p>
+              <h2 className="font-display mt-2 text-3xl">{data.horoscope.lagnaNakshatra}</h2>
+              <p className="text-muted-foreground mt-2 text-sm">
+                {data.horoscope.lagnaSign} Asc · Pada {data.horoscope.lagnaNakshatraPada ?? "—"}
+              </p>
+            </GlassCard>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             {planets.map((p) => (
               <GlassCard key={p.planet} className="flex items-center justify-between gap-3">

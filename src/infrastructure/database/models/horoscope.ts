@@ -53,6 +53,8 @@ const horoscopeSchema = new Schema(
     julianDay: { type: Number, required: true },
     lagnaSign: { type: String, required: true },
     lagnaDegree: { type: Number, required: true },
+    lagnaNakshatra: { type: String, default: null },
+    lagnaNakshatraPada: { type: Number, default: null, min: 1, max: 4 },
     moonSign: { type: String, required: true },
     sunSign: { type: String, required: true },
     planets: { type: [planetPositionSchema], default: [] },

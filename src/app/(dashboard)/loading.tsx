@@ -1,22 +1,26 @@
-import { SkeletonCard } from "@/components/ui/premium-cards";
+import {
+  MatchGridSkeleton,
+  PageHeaderSkeleton,
+  SkeletonScope,
+  StatStripSkeleton,
+} from "@/components/ui/page-skeletons";
 
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading workspace">
-      <div className="space-y-3">
-        <div className="skeleton-shimmer h-3 w-24 rounded-full" />
-        <div className="skeleton-shimmer h-10 w-64 max-w-full rounded-2xl" />
-        <div className="skeleton-shimmer h-4 w-96 max-w-full rounded-full" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonCard key={i} className="h-28" />
-        ))}
-      </div>
+    <SkeletonScope label="Loading workspace" className="space-y-6">
+      <PageHeaderSkeleton />
+      <StatStripSkeleton count={4} />
       <div className="grid gap-4 lg:grid-cols-3">
-        <SkeletonCard className="h-64 lg:col-span-2" />
-        <SkeletonCard className="h-64" />
+        <div className="space-y-4 lg:col-span-2">
+          <MatchGridSkeleton count={2} />
+        </div>
+        <div className="border-border/60 bg-card space-y-3 rounded-2xl border p-5">
+          <div className="skeleton-shimmer h-5 w-40 rounded-full" />
+          <div className="skeleton-shimmer h-3 w-full rounded-full" />
+          <div className="skeleton-shimmer h-3 w-5/6 rounded-full" />
+          <div className="skeleton-shimmer h-3 w-2/3 rounded-full" />
+        </div>
       </div>
-    </div>
+    </SkeletonScope>
   );
 }

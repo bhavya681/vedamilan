@@ -6,6 +6,7 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/constants/routes";
+import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { useHoroscope } from "@/hooks/use-horoscope";
 
 export default function TransitPage() {
@@ -26,7 +27,7 @@ export default function TransitPage() {
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+      {loading ? <PanelSkeleton lines={5} /> : null}
       {!loading && !data?.horoscope ? (
         <EmptyState
           title="No transit context"

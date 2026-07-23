@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 export type HoroscopeBundle = {
   horoscope?: {
     lagnaSign?: string;
+    lagnaNakshatra?: string | null;
+    lagnaNakshatraPada?: number | null;
     moonSign?: string;
     sunSign?: string;
     manglikStatus?: string;

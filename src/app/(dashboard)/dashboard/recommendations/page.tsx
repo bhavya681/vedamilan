@@ -8,6 +8,7 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { MatchCard, GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
+import { ContentReveal, MatchGridSkeleton, PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 type MatchItem = {
@@ -84,9 +85,14 @@ export default function RecommendationsPage() {
       />
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <p className="text-muted-foreground text-sm">Loading recommendations…</p> : null}
+      {loading ? (
+        <div className="space-y-6" role="status" aria-label="Loading recommendations">
+          <PanelSkeleton lines={3} />
+          <MatchGridSkeleton count={3} />
+        </div>
+      ) : null}
 
-      {narrative ? (
+      {!loading && narrative ? (
         <GlassCard>
           <div className="flex items-start gap-3">
             <AiGuruAvatar size="md" />
@@ -112,8 +118,8 @@ export default function RecommendationsPage() {
             </Button>
           }
         />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+      ) : !loading ? (
+        <ContentReveal className="grid gap-4 md:grid-cols-2">
           {matches.slice(0, 6).map((m) => (
             <MatchCard
               key={m.userId}
@@ -130,8 +136,8 @@ export default function RecommendationsPage() {
               onShortlist={() => void shortlist(m.userId)}
             />
           ))}
-        </div>
-      )}
+        </ContentReveal>
+      ) : null}
     </div>
   );
 }

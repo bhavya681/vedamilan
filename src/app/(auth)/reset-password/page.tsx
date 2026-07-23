@@ -73,7 +73,14 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>
+    <Suspense
+      fallback={
+        <div className="space-y-3 p-6" role="status" aria-label="Loading">
+          <div className="skeleton-shimmer h-10 w-full rounded-xl" />
+          <div className="skeleton-shimmer h-10 w-full rounded-xl" />
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

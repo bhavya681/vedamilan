@@ -21,6 +21,9 @@ import { cn } from "@/lib/utils/cn";
 type HoroscopePayload = {
   horoscope?: {
     lagnaSign?: string;
+    lagnaDegree?: number;
+    lagnaNakshatra?: string | null;
+    lagnaNakshatraPada?: number | null;
     moonSign?: string;
     sunSign?: string;
     manglikStatus?: string;
@@ -29,6 +32,7 @@ type HoroscopePayload = {
       sign: string;
       house: number;
       nakshatra: string;
+      nakshatraPada?: number;
       dignity?: string | null;
       isRetrograde?: boolean;
       longitude?: number;
@@ -116,10 +120,11 @@ export default function KundliPage() {
   const east = h?.chartEast;
   const hasChart = isNorthChart(north) || isSouthChart(south) || isEastChart(east);
   const moonNak = h?.planets?.find((p) => p.planet === "Moon")?.nakshatra;
+  const lagnaNak = h?.lagnaNakshatra;
 
   const insight =
     h?.moonSign && h?.lagnaSign
-      ? `With ${h.lagnaSign} rising and a ${h.moonSign} Moon${moonNak ? ` in ${moonNak}` : ""}, your chart points toward emotional clarity and long-term partnership values.`
+      ? `With ${h.lagnaSign} rising${lagnaNak ? ` (${lagnaNak})` : ""} and a ${h.moonSign} Moon${moonNak ? ` in ${moonNak}` : ""}, your chart is calculated sidereal Lahiri — AstroSage-compatible.`
       : null;
 
   const links = [
@@ -181,11 +186,22 @@ export default function KundliPage() {
 
       {h ? (
         <GlassCard className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {[
-              ["Ascendant", h.lagnaSign],
+              [
+                "Ascendant",
+                h.lagnaSign
+                  ? `${h.lagnaSign}${h.lagnaDegree != null ? ` ${Math.floor(h.lagnaDegree)}°` : ""}`
+                  : null,
+              ],
+              [
+                "Lagna Nakshatra",
+                h.lagnaNakshatra
+                  ? `${h.lagnaNakshatra}${h.lagnaNakshatraPada ? ` P${h.lagnaNakshatraPada}` : ""}`
+                  : null,
+              ],
               ["Moon Sign", h.moonSign],
-              ["Nakshatra", moonNak],
+              ["Moon Nakshatra", moonNak],
               ["Sun Sign", h.sunSign],
             ].map(([label, value]) => (
               <div key={String(label)} className="bg-muted/30 rounded-xl px-3 py-3">

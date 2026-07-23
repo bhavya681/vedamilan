@@ -23,6 +23,7 @@ import {
   TimingPredictionPanel,
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
+import { CompatibilitySkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -371,14 +372,7 @@ export default function CompatibilityPage() {
         </div>
       ) : null}
 
-      {loading && !active ? (
-        <div className="border-border/70 bg-card shadow-soft rounded-2xl border p-6">
-          <p className="font-display text-xl">Aligning your charts…</p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Calculating planetary positions and relationship patterns.
-          </p>
-        </div>
-      ) : null}
+      {loading && !active ? <CompatibilitySkeleton /> : null}
 
       {active ? (
         <>

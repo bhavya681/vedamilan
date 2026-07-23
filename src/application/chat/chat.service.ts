@@ -1,6 +1,8 @@
 import { Chat, Message, Profile } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { publishChatEvent } from "@/infrastructure/realtime/pusher";
+import { relationshipService } from "@/application/relationship/relationship.service";
+import { notificationService } from "@/application/notifications/notification.service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 import { normalizePagination, toPaginatedResult } from "@/repositories/pagination";
 
@@ -81,6 +83,12 @@ export class ChatService {
       throw new ValidationError("Invalid chat participant");
     }
     await connectMongo();
+
+    const connected = await relationshipService.areConnected(userId, otherUserId);
+    if (!connected) {
+      throw new ForbiddenError("Messaging is available after you are Connected");
+    }
+
     const key = pairKey(userId, otherUserId);
     const chat = await Chat.findOneAndUpdate(
       { pairKey: key },
@@ -195,6 +203,28 @@ export class ChatService {
       chatId: input.chatId,
       participantIds: chat.participantIds,
     });
+
+    const recipientId = chat.participantIds.find((id) => id !== input.senderId);
+    if (recipientId) {
+      const db = getMongoDb();
+      const sender = await db.collection("user").findOne({
+        $or: [{ id: input.senderId }, { _id: input.senderId as never }],
+      });
+      const senderName = String(sender?.name || "Someone");
+      void notificationService
+        .create({
+          userId: recipientId,
+          type: "MESSAGE",
+          title: "New message",
+          body: `${senderName}: ${preview}`,
+          data: {
+            otherUserId: input.senderId,
+            chatId: input.chatId,
+            href: `/dashboard/chat?with=${input.senderId}`,
+          },
+        })
+        .catch(() => undefined);
+    }
 
     return message;
   }

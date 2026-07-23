@@ -2,7 +2,7 @@ import { BirthDetails, Dasha, Horoscope } from "@/infrastructure/database/models
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { swissEphemerisService, type AyanamshaMode } from "@/lib/services/swiss-ephemeris";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
-import { ENGINE_VERSION, longitudeToSign } from "./vedic-constants";
+import { ENGINE_VERSION, longitudeToNakshatra, longitudeToSign } from "./vedic-constants";
 import {
   buildEastChart,
   buildHouseLords,
@@ -108,6 +108,7 @@ export class HoroscopeService {
     const houses = swissEphemerisService.calculateHouses(jd, birth.latitude, birth.longitude, "P");
     const lagnaLongitude = houses.ascmc[0] ?? 0;
     const lagna = longitudeToSign(lagnaLongitude);
+    const lagnaNak = longitudeToNakshatra(lagnaLongitude);
     const positions = swissEphemerisService.calculatePlanets(jd);
     const planets = buildPlanetRows(positions, lagnaLongitude);
     const moon = planets.find((p) => p.planet === "Moon");
@@ -124,13 +125,15 @@ export class HoroscopeService {
       julianDay: jd,
       lagnaSign: lagna.sign,
       lagnaDegree: lagna.degreeInSign,
+      lagnaNakshatra: lagnaNak.nakshatra,
+      lagnaNakshatraPada: lagnaNak.nakshatraPada,
       moonSign: moon?.sign || "",
       sunSign: sun?.sign || "",
       planets,
       houseLords,
       navamsa: null,
       dashamsa: null,
-      shadbala: { ayanamsaDeg },
+      shadbala: { ayanamsaDeg, lagnaLongitude },
       yogas,
       doshas,
       manglikStatus: manglik.status,

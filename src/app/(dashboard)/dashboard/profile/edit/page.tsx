@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
+import { FormSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import {
   ProfilePhotoUploader,
@@ -116,7 +117,7 @@ export default function EditProfilePage() {
         }
       />
       <GlassCard className="max-w-2xl space-y-6">
-        {!bundle && !error ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+        {!bundle && !error ? <FormSkeleton fields={6} /> : null}
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
         {message ? <p className="text-emerald text-sm">{message}</p> : null}
 

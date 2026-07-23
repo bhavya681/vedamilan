@@ -142,3 +142,93 @@ export type ShortlistDocument = InferSchemaType<typeof shortlistSchema> & {
 export const Shortlist =
   (models.Shortlist as Model<ShortlistDocument>) ||
   model<ShortlistDocument>("Shortlist", shortlistSchema, "shortlists");
+
+/** Sorted pair key for two users (deterministic relationship row). */
+export function relationshipPairKey(a: string, b: string) {
+  return [a, b].sort().join(":");
+}
+
+const connectionRequestSchema = new Schema(
+  {
+    senderId: { type: String, required: true, index: true },
+    receiverId: { type: String, required: true, index: true },
+    pairKey: { type: String, required: true, index: true },
+    message: { type: String, default: "", maxlength: 250 },
+    requestStatus: {
+      type: String,
+      enum: ["PENDING", "ACCEPTED", "DECLINED", "WITHDRAWN"],
+      default: "PENDING",
+      index: true,
+    },
+    respondedAt: { type: Date, default: null },
+  },
+  baseSchemaOptions,
+);
+
+softDeletePlugin(connectionRequestSchema);
+connectionRequestSchema.index(
+  { pairKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { requestStatus: "PENDING", deletedAt: null },
+  },
+);
+
+export type ConnectionRequestDocument = InferSchemaType<typeof connectionRequestSchema> & {
+  _id: Schema.Types.ObjectId;
+};
+export const ConnectionRequest =
+  (models.ConnectionRequest as Model<ConnectionRequestDocument>) ||
+  model<ConnectionRequestDocument>(
+    "ConnectionRequest",
+    connectionRequestSchema,
+    "connection_requests",
+  );
+
+const connectionSchema = new Schema(
+  {
+    userAId: { type: String, required: true, index: true },
+    userBId: { type: String, required: true, index: true },
+    pairKey: { type: String, required: true, unique: true },
+    initiatedBy: { type: String, required: true },
+    connectedAt: { type: Date, default: Date.now },
+    connectionStatus: {
+      type: String,
+      enum: ["ACTIVE", "REMOVED"],
+      default: "ACTIVE",
+      index: true,
+    },
+    removedBy: { type: String, default: null },
+    removedAt: { type: Date, default: null },
+  },
+  baseSchemaOptions,
+);
+
+softDeletePlugin(connectionSchema);
+connectionSchema.index({ userAId: 1, connectionStatus: 1 });
+connectionSchema.index({ userBId: 1, connectionStatus: 1 });
+
+export type ConnectionDocument = InferSchemaType<typeof connectionSchema> & {
+  _id: Schema.Types.ObjectId;
+};
+export const Connection =
+  (models.Connection as Model<ConnectionDocument>) ||
+  model<ConnectionDocument>("Connection", connectionSchema, "connections");
+
+const blockSchema = new Schema(
+  {
+    blockerId: { type: String, required: true, index: true },
+    blockedId: { type: String, required: true, index: true },
+    reason: { type: String, default: "" },
+  },
+  baseSchemaOptions,
+);
+
+softDeletePlugin(blockSchema);
+blockSchema.index({ blockerId: 1, blockedId: 1 }, { unique: true });
+
+export type BlockDocument = InferSchemaType<typeof blockSchema> & {
+  _id: Schema.Types.ObjectId;
+};
+export const Block =
+  (models.Block as Model<BlockDocument>) || model<BlockDocument>("Block", blockSchema, "blocks");

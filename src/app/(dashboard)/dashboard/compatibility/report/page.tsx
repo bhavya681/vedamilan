@@ -19,6 +19,7 @@ import {
   TimingPredictionPanel,
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
+import { CompatibilitySkeleton, ContentReveal } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 type Report = {
@@ -101,8 +102,8 @@ export default function CompatibilityReportPage() {
           </>
         }
       />
-      {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
-      {error ? (
+      {loading ? <CompatibilitySkeleton /> : null}
+      {error && !loading ? (
         <EmptyState
           title="No report yet"
           description={error}
@@ -113,8 +114,8 @@ export default function CompatibilityReportPage() {
           }
         />
       ) : null}
-      {report ? (
-        <>
+      {report && !loading ? (
+        <ContentReveal className="space-y-6">
           <GlassCard glow>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -259,7 +260,7 @@ export default function CompatibilityReportPage() {
             Calculated{" "}
             {report.calculatedAt ? new Date(report.calculatedAt).toLocaleString() : "recently"}
           </Badge>
-        </>
+        </ContentReveal>
       ) : null}
     </div>
   );

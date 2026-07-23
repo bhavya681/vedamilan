@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
+import { FormSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
 type Birth = {
@@ -112,7 +113,7 @@ export default function BirthDetailsPage() {
           it? You can still continue with limited chart accuracy.
         </p>
         {birth === null && !error ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
+          <FormSkeleton fields={4} />
         ) : (
           <form className="space-y-4" onSubmit={onSave}>
             <div>
