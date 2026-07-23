@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
-import { MoodBadge } from "@/features/compatibility/compatibility-visuals";
 import {
   ProfessionalProfileHero,
   ProfileFactGrid,
+  ProfileLayout,
+  ProfilePageFrame,
   ProfilePhotoGallery,
+  ProfileScorePanel,
   ProfileSection,
   SoftPill,
   primaryPhotoUrl,
@@ -113,38 +114,38 @@ export default function MatchProfilePage() {
 
   const photo = primaryPhotoUrl(profile?.photos);
   const location = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ");
-  const meta = profile
-    ? [profile.age ? `${profile.age} yrs` : null, location || null, profile.profession]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
 
   return (
-    <div className="relative mx-auto max-w-3xl space-y-5 sm:space-y-6">
-      <PageHeader
-        title="Member profile"
-        description="A clear view of who they are — then connect with intention."
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href={routes.matches}>Back to matches</Link>
-          </Button>
-        }
-      />
+    <ProfilePageFrame>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.16em] uppercase">
+            Discovery
+          </p>
+          <h1 className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">Member profile</h1>
+          <p className="text-muted-foreground mt-1 max-w-xl text-sm">
+            Review their presence, kundli alignment, then connect with intention.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href={routes.matches}>Back to matches</Link>
+        </Button>
+      </div>
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
 
       {!profile && !error ? (
         <div
-          className="border-border/60 overflow-hidden rounded-2xl border"
+          className="border-border/60 overflow-hidden rounded-[1.35rem] border"
           role="status"
           aria-label="Loading profile"
         >
-          <div className="skeleton-shimmer h-36 w-full" />
-          <div className="space-y-4 px-5 pt-14 pb-6 sm:px-8">
-            <div className="skeleton-shimmer h-7 w-48 rounded-full" />
-            <div className="skeleton-shimmer h-3 w-full rounded-full" />
-            <div className="skeleton-shimmer h-3 w-4/5 rounded-full" />
+          <div className="skeleton-shimmer h-40 w-full" />
+          <div className="space-y-4 px-5 pt-16 pb-8 sm:px-8">
+            <div className="skeleton-shimmer h-8 w-56 rounded-full" />
+            <div className="skeleton-shimmer h-3 w-full max-w-lg rounded-full" />
+            <div className="skeleton-shimmer h-3 w-2/3 rounded-full" />
           </div>
         </div>
       ) : null}
@@ -154,128 +155,137 @@ export default function MatchProfilePage() {
           <ProfessionalProfileHero
             name={profile.name}
             headline={profile.headline}
-            meta={meta}
+            location={location || null}
+            profession={
+              [profile.profession, profile.company ? `at ${profile.company}` : null]
+                .filter(Boolean)
+                .join(" ") || null
+            }
+            education={profile.education}
+            verified={Boolean(profile.isVerified)}
             photo={photo}
+            eyebrow="Potential connection"
             badges={
               <>
-                {profile.isVerified ? <SoftPill>Verified</SoftPill> : null}
-                {profile.education ? <SoftPill>{profile.education}</SoftPill> : null}
-                {profile.moonSign ? <SoftPill>Moon {profile.moonSign}</SoftPill> : null}
+                {profile.age != null ? <SoftPill>{profile.age} yrs</SoftPill> : null}
+                {profile.heightCm ? <SoftPill>{profile.heightCm} cm</SoftPill> : null}
+                {profile.moonSign ? <SoftPill tone="gold">Moon {profile.moonSign}</SoftPill> : null}
                 {profile.lagnaSign ? <SoftPill>Asc {profile.lagnaSign}</SoftPill> : null}
               </>
             }
             actions={
-              <div className="flex flex-col gap-2 sm:items-stretch">
-                <Button asChild>
+              <>
+                <Button asChild className="w-full">
                   <Link href={`${routes.compatibility}?candidate=${id}`}>Compatibility</Link>
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
+                  className="w-full"
                   disabled={busy}
                   onClick={() => void shortlist()}
                 >
                   Shortlist
                 </Button>
-              </div>
+              </>
             }
           />
 
-          {id ? (
-            <ProfileSection title="Connect">
-              <RelationshipActions otherUserId={id} />
-            </ProfileSection>
-          ) : null}
+          <ProfileLayout
+            main={
+              <>
+                {profile.about ? (
+                  <ProfileSection title="About" description="In their words.">
+                    <p className="text-[15px] leading-relaxed sm:text-base">{profile.about}</p>
+                  </ProfileSection>
+                ) : null}
 
-          {profile.about ? (
-            <ProfileSection title="About">
-              <p className="text-sm leading-relaxed sm:text-[15px]">{profile.about}</p>
-            </ProfileSection>
-          ) : null}
+                <ProfileSection
+                  title="Personal details"
+                  description="Background shared on their profile."
+                >
+                  <ProfileFactGrid
+                    items={[
+                      { label: "Age", value: profile.age },
+                      {
+                        label: "Height",
+                        value: profile.heightCm ? `${profile.heightCm} cm` : null,
+                      },
+                      { label: "Location", value: location || null },
+                      { label: "Profession", value: profile.profession },
+                      { label: "Works at", value: profile.company },
+                      { label: "Education", value: profile.education },
+                      { label: "Religion", value: profile.religion },
+                      { label: "Community", value: profile.community },
+                      { label: "Mother tongue", value: profile.motherTongue },
+                      {
+                        label: "Languages",
+                        value: profile.languages?.length ? profile.languages.join(", ") : null,
+                      },
+                      { label: "Marital status", value: formatMarital(profile.maritalStatus) },
+                    ]}
+                  />
+                </ProfileSection>
 
-          <ProfileSection title="Basics">
-            <ProfileFactGrid
-              items={[
-                { label: "Age", value: profile.age },
-                { label: "Height", value: profile.heightCm ? `${profile.heightCm} cm` : null },
-                { label: "Location", value: location || null },
-                { label: "Profession", value: profile.profession },
-                {
-                  label: "Works at",
-                  value: profile.company,
-                },
-                { label: "Education", value: profile.education },
-                { label: "Religion", value: profile.religion },
-                { label: "Community", value: profile.community },
-                { label: "Mother tongue", value: profile.motherTongue },
-                {
-                  label: "Languages",
-                  value: profile.languages?.length ? profile.languages.join(", ") : null,
-                },
-                { label: "Marital status", value: formatMarital(profile.maritalStatus) },
-              ]}
-            />
-          </ProfileSection>
+                <ProfileScorePanel
+                  score={profile.compatibilityScore}
+                  guna={profile.totalGuna}
+                  maxGuna={profile.maxGuna}
+                  manglik={profile.manglik}
+                  nakshatra={profile.nakshatra}
+                  moonSign={profile.moonSign}
+                  lagnaSign={profile.lagnaSign}
+                  strengths={profile.strengths}
+                  challenges={profile.challenges}
+                  footer={
+                    <div className="pt-1">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`${routes.compatibility}?candidate=${id}`}>
+                          Full compatibility report
+                        </Link>
+                      </Button>
+                    </div>
+                  }
+                />
 
-          <ProfileSection title="Kundli alignment">
-            <div className="flex flex-wrap items-center gap-3">
-              <MoodBadge score={profile.compatibilityScore} />
-              <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                <span>{profile.compatibilityScore}% blend</span>
-                <span>
-                  Guna {profile.totalGuna}/{profile.maxGuna}
-                </span>
-                <span>Manglik {profile.manglik}</span>
-                {profile.nakshatra ? <span>Nakshatra {profile.nakshatra}</span> : null}
-              </div>
-            </div>
-            {profile.strengths?.length ? (
-              <div className="mt-5">
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  Why you may connect
-                </p>
-                <ul className="mt-2 space-y-1.5 text-sm leading-relaxed">
-                  {profile.strengths.slice(0, 4).map((s) => (
-                    <li key={s}>· {s}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {profile.challenges?.length ? (
-              <div className="mt-4">
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  Areas to discuss
-                </p>
-                <ul className="mt-2 space-y-1.5 text-sm leading-relaxed">
-                  {profile.challenges.slice(0, 3).map((c) => (
-                    <li key={c}>· {c}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <div className="mt-5">
-              <Button asChild variant="outline" size="sm">
-                <Link href={`${routes.compatibility}?candidate=${id}`}>
-                  Full compatibility report
-                </Link>
-              </Button>
-            </div>
-          </ProfileSection>
+                <ProfilePhotoGallery photos={profile.photos} name={profile.name} />
+              </>
+            }
+            aside={
+              <>
+                {id ? (
+                  <ProfileSection
+                    title="Connect"
+                    description="Interest first, then connect to message."
+                  >
+                    <RelationshipActions otherUserId={id} />
+                  </ProfileSection>
+                ) : null}
 
-          <ProfilePhotoGallery photos={profile.photos} name={profile.name} />
-
-          <ProfileSection title="More actions">
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button asChild variant="outline">
-                <Link href={routes.connections}>Connections</Link>
-              </Button>
-              <Button type="button" variant="ghost" disabled={busy} onClick={() => void block()}>
-                Block
-              </Button>
-            </div>
-          </ProfileSection>
+                <ProfileSection title="More">
+                  <div className="flex flex-col gap-2">
+                    <Button asChild variant="outline" className="justify-start">
+                      <Link href={routes.connections}>Connections</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="justify-start">
+                      <Link href={routes.matches}>Back to matches</Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-destructive justify-start"
+                      disabled={busy}
+                      onClick={() => void block()}
+                    >
+                      Block member
+                    </Button>
+                  </div>
+                </ProfileSection>
+              </>
+            }
+          />
         </>
       ) : null}
-    </div>
+    </ProfilePageFrame>
   );
 }
