@@ -8,8 +8,8 @@ import { LandingSection } from "@/components/layout/landing-section";
 
 const stats = [
   { label: "Members exploring", value: 48920, suffix: "+" },
-  { label: "Compatibility clarity", value: 87, suffix: "%" },
-  { label: "Expert consultations", value: 12600, suffix: "+" },
+  { label: "Avg. match clarity", value: 87, suffix: "%" },
+  { label: "Expert sessions", value: 12600, suffix: "+" },
   { label: "Cities covered", value: 180, suffix: "+" },
 ];
 
@@ -25,7 +25,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
       setDisplay(value);
       return;
     }
-    const duration = 1200;
+    const duration = 1100;
     const start = performance.now();
     let frame = 0;
     const tick = (now: number) => {
@@ -39,29 +39,38 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
   }, [inView, reduceMotion, value]);
 
   return (
-    <span ref={ref} className="font-display text-brand-dual text-3xl sm:text-4xl lg:text-5xl">
+    <span ref={ref} className="font-display text-foreground text-3xl tracking-tight sm:text-4xl">
       {display.toLocaleString("en-IN")}
-      {suffix}
+      <span className="text-gold">{suffix}</span>
     </span>
   );
 }
 
 export function AnimatedStatsSection() {
   return (
-    <LandingSection aria-label="Platform statistics" innerClassName="!py-10 sm:!py-12 lg:!py-14">
+    <LandingSection
+      aria-label="Platform statistics"
+      tone="default"
+      className="relative z-10 -mt-10 sm:-mt-14"
+      innerClassName="!py-0 sm:!py-0 lg:!py-0"
+    >
       <FadeIn>
-        <div className="lotus-divider mb-8 sm:mb-10" />
-      </FadeIn>
-      <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <FadeIn key={stat.label} delay={0.06 * index}>
-            <motion.div className="text-center sm:text-left">
+        <div className="border-border/50 bg-card/80 shadow-soft grid grid-cols-2 overflow-hidden rounded-[1.35rem] border lg:grid-cols-4">
+          {stats.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              className={`px-5 py-7 text-center sm:px-6 sm:py-8 sm:text-left ${
+                index > 0 ? "border-border/40 border-t sm:border-t-0 sm:border-l" : ""
+              } ${index === 2 ? "border-t lg:border-t-0" : ""}`}
+            >
               <Counter value={stat.value} suffix={stat.suffix} />
-              <p className="text-muted-foreground mt-2 text-xs sm:text-sm">{stat.label}</p>
+              <p className="text-muted-foreground mt-2 text-xs tracking-wide sm:text-sm">
+                {stat.label}
+              </p>
             </motion.div>
-          </FadeIn>
-        ))}
-      </div>
+          ))}
+        </div>
+      </FadeIn>
     </LandingSection>
   );
 }

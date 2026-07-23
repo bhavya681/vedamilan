@@ -57,7 +57,7 @@ export function SectionIntro({
       {eyebrow ? (
         <p
           className={cn(
-            "text-[11px] font-semibold tracking-[0.22em] uppercase",
+            "text-[11px] font-semibold tracking-[0.2em] uppercase",
             light ? "text-gold" : "text-secondary",
           )}
         >
@@ -66,7 +66,7 @@ export function SectionIntro({
       ) : null}
       <h2
         className={cn(
-          "font-display mt-3 text-3xl tracking-tight text-balance sm:text-4xl lg:text-[2.75rem]",
+          "font-display mt-3 text-3xl tracking-tight text-balance sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15]",
           light ? "text-ivory" : "text-foreground",
         )}
       >
@@ -75,8 +75,9 @@ export function SectionIntro({
       {description ? (
         <p
           className={cn(
-            "mt-3 text-sm leading-relaxed sm:text-base",
-            light ? "text-ivory/75" : "text-muted-foreground",
+            "mt-3.5 text-sm leading-relaxed sm:text-base",
+            light ? "text-ivory/72" : "text-muted-foreground",
+            align === "center" && "mx-auto max-w-xl",
           )}
         >
           {description}

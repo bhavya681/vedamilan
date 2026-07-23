@@ -7,7 +7,6 @@ import {
 } from "@/features/matchmaking/components/landing-extras";
 import { HowItWorksSection } from "@/features/matchmaking/components/how-it-works";
 import { FeaturesGridSection } from "@/features/matchmaking/components/features-grid";
-import { MarriageTimingPreview } from "@/features/matchmaking/components/marriage-timing-preview";
 import { TestimonialsSection } from "@/features/matchmaking/components/testimonials-section";
 import { PricingSection } from "@/features/payments/components/pricing-section";
 import { FaqSection } from "@/features/matchmaking/components/faq-section";
@@ -20,13 +19,12 @@ export default function LandingPage() {
     <>
       <main id="main-content">
         <HeroSection />
-        <LandingSearchSection />
         <AnimatedStatsSection />
         <HowItWorksSection />
         <FeaturesGridSection />
-        <AiDemoSection />
         <CompatibilityPreviewSection />
-        <MarriageTimingPreview />
+        <AiDemoSection />
+        <LandingSearchSection />
         <SuccessStoriesStrip />
         <TestimonialsSection />
         <PricingSection />

@@ -16,7 +16,8 @@ export function FaqSection() {
           <SectionIntro
             eyebrow="FAQ"
             title="Questions, answered clearly"
-            description="Everything you need before beginning your VedaMilan AI journey."
+            description="Everything you need before beginning your VedaMilan journey."
+            align="center"
           />
         </FadeIn>
         <FadeIn delay={0.1} className="mt-8">

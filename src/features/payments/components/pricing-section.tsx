@@ -14,6 +14,7 @@ export function PricingSection() {
           eyebrow="Membership"
           title="Plans with intention"
           description="Transparent pricing for every stage. Upgrade anytime as your search deepens."
+          align="center"
         />
       </FadeIn>
       <div className="mt-10 grid gap-4 sm:gap-6 lg:grid-cols-3">

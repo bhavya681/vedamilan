@@ -1,14 +1,12 @@
 "use client";
 
 import {
+  Clock3,
+  HeartHandshake,
+  MessagesSquare,
   Sparkles,
   Stars,
-  HeartHandshake,
-  Clock3,
-  MessagesSquare,
-  FileText,
   UserRoundSearch,
-  Orbit,
 } from "lucide-react";
 
 import { FadeIn } from "@/components/animations/motion";
@@ -17,65 +15,56 @@ import { LandingSection, SectionIntro } from "@/components/layout/landing-sectio
 const features = [
   {
     icon: UserRoundSearch,
-    title: "AI Matchmaking",
-    body: "Explainable partner rankings across values, lifestyle, and Vedic harmony.",
+    title: "Intelligent matches",
+    body: "Profiles ranked by overall kundli blend—Ashta Koota, Shukra, Manglik, and Moon harmony.",
   },
   {
     icon: Stars,
-    title: "Kundli Engine",
-    body: "North, South, and East chart views with planet dignity and yogas.",
+    title: "Full Vedic kundli",
+    body: "North, South, and East charts with planets, nakshatra, dasha, and dignity.",
   },
   {
     icon: HeartHandshake,
-    title: "Compatibility",
-    body: "Ashta Koota scoring with rose-gold clarity for families.",
+    title: "Compatibility reports",
+    body: "Guna Milan made clear for you and your family—strengths and areas to discuss.",
   },
   {
     icon: Clock3,
-    title: "Marriage Timing",
-    body: "Activation windows grounded in dasha and transit confluence.",
-  },
-  {
-    icon: Orbit,
-    title: "Dasha & Transit",
-    body: "Timelines that feel navigable—never ominous.",
+    title: "Marriage timing",
+    body: "Dasha and transit confluence to highlight sincere windows, not fear.",
   },
   {
     icon: Sparkles,
-    title: "AI Relationship Coach",
-    body: "Conversation guidance and insight cards with confidence scores.",
+    title: "Explainable AI",
+    body: "Insight that interprets your chart—never invents planetary positions.",
   },
   {
     icon: MessagesSquare,
-    title: "Expert Consultation",
-    body: "Book verified astrologers with transparent specialties.",
-  },
-  {
-    icon: FileText,
-    title: "Premium Reports",
-    body: "Downloadable dossiers for kundli, compatibility, and timing.",
+    title: "Private messaging",
+    body: "Interest → connect → message. Conversations stay intentional and gated.",
   },
 ];
 
 export function FeaturesGridSection() {
   return (
-    <LandingSection id="features" tone="soft">
+    <LandingSection id="features" tone="muted">
       <FadeIn>
         <SectionIntro
           eyebrow="Platform"
-          title="Everything a Vedic relationship OS needs"
-          description="Not just matrimony—complete intelligence for seekers, couples, and families."
+          title="Built for serious seekers"
+          description="Matchmaking with Vedic depth—calm tools for modern professionals and families."
+          align="center"
         />
       </FadeIn>
-      <div className="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+      <div className="mt-12 grid gap-px overflow-hidden rounded-[1.5rem] border border-[color:var(--border)] bg-[color:var(--border)] sm:grid-cols-2 lg:grid-cols-3">
         {features.map((item, index) => (
           <FadeIn key={item.title} delay={0.04 * index}>
-            <article className="glass-panel group h-full rounded-2xl p-5 transition duration-300 hover:-translate-y-1 sm:rounded-3xl sm:p-6">
-              <div className="bg-primary/10 text-primary group-hover:bg-primary/15 flex h-10 w-10 items-center justify-center rounded-xl transition">
+            <article className="bg-card group h-full p-6 transition-colors sm:p-7 md:p-8">
+              <div className="border-border/60 bg-muted/40 text-gold group-hover:border-gold/30 flex h-11 w-11 items-center justify-center rounded-xl border transition-colors">
                 <item.icon className="h-5 w-5" aria-hidden />
               </div>
-              <h3 className="font-display mt-4 text-xl sm:text-2xl">{item.title}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{item.body}</p>
+              <h3 className="font-display mt-5 text-xl tracking-tight sm:text-2xl">{item.title}</h3>
+              <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">{item.body}</p>
             </article>
           </FadeIn>
         ))}

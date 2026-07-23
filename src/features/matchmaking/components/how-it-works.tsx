@@ -8,18 +8,18 @@ import { LandingSection, SectionIntro } from "@/components/layout/landing-sectio
 const steps = [
   {
     n: "01",
-    title: "Share birth details",
-    body: "Precise time and place unlock authentic Vedic charts—never guesswork.",
+    title: "Add your birth details",
+    body: "Accurate time and place unlock authentic Lahiri kundli—the foundation of every recommendation.",
   },
   {
     n: "02",
-    title: "Receive intelligence",
-    body: "Kundli, guna milan, dasha, and AI explanations arrive in one calm workspace.",
+    title: "See clear compatibility",
+    body: "Ashta Koota, Manglik harmony, and explainable blend scores appear beside each profile.",
   },
   {
     n: "03",
-    title: "Act with timing",
-    body: "Match, message, and consult experts when planetary windows favor sincerity.",
+    title: "Connect with intention",
+    body: "Express interest, connect when mutual, and message only after both sides are ready.",
   },
 ];
 
@@ -31,23 +31,37 @@ export function HowItWorksSection() {
       <FadeIn>
         <SectionIntro
           eyebrow="How it works"
-          title="Three serene steps to clarity"
-          description="A guided path from birth details to intentional action—without marketplace noise."
+          title="Clarity in three steps"
+          description="From birth chart to meaningful connection—without marketplace noise."
+          align="center"
         />
       </FadeIn>
-      <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-6">
-        {steps.map((step, index) => (
-          <FadeIn key={step.n} delay={0.08 * index}>
-            <motion.article
-              whileHover={reduceMotion ? undefined : { y: -4 }}
-              className="glass-panel relative h-full overflow-hidden rounded-2xl p-5 sm:rounded-3xl sm:p-6"
-            >
-              <p className="font-display text-brand-dual text-4xl sm:text-5xl">{step.n}</p>
-              <h3 className="font-display mt-4 text-xl sm:text-2xl">{step.title}</h3>
-              <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{step.body}</p>
-            </motion.article>
-          </FadeIn>
-        ))}
+
+      <div className="relative mt-12 md:mt-16">
+        <div
+          className="via-border absolute top-10 right-[12%] left-[12%] hidden h-px bg-gradient-to-r from-transparent to-transparent md:block"
+          aria-hidden
+        />
+        <ol className="grid gap-8 md:grid-cols-3 md:gap-10">
+          {steps.map((step, index) => (
+            <FadeIn key={step.n} delay={0.08 * index}>
+              <motion.li
+                whileHover={reduceMotion ? undefined : { y: -3 }}
+                className="relative text-center md:text-left"
+              >
+                <div className="border-border/60 bg-card shadow-soft mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border md:mx-0">
+                  <span className="font-display text-gold text-xl tracking-tight">{step.n}</span>
+                </div>
+                <h3 className="font-display mt-5 text-xl tracking-tight sm:text-2xl">
+                  {step.title}
+                </h3>
+                <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm leading-relaxed md:mx-0">
+                  {step.body}
+                </p>
+              </motion.li>
+            </FadeIn>
+          ))}
+        </ol>
       </div>
     </LandingSection>
   );

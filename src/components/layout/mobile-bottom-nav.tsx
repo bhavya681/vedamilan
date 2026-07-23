@@ -8,6 +8,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { dashboardNav } from "@/config/navigation";
+import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
@@ -26,10 +27,10 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="border-border/50 bg-background/95 dark:bg-background/90 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl md:hidden dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)]"
+        className="border-border/40 bg-background/92 dark:bg-background/88 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shadow-[0_-10px_36px_rgba(20,17,14,0.08)] backdrop-blur-2xl md:hidden dark:shadow-[0_-10px_36px_rgba(0,0,0,0.4)]"
         aria-label="Primary workspace"
       >
-        <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-1">
+        <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0.5">
           {items.map((item) => {
             const active =
               pathname === item.href ||
@@ -40,15 +41,26 @@ export function MobileBottomNav() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
-                    active
-                      ? "bg-primary/12 text-foreground dark:bg-primary/18"
-                      : "text-muted-foreground hover:text-foreground",
+                    "relative flex flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
+                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="h-5 w-5" aria-hidden />
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
+                      active ? "bg-primary/14 text-gold" : "bg-transparent",
+                    )}
+                  >
+                    <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                  </span>
                   {item.label}
+                  {active ? (
+                    <span
+                      className="bg-gold absolute bottom-0.5 h-1 w-1 rounded-full"
+                      aria-hidden
+                    />
+                  ) : null}
                 </Link>
               </li>
             );
@@ -57,15 +69,20 @@ export function MobileBottomNav() {
             <button
               type="button"
               className={cn(
-                "flex w-full flex-col items-center gap-1 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
-                moreOpen
-                  ? "bg-primary/12 text-foreground dark:bg-primary/18"
-                  : "text-muted-foreground hover:text-foreground",
+                "relative flex w-full flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
+                moreOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => setMoreOpen(true)}
               aria-label="More dashboard links"
             >
-              <MoreHorizontal className="h-5 w-5" aria-hidden />
+              <span
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
+                  moreOpen ? "bg-primary/14 text-gold" : "bg-transparent",
+                )}
+              >
+                <MoreHorizontal className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+              </span>
               More
             </button>
           </li>
@@ -90,21 +107,26 @@ export function MobileBottomNav() {
                   {dashboardNav
                     .filter((item) => (item.group ?? "Menu") === group)
                     .map((item) => {
-                      const active =
-                        pathname === item.href ||
-                        (item.href !== routes.dashboard && pathname.startsWith(item.href));
+                      const active = isDashboardNavActive(pathname, item.href);
+                      const Icon = dashboardNavIcons[item.href];
                       return (
                         <Link
                           key={item.href}
                           href={item.href}
                           onClick={() => setMoreOpen(false)}
                           className={cn(
-                            "rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                            "flex items-center gap-2.5 rounded-2xl px-3 py-3 text-sm font-medium transition-colors",
                             active
                               ? "bg-primary/12 text-foreground dark:bg-primary/18"
                               : "bg-muted/50 hover:bg-muted text-foreground/90 dark:bg-muted/40",
                           )}
                         >
+                          {Icon ? (
+                            <Icon
+                              className={cn("h-4 w-4 shrink-0", active && "text-gold")}
+                              aria-hidden
+                            />
+                          ) : null}
                           {item.title}
                         </Link>
                       );

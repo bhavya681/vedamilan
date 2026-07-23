@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import { Bell, Heart, Menu, MessageCircle, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,12 @@ import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { useSession } from "@/lib/auth/client";
 
+const DASH_QUICK = [
+  { href: routes.matches, label: "Matches", icon: Heart },
+  { href: routes.chat, label: "Messages", icon: MessageCircle },
+  { href: routes.search, label: "Search", icon: Search },
+] as const;
+
 export function Navbar({
   className,
   variant = "default",
@@ -26,6 +32,7 @@ export function Navbar({
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [unread, setUnread] = useState(0);
   const isOverlay = variant === "overlay";
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
@@ -40,7 +47,30 @@ export function Navbar({
     return () => window.removeEventListener("scroll", onScroll);
   }, [isOverlay]);
 
+  useEffect(() => {
+    if (!isDashboard || !isAuthed) return;
+    let cancelled = false;
+    void fetch("/api/notifications")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json.success) {
+          setUnread(Number(json.data?.unread || 0));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [isDashboard, isAuthed, pathname]);
+
   const floating = isOverlay && !scrolled;
+  const userName = session?.user?.name?.trim() || "You";
+  const initials = userName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() || "")
+    .join("");
 
   return (
     <header
@@ -49,13 +79,16 @@ export function Navbar({
         isOverlay ? "fixed inset-x-0 top-0" : "relative",
         floating
           ? "border-transparent bg-transparent"
-          : "border-border/50 bg-background/90 dark:bg-background/85 border-b backdrop-blur-xl",
+          : "border-border/40 bg-background/85 dark:bg-background/80 border-b backdrop-blur-2xl",
+        isDashboard &&
+          !floating &&
+          "bg-card/70 dark:bg-card/50 shadow-[0_1px_0_rgba(20,17,14,0.03)]",
         className,
       )}
     >
       <div
         className={cn(
-          "flex h-14 w-full items-center justify-between gap-3 px-4 sm:h-16 sm:px-5 lg:px-6",
+          "flex h-14 w-full items-center justify-between gap-3 px-3 sm:h-16 sm:px-5 lg:px-6",
           !isDashboard && "mx-auto max-w-7xl lg:px-8",
         )}
       >
@@ -67,11 +100,6 @@ export function Navbar({
             priority
             className={cn(floating ? "[&_span]:text-ivory" : undefined, isDashboard && "md:hidden")}
           />
-          {isDashboard ? (
-            <p className="text-muted-foreground hidden truncate text-sm font-medium md:block">
-              Workspace
-            </p>
-          ) : null}
         </div>
 
         {!isDashboard ? (
@@ -93,36 +121,76 @@ export function Navbar({
           </nav>
         ) : (
           <nav
-            className="text-muted-foreground hidden items-center gap-4 text-sm lg:flex"
+            className="bg-muted/40 dark:bg-muted/25 border-border/40 hidden items-center gap-1 rounded-full border p-1 lg:flex"
             aria-label="Quick"
           >
-            <Link href={routes.matches} className="hover:text-foreground transition-colors">
-              Matches
-            </Link>
-            <Link href={routes.aiInsights} className="hover:text-foreground transition-colors">
-              AI Insights
-            </Link>
-            <Link href={routes.settings} className="hover:text-foreground transition-colors">
-              Settings
-            </Link>
+            {DASH_QUICK.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
+                    active
+                      ? "bg-card text-foreground shadow-soft"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5", active && "text-gold")} aria-hidden />
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <ThemeToggle
             className={cn(floating && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
           />
+
           {isPending ? null : isAuthed ? (
             <>
-              {!isDashboard ? (
+              {isDashboard ? (
+                <>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground relative hidden sm:inline-flex"
+                  >
+                    <Link href={routes.notifications} aria-label="Notifications">
+                      <Bell className="h-4 w-4" />
+                      {unread > 0 ? (
+                        <span className="bg-primary text-primary-foreground absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </Button>
+                  <Link
+                    href={routes.profile}
+                    className="border-border/60 hover:border-gold/40 hidden items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 transition-colors sm:inline-flex"
+                    aria-label="My profile"
+                  >
+                    <span className="bg-navy text-ivory flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold">
+                      {initials || "VM"}
+                    </span>
+                    <span className="max-w-[7rem] truncate text-sm font-medium">{userName}</span>
+                  </Link>
+                </>
+              ) : (
                 <Button asChild className="shadow-gold hidden sm:inline-flex">
                   <Link href={routes.dashboard}>Dashboard</Link>
                 </Button>
-              ) : null}
+              )}
               <SignOutButton
                 className={cn(
-                  "hidden sm:inline-flex",
+                  "hidden lg:inline-flex",
                   floating && "border-ivory/30 text-ivory hover:bg-ivory/10 bg-transparent",
+                  isDashboard && "lg:hidden",
                 )}
                 variant="outline"
                 size="sm"

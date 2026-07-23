@@ -10,7 +10,7 @@ export type NavItem = {
 
 /** Keep landing nav short — product-first, like top matrimony apps */
 export const mainNav: NavItem[] = [
-  { title: "How it works", href: "/#features", description: "Platform capabilities" },
+  { title: "How it works", href: "/#how", description: "Platform capabilities" },
   { title: "Compatibility", href: "/#compatibility", description: "Guna Milan & AI" },
   { title: "Pricing", href: routes.pricing, description: "Membership plans" },
   { title: "FAQ", href: routes.faq, description: "Common questions" },
