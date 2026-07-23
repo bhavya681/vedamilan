@@ -6,7 +6,7 @@ import { Bookmark, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { SoftEmoji, moodFromScore } from "@/features/compatibility/compatibility-visuals";
+import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -122,11 +122,14 @@ export function MatchCard({
         <div className="from-navy via-navy/40 absolute inset-0 bg-gradient-to-t to-transparent" />
 
         <div
-          className="border-gold/50 bg-navy/60 absolute top-4 right-4 flex flex-col items-center gap-0.5 rounded-2xl border px-2.5 py-1.5 backdrop-blur-md"
-          aria-label={`${score}% compatibility — ${mood.title}`}
+          className="border-gold/50 bg-navy/70 absolute top-4 right-4 min-w-[3.25rem] rounded-2xl border px-2.5 py-1.5 text-center backdrop-blur-md"
+          title={`${score}% overall kundli compatibility — ${mood.title}`}
+          aria-label={`${score}% overall match — ${mood.title}`}
         >
-          <SoftEmoji emoji={mood.emoji} size="sm" pulse={false} />
-          <span className="text-ivory text-sm leading-none font-semibold">{score}</span>
+          <p className="text-ivory text-base leading-none font-semibold tabular-nums">{score}%</p>
+          <p className="text-ivory/70 mt-1 text-[9px] font-medium tracking-[0.12em] uppercase">
+            Match
+          </p>
         </div>
 
         <div className="text-ivory absolute inset-x-0 bottom-0 space-y-3 p-5">

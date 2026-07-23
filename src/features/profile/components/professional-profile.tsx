@@ -5,31 +5,14 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
+import {
+  photoUrl,
+  shouldUnoptimizeImage,
+  type ProfilePhoto,
+} from "@/features/profile/profile-photo";
 
-export type ProfilePhoto = {
-  secureUrl?: string;
-  url?: string;
-  isPrimary?: boolean;
-};
-
-export function photoUrl(photo?: ProfilePhoto | null): string | null {
-  return photo?.secureUrl || photo?.url || null;
-}
-
-export function primaryPhotoUrl(photos?: ProfilePhoto[] | null): string | null {
-  if (!photos?.length) return null;
-  return photoUrl(photos.find((p) => p.isPrimary) || photos[0]);
-}
-
-export function shouldUnoptimizeImage(src: string): boolean {
-  return (
-    src.startsWith("data:") ||
-    src.startsWith("/") ||
-    (!src.includes("res.cloudinary.com") &&
-      !src.includes("images.unsplash.com") &&
-      !src.includes("upload.wikimedia.org"))
-  );
-}
+export type { ProfilePhoto };
+export { photoUrl, primaryPhotoUrl, shouldUnoptimizeImage } from "@/features/profile/profile-photo";
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);

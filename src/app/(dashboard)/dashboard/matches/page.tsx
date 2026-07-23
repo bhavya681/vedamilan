@@ -49,19 +49,6 @@ function whyMatch(match: MatchItem) {
   );
 }
 
-function tierLabel(tier?: MatchItem["recommendationTier"]) {
-  switch (tier) {
-    case "BEST":
-      return "Best kundli match";
-    case "STRONG":
-      return "Strong alignment";
-    case "GOOD":
-      return "Good compatibility";
-    default:
-      return "Worth exploring";
-  }
-}
-
 export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [hasSelfChart, setHasSelfChart] = useState(true);
@@ -99,8 +86,17 @@ export default function MatchesPage() {
         return;
       }
 
-      const data = (recJson.data?.data || []) as MatchItem[];
-      // Already kundli-sorted from API — keep order
+      const data = ((recJson.data?.data || []) as MatchItem[])
+        .slice()
+        .sort((a, b) => {
+          if (b.compatibilityScore !== a.compatibilityScore) {
+            return b.compatibilityScore - a.compatibilityScore;
+          }
+          if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
+          return (a.rank ?? 0) - (b.rank ?? 0);
+        })
+        .map((m, i) => ({ ...m, rank: m.rank ?? i + 1 }));
+      // Kundli-sorted: highest overall compatibility first
       setMatches(data);
       setHasSelfChart(recJson.data?.hasSelfChart !== false && Boolean(chartJson.data?.horoscope));
 
@@ -212,8 +208,10 @@ export default function MatchesPage() {
               onInterest={() => void expressInterest(match.userId)}
             />
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 text-xs">
-              {match.rank ? <span>#{match.rank}</span> : null}
-              <span>{tierLabel(match.recommendationTier)}</span>
+              <span className="text-foreground/80 font-medium">
+                #{match.rank ?? index + 1} by overall match
+              </span>
+              <span>{match.compatibilityScore}% blend</span>
               <span>
                 Guna {match.totalGuna}/{match.maxGuna || 36}
               </span>
@@ -233,7 +231,7 @@ export default function MatchesPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Potential connections"
-        description="Prioritized by your kundli — highest Vedic compatibility first."
+        description="Ordered by overall kundli compatibility (highest first). The % on each card is your Vedic blend score — not sun sign."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">

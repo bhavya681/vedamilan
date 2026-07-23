@@ -10,8 +10,8 @@ import {
   ProfilePhotoGallery,
   ProfileSection,
   SoftPill,
-  primaryPhotoUrl,
 } from "@/features/profile/components/professional-profile";
+import { primaryPhotoUrl } from "@/features/profile/profile-photo";
 import { profileService } from "@/application/profile/profile.service";
 import { getSession } from "@/lib/auth/session";
 import { routes } from "@/lib/constants/routes";
