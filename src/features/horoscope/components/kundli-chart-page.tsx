@@ -85,6 +85,7 @@ export function KundliChartPage({
                   <li>
                     House 1 / Asc always at top; count anti-clockwise (4 left, 7 bottom, 10 right).
                   </li>
+                  <li>Numbers are rashis (1=Aries … 12=Pisces) — Asc Gemini shows 3 in house 1.</li>
                   <li>Same-sign planets share one house (whole-sign from Lagna).</li>
                   <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
                 </>

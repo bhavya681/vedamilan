@@ -38,6 +38,7 @@ export type SouthChartData = {
 
 /**
  * North Indian diamond — houses FIXED; House 1 (Asc) always TOP.
+ * Digits are rashi numbers (1=Aries … 12=Pisces), not house ordinals.
  * Count anti-clockwise: 2 left of Asc, 12 right of Asc; 4 left, 7 bottom, 10 right.
  */
 const NORTH_POS: Record<number, { x: number; y: number; numX: number; numY: number }> = {
@@ -259,6 +260,13 @@ function ChartLegend({ className }: { className?: string }) {
   );
 }
 
+/** Whole-sign rashi number (1–12) occupying a house counted from Lagna. */
+export function rashiNumberForHouse(house: number, lagnaSignId: number) {
+  const lagna = ((lagnaSignId % 12) + 12) % 12;
+  const h = Math.min(12, Math.max(1, house));
+  return ((lagna + h - 1) % 12) + 1;
+}
+
 export function NorthIndianKundli({
   chart,
   className,
@@ -278,6 +286,7 @@ export function NorthIndianKundli({
         {Array.from({ length: 12 }, (_, i) => i + 1).map((house) => {
           const pos = NORTH_POS[house]!;
           const glyphs = normalizeGlyphs(chart.houses[String(house)]);
+          const rashiNo = rashiNumberForHouse(house, chart.lagnaSignId);
           return (
             <g key={house}>
               <text
@@ -290,7 +299,7 @@ export function NorthIndianKundli({
                   house === 1 ? "fill-primary" : "fill-muted-foreground",
                 )}
               >
-                {house}
+                {rashiNo}
               </text>
               {house === 1 ? (
                 <text

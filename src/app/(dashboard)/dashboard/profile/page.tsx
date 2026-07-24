@@ -37,11 +37,11 @@ export default async function ProfilePage() {
     email: session.user.email,
   });
   const { profile, birthDetails, preferences } = bundle;
-  const photos = (profile.photos || []) as Array<{
-    secureUrl?: string;
-    url?: string;
-    isPrimary?: boolean;
-  }>;
+  const photos = (profile.photos || []).map((p) => ({
+    secureUrl: p.secureUrl ? String(p.secureUrl) : undefined,
+    url: p.url ? String(p.url) : undefined,
+    isPrimary: Boolean(p.isPrimary),
+  }));
   const photo = primaryPhotoUrl(photos);
   const displayName = profile.name || session.user.name || "Member";
   const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ");

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { routes } from "@/lib/constants/routes";
@@ -25,14 +25,20 @@ const ALLOW_WHILE_INCOMPLETE = [
 export function OnboardingRedirect() {
   const pathname = usePathname();
   const router = useRouter();
+  const checking = useRef(false);
 
   useEffect(() => {
     if (ALLOW_WHILE_INCOMPLETE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
       return;
     }
 
+    // `/dashboard` resolves its own gate to avoid racing astrology/matrimony homes.
+    if (pathname === routes.dashboard) return;
+
     let cancelled = false;
     void (async () => {
+      if (checking.current) return;
+      checking.current = true;
       try {
         const [profileRes, chartRes] = await Promise.all([
           fetch("/api/profile").then((r) => r.json()),
@@ -58,6 +64,8 @@ export function OnboardingRedirect() {
         }
       } catch {
         /* ignore network blips */
+      } finally {
+        checking.current = false;
       }
     })();
 

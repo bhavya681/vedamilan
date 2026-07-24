@@ -13,6 +13,7 @@ import {
   ProfilePhotoUploader,
   type ProfilePhotoItem,
 } from "@/features/profile/components/profile-photo-uploader";
+import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { authClient } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -117,21 +118,29 @@ export function OnboardingWizard() {
     if (chartRes.success && chartRes.data?.horoscope) {
       setChart(chartRes.data.horoscope);
     }
+
+    const readiness = evaluateOnboardingReadiness({
+      gender: p?.gender,
+      city: p?.city,
+      profession: p?.profession,
+      education: p?.education,
+      dateOfBirth: p?.dateOfBirth,
+      photos: p?.photos,
+      completionScore: p?.completion?.score,
+      hasBirthDetails: Boolean(birth?.birthDate),
+      hasChart: Boolean(chartRes.success && chartRes.data?.horoscope),
+    });
+
+    // Only leave onboarding when fully ready — never bounce on a partial flag.
+    if (readiness.ready && p?.onboardingCompletedAt) {
+      router.replace(routes.dashboard);
+      return;
+    }
+
     // Resume step if partially done — never skip required setup
-    if (
-      chartRes.success &&
-      chartRes.data?.horoscope &&
-      birth?.birthDate &&
-      p?.city &&
-      p?.photos?.length
-    ) {
-      const gender = String(p?.gender || "").toUpperCase();
-      if ((gender === "MALE" || gender === "FEMALE") && p?.onboardingCompletedAt) {
-        router.replace(routes.dashboard);
-        return;
-      }
+    if (readiness.hasChart && readiness.hasBirth && p?.city && readiness.hasPhoto) {
       setStep(3);
-    } else if (birth?.birthDate) setStep(2);
+    } else if (readiness.hasBirth) setStep(2);
     else if (p?.city && p?.profession) setStep(1);
   }, [router]);
 
