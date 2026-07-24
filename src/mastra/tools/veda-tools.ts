@@ -148,6 +148,7 @@ export const getCompatibilityTool = createTool({
         marriageWindows: Array.isArray(report.marriageWindows)
           ? report.marriageWindows.slice(0, 5)
           : [],
+        advancedMarriageDynamics: report.advancedMarriageDynamics || null,
       },
     };
   },

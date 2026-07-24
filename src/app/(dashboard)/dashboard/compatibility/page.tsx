@@ -23,6 +23,7 @@ import {
   TimingPredictionPanel,
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
+import { AdvancedMarriageDynamicsPanel } from "@/features/compatibility/advanced-marriage-dynamics-panel";
 import { CompatibilitySkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -102,6 +103,9 @@ type Report = {
   categoryScores?: Record<string, number>;
   marriageWindows?: Array<{ label: string; window: string; reason: string; score: number }>;
   timingPrediction?: TimingPredictionView | null;
+  advancedMarriageDynamics?:
+    | import("@/features/compatibility/advanced-marriage-dynamics-panel").AdvancedMarriageDynamicsView
+    | null;
 };
 
 type RecMatch = {
@@ -532,6 +536,7 @@ export default function CompatibilityPage() {
                 {(
                   [
                     ["why", "Overview"],
+                    ["marriage", "Marriage dynamics"],
                     ["timing", "Timing"],
                     ["ai", "AI Guru"],
                     ["deep", "Deep modules"],
@@ -553,10 +558,24 @@ export default function CompatibilityPage() {
 
             <TabsContent value="why" className="mt-0">
               <p className="text-muted-foreground text-sm leading-relaxed">
-                The score above is a multi-module bond (personality, Moon, Shukra, 7th, D9, Ashta
-                Koota, and more) — never a single koota. Open Timing for Mahadasha + Gochar marriage
-                windows, or AI Guru for a guided reading.
+                The score above is your Compatibility score (deep compare) — not discovery Match
+                score. Open Marriage dynamics for D1/D9/Venus/Moon layers, Timing for dasha windows,
+                or AI Guru for a guided reading. AI never recalculates planets.
               </p>
+            </TabsContent>
+
+            <TabsContent value="marriage" className="mt-0">
+              {active.advancedMarriageDynamics ? (
+                <AdvancedMarriageDynamicsPanel data={active.advancedMarriageDynamics} />
+              ) : (
+                <GlassCard>
+                  <p className="text-muted-foreground text-sm">
+                    Run a fresh compatibility compare to generate Advanced Marriage Dynamics (D1,
+                    D9, Venus, Moon, triad, Lagna, Yoni, Saturn, 9th–7th, Arudha, balance, and dasha
+                    activation).
+                  </p>
+                </GlassCard>
+              )}
             </TabsContent>
 
             <TabsContent value="timing" className="mt-0">

@@ -37,6 +37,8 @@ const compatibilityReportSchema = new Schema(
     marriageWindows: { type: [Schema.Types.Mixed], default: [] },
     /** Multi-factor dasha + gochar + bond timing dossier */
     timingPrediction: { type: Schema.Types.Mixed, default: null },
+    /** Phase-1 Advanced Marriage Dynamics (interpretive layer; not discovery Match score) */
+    advancedMarriageDynamics: { type: Schema.Types.Mixed, default: null },
     engineVersion: { type: String, required: true },
     calculatedAt: { type: Date, default: Date.now },
   },

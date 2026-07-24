@@ -19,6 +19,10 @@ import {
   TimingPredictionPanel,
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
+import {
+  AdvancedMarriageDynamicsPanel,
+  type AdvancedMarriageDynamicsView,
+} from "@/features/compatibility/advanced-marriage-dynamics-panel";
 import { CompatibilitySkeleton, ContentReveal } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
@@ -51,6 +55,7 @@ type Report = {
     remedies?: string[];
   };
   timingPrediction?: TimingPredictionView | null;
+  advancedMarriageDynamics?: AdvancedMarriageDynamicsView | null;
 };
 
 export default function CompatibilityReportPage() {
@@ -174,6 +179,10 @@ export default function CompatibilityReportPage() {
 
           {report.timingPrediction ? (
             <TimingPredictionPanel timing={report.timingPrediction} pairMode />
+          ) : null}
+
+          {report.advancedMarriageDynamics ? (
+            <AdvancedMarriageDynamicsPanel data={report.advancedMarriageDynamics} />
           ) : null}
 
           {report.categoryScores ? (

@@ -4,6 +4,7 @@ import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 import { pairKey, scoreAshtaKoota } from "./ashta-koota";
+import { scoreAdvancedMarriageDynamics, type AmdChartInput } from "./advanced-marriage-dynamics";
 import { scoreDeepCompatibility, type DeepChartInput } from "./deep-compatibility";
 import { seventhLord, type ChartPlanetLite } from "./shukra-milan";
 import {
@@ -26,11 +27,13 @@ function moonFromChart(horoscope: {
 
 function toDeepChart(horoscope: {
   lagnaSign?: string | null;
+  lagnaDegree?: number | null;
   moonSign?: string | null;
   sunSign?: string | null;
   manglikStatus?: string | null;
   planets?: unknown;
   houseLords?: unknown;
+  shadbala?: unknown;
 }): DeepChartInput {
   const lordsRaw = horoscope.houseLords;
   const houseLords: Record<string, string> = {};
@@ -63,6 +66,25 @@ function toDeepChart(horoscope: {
     manglikStatus: horoscope.manglikStatus || undefined,
     planets,
     houseLords,
+  };
+}
+
+function toAmdChart(horoscope: {
+  lagnaSign?: string | null;
+  lagnaDegree?: number | null;
+  moonSign?: string | null;
+  sunSign?: string | null;
+  manglikStatus?: string | null;
+  planets?: unknown;
+  houseLords?: unknown;
+  shadbala?: unknown;
+}): AmdChartInput {
+  const deep = toDeepChart(horoscope);
+  const shadbala = horoscope.shadbala as { lagnaLongitude?: number } | null | undefined;
+  return {
+    ...deep,
+    lagnaDegree: typeof horoscope.lagnaDegree === "number" ? horoscope.lagnaDegree : null,
+    lagnaLongitude: typeof shadbala?.lagnaLongitude === "number" ? shadbala.lagnaLongitude : null,
   };
 }
 
@@ -140,6 +162,22 @@ export class CompatibilityService {
       Dasha.findOne({ userId: userBId }).sort({ calculatedAt: -1 }).lean(),
       safeGochar(userAId),
     ]);
+
+    const advancedMarriageDynamics = scoreAdvancedMarriageDynamics({
+      chartA: toAmdChart(chartA),
+      chartB: toAmdChart(chartB),
+      gunaBreakdown: scored.gunaBreakdown,
+      nakshatraA: a.nakshatra,
+      nakshatraB: b.nakshatra,
+      ashtaYoni: scored.yoni,
+      dashaA: dashaA
+        ? { currentMaha: dashaA.currentMaha, currentAntar: dashaA.currentAntar }
+        : null,
+      dashaB: dashaB
+        ? { currentMaha: dashaB.currentMaha, currentAntar: dashaB.currentAntar }
+        : null,
+      gocharAvailable: Boolean(gocharA),
+    });
 
     const periodsA = periodsFrom(dashaA);
     const periodsB = periodsFrom(dashaB);
@@ -219,6 +257,7 @@ export class CompatibilityService {
           challenges: mergedChallenges,
           marriageWindows: windows,
           timingPrediction,
+          advancedMarriageDynamics,
           engineVersion: ENGINE_VERSION,
           calculatedAt: new Date(),
           deletedAt: null,
