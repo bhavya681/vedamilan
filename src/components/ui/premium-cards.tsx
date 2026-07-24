@@ -6,7 +6,6 @@ import { Bookmark, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,7 +97,6 @@ export function MatchCard({
   interestBusy?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
-  const mood = moodFromScore(score);
 
   return (
     <motion.article
@@ -123,8 +121,8 @@ export function MatchCard({
 
         <div
           className="border-gold/50 bg-navy/70 absolute top-4 right-4 min-w-[3.25rem] rounded-2xl border px-2.5 py-1.5 text-center backdrop-blur-md"
-          title={`${score}% overall kundli compatibility — ${mood.title}`}
-          aria-label={`${score}% overall match — ${mood.title}`}
+          title={`${score}% match score — how relevant this profile is for you in discovery`}
+          aria-label={`${score}% match score — relevance for discovery`}
         >
           <p className="text-ivory text-base leading-none font-semibold tabular-nums">{score}%</p>
           <p className="text-ivory/70 mt-1 text-[9px] font-medium tracking-[0.12em] uppercase">

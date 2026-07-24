@@ -1,6 +1,7 @@
 import { withVedicDisclaimer, VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-disclaimer";
 import { AiConversation, Horoscope, Dasha, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
+import { runWithAiToolContext } from "@/application/ai/ai-tool-context";
 import { compatibilityService } from "@/application/rules/compatibility.service";
 import { matchmakingService } from "@/application/matchmaking/matchmaking.service";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
@@ -294,15 +295,23 @@ export class AiService {
       try {
         const agentInstance = vedaAgents[agent];
         const prompt = [
-          `Authenticated userId: ${userId}`,
-          candidateUserId ? `Candidate userId: ${candidateUserId}` : null,
-          "Always call the relevant tool with this userId before explaining.",
+          "Tools are already bound to the authenticated member — do not invent user ids.",
+          candidateUserId
+            ? `An allowlisted candidate partner id is available for compatibility tools only: ${candidateUserId}`
+            : "No candidate partner in context; use list mode for compatibility history.",
+          "Always call the relevant tool before explaining.",
           `Member message: ${message}`,
         ]
           .filter(Boolean)
           .join("\n");
 
-        const result = await agentInstance.generate(prompt);
+        const result = await runWithAiToolContext(
+          {
+            sessionUserId: userId,
+            allowedCandidateUserId: candidateUserId || null,
+          },
+          () => agentInstance.generate(prompt),
+        );
         answer = withVedicDisclaimer(
           typeof result.text === "string" && result.text.trim()
             ? result.text

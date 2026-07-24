@@ -540,6 +540,58 @@ export class RelationshipService {
     return this.getState(blockerId, blockedId);
   }
 
+  async unblockUser(blockerId: string, blockedId: string) {
+    if (!blockedId || blockedId === blockerId) {
+      throw new ValidationError("Invalid member");
+    }
+    await connectMongo();
+    const updated = await Block.findOneAndUpdate(
+      { blockerId, blockedId, deletedAt: null, status: "ACTIVE" },
+      {
+        $set: {
+          deletedAt: new Date(),
+          status: "ARCHIVED",
+        },
+      },
+      { new: true },
+    ).lean();
+    if (!updated) throw new NotFoundError("Block not found");
+    return this.getState(blockerId, blockedId);
+  }
+
+  async listBlocked(userId: string) {
+    await connectMongo();
+    const rows = await Block.find({
+      blockerId: userId,
+      status: "ACTIVE",
+      deletedAt: null,
+    })
+      .sort({ updatedAt: -1 })
+      .lean();
+    const members = await this.enrichMembers(rows.map((r) => r.blockedId));
+    return rows.map((row) => ({
+      blockedId: row.blockedId,
+      reason: row.reason || "",
+      blockedAt: row.updatedAt || row.createdAt,
+      member: members.get(row.blockedId) || null,
+    }));
+  }
+
+  /** Peer ids either side of an ACTIVE block involving this user. */
+  async listBlockedPeerIds(userId: string): Promise<string[]> {
+    await connectMongo();
+    const rows = await Block.find({
+      status: "ACTIVE",
+      deletedAt: null,
+      $or: [{ blockerId: userId }, { blockedId: userId }],
+    }).lean();
+    return [
+      ...new Set(
+        rows.map((r) => (r.blockerId === userId ? r.blockedId : r.blockerId)).filter(Boolean),
+      ),
+    ];
+  }
+
   private async enrichMembers(userIds: string[]) {
     const unique = [...new Set(userIds.filter(Boolean))];
     const db = getMongoDb();

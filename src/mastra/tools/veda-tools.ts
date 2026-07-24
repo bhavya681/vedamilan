@@ -1,6 +1,10 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
+import {
+  requireSessionToolUserId,
+  resolveAllowedCandidateUserId,
+} from "@/application/ai/ai-tool-context";
 import { Horoscope, Dasha, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { compatibilityService } from "@/application/rules/compatibility.service";
@@ -10,16 +14,23 @@ import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 /**
  * Tools only read calculated engine/DB data.
  * AI must never invent planet positions, scores, or dashas.
+ * Identity always comes from AsyncLocalStorage session context — not LLM args.
  */
+
+const optionalUserId = z
+  .string()
+  .optional()
+  .describe("Ignored — server binds the authenticated member id");
 
 export const getHoroscopeTool = createTool({
   id: "get-horoscope-chart",
   description:
-    "Load the user's stored Vedic kundli chart, yogas (including Raja Yoga), doshas, and dasha from the calculation engine. Never invent planets.",
+    "Load the authenticated member's stored Vedic kundli chart, yogas, doshas, and dasha. Never invent planets.",
   inputSchema: z.object({
-    userId: z.string().describe("Authenticated user id"),
+    userId: optionalUserId,
   }),
-  execute: async ({ userId }) => {
+  execute: async () => {
+    const userId = requireSessionToolUserId();
     await connectMongo();
     const [chart, dasha] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
@@ -78,11 +89,12 @@ export const getHoroscopeTool = createTool({
 export const getGocharTool = createTool({
   id: "get-gochar-transits",
   description:
-    "Load current Gochar (transit) planets relative to the member's natal Lagna. Use for timing and present-sky questions.",
+    "Load current Gochar (transit) planets relative to the authenticated member's natal Lagna.",
   inputSchema: z.object({
-    userId: z.string(),
+    userId: optionalUserId,
   }),
-  execute: async ({ userId }) => {
+  execute: async () => {
+    const userId = requireSessionToolUserId();
     try {
       const gochar = await computeGocharForUser(userId);
       return { found: true as const, gochar };
@@ -98,12 +110,17 @@ export const getGocharTool = createTool({
 export const getCompatibilityTool = createTool({
   id: "get-compatibility-report",
   description:
-    "Load or compute deep compatibility (Shukra Milan + Ashta Koota + weighted modules) from the deterministic rule engine for two users.",
+    "Load or compute deep compatibility for the authenticated member. Candidate must be the allowlisted partner from the chat context.",
   inputSchema: z.object({
-    userId: z.string(),
-    candidateUserId: z.string().optional(),
+    userId: optionalUserId,
+    candidateUserId: z
+      .string()
+      .optional()
+      .describe("Optional; only honored if it matches the chat allowlist"),
   }),
-  execute: async ({ userId, candidateUserId }) => {
+  execute: async ({ candidateUserId: requestedCandidate }) => {
+    const userId = requireSessionToolUserId();
+    const candidateUserId = resolveAllowedCandidateUserId(requestedCandidate);
     if (!candidateUserId) {
       const reports = await compatibilityService.listForUser(userId);
       return { mode: "list" as const, reports: reports.slice(0, 5) };
@@ -139,11 +156,12 @@ export const getCompatibilityTool = createTool({
 export const getMarriageTimingTool = createTool({
   id: "get-marriage-timing",
   description:
-    "Load multi-factor marriage timing (Mahadasha, Antardasha, live Gochar, partner-arrival and marriage windows). Never invent dates.",
+    "Load multi-factor marriage timing for the authenticated member. Never invent dates.",
   inputSchema: z.object({
-    userId: z.string(),
+    userId: optionalUserId,
   }),
-  execute: async ({ userId }) => {
+  execute: async () => {
+    const userId = requireSessionToolUserId();
     const timing = await compatibilityService.marriageTimingForUser(userId);
     return {
       manglikStatus: timing.manglikStatus,
@@ -160,11 +178,12 @@ export const getMarriageTimingTool = createTool({
 
 export const getProfileTool = createTool({
   id: "get-profile-summary",
-  description: "Load the member profile summary used for relationship coaching context.",
+  description: "Load the authenticated member profile summary for coaching context.",
   inputSchema: z.object({
-    userId: z.string(),
+    userId: optionalUserId,
   }),
-  execute: async ({ userId }) => {
+  execute: async () => {
+    const userId = requireSessionToolUserId();
     await connectMongo();
     const profile = await Profile.findOne({ userId }).lean();
     if (!profile) return { found: false as const };
@@ -188,11 +207,12 @@ export const getProfileTool = createTool({
 
 export const getRecommendationsTool = createTool({
   id: "get-match-recommendations",
-  description: "Load ranked matchmaking recommendations from the rule-based matchmaker.",
+  description: "Load ranked matchmaking recommendations for the authenticated member.",
   inputSchema: z.object({
-    userId: z.string(),
+    userId: optionalUserId,
   }),
-  execute: async ({ userId }) => {
+  execute: async () => {
+    const userId = requireSessionToolUserId();
     const result = await matchmakingService.recommend(userId);
     return {
       hasChart: result.self.hasChart,
@@ -201,7 +221,7 @@ export const getRecommendationsTool = createTool({
         name: m.name,
         city: m.city,
         profession: m.profession,
-        compatibilityScore: m.compatibilityScore,
+        matchScore: m.compatibilityScore,
         totalGuna: m.totalGuna,
         reasons: m.reasons,
         manglik: m.manglik,

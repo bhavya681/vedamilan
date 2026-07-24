@@ -18,8 +18,8 @@ export default function TransitPage() {
     <div className="relative space-y-6">
       <PageHeader
         eyebrow="VedaMilan AI"
-        title="Transit & yogas"
-        description="Stored yoga/dosha notes from your calculated chart"
+        title="Yogas & doshas"
+        description="Stored yoga and dosha notes from your calculated kundli — not live Gochar / transit positions."
         actions={
           <Button asChild variant="secondary">
             <Link href={routes.kundli}>Back to kundli</Link>
@@ -30,8 +30,8 @@ export default function TransitPage() {
       {loading ? <PanelSkeleton lines={5} /> : null}
       {!loading && !data?.horoscope ? (
         <EmptyState
-          title="No transit context"
-          description="Generate kundli first. Live transit ephemeris can be layered later."
+          title="No yoga notes yet"
+          description="Generate kundli first. Live Gochar (current planetary transits) is a separate feature and is not shown on this page."
           action={
             <Button asChild>
               <Link href={routes.kundli}>Generate</Link>

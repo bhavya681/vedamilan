@@ -70,8 +70,12 @@ function CompareMatchesInner() {
           ["City", left.city || "—", right.city || "—"],
           ["Profession", left.profession || "—", right.profession || "—"],
           ["Education", left.education || "—", right.education || "—"],
-          ["Vedic score", `${left.compatibilityScore}%`, `${right.compatibilityScore}%`],
-          ["Guna", `${left.totalGuna}/${left.maxGuna}`, `${right.totalGuna}/${right.maxGuna}`],
+          ["Match score", `${left.compatibilityScore}%`, `${right.compatibilityScore}%`],
+          [
+            "Guna (blend)",
+            `${left.totalGuna}/${left.maxGuna}`,
+            `${right.totalGuna}/${right.maxGuna}`,
+          ],
           ["Manglik", left.manglik, right.manglik],
           ["Age", String(left.age ?? "—"), String(right.age ?? "—")],
         ]
@@ -141,7 +145,7 @@ function CompareMatchesInner() {
                 <CardContent className="space-y-3">
                   <Progress value={profile.compatibilityScore} />
                   <div className="flex flex-wrap gap-2">
-                    <Badge>{profile.compatibilityScore}% Vedic</Badge>
+                    <Badge>{profile.compatibilityScore}% match score</Badge>
                     <Badge variant="outline">
                       Guna {profile.totalGuna}/{profile.maxGuna}
                     </Badge>

@@ -141,6 +141,9 @@ export default function SettingsPage() {
                 <Link href={routes.privacySettings}>Privacy</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
+                <Link href={routes.blocked}>Blocked</Link>
+              </Button>
+              <Button asChild type="button" variant="ghost">
                 <Link href={routes.security}>Security</Link>
               </Button>
             </div>

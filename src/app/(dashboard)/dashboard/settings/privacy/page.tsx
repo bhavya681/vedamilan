@@ -92,6 +92,9 @@ export default function PrivacySettingsPage() {
         <Button type="button" onClick={() => void save()} disabled={loading}>
           {loading ? "Saving…" : "Save privacy"}
         </Button>
+        <Button asChild variant="outline" className="w-full sm:w-auto">
+          <Link href={routes.blocked}>Manage blocked members</Link>
+        </Button>
       </GlassCard>
     </div>
   );

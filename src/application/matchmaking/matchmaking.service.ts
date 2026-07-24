@@ -9,6 +9,8 @@ import {
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
+import { relationshipService } from "@/application/relationship/relationship.service";
+import { ForbiddenError } from "@/lib/utils/error-handler";
 import {
   normalizePagination,
   toPaginatedResult,
@@ -248,6 +250,11 @@ export class MatchmakingService {
       "photos.0": { $exists: true },
     };
 
+    const blockedPeerIds = await relationshipService.listBlockedPeerIds(userId);
+    if (blockedPeerIds.length) {
+      query.userId = { $ne: userId, $nin: blockedPeerIds };
+    }
+
     const city = filters.city;
     if (city && city !== "all") {
       query.city = city;
@@ -440,6 +447,9 @@ export class MatchmakingService {
 
   async getCandidate(viewerUserId: string, candidateUserId: string) {
     await connectMongo();
+    if (await relationshipService.isBlockedEitherWay(viewerUserId, candidateUserId)) {
+      throw new ForbiddenError("This profile is not available");
+    }
     const [profile, chart, names, match] = await Promise.all([
       Profile.findOne({ userId: candidateUserId, status: "ACTIVE" }).lean(),
       Horoscope.findOne({ userId: candidateUserId }).sort({ calculatedAt: -1 }).lean(),

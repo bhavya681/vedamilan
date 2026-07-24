@@ -134,7 +134,7 @@ export default function KundliPage() {
     { t: "Planets", h: routes.planets },
     { t: "Nakshatra", h: routes.nakshatra },
     { t: "Dasha", h: routes.dasha },
-    { t: "Transit", h: routes.transit },
+    { t: "Yogas", h: routes.transit },
     { t: "Marriage Timing", h: routes.marriageTiming },
   ];
 

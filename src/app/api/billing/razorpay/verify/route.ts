@@ -7,6 +7,10 @@ import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Client may only send Razorpay capture tokens.
+ * Plan, amount, and ownership are loaded from the server Payment row created at checkout.
+ */
 export async function POST(request: Request) {
   try {
     const session = await requireSession().catch(() => {
@@ -17,13 +21,14 @@ export async function POST(request: Request) {
         orderId: z.string().min(1),
         paymentId: z.string().min(1),
         signature: z.string().min(1),
-        planCode: z.string().min(1),
       })
       .parse(await request.json());
 
     const subscription = await billingService.verifyRazorpayPayment({
       userId: session.user.id,
-      ...body,
+      orderId: body.orderId,
+      paymentId: body.paymentId,
+      signature: body.signature,
     });
     return successResponse({ subscription });
   } catch (error) {

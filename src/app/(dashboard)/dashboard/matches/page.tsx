@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, MatchesPageSkeleton } from "@/components/ui/page-skeletons";
+import { ScoreExplainCallout } from "@/features/matchmaking/components/score-explain";
 import { routes } from "@/lib/constants/routes";
 
 type MatchItem = {
@@ -209,16 +210,16 @@ export default function MatchesPage() {
             />
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 text-xs">
               <span className="text-foreground/80 font-medium">
-                #{match.rank ?? index + 1} by overall match
+                #{match.rank ?? index + 1} by match score
               </span>
-              <span>{match.compatibilityScore}% blend</span>
+              <span>{match.compatibilityScore}% match score</span>
               <span>
                 Guna {match.totalGuna}/{match.maxGuna || 36}
               </span>
             </div>
             <Button asChild variant="link" className="h-auto px-0 text-sm">
               <Link href={`${routes.compatibility}?candidate=${match.userId}`}>
-                See full compatibility
+                See compatibility score
               </Link>
             </Button>
           </motion.div>
@@ -231,7 +232,7 @@ export default function MatchesPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title="Potential connections"
-        description="Ordered by overall kundli compatibility (highest first). The % on each card is your Vedic blend score — not sun sign."
+        description="Ranked by match score — how relevant each profile is for you in discovery. Open Compatibility for a deep chart compare."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -249,6 +250,8 @@ export default function MatchesPage() {
           </div>
         }
       />
+
+      <ScoreExplainCallout kind="match" className="max-w-2xl" />
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 

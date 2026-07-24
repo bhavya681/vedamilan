@@ -293,7 +293,10 @@ export function ProfileScorePanel({
   footer?: ReactNode;
 }) {
   return (
-    <ProfileSection title="Kundli alignment" description="Overall Vedic blend with your chart.">
+    <ProfileSection
+      title="Match score"
+      description="How relevant this profile is for you in discovery — not a full compatibility report."
+    >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="border-gold/30 from-gold/10 to-card flex h-28 w-28 shrink-0 flex-col items-center justify-center rounded-2xl border bg-gradient-to-b">
           <p className="font-display text-gold text-4xl leading-none tracking-tight">{score}%</p>
@@ -302,6 +305,10 @@ export function ProfileScorePanel({
           </p>
         </div>
         <div className="min-w-0 flex-1 space-y-3">
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Discovery ranking from a fast Vedic blend (Ashta Koota, Shukra, Manglik, Moon) plus your
+            preferences. For a full relationship assessment, open Compatibility.
+          </p>
           <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
             <span className="text-foreground font-medium">
               Guna {guna}/{maxGuna}

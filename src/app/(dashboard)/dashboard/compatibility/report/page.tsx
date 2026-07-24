@@ -88,7 +88,7 @@ export default function CompatibilityReportPage() {
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Compatibility Report"
-        description="Shareable dossier — Shukra Milan, deep modules, and Ashta Koota from the rule engine"
+        description="Compatibility score — deep chart compare (Ashta Koota, Shukra Milan, weighted modules). Different from discovery match score."
         actions={
           <>
             <Button asChild variant="secondary">
@@ -123,7 +123,7 @@ export default function CompatibilityReportPage() {
                   {report.userAId?.slice(0, 8)}… × {report.userBId?.slice(0, 8)}…
                 </h2>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Deep {report.deepOverallScore ?? report.overallScore}% · Shukra{" "}
+                  Compatibility score {report.deepOverallScore ?? report.overallScore}% · Shukra{" "}
                   {report.shukraMilan?.averageScore ?? "—"}/10 · Guna {report.totalGuna}/
                   {report.maxGuna} · Manglik {report.manglikCompatibility}
                 </p>
@@ -143,8 +143,9 @@ export default function CompatibilityReportPage() {
               <p className="mt-4 text-sm leading-relaxed">{report.decisionReason}</p>
             ) : null}
             <p className="text-muted-foreground mt-4 text-xs leading-relaxed">
-              Scores come from the deterministic compatibility engine (Ashta Koota + Shukra Milan +
-              weighted modules). AI may explain this dossier but never recalculates placements.
+              This is your Compatibility score from the deep engine (Ashta Koota + Shukra Milan +
+              weighted modules) — not the Match score shown in discovery. AI may explain this
+              dossier but never recalculates placements.
             </p>
             {(report.strengths || []).length ? (
               <div className="mt-6">

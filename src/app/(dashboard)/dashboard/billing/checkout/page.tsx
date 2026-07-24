@@ -60,7 +60,6 @@ export default function CheckoutPage() {
             orderId: response.razorpay_order_id,
             paymentId: response.razorpay_payment_id,
             signature: response.razorpay_signature,
-            planCode: plan,
           }),
         });
         const json = await res.json();
