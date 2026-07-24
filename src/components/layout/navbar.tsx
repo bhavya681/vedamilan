@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bell, Heart, Menu, MessageCircle, Palette, Search } from "lucide-react";
+import { Bell, Heart, Menu, MessageCircle, Palette, Search, Sparkles, Stars } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,22 @@ import { MobileDashboardMenu } from "@/components/layout/mobile-dashboard-menu";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { mainNav } from "@/config/navigation";
+import { useWorkspaceModeOptional } from "@/components/providers/workspace-mode-provider";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { useSession } from "@/lib/auth/client";
+import { NOTIFICATIONS_UPDATED_EVENT } from "@/lib/notifications/events";
 
-const DASH_QUICK = [
+const MATRIMONY_QUICK = [
   { href: routes.matches, label: "Matches", icon: Heart },
   { href: routes.chat, label: "Messages", icon: MessageCircle },
   { href: routes.search, label: "Search", icon: Search },
+] as const;
+
+const ASTROLOGY_QUICK = [
+  { href: routes.kundli, label: "Kundli", icon: Stars },
+  { href: routes.divisionalCharts, label: "Charts", icon: Sparkles },
+  { href: routes.rajaYogas, label: "Yogas", icon: Sparkles },
 ] as const;
 
 export function Navbar({
@@ -36,8 +44,11 @@ export function Navbar({
   const isOverlay = variant === "overlay";
   const pathname = usePathname();
   const { data: session, isPending } = useSession();
+  const workspace = useWorkspaceModeOptional();
   const isDashboard = pathname.startsWith("/dashboard");
   const isAuthed = Boolean(session?.user);
+  const homeHref = workspace?.homeHref ?? routes.dashboard;
+  const dashQuick = workspace?.mode === "astrology" ? ASTROLOGY_QUICK : MATRIMONY_QUICK;
 
   useEffect(() => {
     if (!isOverlay) return;
@@ -50,16 +61,34 @@ export function Navbar({
   useEffect(() => {
     if (!isDashboard || !isAuthed) return;
     let cancelled = false;
-    void fetch("/api/notifications")
-      .then((r) => r.json())
-      .then((json) => {
+
+    async function refreshUnread() {
+      try {
+        const r = await fetch("/api/notifications");
+        const json = await r.json();
         if (!cancelled && json.success) {
           setUnread(Number(json.data?.unread || 0));
         }
-      })
-      .catch(() => undefined);
+      } catch {
+        /* ignore */
+      }
+    }
+
+    void refreshUnread();
+
+    function onUpdated(event: Event) {
+      const detail = (event as CustomEvent<{ unread?: number }>).detail;
+      if (typeof detail?.unread === "number") {
+        setUnread(detail.unread);
+        return;
+      }
+      void refreshUnread();
+    }
+
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
     return () => {
       cancelled = true;
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
     };
   }, [isDashboard, isAuthed, pathname]);
 
@@ -95,7 +124,7 @@ export function Navbar({
         <div className="flex min-w-0 items-center gap-2">
           {isDashboard ? <MobileDashboardMenu /> : null}
           <BrandLogo
-            href={isAuthed ? routes.dashboard : routes.home}
+            href={isAuthed ? homeHref : routes.home}
             size="md"
             priority
             className={cn(floating ? "[&_span]:text-ivory" : undefined, isDashboard && "md:hidden")}
@@ -124,7 +153,7 @@ export function Navbar({
             className="bg-muted/40 dark:bg-muted/25 border-border/40 hidden items-center gap-1 rounded-full border p-1 lg:flex"
             aria-label="Quick"
           >
-            {DASH_QUICK.map((item) => {
+            {dashQuick.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href);
               const Icon = item.icon;
               return (

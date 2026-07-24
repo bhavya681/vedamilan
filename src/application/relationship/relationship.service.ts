@@ -132,36 +132,57 @@ export class RelationshipService {
     }
 
     const key = relationshipPairKey(viewerId, otherId);
-    const [connection, pendingRequest, declinedRequest, iSent, theySent] = await Promise.all([
-      Connection.findOne({ pairKey: key, status: "ACTIVE" }).lean(),
-      ConnectionRequest.findOne({
-        pairKey: key,
-        requestStatus: "PENDING",
-        status: "ACTIVE",
-      }).lean(),
-      ConnectionRequest.findOne({
-        pairKey: key,
-        requestStatus: "DECLINED",
-        status: "ACTIVE",
-      })
-        .sort({ respondedAt: -1 })
-        .lean(),
-      Like.findOne({
-        fromUserId: viewerId,
-        toUserId: otherId,
-        type: INTEREST_TYPE,
-        status: "ACTIVE",
-      }).lean(),
-      Like.findOne({
-        fromUserId: otherId,
-        toUserId: viewerId,
-        type: INTEREST_TYPE,
-        status: "ACTIVE",
-      }).lean(),
-    ]);
+    const [connection, pendingRequest, declinedRequest, iSent, theySent, otherProfile] =
+      await Promise.all([
+        Connection.findOne({ pairKey: key, status: "ACTIVE" }).lean(),
+        ConnectionRequest.findOne({
+          pairKey: key,
+          requestStatus: "PENDING",
+          status: "ACTIVE",
+        }).lean(),
+        ConnectionRequest.findOne({
+          pairKey: key,
+          requestStatus: "DECLINED",
+          status: "ACTIVE",
+        })
+          .sort({ respondedAt: -1 })
+          .lean(),
+        Like.findOne({
+          fromUserId: viewerId,
+          toUserId: otherId,
+          type: INTEREST_TYPE,
+          status: "ACTIVE",
+        }).lean(),
+        Like.findOne({
+          fromUserId: otherId,
+          toUserId: viewerId,
+          type: INTEREST_TYPE,
+          status: "ACTIVE",
+        }).lean(),
+        Profile.findOne({ userId: otherId, status: "ACTIVE" }).lean(),
+      ]);
+
+    const acceptsInterest =
+      (otherProfile as { privacy?: { acceptInterests?: boolean } } | null)?.privacy
+        ?.acceptInterests !== false;
+
+    type StateResult = {
+      state: ConnectionState;
+      canMessage: boolean;
+      canConnect: boolean;
+      canInterest: boolean;
+      canUndoInterest: boolean;
+      pendingRequestId: string | null;
+      requestMessage: string | null;
+    };
+
+    const withInterestGate = (result: StateResult): StateResult => ({
+      ...result,
+      canInterest: result.canInterest && acceptsInterest,
+    });
 
     if (connection?.connectionStatus === "ACTIVE") {
-      return {
+      return withInterestGate({
         state: "CONNECTED",
         canMessage: true,
         canConnect: false,
@@ -169,11 +190,11 @@ export class RelationshipService {
         canUndoInterest: false,
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
     if (connection?.connectionStatus === "REMOVED") {
-      return {
+      return withInterestGate({
         state: "REMOVED",
         canMessage: false,
         canConnect: false,
@@ -181,12 +202,12 @@ export class RelationshipService {
         canUndoInterest: false,
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
     if (pendingRequest) {
       const sentByMe = pendingRequest.senderId === viewerId;
-      return {
+      return withInterestGate({
         state: sentByMe ? "REQUEST_SENT" : "REQUEST_RECEIVED",
         canMessage: false,
         canConnect: false,
@@ -194,11 +215,11 @@ export class RelationshipService {
         canUndoInterest: false,
         pendingRequestId: String(pendingRequest._id),
         requestMessage: pendingRequest.message || null,
-      };
+      });
     }
 
     if (declinedRequest && declinedRequest.senderId === viewerId) {
-      return {
+      return withInterestGate({
         state: "DECLINED",
         canMessage: false,
         canConnect: Boolean(iSent && theySent),
@@ -206,11 +227,11 @@ export class RelationshipService {
         canUndoInterest: Boolean(iSent),
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
     if (iSent && theySent) {
-      return {
+      return withInterestGate({
         state: "MUTUAL_INTEREST",
         canMessage: false,
         canConnect: true,
@@ -218,11 +239,11 @@ export class RelationshipService {
         canUndoInterest: true,
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
     if (iSent) {
-      return {
+      return withInterestGate({
         state: "INTERESTED",
         canMessage: false,
         canConnect: false,
@@ -230,11 +251,11 @@ export class RelationshipService {
         canUndoInterest: true,
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
     if (theySent) {
-      return {
+      return withInterestGate({
         state: "INTERESTED_BY_OTHER",
         canMessage: false,
         canConnect: false,
@@ -242,10 +263,10 @@ export class RelationshipService {
         canUndoInterest: false,
         pendingRequestId: null,
         requestMessage: null,
-      };
+      });
     }
 
-    return {
+    return withInterestGate({
       state: "NONE",
       canMessage: false,
       canConnect: false,
@@ -253,7 +274,7 @@ export class RelationshipService {
       canUndoInterest: false,
       pendingRequestId: null,
       requestMessage: null,
-    };
+    });
   }
 
   async expressInterest(fromUserId: string, toUserId: string) {
@@ -262,6 +283,16 @@ export class RelationshipService {
     }
     await this.assertNotBlocked(fromUserId, toUserId);
     await connectMongo();
+
+    const targetProfile = await Profile.findOne({ userId: toUserId, status: "ACTIVE" }).lean();
+    if (!targetProfile) {
+      throw new NotFoundError("Member not found");
+    }
+    const acceptInterests = (targetProfile as { privacy?: { acceptInterests?: boolean } }).privacy
+      ?.acceptInterests;
+    if (acceptInterests === false) {
+      throw new ForbiddenError("This member is not accepting interest right now");
+    }
 
     const existing = await Like.findOneAndUpdate(
       { fromUserId, toUserId, type: INTEREST_TYPE },

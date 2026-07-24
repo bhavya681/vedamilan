@@ -32,6 +32,17 @@ export const profileUpdateSchema = z.object({
     })
     .optional(),
   visibility: z.enum(["PUBLIC", "MEMBERS", "HIDDEN"]).optional(),
+  privacy: z
+    .object({
+      showAge: z.boolean().optional(),
+      showMoonSign: z.boolean().optional(),
+      showLagna: z.boolean().optional(),
+      showManglik: z.boolean().optional(),
+      showNakshatra: z.boolean().optional(),
+      acceptInterests: z.boolean().optional(),
+      showOnlineStatus: z.boolean().optional(),
+    })
+    .optional(),
   /** Pass true to mark guided onboarding finished (or skipped). */
   completeOnboarding: z.boolean().optional(),
 });

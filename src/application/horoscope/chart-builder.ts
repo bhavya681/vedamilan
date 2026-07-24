@@ -161,6 +161,37 @@ export function detectManglik(planets: ChartPlanet[]): {
 }
 
 export function detectDoshas(planets: ChartPlanet[], manglikStatus: string) {
+  const rahu = planets.find((p) => p.planet === "Rahu");
+  const ketu = planets.find((p) => p.planet === "Ketu");
+  const classical = planets.filter((p) =>
+    ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].includes(p.planet),
+  );
+
+  let kalaPresent = false;
+  let kalaNotes = "Rahu–Ketu axis not available for Kaal Sarp scan.";
+  if (rahu && ketu && classical.length >= 5) {
+    const rSign = rahu.signId;
+    const kSign = ketu.signId;
+    // All classical planets on one semicircle between Rahu and Ketu (exclusive of nodes)
+    const forward: number[] = [];
+    for (let s = (rSign + 1) % 12; s !== kSign; s = (s + 1) % 12) forward.push(s);
+    const backward: number[] = [];
+    for (let s = (kSign + 1) % 12; s !== rSign; s = (s + 1) % 12) backward.push(s);
+    const allIn = (arc: number[]) => classical.every((p) => arc.includes(p.signId));
+    kalaPresent =
+      (forward.length > 0 && allIn(forward)) || (backward.length > 0 && allIn(backward));
+    kalaNotes = kalaPresent
+      ? `All classical planets lie on one side of the Rahu (${rahu.sign})–Ketu (${ketu.sign}) axis.`
+      : `Planets are distributed across the Rahu (${rahu.sign})–Ketu (${ketu.sign}) axis — full Kaal Sarp not indicated.`;
+  }
+
+  const manglikNotes =
+    manglikStatus === "MANGLIK"
+      ? "Mars occupies a classical Manglik house."
+      : manglikStatus === "PARTIAL"
+        ? "Mars in house 2 or 8 — traditionally partial Manglik consideration."
+        : "Mars is outside classical Manglik houses.";
+
   return [
     {
       code: "MANGLIK",
@@ -168,14 +199,14 @@ export function detectDoshas(planets: ChartPlanet[], manglikStatus: string) {
       present: manglikStatus !== "NON_MANGLIK",
       severity:
         manglikStatus === "MANGLIK" ? "HIGH" : manglikStatus === "PARTIAL" ? "MEDIUM" : "NONE",
-      notes: "",
+      notes: manglikNotes,
     },
     {
       code: "KALA_SARPA",
-      name: "Kaal Sarp hint",
-      present: false,
-      severity: "NONE",
-      notes: "Full axis sweep reserved for detailed engine pass.",
+      name: "Kaal Sarp Dosha",
+      present: kalaPresent,
+      severity: kalaPresent ? "MEDIUM" : "NONE",
+      notes: kalaNotes,
     },
   ];
 }

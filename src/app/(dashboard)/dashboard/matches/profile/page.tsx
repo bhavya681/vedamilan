@@ -39,15 +39,17 @@ type Candidate = {
   about: string | null;
   photos?: Array<{ secureUrl?: string; isPrimary?: boolean }>;
   isVerified?: boolean;
-  manglik: string;
+  manglik: string | null;
   nakshatra?: string | null;
   moonSign?: string | null;
   lagnaSign?: string | null;
+  acceptInterests?: boolean;
   compatibilityScore: number;
   totalGuna: number;
   maxGuna: number;
   strengths: string[];
   challenges: string[];
+  reasons?: string[];
 };
 
 function formatMarital(status?: string | null) {
@@ -201,6 +203,35 @@ export default function MatchProfilePage() {
                 ) : null}
 
                 <ProfileSection
+                  title="Why this person?"
+                  description="Concise reasons from preferences and soft match scoring — not the full deep report."
+                >
+                  {(profile.reasons || profile.strengths || []).slice(0, 4).length ? (
+                    <ul className="space-y-2 text-sm">
+                      <li className="text-foreground font-medium">
+                        {profile.compatibilityScore}% match alignment
+                      </li>
+                      {(profile.reasons || profile.strengths).slice(0, 4).map((r) => (
+                        <li key={r} className="text-muted-foreground">
+                          · {r}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      Open compatibility for a deeper explanation of this connection.
+                    </p>
+                  )}
+                  <div className="mt-3">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`${routes.compatibility}?candidate=${id}`}>
+                        See compatibility details
+                      </Link>
+                    </Button>
+                  </div>
+                </ProfileSection>
+
+                <ProfileSection
                   title="Personal details"
                   description="Background shared on their profile."
                 >
@@ -231,7 +262,7 @@ export default function MatchProfilePage() {
                   score={profile.compatibilityScore}
                   guna={profile.totalGuna}
                   maxGuna={profile.maxGuna}
-                  manglik={profile.manglik}
+                  manglik={profile.manglik || undefined}
                   nakshatra={profile.nakshatra}
                   moonSign={profile.moonSign}
                   lagnaSign={profile.lagnaSign}

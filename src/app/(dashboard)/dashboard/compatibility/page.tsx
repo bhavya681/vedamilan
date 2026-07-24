@@ -617,6 +617,20 @@ export default function CompatibilityPage() {
               {!active.deepAnalysis?.modules?.length ? (
                 <p className="text-muted-foreground text-sm">No deep modules on this report.</p>
               ) : null}
+              {(active.deepAnalysis?.remedies || []).length ? (
+                <GlassCard className="space-y-3">
+                  <h3 className="font-display text-xl">Relationship guidance</h3>
+                  <p className="text-muted-foreground text-xs">
+                    From the deep compatibility engine — traditional habit themes, not medical
+                    advice.
+                  </p>
+                  <ul className="space-y-2 text-sm">
+                    {active.deepAnalysis?.remedies?.map((r) => (
+                      <li key={r}>· {r}</li>
+                    ))}
+                  </ul>
+                </GlassCard>
+              ) : null}
             </TabsContent>
 
             <TabsContent value="shukra" className="mt-0 space-y-4">

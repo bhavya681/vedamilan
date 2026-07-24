@@ -9,15 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { dashboardNav } from "@/config/navigation";
+import { ModeSwitcher } from "@/components/layout/mode-switcher";
+import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
+import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { WORKSPACE_MODE_META } from "@/lib/workspace/mode";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: string }) {
   const pathname = usePathname();
+  const { mode, homeHref } = useWorkspaceMode();
   const [open, setOpen] = useState(false);
-  const groups = [...new Set(dashboardNav.map((item) => item.group ?? "Menu"))];
+  const items = navForMode(mode);
+  const groups = navGroupsForMode(mode);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -41,8 +46,11 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
       >
         <SheetHeader className="border-border/50 from-card to-background border-b bg-gradient-to-b p-4 text-left">
           <SheetTitle className="sr-only">Dashboard menu</SheetTitle>
-          <BrandLogo href={routes.dashboard} size="sm" />
-          <p className="text-muted-foreground mt-1 text-xs">Relationship intelligence</p>
+          <BrandLogo href={homeHref} size="sm" />
+          <ModeSwitcher className="mt-3 w-full" />
+          <p className="text-muted-foreground mt-2 truncate text-[11px] leading-snug">
+            {WORKSPACE_MODE_META[mode].subtitle}
+          </p>
         </SheetHeader>
         <nav className="space-y-5 p-4" aria-label="Dashboard">
           {groups.map((group) => (
@@ -51,14 +59,14 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
                 {group}
               </p>
               <div className="space-y-1">
-                {dashboardNav
+                {items
                   .filter((item) => (item.group ?? "Menu") === group)
                   .map((item) => {
                     const active = isDashboardNavActive(pathname, item.href);
                     const Icon = dashboardNavIcons[item.href];
                     return (
                       <Link
-                        key={item.href}
+                        key={`${item.group}-${item.href}`}
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={cn(

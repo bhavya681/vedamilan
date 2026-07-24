@@ -149,13 +149,27 @@ export class ProfileService {
     await this.ensureConnected();
     await this.getOrCreateProfile(userId);
 
-    const { completeOnboarding, ...rest } = input;
+    const { completeOnboarding, privacy, ...rest } = input;
     const payload: Record<string, unknown> = { ...rest };
     if (rest.dateOfBirth) {
       payload.dateOfBirth = new Date(rest.dateOfBirth);
     }
     if (typeof rest.name === "string") {
       payload.name = rest.name.trim();
+    }
+    if (privacy) {
+      const existing = await Profile.findOne({ userId }).lean();
+      const prev = (existing?.privacy || {}) as Record<string, unknown>;
+      payload.privacy = {
+        showAge: prev.showAge !== false,
+        showMoonSign: prev.showMoonSign !== false,
+        showLagna: prev.showLagna !== false,
+        showManglik: prev.showManglik !== false,
+        showNakshatra: prev.showNakshatra !== false,
+        acceptInterests: prev.acceptInterests !== false,
+        showOnlineStatus: Boolean(prev.showOnlineStatus),
+        ...privacy,
+      };
     }
     if (completeOnboarding === true) {
       const existing = await Profile.findOne({ userId }).lean();

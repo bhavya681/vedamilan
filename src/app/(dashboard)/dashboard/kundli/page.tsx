@@ -128,14 +128,14 @@ export default function KundliPage() {
       : null;
 
   const links = [
-    { t: "North Indian", h: routes.chartNorth },
-    { t: "South Indian", h: routes.chartSouth },
-    { t: "East Indian", h: routes.chartEast },
-    { t: "Planets", h: routes.planets },
-    { t: "Nakshatra", h: routes.nakshatra },
-    { t: "Dasha", h: routes.dasha },
-    { t: "Yogas", h: routes.transit },
-    { t: "Marriage Timing", h: routes.marriageTiming },
+    { t: "Charts (Moon/Sun/D9)", h: routes.divisionalCharts },
+    { t: "Ashtakavarga", h: routes.ashtakavarga },
+    { t: "Varna & Gana", h: routes.natalProfile },
+    { t: "Raja Yogas", h: routes.rajaYogas },
+    { t: "Yogas & doshas", h: routes.yogas },
+    { t: "Lal Kitab", h: routes.lalKitab },
+    { t: "Live Gochar", h: routes.gochar },
+    { t: "Predictions", h: routes.predictions },
   ];
 
   return (
@@ -226,7 +226,7 @@ export default function KundliPage() {
           ) : null}
           <div className="flex flex-wrap gap-2">
             <Button asChild>
-              <Link href={routes.matches}>See My Best Matches</Link>
+              <Link href={routes.matrimony}>Find compatible partners</Link>
             </Button>
             <Button type="button" variant="outline" onClick={() => setShowAdvanced((v) => !v)}>
               {showAdvanced ? "Hide advanced" : "Explore advanced details"}

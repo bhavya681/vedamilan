@@ -2,39 +2,60 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, LayoutDashboard, MessageCircle, MoreHorizontal, Stars } from "lucide-react";
-import { useState } from "react";
+import {
+  Heart,
+  LayoutDashboard,
+  MessageCircle,
+  MoreHorizontal,
+  Sparkles,
+  Stars,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
-import { dashboardNav } from "@/config/navigation";
+import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
+import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
-const items = [
-  { href: routes.dashboard, label: "Home", icon: LayoutDashboard },
-  { href: routes.matches, label: "Matches", icon: Heart },
-  { href: routes.kundli, label: "Kundli", icon: Stars },
-  { href: routes.chat, label: "Chat", icon: MessageCircle },
-];
-
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { mode, homeHref } = useWorkspaceMode();
   const [moreOpen, setMoreOpen] = useState(false);
-  const groups = [...new Set(dashboardNav.map((item) => item.group ?? "Menu"))];
+  const items = navForMode(mode);
+  const groups = navGroupsForMode(mode);
+
+  const primary = useMemo(() => {
+    if (mode === "astrology") {
+      return [
+        { href: homeHref, label: "Home", icon: LayoutDashboard },
+        { href: routes.kundli, label: "Kundli", icon: Stars },
+        { href: routes.rajaYogas, label: "Yogas", icon: Sparkles },
+        { href: routes.lalKitab, label: "Lal Kitab", icon: Sparkles },
+      ];
+    }
+    return [
+      { href: homeHref, label: "Home", icon: LayoutDashboard },
+      { href: routes.matches, label: "Matches", icon: Heart },
+      { href: routes.compatibility, label: "Compat", icon: Stars },
+      { href: routes.chat, label: "Chat", icon: MessageCircle },
+    ];
+  }, [mode, homeHref]);
 
   return (
     <>
       <nav
         className="border-border/40 bg-background/92 dark:bg-background/88 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shadow-[0_-10px_36px_rgba(20,17,14,0.08)] backdrop-blur-2xl md:hidden dark:shadow-[0_-10px_36px_rgba(0,0,0,0.4)]"
         aria-label="Primary workspace"
+        data-mode={mode}
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0.5">
-          {items.map((item) => {
+          {primary.map((item) => {
             const active =
-              pathname === item.href ||
-              (item.href !== routes.dashboard && pathname.startsWith(item.href));
+              pathname === item.href || (item.href !== homeHref && pathname.startsWith(item.href));
             const Icon = item.icon;
             return (
               <li key={item.href} className="flex-1">
@@ -97,6 +118,7 @@ export function MobileBottomNav() {
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Workspace</SheetTitle>
           </SheetHeader>
+          <ModeSwitcher className="mt-4 w-full" />
           <div className="mt-4 space-y-4">
             {groups.map((group) => (
               <div key={group}>
@@ -104,14 +126,14 @@ export function MobileBottomNav() {
                   {group}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {dashboardNav
+                  {items
                     .filter((item) => (item.group ?? "Menu") === group)
                     .map((item) => {
                       const active = isDashboardNavActive(pathname, item.href);
                       const Icon = dashboardNavIcons[item.href];
                       return (
                         <Link
-                          key={item.href}
+                          key={`${item.group}-${item.href}`}
                           href={item.href}
                           onClick={() => setMoreOpen(false)}
                           className={cn(

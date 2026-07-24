@@ -20,7 +20,13 @@ export type HoroscopeBundle = {
       dignity?: string | null;
       isRetrograde?: boolean;
     }>;
-    yogas?: Array<{ name: string; category: string }>;
+    yogas?: Array<{
+      code?: string;
+      name: string;
+      category?: string;
+      strength?: number;
+      description?: string;
+    }>;
     doshas?: Array<{ code: string; present: boolean; severity?: string }>;
     chartNorth?: unknown;
     chartSouth?: unknown;

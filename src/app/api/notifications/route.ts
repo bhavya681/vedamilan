@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth/session";
 import { notificationService } from "@/application/notifications/notification.service";
 import { successResponse } from "@/lib/utils/api-response";
-import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
 
 export const dynamic = "force-dynamic";
 
@@ -30,15 +30,20 @@ export async function PATCH(request: Request) {
     });
     const body = z
       .object({
-        notificationId: z.string().optional(),
+        notificationId: z.string().min(1).optional(),
         markAll: z.boolean().optional(),
       })
       .parse(await request.json().catch(() => ({})));
-    await notificationService.markRead(
+
+    if (!body.markAll && !body.notificationId) {
+      throw new ValidationError("Provide markAll or notificationId");
+    }
+
+    const result = await notificationService.markRead(
       session.user.id,
       body.markAll ? undefined : body.notificationId,
     );
-    return successResponse({ ok: true });
+    return successResponse(result);
   } catch (error) {
     return handleRouteError(error);
   }

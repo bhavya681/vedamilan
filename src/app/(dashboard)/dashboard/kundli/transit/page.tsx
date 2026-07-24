@@ -1,71 +1,119 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/constants/routes";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
-import { useHoroscope } from "@/hooks/use-horoscope";
+import {
+  DoshaDetailList,
+  VedicExtrasBanner,
+  YogaDetailList,
+} from "@/features/horoscope/components/yoga-dosha-details";
+import { routes } from "@/lib/constants/routes";
 
-export default function TransitPage() {
-  const { data, error, loading } = useHoroscope();
-  const yogas = data?.horoscope?.yogas || [];
-  const doshas = data?.horoscope?.doshas || [];
+type Extras = {
+  yogas: Array<{
+    code?: string;
+    name: string;
+    category?: string;
+    strength?: number;
+    description?: string;
+    insight: {
+      meaning: string;
+      whenActivates: string;
+      watchFor: string;
+      lifeAreas: string[];
+      activationNow: string;
+      engineNote: string;
+    };
+  }>;
+  doshas: Array<{
+    code: string;
+    name: string;
+    present: boolean;
+    severity?: string;
+    notes?: string;
+    insight: {
+      meaning: string;
+      whenActivates: string;
+      watchFor: string;
+      lifeAreas: string[];
+      activationNow: string;
+      engineNote: string;
+      statusLabel?: string;
+    };
+  }>;
+};
+
+export default function YogasDoshasPage() {
+  const [data, setData] = useState<Extras | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void fetch("/api/horoscope/vedic-extras")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) {
+          setError(json.error?.message || "Unable to load yogas & doshas");
+          return;
+        }
+        setData(json.data);
+      })
+      .catch(() => setError("Unable to load yogas & doshas"))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
-        title="Yogas & doshas"
-        description="Stored yoga and dosha notes from your calculated kundli — not live Gochar / transit positions."
+        eyebrow="Calculated from your Kundli"
+        title="Yogas & Doshas"
+        description="Tap any item for meaning, when it may activate, and what to watch — deterministic engine output."
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.kundli}>Back to kundli</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href={routes.rajaYogas}>Raja Yogas</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.lalKitab}>Lal Kitab</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.kundli}>Kundli</Link>
+            </Button>
+          </div>
         }
       />
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <PanelSkeleton lines={5} /> : null}
-      {!loading && !data?.horoscope ? (
+
+      <VedicExtrasBanner />
+      {loading ? <PanelSkeleton lines={6} /> : null}
+      {error ? (
         <EmptyState
-          title="No yoga notes yet"
-          description="Generate kundli first. Live Gochar (current planetary transits) is a separate feature and is not shown on this page."
+          title="Chart required"
+          description={error}
           action={
             <Button asChild>
-              <Link href={routes.kundli}>Generate</Link>
+              <Link href={routes.kundli}>Generate Kundli</Link>
             </Button>
           }
         />
-      ) : (
+      ) : null}
+
+      {data ? (
         <div className="grid gap-4 lg:grid-cols-2">
-          <GlassCard>
+          <GlassCard className="space-y-3">
             <h2 className="font-display text-xl">Yogas</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              {yogas.length
-                ? yogas.map((y) => (
-                    <li key={y.name}>
-                      {y.name} · {y.category}
-                    </li>
-                  ))
-                : "No yogas flagged by the rule engine."}
-            </ul>
+            <YogaDetailList items={data.yogas} empty="No yogas flagged by the rule engine." />
           </GlassCard>
-          <GlassCard>
+          <GlassCard className="space-y-3">
             <h2 className="font-display text-xl">Doshas</h2>
-            <ul className="mt-3 space-y-2 text-sm">
-              {doshas.length
-                ? doshas.map((d) => (
-                    <li key={d.code}>
-                      {d.code} · {d.present ? d.severity || "present" : "clear"}
-                    </li>
-                  ))
-                : "No doshas flagged."}
-            </ul>
+            <DoshaDetailList items={data.doshas} />
           </GlassCard>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

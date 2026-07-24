@@ -481,11 +481,18 @@ export class MatchmakingService {
 
     const name = displayName(names, candidateUserId);
     const headline = sanitizeHeadline(profile.headline, name);
+    const privacy = (profile as { privacy?: Record<string, boolean> }).privacy || {};
+    const showAge = privacy.showAge !== false;
+    const showMoonSign = privacy.showMoonSign !== false;
+    const showLagna = privacy.showLagna !== false;
+    const showManglik = privacy.showManglik !== false;
+    const showNakshatra = privacy.showNakshatra !== false;
+    const acceptInterests = privacy.acceptInterests !== false;
 
     return {
       userId: candidateUserId,
       name,
-      age: ageFromDob(profile.dateOfBirth as Date | null),
+      age: showAge ? ageFromDob(profile.dateOfBirth as Date | null) : null,
       city: profile.city,
       state: profile.state ?? null,
       country: profile.country ?? null,
@@ -502,10 +509,11 @@ export class MatchmakingService {
       headline,
       photos: profile.photos,
       isVerified: Boolean(profile.isVerified),
-      manglik: chart?.manglikStatus || "UNKNOWN",
-      nakshatra: chart ? moonMeta(chart).nakshatra : null,
-      moonSign: chart?.moonSign || null,
-      lagnaSign: chart?.lagnaSign || null,
+      manglik: showManglik ? chart?.manglikStatus || "UNKNOWN" : null,
+      nakshatra: showNakshatra && chart ? moonMeta(chart).nakshatra : null,
+      moonSign: showMoonSign ? chart?.moonSign || null : null,
+      lagnaSign: showLagna ? chart?.lagnaSign || null : null,
+      acceptInterests,
       compatibilityScore: scored?.compatibilityScore ?? match?.compatibilityScore ?? 0,
       totalGuna: scored?.totalGuna ?? 0,
       maxGuna: scored?.maxGuna ?? 36,

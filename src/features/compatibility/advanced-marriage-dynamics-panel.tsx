@@ -5,6 +5,12 @@ import { useState } from "react";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from "@/lib/utils/cn";
 
 type DualView = { simple: string; vedic: string };
@@ -112,13 +118,9 @@ function BulletList({ title, items }: { title: string; items?: string[] }) {
   );
 }
 
-function ModuleCard({ module }: { module: AmdModule }) {
+function ModuleDetails({ module }: { module: AmdModule }) {
   return (
-    <GlassCard className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-display text-xl">{module.title}</h3>
-        <Badge variant="secondary">{module.tone}</Badge>
-      </div>
+    <div className="space-y-3 pb-2">
       <DualCopy dual={module.dual} />
       {typeof module.compositeScore === "number" ? (
         <p className="text-muted-foreground text-xs">
@@ -198,9 +200,25 @@ function ModuleCard({ module }: { module: AmdModule }) {
       {module.d9Notes?.length ? (
         <p className="text-muted-foreground text-xs">{module.d9Notes.join(" ")}</p>
       ) : null}
-    </GlassCard>
+    </div>
   );
 }
+
+const DIMENSION_LABELS: Record<string, string> = {
+  d1Foundation: "Marriage Foundation",
+  d9Marriage: "Marriage Experience",
+  venusDynamics: "Attraction & Intimacy",
+  moonEmotional: "Emotional Bond",
+  houseTriad: "Overall Compatibility",
+  lagnaCompatibility: "Relationship Balance",
+  selfPartnerAxis: "Relationship Balance",
+  yoniIntimacy: "Attraction & Intimacy",
+  saturnResponsibility: "Relationship Balance",
+  ninthSeventh: "Shared Growth",
+  arudha: "Advanced Vedic View",
+  relationshipBalance: "Relationship Balance",
+  timingActivation: "Timing",
+};
 
 export function AdvancedMarriageDynamicsPanel({
   data,
@@ -209,26 +227,27 @@ export function AdvancedMarriageDynamicsPanel({
   data: AdvancedMarriageDynamicsView | null | undefined;
   className?: string;
 }) {
-  const [openDetails, setOpenDetails] = useState(false);
   const [showMethod, setShowMethod] = useState(false);
 
   if (!data) return null;
 
-  const modules = [
-    data.modules?.d1Foundation,
-    data.modules?.d9Marriage,
-    data.modules?.venusDynamics,
-    data.modules?.moonEmotional,
-    data.modules?.houseTriad,
-    data.modules?.lagnaCompatibility,
-    data.modules?.selfPartnerAxis,
-    data.modules?.yoniIntimacy,
-    data.modules?.saturnResponsibility,
-    data.modules?.ninthSeventh,
-    data.modules?.arudha,
-    data.modules?.relationshipBalance,
-    data.modules?.timingActivation,
-  ].filter(Boolean) as AmdModule[];
+  const moduleEntries: Array<{ key: string; module: AmdModule }> = [];
+  const pushModule = (key: string, module?: AmdModule) => {
+    if (module) moduleEntries.push({ key, module });
+  };
+  pushModule("d1Foundation", data.modules?.d1Foundation);
+  pushModule("d9Marriage", data.modules?.d9Marriage);
+  pushModule("venusDynamics", data.modules?.venusDynamics);
+  pushModule("moonEmotional", data.modules?.moonEmotional);
+  pushModule("houseTriad", data.modules?.houseTriad);
+  pushModule("lagnaCompatibility", data.modules?.lagnaCompatibility);
+  pushModule("selfPartnerAxis", data.modules?.selfPartnerAxis);
+  pushModule("yoniIntimacy", data.modules?.yoniIntimacy);
+  pushModule("saturnResponsibility", data.modules?.saturnResponsibility);
+  pushModule("ninthSeventh", data.modules?.ninthSeventh);
+  pushModule("arudha", data.modules?.arudha);
+  pushModule("relationshipBalance", data.modules?.relationshipBalance);
+  pushModule("timingActivation", data.modules?.timingActivation);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -238,7 +257,7 @@ export function AdvancedMarriageDynamicsPanel({
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.16em] uppercase">
               Layer 4 · Vedic Marriage Intelligence
             </p>
-            <h2 className="font-display mt-1 text-2xl sm:text-3xl">Advanced Marriage Dynamics</h2>
+            <h2 className="font-display mt-1 text-2xl sm:text-3xl">Your Compatibility</h2>
           </div>
           {data.overallTone ? (
             <Badge className="bg-primary/15 text-foreground">{data.overallTone}</Badge>
@@ -246,8 +265,8 @@ export function AdvancedMarriageDynamicsPanel({
         </div>
         <DualCopy dual={data.overallTheme} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <BulletList title="Strongest foundations" items={data.strongestFoundations} />
-          <BulletList title="Potential growth areas" items={data.potentialGrowthAreas} />
+          <BulletList title="Why this works · key strengths" items={data.strongestFoundations} />
+          <BulletList title="Areas to understand" items={data.potentialGrowthAreas} />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="border-border/50 rounded-xl border p-3">
@@ -279,14 +298,9 @@ export function AdvancedMarriageDynamicsPanel({
         {data.disclaimer ? (
           <p className="text-muted-foreground text-xs leading-relaxed">{data.disclaimer}</p>
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" onClick={() => setOpenDetails((v) => !v)}>
-            {openDetails ? "Hide Vedic details" : "Explore the Vedic details"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => setShowMethod((v) => !v)}>
-            {showMethod ? "Hide methodology" : "How we analyze"}
-          </Button>
-        </div>
+        <Button type="button" variant="outline" onClick={() => setShowMethod((v) => !v)}>
+          {showMethod ? "Hide methodology" : "How we analyze"}
+        </Button>
         {data.methodologyVersion ? (
           <p className="text-muted-foreground text-[10px]">Method {data.methodologyVersion}</p>
         ) : null}
@@ -312,12 +326,33 @@ export function AdvancedMarriageDynamicsPanel({
         </GlassCard>
       ) : null}
 
-      {openDetails ? (
-        <div className="space-y-4">
-          {modules.map((module) => (
-            <ModuleCard key={module.id} module={module} />
-          ))}
-        </div>
+      {moduleEntries.length ? (
+        <GlassCard className="space-y-2">
+          <div>
+            <h3 className="font-display text-xl">Explore dimensions</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Summary first — open a dimension for Vedic detail.
+            </p>
+          </div>
+          <Accordion type="multiple" className="w-full">
+            {moduleEntries.map(({ key, module }) => (
+              <AccordionItem key={module.id} value={module.id}>
+                <AccordionTrigger className="hover:no-underline">
+                  <span className="flex flex-wrap items-center gap-2 pr-3 text-left">
+                    <span className="font-display text-base sm:text-lg">{module.title}</span>
+                    <Badge variant="secondary">{module.tone}</Badge>
+                    <span className="text-muted-foreground text-xs">
+                      {DIMENSION_LABELS[key] || "Dimension"} · Explore
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ModuleDetails module={module} />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </GlassCard>
       ) : null}
     </div>
   );

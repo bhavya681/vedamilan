@@ -25,6 +25,8 @@ notificationSchema.index({ userId: 1, readAt: 1, createdAt: -1 });
 
 export type NotificationDocument = InferSchemaType<typeof notificationSchema> & {
   _id: Schema.Types.ObjectId;
+  status?: string;
+  deletedAt?: Date | null;
 };
 export const Notification =
   (models.Notification as Model<NotificationDocument>) ||

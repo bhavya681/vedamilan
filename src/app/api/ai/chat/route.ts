@@ -5,6 +5,7 @@ import { aiService } from "@/application/ai/ai.service";
 import type { VedaAgentKey } from "@/mastra/agents/veda-agents";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,11 @@ export async function POST(request: Request) {
       throw new UnauthorizedError();
     });
     const body = schema.parse(await request.json());
+    await enforceRateLimit({
+      key: `ai:chat:${session.user.id}`,
+      limit: 20,
+      windowSec: 60,
+    });
     const result = await aiService.chat({
       userId: session.user.id,
       agent: body.agent,

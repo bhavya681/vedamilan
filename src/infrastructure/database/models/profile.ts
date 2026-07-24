@@ -72,6 +72,17 @@ const profileSchema = new Schema(
       default: "MEMBERS",
       index: true,
     },
+    /** Granular discovery / interest privacy — birth raw fields stay off public APIs. */
+    privacy: {
+      showAge: { type: Boolean, default: true },
+      showMoonSign: { type: Boolean, default: true },
+      showLagna: { type: Boolean, default: true },
+      showManglik: { type: Boolean, default: true },
+      showNakshatra: { type: Boolean, default: true },
+      acceptInterests: { type: Boolean, default: true },
+      /** Reserved until presence infrastructure ships — UI explains this. */
+      showOnlineStatus: { type: Boolean, default: false },
+    },
     isProfileComplete: { type: Boolean, default: false },
     /** Set when user finishes or skips the guided onboarding wizard */
     onboardingCompletedAt: { type: Date, default: null },

@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 import { Chat, Message, Profile } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { publishChatEvent } from "@/infrastructure/realtime/pusher";
@@ -10,20 +12,30 @@ function pairKey(a: string, b: string) {
   return [a, b].sort().join(":");
 }
 
-async function resolveNames(userIds: string[]) {
+async function resolveAuthNames(userIds: string[]) {
   const map = new Map<string, string>();
   if (!userIds.length) return map;
   const db = getMongoDb();
+  const objectIds = userIds
+    .filter((id) => ObjectId.isValid(id) && String(new ObjectId(id)) === id)
+    .map((id) => new ObjectId(id));
+
   const users = await db
     .collection("user")
-    .find({ $or: [{ id: { $in: userIds } }, { _id: { $in: userIds as never[] } }] })
+    .find({
+      $or: [
+        { id: { $in: userIds } },
+        { _id: { $in: userIds as never[] } },
+        ...(objectIds.length ? [{ _id: { $in: objectIds } }] : []),
+      ],
+    })
     .project({ id: 1, name: 1, _id: 1 })
     .toArray();
+
   for (const u of users) {
-    map.set(
-      String((u as { id?: string }).id || u._id),
-      String((u as { name?: string }).name || "Member"),
-    );
+    const id = String((u as { id?: string }).id || u._id);
+    const name = (u as { name?: string }).name;
+    if (name) map.set(id, String(name));
   }
   return map;
 }
@@ -41,9 +53,11 @@ export class ChatService {
     const otherIds = chats
       .map((c) => c.participantIds.find((id) => id !== userId) || "")
       .filter(Boolean);
-    const [names, profiles, unreadAgg] = await Promise.all([
-      resolveNames(otherIds),
-      Profile.find({ userId: { $in: otherIds } }).lean(),
+    const [authNames, profiles, unreadAgg] = await Promise.all([
+      resolveAuthNames(otherIds),
+      Profile.find({ userId: { $in: otherIds } })
+        .select("userId name photos")
+        .lean(),
       Message.aggregate([
         {
           $match: {
@@ -56,21 +70,21 @@ export class ChatService {
         { $group: { _id: "$chatId", count: { $sum: 1 } } },
       ]),
     ]);
-    const photoBy = new Map(
-      profiles.map((p) => [
-        p.userId,
-        p.photos?.find((ph) => ph.isPrimary)?.secureUrl || p.photos?.[0]?.secureUrl || null,
-      ]),
-    );
+    const profileBy = new Map(profiles.map((p) => [String(p.userId), p]));
     const unreadBy = new Map(unreadAgg.map((u) => [String(u._id), u.count as number]));
 
     return chats.map((chat) => {
       const otherId = chat.participantIds.find((id) => id !== userId) || "";
+      const profile = profileBy.get(otherId);
+      const name =
+        (profile?.name && String(profile.name).trim()) || authNames.get(otherId) || "Member";
+      const photos = profile?.photos || [];
+      const primary = photos.find((ph) => ph.isPrimary) || photos[0] || null;
       return {
         id: String(chat._id),
         otherUserId: otherId,
-        name: names.get(otherId) || "Member",
-        photo: photoBy.get(otherId) || null,
+        name,
+        photo: primary?.secureUrl || primary?.url || null,
         preview: chat.lastMessagePreview || "",
         lastMessageAt: chat.lastMessageAt,
         unread: unreadBy.get(String(chat._id)) || 0,
@@ -90,6 +104,7 @@ export class ChatService {
     }
 
     const key = pairKey(userId, otherUserId);
+    // `status` must live in only one of $set / $setOnInsert or Mongo throws a path conflict.
     const chat = await Chat.findOneAndUpdate(
       { pairKey: key },
       {
@@ -97,7 +112,6 @@ export class ChatService {
           participantIds: [userId, otherUserId].sort(),
           pairKey: key,
           createdBy: userId,
-          status: "ACTIVE",
         },
         $set: { deletedAt: null, status: "ACTIVE" },
       },

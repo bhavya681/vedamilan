@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth/session";
 import { chatService } from "@/application/chat/chat.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,11 @@ export async function POST(request: Request, context: { params: Promise<{ chatId
   try {
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `chat:send:${session.user.id}`,
+      limit: 60,
+      windowSec: 60,
     });
     const { chatId } = await context.params;
     const body = z

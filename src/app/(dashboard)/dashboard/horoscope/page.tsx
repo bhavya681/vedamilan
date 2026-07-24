@@ -7,7 +7,6 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
@@ -16,25 +15,28 @@ import { routes } from "@/lib/constants/routes";
 export default function HoroscopePage() {
   const [moonSign, setMoonSign] = useState<string | null>(null);
   const [dasha, setDasha] = useState<string | null>(null);
+  const [gocharHighlights, setGocharHighlights] = useState<string[]>([]);
   const [summary, setSummary] = useState<string | null>(null);
-  const [scores, setScores] = useState({ love: 0, career: 0, health: 0, spirit: 0 });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const [chartRes, aiRes] = await Promise.all([
+      const [chartRes, gocharRes, aiRes] = await Promise.all([
         fetch("/api/horoscope"),
+        fetch("/api/gochar"),
         fetch("/api/ai/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             agent: "HOROSCOPE",
-            message: "Give a gentle daily focus based on my stored chart and dasha.",
+            message:
+              "Give a gentle daily focus based on my stored chart, current dasha, and live gochar. Do not invent meters or planet positions.",
           }),
         }),
       ]);
       const chart = await chartRes.json();
+      const gochar = await gocharRes.json();
       const ai = await aiRes.json();
       if (!chart.success || !chart.data?.horoscope) {
         setError("Generate your kundli to unlock daily horoscope guidance.");
@@ -46,16 +48,7 @@ export default function HoroscopePage() {
       const maha = chart.data.dasha?.currentMaha;
       const antar = chart.data.dasha?.currentAntar;
       setDasha(maha ? `${maha}${antar ? ` / ${antar}` : ""}` : null);
-      const seed =
-        (h.moonSign?.length || 0) +
-        (chart.data.dasha?.currentMaha?.length || 0) +
-        new Date().getDate();
-      setScores({
-        love: 55 + (seed % 35),
-        career: 50 + ((seed * 3) % 40),
-        health: 60 + ((seed * 5) % 30),
-        spirit: 58 + ((seed * 7) % 32),
-      });
+      setGocharHighlights(gochar.success ? gochar.data?.highlights || [] : []);
       setSummary(
         ai.success
           ? ai.data.answer
@@ -74,11 +67,14 @@ export default function HoroscopePage() {
       <PageHeader
         eyebrow="VedaMilan AI"
         title="Daily horoscope"
-        description="Guidance grounded in your stored Vedic chart"
+        description="Guidance grounded in your stored Vedic chart and live Gochar — no invented day meters."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href={routes.kundli}>Kundli</Link>
+              <Link href={routes.predictions}>Period predictions</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.gochar}>Live Gochar</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href={routes.aiInsights}>Ask AI Guru</Link>
@@ -123,6 +119,9 @@ export default function HoroscopePage() {
             </div>
 
             <div className="px-5 py-5 sm:px-6 sm:py-6">
+              <p className="text-muted-foreground mb-3 text-xs">
+                AI Guru Interpretation · explains calculated chart data
+              </p>
               {loading || !summary ? (
                 <div className="space-y-3" role="status" aria-label="Preparing reading">
                   <PanelSkeleton lines={4} className="border-0 p-0 shadow-none" />
@@ -133,28 +132,27 @@ export default function HoroscopePage() {
             </div>
           </GlassCard>
 
-          <GlassCard>
+          <GlassCard className="space-y-3">
             <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.16em] uppercase">
-              Day tone meters
+              Calculated from your Kundli · Live Gochar
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {(
-                [
-                  ["Love", scores.love],
-                  ["Career", scores.career],
-                  ["Health", scores.health],
-                  ["Spirit", scores.spirit],
-                ] as const
-              ).map(([label, value]) => (
-                <div key={label}>
-                  <div className="mb-2 flex justify-between text-xs">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="font-medium">{value}%</span>
-                  </div>
-                  <Progress value={value} className="h-1.5" />
-                </div>
-              ))}
-            </div>
+            {gocharHighlights.length ? (
+              <ul className="space-y-1.5 text-sm">
+                {gocharHighlights.map((h) => (
+                  <li key={h}>· {h}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Live transit highlights appear when Gochar can be calculated.{" "}
+                <Link
+                  href={routes.gochar}
+                  className="text-foreground underline-offset-2 hover:underline"
+                >
+                  Open Gochar
+                </Link>
+              </p>
+            )}
           </GlassCard>
         </div>
       )}

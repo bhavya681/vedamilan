@@ -1,10 +1,16 @@
+import { Types } from "mongoose";
+
 import { Notification } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
+
+const UNREAD_FILTER = {
+  $or: [{ readAt: null }, { readAt: { $exists: false } }],
+};
 
 export class NotificationService {
   async list(userId: string, limit = 50) {
     await connectMongo();
-    return Notification.find({ userId, status: "ACTIVE" })
+    return Notification.find({ userId, status: "ACTIVE", deletedAt: null })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -15,23 +21,42 @@ export class NotificationService {
     return Notification.countDocuments({
       userId,
       status: "ACTIVE",
-      readAt: null,
+      deletedAt: null,
+      ...UNREAD_FILTER,
     });
   }
 
   async markRead(userId: string, notificationId?: string) {
     await connectMongo();
+    const now = new Date();
+
     if (notificationId) {
-      await Notification.updateOne({ _id: notificationId, userId } as Record<string, unknown>, {
-        $set: { readAt: new Date() },
-      });
-      return { ok: true };
+      const filter: Record<string, unknown> = {
+        userId,
+        status: "ACTIVE",
+        deletedAt: null,
+        ...UNREAD_FILTER,
+      };
+      if (Types.ObjectId.isValid(notificationId)) {
+        filter._id = new Types.ObjectId(notificationId);
+      } else {
+        filter._id = notificationId;
+      }
+      await Notification.updateOne(filter, { $set: { readAt: now } });
+    } else {
+      await Notification.updateMany(
+        {
+          userId,
+          status: "ACTIVE",
+          deletedAt: null,
+          ...UNREAD_FILTER,
+        },
+        { $set: { readAt: now } },
+      );
     }
-    await Notification.updateMany(
-      { userId, readAt: null, status: "ACTIVE" },
-      { $set: { readAt: new Date() } },
-    );
-    return { ok: true };
+
+    const unread = await this.unreadCount(userId);
+    return { ok: true as const, unread };
   }
 
   async create(input: {
@@ -51,13 +76,15 @@ export class NotificationService {
       data: input.data || {},
       channel: input.channel || "IN_APP",
       sentAt: new Date(),
+      readAt: null,
+      status: "ACTIVE",
     });
   }
 
   /** Seed helpful onboarding notices for brand-new members with an empty inbox. */
   async ensureWelcome(userId: string) {
     await connectMongo();
-    const count = await Notification.countDocuments({ userId });
+    const count = await Notification.countDocuments({ userId, deletedAt: null });
     if (count > 0) return;
     await Notification.insertMany([
       {
@@ -67,7 +94,9 @@ export class NotificationService {
         body: "Complete your profile, add birth details, and generate your kundli to unlock matching and AI explanations.",
         channel: "IN_APP",
         sentAt: new Date(),
+        readAt: null,
         status: "ACTIVE",
+        deletedAt: null,
       },
       {
         userId,
@@ -76,7 +105,9 @@ export class NotificationService {
         body: "Birth details power deterministic Vedic calculations. AI only explains the results.",
         channel: "IN_APP",
         sentAt: new Date(),
+        readAt: null,
         status: "ACTIVE",
+        deletedAt: null,
       },
     ]);
   }

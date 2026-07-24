@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Mic, Phone, Send, Sparkles, Video } from "lucide-react";
+import { Ban, Mic, Phone, Send, Sparkles, Video, X } from "lucide-react";
 import Pusher from "pusher-js";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,13 @@ import { routes } from "@/lib/constants/routes";
 import { authClient } from "@/lib/auth/client";
 import { ChatSkeleton } from "@/components/ui/page-skeletons";
 
+const ICE_BREAKERS_HIDDEN_KEY = "vedamilan.chat.ice-breakers.hidden.v1";
+
 type ChatListItem = {
   id: string;
   otherUserId: string;
   name: string;
+  photo: string | null;
   preview: string;
   unread: number;
 };
@@ -35,6 +38,32 @@ type ChatMessage = {
   readBy?: string[];
 };
 
+function initials(name: string) {
+  return name
+    .replace(/[()]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function readHiddenIceBreakerChats(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(ICE_BREAKERS_HIDDEN_KEY);
+    const list = raw ? (JSON.parse(raw) as string[]) : [];
+    return new Set(Array.isArray(list) ? list : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeHiddenIceBreakerChats(ids: Set<string>) {
+  window.localStorage.setItem(ICE_BREAKERS_HIDDEN_KEY, JSON.stringify([...ids]));
+}
+
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const withUserId = searchParams.get("with");
@@ -46,6 +75,7 @@ export default function ChatPage() {
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [iceBreakers, setIceBreakers] = useState<string[]>([]);
+  const [iceBreakersHidden, setIceBreakersHidden] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [booting, setBooting] = useState(true);
   const typingTimer = useRef<number | null>(null);
@@ -116,12 +146,35 @@ export default function ChatPage() {
   useEffect(() => {
     if (!activeId) return;
     void loadMessages(activeId);
+    setIceBreakersHidden(readHiddenIceBreakerChats().has(activeId));
     void fetch(`/api/chats/ice-breakers?otherUserId=${active?.otherUserId || ""}`)
       .then((r) => r.json())
       .then((json) => {
         if (json.success) setIceBreakers(json.data.replies || []);
       });
   }, [activeId, active?.otherUserId, loadMessages]);
+
+  function hideIceBreakers() {
+    if (!activeId) return;
+    const next = readHiddenIceBreakerChats();
+    next.add(activeId);
+    writeHiddenIceBreakerChats(next);
+    setIceBreakersHidden(true);
+  }
+
+  function showIceBreakers() {
+    if (!activeId) return;
+    const next = readHiddenIceBreakerChats();
+    next.delete(activeId);
+    writeHiddenIceBreakerChats(next);
+    setIceBreakersHidden(false);
+  }
+
+  function useIceBreaker(reply: string) {
+    setDraft(reply);
+    // Show suggestions only once — hide after picking one.
+    hideIceBreakers();
+  }
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -139,6 +192,16 @@ export default function ChatPage() {
         return [...prev, payload.message];
       });
       void loadChats();
+    });
+    channel.bind("message:read", (payload: { userId?: string; chatId?: string }) => {
+      if (!payload.userId || payload.userId === meId) return;
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.senderId !== meId) return m;
+          const readBy = Array.from(new Set([...(m.readBy || []), payload.userId!]));
+          return { ...m, readBy };
+        }),
+      );
     });
     channel.bind("typing", (payload: { userId: string; isTyping: boolean }) => {
       if (payload.userId !== meId) setTyping(payload.isTyping);
@@ -180,6 +243,7 @@ export default function ChatPage() {
       if (prev.some((m) => m._id === json.data.message._id)) return prev;
       return [...prev, json.data.message];
     });
+    hideIceBreakers();
     await loadChats();
   }
 
@@ -211,18 +275,39 @@ export default function ChatPage() {
     }
   }
 
+  async function onBlock() {
+    if (!active?.otherUserId) return;
+    const ok = window.confirm(
+      `Block ${active.name}? You will no longer be able to message each other.`,
+    );
+    if (!ok) return;
+    const res = await fetch("/api/blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blockedId: active.otherUserId }),
+    });
+    const json = await res.json();
+    if (!json.success) {
+      setError(json.error?.message || "Unable to block member");
+      return;
+    }
+    setActiveId("");
+    setMessages([]);
+    await loadChats();
+  }
+
   if (booting) {
     return <ChatSkeleton />;
   }
 
   return (
-    <div className="grid h-[calc(100vh-10rem)] gap-4 lg:grid-cols-[280px_1fr]">
-      <aside className="glass-panel overflow-hidden rounded-2xl">
-        <div className="border-border/60 border-b p-4">
+    <div className="grid h-[calc(100vh-10rem)] min-h-0 gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
+      <aside className="glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl">
+        <div className="border-border/60 shrink-0 border-b p-4">
           <h1 className="font-display text-xl">Messages</h1>
         </div>
-        <ScrollArea className="h-[calc(100%-57px)]">
-          <div className="space-y-1 p-2">
+        <ScrollArea className="min-h-0 w-full flex-1">
+          <div className="w-full max-w-full space-y-1 p-2">
             {chats.length === 0 ? (
               <p className="text-muted-foreground p-3 text-sm">
                 No conversations yet. Connect with someone first, then message from Connections.
@@ -234,25 +319,26 @@ export default function ChatPage() {
                 type="button"
                 onClick={() => setActiveId(conversation.id)}
                 className={cn(
-                  "flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors",
+                  "flex w-full max-w-full min-w-0 items-start gap-3 overflow-hidden rounded-xl p-3 text-left transition-colors",
                   activeId === conversation.id ? "bg-primary/15" : "hover:bg-muted",
                 )}
               >
-                <Avatar>
-                  <AvatarFallback>
-                    {conversation.name
-                      .split(" ")
-                      .map((part) => part[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </AvatarFallback>
+                <Avatar className="size-10 shrink-0">
+                  {conversation.photo ? (
+                    <AvatarImage src={conversation.photo} alt={conversation.name} />
+                  ) : null}
+                  <AvatarFallback>{initials(conversation.name)}</AvatarFallback>
                 </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-medium">{conversation.name}</p>
-                    {conversation.unread > 0 ? <Badge>{conversation.unread}</Badge> : null}
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <p className="min-w-0 flex-1 truncate font-medium">{conversation.name}</p>
+                    {conversation.unread > 0 ? (
+                      <Badge className="shrink-0">{conversation.unread}</Badge>
+                    ) : null}
                   </div>
-                  <p className="text-muted-foreground truncate text-xs">{conversation.preview}</p>
+                  <p className="text-muted-foreground block w-full truncate text-xs">
+                    {conversation.preview}
+                  </p>
                 </div>
               </button>
             ))}
@@ -260,17 +346,12 @@ export default function ChatPage() {
         </ScrollArea>
       </aside>
 
-      <section className="glass-panel flex flex-col overflow-hidden rounded-2xl">
+      <section className="glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl">
         <header className="border-border/60 flex items-center justify-between border-b px-4 py-3">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarFallback>
-                {active?.name
-                  ?.split(" ")
-                  .map((part) => part[0])
-                  .join("")
-                  .slice(0, 2)}
-              </AvatarFallback>
+              {active?.photo ? <AvatarImage src={active.photo} alt={active.name} /> : null}
+              <AvatarFallback>{active?.name ? initials(active.name) : "?"}</AvatarFallback>
             </Avatar>
             <div>
               <p className="font-medium">{active?.name || "Select a conversation"}</p>
@@ -280,6 +361,16 @@ export default function ChatPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            {active?.otherUserId ? (
+              <Button
+                size="icon"
+                variant="outline"
+                aria-label="Block member"
+                onClick={() => void onBlock()}
+              >
+                <Ban className="h-4 w-4" />
+              </Button>
+            ) : null}
             <Button size="icon" variant="outline" aria-label="Audio call">
               <Phone className="h-4 w-4" />
             </Button>
@@ -337,23 +428,51 @@ export default function ChatPage() {
         </ScrollArea>
 
         <div className="border-border/60 space-y-3 border-t p-4">
-          <div className="flex flex-wrap gap-2">
-            <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-              <Sparkles className="h-3.5 w-3.5" /> AI suggested replies
-            </span>
-            {iceBreakers.map((reply) => (
-              <Button
-                key={reply}
+          {iceBreakers.length > 0 ? (
+            iceBreakersHidden ? (
+              <button
                 type="button"
-                size="sm"
-                variant="outline"
-                className="h-auto max-w-full py-2 text-left text-xs whitespace-normal"
-                onClick={() => setDraft(reply)}
+                onClick={showIceBreakers}
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
               >
-                {reply}
-              </Button>
-            ))}
-          </div>
+                <Sparkles className="h-3.5 w-3.5" />
+                Show AI suggestions
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+                    <Sparkles className="h-3.5 w-3.5" /> AI suggested replies
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground h-7 px-2 text-xs"
+                    onClick={hideIceBreakers}
+                    aria-label="Hide AI suggestions"
+                  >
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    Hide
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {iceBreakers.map((reply) => (
+                    <Button
+                      key={reply}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-auto max-w-full py-2 text-left text-xs whitespace-normal"
+                      onClick={() => useIceBreaker(reply)}
+                    >
+                      {reply}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )
+          ) : null}
           <form className="flex items-center gap-2" onSubmit={onSend}>
             <Button
               type="button"

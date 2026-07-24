@@ -6,9 +6,12 @@ import { ChevronsLeft, ChevronsRight, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { Button } from "@/components/ui/button";
-import { dashboardNav } from "@/config/navigation";
+import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
+import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { WORKSPACE_MODE_META } from "@/lib/workspace/mode";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { authClient, useSession } from "@/lib/auth/client";
@@ -18,7 +21,9 @@ const COLLAPSE_KEY = "vedamilan.sidebar.collapsed";
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const groups = [...new Set(dashboardNav.map((item) => item.group ?? "Menu"))];
+  const { mode, homeHref } = useWorkspaceMode();
+  const items = navForMode(mode);
+  const groups = navGroupsForMode(mode);
   const [collapsed, setCollapsed] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const { data: session } = useSession();
@@ -71,6 +76,7 @@ export function Sidebar({ className }: { className?: string }) {
       )}
       aria-label="Dashboard sidebar"
       data-collapsed={collapsed ? "true" : "false"}
+      data-mode={mode}
     >
       <div
         className={cn(
@@ -85,7 +91,7 @@ export function Sidebar({ className }: { className?: string }) {
           )}
         >
           <BrandLogo
-            href={routes.dashboard}
+            href={homeHref}
             size="sm"
             showWordmark={!collapsed}
             className={collapsed ? "justify-center" : "min-w-0"}
@@ -106,10 +112,20 @@ export function Sidebar({ className }: { className?: string }) {
           </Button>
         </div>
         {!collapsed ? (
-          <p className="text-muted-foreground mt-2 px-0.5 text-[11px] tracking-wide">
-            Relationship intelligence
-          </p>
-        ) : null}
+          <div className="mt-3 space-y-2">
+            <ModeSwitcher className="w-full" />
+            <p
+              key={mode}
+              className="text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 truncate px-0.5 text-[10px] leading-snug duration-300"
+            >
+              {WORKSPACE_MODE_META[mode].subtitle}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 flex justify-center">
+            <ModeSwitcher compact />
+          </div>
+        )}
       </div>
 
       <nav
@@ -129,14 +145,14 @@ export function Sidebar({ className }: { className?: string }) {
                 <div className="bg-border/60 mx-auto mb-2 h-px w-6" aria-hidden />
               )}
               <div className="space-y-1">
-                {dashboardNav
+                {items
                   .filter((item) => (item.group ?? "Menu") === group)
                   .map((item) => {
                     const active = isDashboardNavActive(pathname, item.href);
                     const Icon = dashboardNavIcons[item.href];
                     return (
                       <Link
-                        key={item.href}
+                        key={`${item.group}-${item.href}`}
                         href={item.href}
                         title={collapsed ? item.title : undefined}
                         className={cn(

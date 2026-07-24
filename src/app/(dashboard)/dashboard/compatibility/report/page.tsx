@@ -185,6 +185,23 @@ export default function CompatibilityReportPage() {
             <AdvancedMarriageDynamicsPanel data={report.advancedMarriageDynamics} />
           ) : null}
 
+          {(report.deepAnalysis?.remedies || []).length ? (
+            <GlassCard className="space-y-3">
+              <div>
+                <h3 className="font-display text-xl">Relationship guidance</h3>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Habit and communication themes from the deep compatibility engine — not medical
+                  advice, and not AI-invented remedies.
+                </p>
+              </div>
+              <ul className="space-y-2 text-sm">
+                {report.deepAnalysis?.remedies?.map((r) => (
+                  <li key={r}>· {r}</li>
+                ))}
+              </ul>
+            </GlassCard>
+          ) : null}
+
           {report.categoryScores ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {Object.entries(report.categoryScores)
