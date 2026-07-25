@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
+import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { WisdomPortrait } from "@/features/wisdom/components/wisdom-portrait";
 import { getWisdomGuide } from "@/domain/wisdom/guides";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
@@ -14,13 +16,18 @@ import { routes } from "@/lib/constants/routes";
 export default function WisdomGuideProfilePage() {
   const params = useParams<{ guideId: string }>();
   const guide = getWisdomGuide(params.guideId);
+  const { setMode } = useWorkspaceMode();
+
+  useEffect(() => {
+    setMode("wisdom", { navigate: false });
+  }, [setMode]);
 
   if (!guide) {
     return (
       <div className="space-y-4 py-10">
         <p>Guide not found.</p>
         <Button asChild variant="outline">
-          <Link href={routes.vedicWisdom}>Back to Vedic Wisdom</Link>
+          <Link href={routes.vedicWisdom}>Back to Rishi Sage</Link>
         </Button>
       </div>
     );

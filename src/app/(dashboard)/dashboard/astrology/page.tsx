@@ -33,6 +33,7 @@ function greetingForHour(hour: number) {
 }
 
 const LIFE_AREAS = [
+  { title: "Dashas", href: routes.dasha, hint: "Mahadasha and Antardasha timeline" },
   { title: "Career", href: routes.rajaYogas, hint: "Raja Yogas and recognition themes" },
   { title: "Charts", href: routes.divisionalCharts, hint: "Moon, Sun, and Navamsha views" },
   { title: "Ashtakavarga", href: routes.ashtakavarga, hint: "House bindu strength" },
@@ -168,7 +169,7 @@ export default function AstrologyHomePage() {
                   Antardasha: {bundle.currentAntar || "—"}
                 </p>
                 <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
-                  <Link href={routes.dasha}>View periods</Link>
+                  <Link href={routes.dasha}>Open full Dashas</Link>
                 </Button>
               </div>
               <div>
@@ -216,6 +217,42 @@ export default function AstrologyHomePage() {
                 </Button>
                 <p className="text-muted-foreground mt-2 text-[11px]">
                   Calculated from your Kundli · deterministic planetary data
+                </p>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="font-display text-2xl">Dashas</h2>
+                  <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
+                    Your Vimshottari timeline — Mahadasha for the long arc, Antardasha for the
+                    chapter you are in now.
+                  </p>
+                </div>
+                <Button asChild className="w-full sm:w-auto">
+                  <Link href={routes.dasha}>
+                    Explore Dashas
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="border-border/60 grid gap-4 rounded-2xl border p-4 sm:grid-cols-2 sm:p-5">
+                <div>
+                  <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
+                    Mahadasha
+                  </p>
+                  <p className="font-display mt-1 text-2xl">{bundle.currentMaha || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
+                    Antardasha
+                  </p>
+                  <p className="font-display mt-1 text-2xl">{bundle.currentAntar || "—"}</p>
+                </div>
+                <p className="text-muted-foreground text-xs leading-relaxed sm:col-span-2">
+                  Open Dashas for progress bars, the full Mahadasha list, and expandable Antardasha
+                  sub-periods.
                 </p>
               </div>
             </section>

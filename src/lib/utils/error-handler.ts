@@ -114,7 +114,7 @@ export function handleRouteError(error: unknown): NextResponse {
   if (parsed.statusCode >= 500) {
     logger.error({ err: error }, "Unhandled route error");
   } else {
-    logger.warn({ code: parsed.code }, "Handled route error");
+    logger.warn({ code: parsed.code, message: parsed.message }, "Handled route error");
   }
 
   return errorResponse(parsed.code, parsed.message, parsed.statusCode, parsed.details);

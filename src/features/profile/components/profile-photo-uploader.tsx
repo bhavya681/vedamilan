@@ -74,8 +74,13 @@ export function ProfilePhotoUploader({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      onError?.("Please choose a JPG, PNG, or WEBP image");
+    const allowed = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]);
+    if (!allowed.has(file.type.toLowerCase())) {
+      onError?.(
+        file.type.startsWith("image/")
+          ? "Only JPG, PNG, WEBP, or GIF are supported (not HEIC/AVIF)"
+          : "Please choose a JPG, PNG, WEBP, or GIF image",
+      );
       return;
     }
     if (file.size > MAX_FILE_BYTES) {

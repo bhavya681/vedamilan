@@ -1,4 +1,6 @@
-export type WorkspaceMode = "astrology" | "matrimony";
+import { stripLocaleFromPathname } from "@/lib/i18n/path";
+
+export type WorkspaceMode = "astrology" | "matrimony" | "wisdom";
 
 export const WORKSPACE_MODE_STORAGE_KEY = "vedamilan.workspace-mode.v1";
 
@@ -16,10 +18,15 @@ export const WORKSPACE_MODE_META: Record<
     subtitle: "Discover meaningful compatibility",
     homePath: "/dashboard/matrimony",
   },
+  wisdom: {
+    label: "Rishi Sage",
+    subtitle: "Converse with AI wisdom guides inspired by Vedic sages",
+    homePath: "/dashboard/vedic-wisdom",
+  },
 };
 
 export function isWorkspaceMode(value: unknown): value is WorkspaceMode {
-  return value === "astrology" || value === "matrimony";
+  return value === "astrology" || value === "matrimony" || value === "wisdom";
 }
 
 export function readLocalWorkspaceMode(): WorkspaceMode {
@@ -43,9 +50,12 @@ export function writeLocalWorkspaceMode(mode: WorkspaceMode) {
 
 /** Infer preferred mode from the current path when no explicit preference applies. */
 export function inferModeFromPath(pathname: string): WorkspaceMode | null {
-  if (!pathname.startsWith("/dashboard")) return null;
-  if (pathname.startsWith("/dashboard/astrology")) return "astrology";
-  if (pathname.startsWith("/dashboard/matrimony")) return "matrimony";
+  // Browser URLs may be `/en/dashboard/...` — compare against bare app paths.
+  const bare = stripLocaleFromPathname(pathname).pathname;
+  if (!bare.startsWith("/dashboard")) return null;
+  if (bare.startsWith("/dashboard/astrology")) return "astrology";
+  if (bare.startsWith("/dashboard/matrimony")) return "matrimony";
+  if (bare.startsWith("/dashboard/vedic-wisdom")) return "wisdom";
 
   const astrologyPrefixes = [
     "/dashboard/kundli",
@@ -56,7 +66,7 @@ export function inferModeFromPath(pathname: string): WorkspaceMode | null {
     "/dashboard/predictions",
     "/dashboard/remedies",
   ];
-  if (astrologyPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  if (astrologyPrefixes.some((p) => bare === p || bare.startsWith(`${p}/`))) {
     return "astrology";
   }
 
@@ -72,7 +82,7 @@ export function inferModeFromPath(pathname: string): WorkspaceMode | null {
     "/dashboard/recommendations",
     "/dashboard/compatibility",
   ];
-  if (matrimonyPrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  if (matrimonyPrefixes.some((p) => bare === p || bare.startsWith(`${p}/`))) {
     return "matrimony";
   }
 

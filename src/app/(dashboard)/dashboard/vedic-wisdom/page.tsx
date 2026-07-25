@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
-import { WisdomGuideCard } from "@/features/wisdom/components/wisdom-portrait";
+import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
+import { RishiSageTile, WisdomGuideCard } from "@/features/wisdom/components/wisdom-portrait";
 import {
   WISDOM_CATEGORIES,
   WISDOM_GUIDES,
@@ -23,7 +25,8 @@ const daily = wisdomDailyReflection() ?? {
   label: "Today's AI reflection inspired by Vedic wisdom.",
 };
 
-export default function VedicWisdomPage() {
+export default function RishiSageHomePage() {
+  const { setMode } = useWorkspaceMode();
   const [category, setCategory] = useState<WisdomCategoryId | "all">("all");
   const featured = useMemo(() => listFeaturedSages(), []);
   const guides = useMemo(() => {
@@ -31,12 +34,16 @@ export default function VedicWisdomPage() {
     return WISDOM_GUIDES.filter((g) => g.categoryIds.includes(category));
   }, [category]);
 
+  useEffect(() => {
+    setMode("wisdom", { navigate: false });
+  }, [setMode]);
+
   return (
     <div className="space-y-10">
       <ContentReveal className="space-y-10">
         <PageHeader
-          title="Vedic Wisdom"
-          description="Seek wisdom. Reflect deeply. Live consciously."
+          title="Rishi Sage"
+          description="Seek wisdom. Reflect deeply. Talk and speak with AI guides inspired by Vedic traditions."
           actions={
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button asChild>
@@ -54,13 +61,11 @@ export default function VedicWisdomPage() {
             Rishi Sabha
           </p>
           <h2 className="font-display text-3xl leading-tight tracking-tight sm:text-4xl">
-            Which wisdom do you seek today?
+            Which sage will you sit with today?
           </h2>
           <p className="text-muted-foreground text-base leading-relaxed">
-            Explore timeless teachings from India&apos;s philosophers, teachers, strategists, and
-            spiritual traditions through thoughtful AI-guided conversations. These are AI Wisdom
-            Guides inspired by documented teachings — not claims that historical figures are
-            speaking.
+            Choose a guide by portrait, then chat in text or speak aloud. These are AI Wisdom Guides
+            inspired by documented teachings — not claims that historical figures are speaking.
           </p>
         </section>
 
@@ -74,16 +79,30 @@ export default function VedicWisdomPage() {
 
         <section className="space-y-4">
           <div>
-            <h2 className="font-display text-2xl">Vedic Sages</h2>
+            <h2 className="font-display text-2xl">Meet the Rishis</h2>
             <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
-              Different Hindu traditions describe different Sapta Rishi lineages and lists. Here we
-              present widely attested Vedic sages as an editorial collection — without claiming one
-              universal fixed list.
+              Symbolic portraits open chat and voice sessions. Tap Chat to write, or Speak for a
+              spoken exchange.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {featured.map((guide) => (
+              <RishiSageTile key={guide.id} guide={guide} />
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-display text-2xl">Featured teachings</h2>
+            <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
+              Different Hindu traditions describe different Sapta Rishi lineages. This is an
+              editorial collection — not one universal fixed list.
             </p>
           </div>
           <div className="divide-border/60 divide-y">
-            {featured.slice(0, 4).map((guide) => (
-              <WisdomGuideCard key={guide.id} guide={guide} featured />
+            {featured.slice(0, 3).map((guide) => (
+              <WisdomGuideCard key={`featured-card-${guide.id}`} guide={guide} featured />
             ))}
           </div>
         </section>
@@ -93,7 +112,7 @@ export default function VedicWisdomPage() {
             <div>
               <h2 className="font-display text-2xl">Wisdom Library</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                Browse by tradition and domain of wisdom.
+                Browse every guide — chat, speak, or read their profile.
               </p>
             </div>
           </div>
@@ -131,12 +150,14 @@ export default function VedicWisdomPage() {
               {WISDOM_CATEGORIES.find((c) => c.id === category)?.description}
             </p>
           ) : null}
-          <div className="divide-border/60 divide-y">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {guides.map((guide) => (
-              <WisdomGuideCard key={guide.id} guide={guide} />
+              <RishiSageTile key={guide.id} guide={guide} />
             ))}
           </div>
         </section>
+
+        <CrossModeCta />
 
         <p className="text-muted-foreground max-w-3xl text-xs leading-relaxed">
           {WISDOM_AI_DISCLAIMER}

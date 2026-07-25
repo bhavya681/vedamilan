@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { MessageCircle, Mic } from "lucide-react";
+
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
+import { sagePortraitUrl } from "@/domain/wisdom/sage-portraits";
 import type { WisdomGuide } from "@/domain/wisdom/guides";
 
 const accentClass: Record<WisdomGuide["accent"], string> = {
@@ -18,10 +22,12 @@ export function WisdomPortrait({
   size = "md",
   className,
 }: {
-  guide: Pick<WisdomGuide, "displayName" | "monogram" | "accent">;
+  guide: Pick<WisdomGuide, "id" | "displayName" | "monogram" | "accent">;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
+  const portrait = sagePortraitUrl(guide.id);
+  const [failed, setFailed] = useState(false);
   const sizeClass =
     size === "sm"
       ? "h-12 w-12 text-lg"
@@ -30,6 +36,29 @@ export function WisdomPortrait({
         : size === "xl"
           ? "h-32 w-32 text-4xl sm:h-40 sm:w-40 sm:text-5xl"
           : "h-16 w-16 text-2xl";
+
+  if (portrait && !failed) {
+    return (
+      <div
+        className={cn(
+          "ring-border/60 relative overflow-hidden rounded-full ring-1",
+          sizeClass,
+          className,
+        )}
+      >
+        {/* Wikimedia / Wikipedia portraits — native img for host flexibility */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={portrait}
+          alt={`Portrait depiction of ${guide.displayName}`}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -47,6 +76,53 @@ export function WisdomPortrait({
   );
 }
 
+/** Compact tile: portrait + chat / speak actions for the Rishi Sage home. */
+export function RishiSageTile({ guide }: { guide: WisdomGuide }) {
+  return (
+    <article className="border-border/60 bg-card/40 hover:border-foreground/20 flex flex-col gap-4 rounded-2xl border p-4 transition-colors sm:p-5">
+      <div className="flex items-start gap-3">
+        <WisdomPortrait guide={guide} size="lg" className="!h-20 !w-20 shrink-0 !text-2xl" />
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-[10px] font-medium tracking-[0.14em] uppercase">
+            {guide.role}
+          </p>
+          <h3 className="font-display mt-0.5 truncate text-lg leading-tight tracking-tight">
+            {guide.displayName}
+          </h3>
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
+            {guide.domain}
+          </p>
+        </div>
+      </div>
+      <p className="font-display text-foreground/85 line-clamp-2 text-sm leading-snug">
+        “{guide.shortPhilosophy}”
+      </p>
+      <div className="mt-auto flex flex-wrap gap-2">
+        <Link
+          href={`${routes.vedicWisdom}/${guide.id}/chat`}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors sm:flex-none"
+        >
+          <MessageCircle className="h-3.5 w-3.5" aria-hidden />
+          Chat
+        </Link>
+        <Link
+          href={`${routes.vedicWisdom}/${guide.id}/voice`}
+          className="border-border hover:bg-muted inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors sm:flex-none"
+        >
+          <Mic className="h-3.5 w-3.5" aria-hidden />
+          Speak
+        </Link>
+        <Link
+          href={`${routes.vedicWisdom}/${guide.id}`}
+          className="text-muted-foreground hover:text-foreground inline-flex h-9 items-center px-2 text-xs font-medium transition-colors"
+        >
+          Profile
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export function WisdomGuideCard({ guide, featured }: { guide: WisdomGuide; featured?: boolean }) {
   return (
     <article
@@ -55,7 +131,7 @@ export function WisdomGuideCard({ guide, featured }: { guide: WisdomGuide; featu
         featured && "sm:py-8",
       )}
     >
-      <WisdomPortrait guide={guide} size={featured ? "lg" : "md"} className="shrink-0" />
+      <WisdomPortrait guide={guide} size={featured ? "xl" : "lg"} className="shrink-0" />
       <div className="min-w-0 flex-1 space-y-3">
         <div>
           <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
@@ -76,6 +152,7 @@ export function WisdomGuideCard({ guide, featured }: { guide: WisdomGuide; featu
         </p>
         <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
           AI Wisdom Guide inspired by teachings traditionally associated with {guide.displayName}.
+          Portrait is a public-domain artistic depiction from Wikimedia / Wikipedia archives.
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Link

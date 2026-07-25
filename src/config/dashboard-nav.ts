@@ -30,6 +30,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.yourConnection]: HeartHandshake,
   [routes.chat]: MessageCircle,
   [routes.kundli]: Stars,
+  [routes.dasha]: CalendarDays,
   [routes.search]: Search,
   [routes.compatibility]: Compass,
   [routes.horoscope]: CalendarDays,
@@ -57,7 +58,12 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
 
 export function isDashboardNavActive(pathname: string, href: string) {
   if (pathname === href) return true;
-  if (href === routes.dashboard || href === routes.astrology || href === routes.matrimony) {
+  if (
+    href === routes.dashboard ||
+    href === routes.astrology ||
+    href === routes.matrimony ||
+    href === routes.vedicWisdom
+  ) {
     return pathname === href;
   }
   if (href === routes.matches && pathname.startsWith(routes.matches)) return true;

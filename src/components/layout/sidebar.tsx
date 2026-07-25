@@ -117,7 +117,9 @@ export function Sidebar({ className }: { className?: string }) {
             >
               {mode === "astrology"
                 ? t("navigation.modeAstrologySubtitle")
-                : t("navigation.modeMatrimonySubtitle")}
+                : mode === "wisdom"
+                  ? t("navigation.modeRishiSageSubtitle")
+                  : t("navigation.modeMatrimonySubtitle")}
             </p>
           </div>
         ) : (

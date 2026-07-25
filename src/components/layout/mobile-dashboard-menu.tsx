@@ -52,7 +52,9 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
           <p className="text-muted-foreground mt-2 truncate text-[11px] leading-snug">
             {mode === "astrology"
               ? t("navigation.modeAstrologySubtitle")
-              : t("navigation.modeMatrimonySubtitle")}
+              : mode === "wisdom"
+                ? t("navigation.modeRishiSageSubtitle")
+                : t("navigation.modeMatrimonySubtitle")}
           </p>
         </SheetHeader>
         <nav className="space-y-5 p-4" aria-label={t("navigation.dashboard")}>

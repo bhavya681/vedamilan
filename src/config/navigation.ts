@@ -41,7 +41,7 @@ export const footerNav: Record<string, NavItem[]> = {
 
 /**
  * Dashboard nav — filtered by workspace mode in shell components.
- * Shared items (no `modes`) appear in both Astrology and Matrimony.
+ * Shared items (no `modes`) appear in every mode.
  */
 export const dashboardNav: NavItem[] = [
   {
@@ -56,7 +56,14 @@ export const dashboardNav: NavItem[] = [
     group: "Main",
     modes: ["matrimony"],
   },
+  {
+    title: "Rishi Sage home",
+    href: routes.vedicWisdom,
+    group: "Main",
+    modes: ["wisdom"],
+  },
   { title: "My Kundli", href: routes.kundli, group: "Astrology", modes: ["astrology"] },
+  { title: "Dashas", href: routes.dasha, group: "Astrology", modes: ["astrology"] },
   { title: "Charts", href: routes.divisionalCharts, group: "Astrology", modes: ["astrology"] },
   { title: "Ashtakavarga", href: routes.ashtakavarga, group: "Astrology", modes: ["astrology"] },
   { title: "Varna & Gana", href: routes.natalProfile, group: "Astrology", modes: ["astrology"] },
@@ -84,7 +91,9 @@ export const dashboardNav: NavItem[] = [
 
   { title: "Compatibility", href: routes.compatibility, group: "Discover", modes: ["matrimony"] },
   { title: "AI Guru", href: routes.aiInsights, group: "Shared", modes: ["matrimony"] },
-  { title: "Vedic Wisdom", href: routes.vedicWisdom, group: "Wisdom" },
+
+  { title: "Ask the Sages", href: routes.askTheSages, group: "Wisdom", modes: ["wisdom"] },
+  { title: "Wisdom Journal", href: routes.wisdomJournal, group: "Wisdom", modes: ["wisdom"] },
 
   { title: "My profile", href: routes.profile, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },

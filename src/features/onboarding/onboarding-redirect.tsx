@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+import { useAppPathname, useLocaleRouter } from "@/components/i18n/locale-navigation";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { routes } from "@/lib/constants/routes";
 
@@ -16,6 +16,11 @@ const ALLOW_WHILE_INCOMPLETE = [
   routes.settings,
   routes.security,
   routes.privacySettings,
+  routes.languageRegion,
+  routes.appearance,
+  routes.vedicWisdom,
+  routes.askTheSages,
+  routes.wisdomJournal,
 ];
 
 /**
@@ -23,8 +28,8 @@ const ALLOW_WHILE_INCOMPLETE = [
  * before using matches / compatibility / home content.
  */
 export function OnboardingRedirect() {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname = useAppPathname();
+  const router = useLocaleRouter();
   const checking = useRef(false);
 
   useEffect(() => {

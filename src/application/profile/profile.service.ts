@@ -245,8 +245,11 @@ export class ProfileService {
     if (!dataUrl.startsWith("data:image/")) {
       throw new ValidationError("Expected a valid image file");
     }
-    if (!/^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(dataUrl)) {
-      throw new ValidationError("Only JPEG, PNG, WEBP, or GIF uploads are allowed");
+    // Allow optional parameters (e.g. charset) between mime and base64 marker.
+    if (!/^data:image\/(jpeg|jpg|png|webp|gif)(?:;[\w=-]+)*;base64,/i.test(dataUrl)) {
+      throw new ValidationError(
+        "Only JPEG, PNG, WEBP, or GIF uploads are allowed (HEIC/AVIF are not supported)",
+      );
     }
     if (dataUrl.length > MAX_DATA_URL_CHARS) {
       throw new ValidationError("Image is too large (max 5MB)");
@@ -292,25 +295,34 @@ export class ProfileService {
     const parsed = assertHttpsImageUrl(imageUrl);
     const href = parsed.toString();
 
-    // Never store arbitrary remote URLs without Cloudinary ingest — prevents SSRF/store of attacker hosts.
-    if (!cloudinaryService.isConfigured()) {
-      throw new ValidationError(
-        "Remote image links require Cloudinary. Upload a file instead, or configure Cloudinary.",
+    if (cloudinaryService.isConfigured()) {
+      const uploaded = await cloudinaryService.uploadImage({
+        data: href,
+        folder: `vedamilan/profiles/${userId}`,
+      });
+      return this.attachPhoto(
+        userId,
+        {
+          cloudinaryPublicId: uploaded.public_id,
+          url: uploaded.url,
+          secureUrl: uploaded.secure_url,
+          width: uploaded.width,
+          height: uploaded.height,
+        },
+        makePrimary,
       );
     }
 
-    const uploaded = await cloudinaryService.uploadImage({
-      data: href,
-      folder: `vedamilan/profiles/${userId}`,
-    });
+    // Dev/local fallback: store the validated HTTPS URL only (no server-side fetch → no SSRF).
+    const stamp = Date.now();
     return this.attachPhoto(
       userId,
       {
-        cloudinaryPublicId: uploaded.public_id,
-        url: uploaded.url,
-        secureUrl: uploaded.secure_url,
-        width: uploaded.width,
-        height: uploaded.height,
+        cloudinaryPublicId: `remote/${userId}/${stamp}`,
+        url: href,
+        secureUrl: href,
+        width: null,
+        height: null,
       },
       makePrimary,
     );

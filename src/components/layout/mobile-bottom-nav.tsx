@@ -35,14 +35,22 @@ export function MobileBottomNav() {
       return [
         { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
         { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
-        { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
+        { href: routes.dasha, labelKey: "navigation.dashas", icon: BookOpen },
+        { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: MessageCircle },
+      ];
+    }
+    if (mode === "wisdom") {
+      return [
+        { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
+        { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: Stars },
+        { href: routes.wisdomJournal, labelKey: "navigation.wisdomJournal", icon: BookOpen },
         { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: MessageCircle },
       ];
     }
     return [
       { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
       { href: routes.matches, labelKey: "navigation.matches", icon: Heart },
-      { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
+      { href: routes.compatibility, labelKey: "navigation.compatibility", icon: BookOpen },
       { href: routes.chat, labelKey: "navigation.messages", icon: MessageCircle },
     ];
   }, [mode, homeHref]);

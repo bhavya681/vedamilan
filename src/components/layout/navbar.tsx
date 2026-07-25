@@ -2,7 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bell, Heart, Menu, MessageCircle, Palette, Search, Sparkles, Stars } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  CalendarDays,
+  Heart,
+  Menu,
+  MessageCircle,
+  Palette,
+  Search,
+  Sparkles,
+  Stars,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -31,8 +42,14 @@ const MATRIMONY_QUICK = [
 
 const ASTROLOGY_QUICK = [
   { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
-  { href: routes.divisionalCharts, labelKey: "navigation.charts", icon: Sparkles },
+  { href: routes.dasha, labelKey: "navigation.dashas", icon: CalendarDays },
   { href: routes.rajaYogas, labelKey: "navigation.rajaYogas", icon: Sparkles },
+] as const;
+
+const WISDOM_QUICK = [
+  { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
+  { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: Sparkles },
+  { href: routes.wisdomJournal, labelKey: "navigation.wisdomJournal", icon: BookOpen },
 ] as const;
 
 export function Navbar({
@@ -53,7 +70,12 @@ export function Navbar({
   const isDashboard = pathname.startsWith("/dashboard");
   const isAuthed = Boolean(session?.user);
   const homeHref = workspace?.homeHref ?? routes.dashboard;
-  const dashQuick = workspace?.mode === "astrology" ? ASTROLOGY_QUICK : MATRIMONY_QUICK;
+  const dashQuick =
+    workspace?.mode === "astrology"
+      ? ASTROLOGY_QUICK
+      : workspace?.mode === "wisdom"
+        ? WISDOM_QUICK
+        : MATRIMONY_QUICK;
 
   useEffect(() => {
     if (!isOverlay) return;

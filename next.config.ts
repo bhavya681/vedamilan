@@ -21,7 +21,7 @@ const securityHeaders = [
       "base-uri 'self'",
       "frame-ancestors 'none'",
       "object-src 'none'",
-      "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://upload.wikimedia.org",
+      "img-src 'self' data: blob: https:",
       "media-src 'self' blob: https://res.cloudinary.com",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "upload.wikimedia.org",
+      },
+      {
+        protocol: "https",
+        hostname: "commons.wikimedia.org",
       },
     ],
   },
