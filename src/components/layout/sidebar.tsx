@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { ModeSwitcher } from "@/components/layout/mode-switcher";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { Button } from "@/components/ui/button";
 import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
@@ -60,12 +61,6 @@ export function Sidebar({ className }: { className?: string }) {
   }
 
   const userName = session?.user?.name?.trim() || "Member";
-  const initials = userName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() || "")
-    .join("");
 
   return (
     <aside
@@ -199,9 +194,7 @@ export function Sidebar({ className }: { className?: string }) {
           )}
           title={collapsed ? "My profile" : undefined}
         >
-          <span className="bg-navy text-ivory flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold tracking-wide">
-            {initials || "VM"}
-          </span>
+          <UserAvatar name={userName} size="md" />
           {!collapsed ? (
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{userName}</span>

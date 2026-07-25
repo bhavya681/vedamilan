@@ -14,11 +14,11 @@ export function primaryPhotoUrl(photos?: ProfilePhoto[] | null): string | null {
 }
 
 export function shouldUnoptimizeImage(src: string): boolean {
+  // Wikimedia rate-limits Next Image optimizer (429) and some thumbs 404 — never proxy it.
+  if (src.includes("upload.wikimedia.org")) return true;
   return (
     src.startsWith("data:") ||
     src.startsWith("/") ||
-    (!src.includes("res.cloudinary.com") &&
-      !src.includes("images.unsplash.com") &&
-      !src.includes("upload.wikimedia.org"))
+    (!src.includes("res.cloudinary.com") && !src.includes("images.unsplash.com"))
   );
 }

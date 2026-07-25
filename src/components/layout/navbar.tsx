@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { MobileDashboardMenu } from "@/components/layout/mobile-dashboard-menu";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { mainNav } from "@/config/navigation";
@@ -94,12 +95,6 @@ export function Navbar({
 
   const floating = isOverlay && !scrolled;
   const userName = session?.user?.name?.trim() || "You";
-  const initials = userName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() || "")
-    .join("");
 
   return (
     <header
@@ -204,9 +199,7 @@ export function Navbar({
                     className="border-border/60 hover:border-gold/40 hidden items-center gap-2 rounded-full border py-1 pr-2.5 pl-1 transition-colors sm:inline-flex"
                     aria-label="My profile"
                   >
-                    <span className="bg-navy text-ivory flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold">
-                      {initials || "VM"}
-                    </span>
+                    <UserAvatar name={userName} size="sm" />
                     <span className="max-w-[7rem] truncate text-sm font-medium">{userName}</span>
                   </Link>
                   <Button

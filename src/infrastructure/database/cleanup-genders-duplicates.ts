@@ -29,17 +29,13 @@ import { DEMO_MEMBERS, PRESERVE_USER_EMAILS } from "@/lib/mock/demo-profiles";
 import { logger } from "@/lib/utils/logger";
 
 const BHAVYA_MALE_EMAILS = new Set(
-  [
-    "bbw3238@gmail.com",
-    "bhavyawade2@gmail.com",
-    "bhavya@vedamilan.ai",
-    "bhavya.wade@gmail.com",
-  ].map((e) => e.toLowerCase()),
+  ["bhavyawade2@gmail.com", "bhavya@vedamilan.ai", "bhavya.wade@gmail.com"].map((e) =>
+    e.toLowerCase(),
+  ),
 );
 
 /** Known preserved / real accounts with explicit gender overrides */
 const GENDER_OVERRIDES = new Map<string, "MALE" | "FEMALE">([
-  ["bbw3238@gmail.com", "MALE"],
   ["bhavyawade2@gmail.com", "MALE"],
   ["bhavya@vedamilan.ai", "MALE"],
   ["bhavya.wade@gmail.com", "MALE"],
@@ -221,11 +217,7 @@ async function backfillGenders() {
         (BHAVYA_MALE_EMAILS.has(email) || FORCE_MALE_NAME_HINTS.some((re) => re.test(userName))
           ? "MALE"
           : null);
-      if (
-        BHAVYA_MALE_EMAILS.has(email) ||
-        email === "bbw3238@gmail.com" ||
-        email === "bhavyawade2@gmail.com"
-      ) {
+      if (BHAVYA_MALE_EMAILS.has(email)) {
         bhavyaFixed += 1;
       }
     } else if (demoMap.has(email)) {

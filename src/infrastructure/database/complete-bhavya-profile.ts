@@ -11,7 +11,7 @@ import { horoscopeService } from "@/application/horoscope/horoscope.service";
 import { calculateProfileCompletion } from "@/application/profile/profile.service";
 import { logger } from "@/lib/utils/logger";
 
-const BHAVYA_EMAILS = ["bbw3238@gmail.com", "bhavyawade2@gmail.com"];
+const BHAVYA_EMAILS = ["bhavyawade2@gmail.com"];
 
 const PHOTO = "/avatars/bhavya.png";
 

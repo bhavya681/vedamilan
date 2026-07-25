@@ -6,6 +6,7 @@ import { ImagePlus, Link2, Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { invalidateUserAvatarCache } from "@/components/layout/user-avatar";
 import { cn } from "@/lib/utils/cn";
 
 export type ProfilePhotoItem = {
@@ -58,6 +59,7 @@ export function ProfilePhotoUploader({
           return;
         }
         onChanged(json.data.photos || []);
+        invalidateUserAvatarCache();
         onMessage?.(photos.length === 0 ? "Profile picture added" : "Photo added");
         setImageUrl("");
         setPreviewUrl(null);
@@ -122,6 +124,7 @@ export function ProfilePhotoUploader({
         return;
       }
       onChanged(json.data.photos || []);
+      invalidateUserAvatarCache();
       onMessage?.("Photo removed");
     } catch {
       onError?.("Could not remove photo");

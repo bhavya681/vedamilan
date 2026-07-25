@@ -18,6 +18,7 @@ type ProfileBundle = {
     name?: string;
     headline?: string;
     about?: string;
+    gender?: string | null;
     profession?: string | null;
     city?: string | null;
     education?: string | null;
@@ -67,6 +68,7 @@ export default function EditProfilePage() {
     const payload = {
       name: String(form.get("name") || "").trim(),
       headline: String(form.get("headline") || ""),
+      gender: String(form.get("gender") || "UNDISCLOSED"),
       profession: String(form.get("profession") || ""),
       city: String(form.get("city") || ""),
       education: String(form.get("education") || ""),
@@ -142,9 +144,43 @@ export default function EditProfilePage() {
             ) : null}
 
             <form className="space-y-4 border-t pt-6" onSubmit={onSave}>
+              <div>
+                <label className="text-sm font-medium" htmlFor="name">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+                  defaultValue={p.name || bundle?.user?.name || ""}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium" htmlFor="gender">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2"
+                  defaultValue={
+                    ["MALE", "FEMALE", "OTHER", "UNDISCLOSED"].includes(String(p.gender || ""))
+                      ? String(p.gender)
+                      : "UNDISCLOSED"
+                  }
+                  required
+                >
+                  <option value="UNDISCLOSED">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Male or Female is required for match discovery.
+                </p>
+              </div>
               {(
                 [
-                  ["name", "Name", p.name || bundle?.user?.name || ""],
                   ["headline", "Headline (shown under your name)", p.headline || ""],
                   ["profession", "Profession", p.profession || ""],
                   ["city", "City", p.city || ""],

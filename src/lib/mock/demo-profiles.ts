@@ -41,8 +41,10 @@ export type DemoMember = {
   headline: string;
   about: string;
   lifestyle: { diet: string; smoking: string; drinking: string };
-  /** Portrait URL (Wikimedia for celebs, Unsplash for fictional) */
+  /** Primary portrait URL (Wikimedia for celebs, Unsplash for fictional) */
   photo: string;
+  /** Extra gallery portraits (realistic Wikimedia / Unsplash) */
+  extraPhotos?: string[];
   isCelebrity?: boolean;
   isVerified?: boolean;
   birth: DemoBirth;
@@ -65,11 +67,7 @@ const unsplash = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&h=1000&q=80`;
 
 /** Real user accounts that seed must never delete */
-export const PRESERVE_USER_EMAILS = [
-  "bbw3238@gmail.com",
-  "bhavyawade2@gmail.com",
-  "matiya@gmail.com",
-] as const;
+export const PRESERVE_USER_EMAILS = ["bhavyawade2@gmail.com", "matiya@gmail.com"] as const;
 
 /** Indian celebs + fictional professionals (core roster) */
 const CORE_DEMO_MEMBERS: DemoMember[] = [
@@ -190,7 +188,7 @@ const CORE_DEMO_MEMBERS: DemoMember[] = [
       "Demo celebrity profile. Creative, family-first, and drawn to partners who respect privacy while sharing ambition thoughtfully.",
     lifestyle: { diet: "Non-vegetarian", smoking: "No", drinking: "Occasionally" },
     photo:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Alia_Bhatt_attends_at_the_2026_Cannes_Film_Festival_%28cropped%29_%28cropped%29.jpg/960px-Alia_Bhatt_attends_at_the_2026_Cannes_Film_Festival_%28cropped%29_%28cropped%29.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Alia_Bhatt_promoting_Kalank.jpg/960px-Alia_Bhatt_promoting_Kalank.jpg",
     isCelebrity: true,
     isVerified: true,
     birth: {

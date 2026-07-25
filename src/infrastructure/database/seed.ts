@@ -66,7 +66,24 @@ function inferCountry(member: (typeof DEMO_MEMBERS)[number]): string {
   if (place.includes("japan") || place.includes("osaka") || place.includes("tokyo")) return "Japan";
   if (place.includes("new zealand") || place.includes("auckland")) return "New Zealand";
   if (place.includes("hawaii") || place.includes("honolulu")) return "United States";
-  if (place.includes("spain") || place.includes("madrid")) return "Spain";
+  if (
+    place.includes("spain") ||
+    place.includes("madrid") ||
+    place.includes("barcelona") ||
+    place.includes("sant cugat")
+  )
+    return "Spain";
+  if (place.includes("chile") || place.includes("santiago")) return "Chile";
+  if (place.includes("colombia") || place.includes("barranquilla")) return "Colombia";
+  if (place.includes("kenya") || place.includes("nairobi")) return "Kenya";
+  if (place.includes("israel") || place.includes("tel aviv") || place.includes("rosh"))
+    return "Israel";
+  if (place.includes("korea") || place.includes("seoul") || place.includes("busan"))
+    return "South Korea";
+  if (place.includes("jersey") || place.includes("saint helier")) return "United Kingdom";
+  if (place.includes("puerto rico") || place.includes("vega baja") || place.includes("san juan")) {
+    return "United States";
+  }
   return "India";
 }
 

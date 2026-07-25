@@ -6,6 +6,7 @@ import { Bookmark, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
+import { shouldUnoptimizeImage } from "@/features/profile/profile-photo";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,7 +113,7 @@ export function MatchCard({
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-            unoptimized={Boolean(photo?.startsWith("/"))}
+            unoptimized={shouldUnoptimizeImage(photo)}
           />
         ) : (
           <div className="bg-brand-dual-soft absolute inset-0" />
