@@ -15,13 +15,6 @@ function hasLlmCredentials(): boolean {
   );
 }
 
-function formatDate(d?: Date | string | null) {
-  if (!d) return "—";
-  const date = typeof d === "string" ? new Date(d) : d;
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
-}
-
 async function guruDeterministicExplain(userId: string, message: string) {
   await connectMongo();
   const [chart, dasha] = await Promise.all([
@@ -31,15 +24,7 @@ async function guruDeterministicExplain(userId: string, message: string) {
 
   if (!chart) {
     return withVedicDisclaimer(
-      [
-        "Namaste.",
-        "",
-        "I am ready to guide you — but your kundli has not been generated yet.",
-        "Please open Birth Details, save your birth data, then generate your kundli.",
-        "Once the chart is stored, I can explain Raja Yogas, Mahadasha, Gochar, and relationship timing with chart-backed clarity.",
-        "",
-        `Your question: ${message}`,
-      ].join("\n"),
+      "Namaste. I am AI Guru. Please save your birth details and generate your kundli first — then I can answer from your chart in simple words.",
     );
   }
 
@@ -55,106 +40,78 @@ async function guruDeterministicExplain(userId: string, message: string) {
     /raja|gajakesari|dharma.?karma|budhaditya|ruchaka/i.test(`${y.code} ${y.name}`),
   );
   const venus = chart.planets?.find((p) => p.planet === "Venus");
-  const seventh = chart.planets?.find((p) => p.house === 7);
-  const mahaPeriods = (dasha?.periods || [])
-    .filter((p) => p.level === "MAHA")
-    .slice(0, 6)
-    .map((p) => `• ${p.lord}: ${formatDate(p.startDate)} → ${formatDate(p.endDate)}`)
-    .join("\n");
-
   const q = message.toLowerCase();
   const wantsMarriage = /marri|partner|spouse|relat|love|7th|vivah/.test(q);
   const wantsCareer = /career|job|work|business|success|raja/.test(q);
   const wantsTiming = /when|timing|this (month|year)|gochar|transit|now|dasha/.test(q);
 
-  const sections: string[] = [
-    "Namaste.",
-    "",
-    "### Chart foundation",
-    `Your Lagna rises in **${chart.lagnaSign}**, Moon rests in **${chart.moonSign}**, and Sun shines from **${chart.sunSign}**.`,
-    `Manglik reading from the rule engine: **${chart.manglikStatus}**.`,
+  const lines: string[] = [
+    `Your rising sign (Lagna) is **${chart.lagnaSign}**, Moon is in **${chart.moonSign}**, and Sun is in **${chart.sunSign}**.`,
   ];
 
-  if (raja.length) {
-    sections.push(
-      "",
-      "### Raja & auspicious yogas",
-      ...raja.map(
-        (y) =>
-          `• **${y.name}** (${y.category}, strength ${y.strength}): ${y.description || "Supportive classical combination."}`,
-      ),
-    );
-  } else if (yogas.length) {
-    sections.push(
-      "",
-      "### Yogas present",
-      ...yogas.slice(0, 5).map((y) => `• **${y.name}**: ${y.description || y.category}`),
-    );
-  } else {
-    sections.push(
-      "",
-      "### Yogas",
-      "No strong Raja-style combinations were flagged in the current engine pass. Focus remains on Lagna, Moon, and dasha lords.",
+  if (dasha?.currentMaha) {
+    lines.push(
+      `Right now your main period (Mahadasha) is **${dasha.currentMaha}**${
+        dasha.currentAntar ? `, with Antardasha **${dasha.currentAntar}**` : ""
+      }.`,
     );
   }
 
-  if (dasha) {
-    sections.push(
-      "",
-      "### Vimshottari Dasha",
-      `Current **Mahadasha**: ${dasha.currentMaha || "—"}${dasha.currentAntar ? ` · **Antardasha**: ${dasha.currentAntar}` : ""}.`,
-      mahaPeriods ? `Upcoming / recent Mahadasha arc:\n${mahaPeriods}` : "",
+  if (raja[0]) {
+    lines.push(
+      `A supportive yoga on your chart: **${raja[0].name}** — ${
+        raja[0].description || "it can support growth when you act with focus."
+      }`,
+    );
+  } else if (yogas[0]) {
+    lines.push(`Notable combination: **${yogas[0].name}**.`);
+  }
+
+  if (wantsMarriage && venus) {
+    lines.push(
+      `For relationships, Venus in **${venus.sign}** (house ${venus.house}) shows how you give and receive love.`,
+    );
+  } else if (wantsCareer) {
+    lines.push(
+      "For career, watch your 10th-house themes with the current dasha — steady effort usually works better than rushing.",
+    );
+  } else if (wantsTiming && gochar?.highlights?.[0]) {
+    lines.push(`In the sky now: ${gochar.highlights[0]}`);
+  } else if (gochar?.highlights?.[0]) {
+    lines.push(`Current transit note: ${gochar.highlights[0]}`);
+  }
+
+  lines.push("Ask me one clear question — I will keep the answer short and easy.");
+
+  return withVedicDisclaimer(lines.join("\n\n"));
+}
+
+async function guruOpeningGreeting(userId: string) {
+  await connectMongo();
+  const [chart, dasha] = await Promise.all([
+    Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
+    Dasha.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
+  ]);
+
+  if (!chart) {
+    return withVedicDisclaimer(
+      "Namaste. I am **AI Guru**. Generate your kundli from Birth Details, then ask me anything — I will answer in simple words from your chart.",
     );
   }
 
-  if (gochar) {
-    sections.push(
-      "",
-      "### Gochar (present sky)",
-      `As of ${formatDate(gochar.asOf)} — transit Ascendant near **${gochar.transitAscendant}** (read from natal Lagna **${gochar.natalLagna}**).`,
-      ...gochar.highlights.map((h) => `• ${h}`),
+  const parts = [
+    "Namaste. I am **AI Guru**.",
+    `Your chart shows Lagna in **${chart.lagnaSign}** and Moon in **${chart.moonSign}**.`,
+  ];
+  if (dasha?.currentMaha) {
+    parts.push(
+      `Current Mahadasha: **${dasha.currentMaha}**${
+        dasha.currentAntar ? ` · Antardasha **${dasha.currentAntar}**` : ""
+      }.`,
     );
   }
-
-  if (wantsMarriage || !wantsCareer) {
-    sections.push(
-      "",
-      "### Relationship lens",
-      venus
-        ? `Venus occupies **${venus.sign}** in house **${venus.house}** (${venus.nakshatra}) — this colors affection style and partnership taste.`
-        : "Venus placement unavailable.",
-      seventh
-        ? `A planet presently marking the 7th house space in your natal map: **${seventh.planet}** in ${seventh.sign}.`
-        : "No planet sits directly in the natal 7th in the stored chart — partnership themes then lean more on the 7th lord and Venus.",
-    );
-  }
-
-  if (wantsCareer) {
-    sections.push(
-      "",
-      "### Career / elevation",
-      "Watch the 10th-house themes together with any Raja / Dharma-Karma combinations above. When the current Mahadasha lord supports kendra/trikona houses, outer recognition tends to feel smoother.",
-    );
-  }
-
-  if (wantsTiming || gochar) {
-    sections.push(
-      "",
-      "### How to work with this period",
-      "• Honour the Mahadasha lord's nature in daily discipline (clarity, patience, or initiative as indicated).",
-      "• Use supportive Gochar months for introductions, interviews, or family conversations — avoid rushing under heavy Saturn pressure on the 7th/8th.",
-      "• Re-check compatibility with Ashta Koota before serious commitments.",
-    );
-  }
-
-  sections.push(
-    "",
-    "### On your question",
-    `You asked: “${message}”`,
-    "I have answered from your stored kundli, yoga engine, dasha periods, and current Gochar — not from guesswork. If you want depth on one yoga, a house, or marriage timing windows, ask me specifically.",
-  );
-
-  return withVedicDisclaimer(sections.filter(Boolean).join("\n"));
+  parts.push("Ask me about love, career, timing, or yogas — I keep answers short and clear.");
+  return withVedicDisclaimer(parts.join(" "));
 }
 
 async function deterministicExplain(agent: VedaAgentKey, userId: string, message: string) {
@@ -300,6 +257,7 @@ export class AiService {
             ? `An allowlisted candidate partner id is available for compatibility tools only: ${candidateUserId}`
             : "No candidate partner in context; use list mode for compatibility history.",
           "Always call the relevant tool before explaining.",
+          "Reply in simple English. Keep it short: 3–6 sentences or up to 5 bullets. Answer only what was asked.",
           `Member message: ${message}`,
         ]
           .filter(Boolean)
@@ -392,12 +350,9 @@ export class AiService {
     );
 
     const greeting = chart
-      ? await guruDeterministicExplain(
-          userId,
-          "Please give me a warm opening overview of my chart, yogas, dasha, and current gochar.",
-        )
+      ? await guruOpeningGreeting(userId)
       : withVedicDisclaimer(
-          "Namaste. Generate your kundli from Birth Details so I can read your Lagna, Moon, Raja Yogas, Dasha, and Gochar as your AI Guru.",
+          "Namaste. I am **AI Guru**. Generate your kundli from Birth Details, then ask me — I answer in simple, short words from your chart.",
         );
 
     return {
@@ -454,11 +409,11 @@ export class AiService {
       gochar,
       openingMessage: greeting,
       suggestedPrompts: [
-        "What do my Raja Yogas say about career and recognition?",
-        "Explain my current Mahadasha and Antardasha for relationships.",
-        "What does Gochar show for the next few months?",
-        "How do Venus and the 7th house shape my marriage themes?",
-        "Which yogas and doshas should I be conscious of?",
+        "What does my current dasha mean for me?",
+        "Tell me one strength in my chart.",
+        "How do Venus and the 7th house look for love?",
+        "What should I watch this month?",
+        "Explain my Lagna in simple words.",
       ],
       disclaimer: VEDIC_AI_DISCLAIMER,
     };

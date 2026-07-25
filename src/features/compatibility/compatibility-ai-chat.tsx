@@ -21,10 +21,10 @@ type ChatMessage = {
 };
 
 const SUGGESTED = [
-  "Why is this person a strong match for me?",
-  "What does our emotional alignment look like?",
-  "Where should we communicate carefully?",
-  "Should I explore this connection further?",
+  "Why is this a good match?",
+  "How do we feel emotionally?",
+  "What should we talk about carefully?",
+  "Should I explore this further?",
 ];
 
 function Bubble({ role, content }: { role: string; content: string }) {
@@ -58,8 +58,8 @@ export function CompatibilityAiChat({
     {
       role: "assistant",
       content: partnerName
-        ? `Namaste. I am **${AI_GURU_NAME}**. I can help you understand your compatibility with **${partnerName}** — emotional patterns, strengths, and areas worth discussing with care.`
-        : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — emotional patterns, strengths, or areas worth discussing. My guidance stays grounded in your calculated charts.`,
+        ? `Namaste. I am **${AI_GURU_NAME}**. Ask about you and **${partnerName}** — I will keep answers short and clear.`
+        : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — short, simple guidance from both charts.`,
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -79,8 +79,8 @@ export function CompatibilityAiChat({
       {
         role: "assistant",
         content: partnerName
-          ? `Namaste. I am **${AI_GURU_NAME}**. I can help you understand your compatibility with **${partnerName}** — emotional patterns, strengths, and areas worth discussing with care.`
-          : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — emotional patterns, strengths, or areas worth discussing.`,
+          ? `Namaste. I am **${AI_GURU_NAME}**. Ask about you and **${partnerName}** — I will keep answers short and clear.`
+          : `Namaste. I am **${AI_GURU_NAME}**. Ask about this connection — short, simple guidance from both charts.`,
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -109,22 +109,17 @@ export function CompatibilityAiChat({
       const json = await res.json();
       if (!json.success) {
         setError(json.error?.message || `${AI_GURU_NAME} could not respond right now`);
-        setBusy(false);
         return;
       }
       setConversationId(json.data.conversationId);
-      if (Array.isArray(json.data.messages) && json.data.messages.length) {
-        setMessages(
-          json.data.messages.filter(
-            (m: ChatMessage) => m.role === "user" || m.role === "assistant",
-          ),
-        );
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: json.data.answer, createdAt: new Date() },
-        ]);
-      }
+      const answer =
+        typeof json.data.answer === "string" && json.data.answer.trim()
+          ? json.data.answer
+          : "I could not form a short answer just now. Please try again.";
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: answer, createdAt: new Date() },
+      ]);
     } catch {
       setError("Connection issue — please try again");
     } finally {
@@ -163,7 +158,7 @@ export function CompatibilityAiChat({
           {busy ? (
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
               <AiGuruAvatar size="sm" busy />
-              <span>{AI_GURU_NAME} is reading both charts…</span>
+              <span>{AI_GURU_NAME} is thinking…</span>
             </div>
           ) : null}
           <div ref={bottomRef} />
