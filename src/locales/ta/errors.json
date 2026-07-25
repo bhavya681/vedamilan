@@ -1,0 +1,9 @@
+{
+  "generic": "ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.",
+  "unauthorized": "உள்நுழையவும்.",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "Content unavailable"
+}

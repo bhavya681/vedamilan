@@ -30,6 +30,8 @@
     "test:ai": "vitest run src/application/ai src/mastra",
     "test:chat": "vitest run src/application/chat",
     "test:billing": "vitest run src/application/billing",
+    "test:security": "vitest run src/lib/security src/lib/utils/__tests__/error-handler.test.ts src/application/billing/__tests__/payment-integrity.test.ts src/application/ai/__tests__/ai-tool-context.test.ts src/lib/auth/__tests__",
+    "audit:deps": "npm audit --omit=dev",
     "test:watch": "vitest"
   },
   "lint-staged": {
@@ -100,6 +102,7 @@
     "react-markdown": "^10.1.0",
     "recharts": "^3.9.2",
     "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "stripe": "^22.3.1",
     "sweph": "^2.10.3-7",

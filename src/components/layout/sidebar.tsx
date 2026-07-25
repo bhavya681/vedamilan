@@ -1,18 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ChevronsLeft, ChevronsRight, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { useT } from "@/components/i18n/i18n-provider";
+import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { Button } from "@/components/ui/button";
 import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
-import { WORKSPACE_MODE_META } from "@/lib/workspace/mode";
+import { navGroupKey, navTitleKey } from "@/lib/i18n/nav-labels";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { authClient, useSession } from "@/lib/auth/client";
@@ -20,8 +21,9 @@ import { authClient, useSession } from "@/lib/auth/client";
 const COLLAPSE_KEY = "vedamilan.sidebar.collapsed";
 
 export function Sidebar({ className }: { className?: string }) {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
   const router = useRouter();
+  const t = useT();
   const { mode, homeHref } = useWorkspaceMode();
   const items = navForMode(mode);
   const groups = navGroupsForMode(mode);
@@ -60,7 +62,7 @@ export function Sidebar({ className }: { className?: string }) {
     }
   }
 
-  const userName = session?.user?.name?.trim() || "Member";
+  const userName = session?.user?.name?.trim() || t("pages.member");
 
   return (
     <aside
@@ -97,7 +99,7 @@ export function Sidebar({ className }: { className?: string }) {
             size="icon"
             className="border-border/60 h-8 w-8 shrink-0"
             onClick={toggleCollapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("navigation.expandSidebar") : t("navigation.collapseSidebar")}
           >
             {collapsed ? (
               <ChevronsRight className="h-4 w-4" />
@@ -113,7 +115,9 @@ export function Sidebar({ className }: { className?: string }) {
               key={mode}
               className="text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 truncate px-0.5 text-[10px] leading-snug duration-300"
             >
-              {WORKSPACE_MODE_META[mode].subtitle}
+              {mode === "astrology"
+                ? t("navigation.modeAstrologySubtitle")
+                : t("navigation.modeMatrimonySubtitle")}
             </p>
           </div>
         ) : (
@@ -134,7 +138,7 @@ export function Sidebar({ className }: { className?: string }) {
             <div key={group}>
               {!collapsed ? (
                 <p className="text-muted-foreground/75 mb-2 px-2.5 text-[10px] font-semibold tracking-[0.16em] uppercase">
-                  {group}
+                  {t(navGroupKey(group))}
                 </p>
               ) : (
                 <div className="bg-border/60 mx-auto mb-2 h-px w-6" aria-hidden />
@@ -145,11 +149,12 @@ export function Sidebar({ className }: { className?: string }) {
                   .map((item) => {
                     const active = isDashboardNavActive(pathname, item.href);
                     const Icon = dashboardNavIcons[item.href];
+                    const label = t(navTitleKey(item.href, item.title));
                     return (
-                      <Link
+                      <LocaleLink
                         key={`${item.group}-${item.href}`}
                         href={item.href}
-                        title={collapsed ? item.title : undefined}
+                        title={collapsed ? label : undefined}
                         className={cn(
                           "group relative flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200",
                           collapsed ? "justify-center px-2 py-2.5" : "px-2.5 py-2.5",
@@ -170,8 +175,8 @@ export function Sidebar({ className }: { className?: string }) {
                             aria-hidden
                           />
                         ) : null}
-                        {!collapsed ? <span className="truncate">{item.title}</span> : null}
-                      </Link>
+                        {!collapsed ? <span className="truncate">{label}</span> : null}
+                      </LocaleLink>
                     );
                   })}
               </div>
@@ -186,22 +191,24 @@ export function Sidebar({ className }: { className?: string }) {
           collapsed ? "p-2" : "p-3 xl:p-3.5",
         )}
       >
-        <Link
+        <LocaleLink
           href={routes.profile}
           className={cn(
             "border-border/50 hover:border-gold/30 hover:bg-muted/40 bg-card/80 flex items-center gap-3 rounded-2xl border transition-colors",
             collapsed ? "justify-center p-2" : "px-2.5 py-2.5",
           )}
-          title={collapsed ? "My profile" : undefined}
+          title={collapsed ? t("navigation.profile") : undefined}
         >
           <UserAvatar name={userName} size="md" />
           {!collapsed ? (
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{userName}</span>
-              <span className="text-muted-foreground block text-[11px]">View profile</span>
+              <span className="text-muted-foreground block text-[11px]">
+                {t("navigation.viewProfile")}
+              </span>
             </span>
           ) : null}
-        </Link>
+        </LocaleLink>
 
         <Button
           type="button"
@@ -213,10 +220,12 @@ export function Sidebar({ className }: { className?: string }) {
           )}
           onClick={() => void onSignOut()}
           disabled={signingOut}
-          aria-label="Sign out"
+          aria-label={t("navigation.signOut")}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed ? <span className="ml-2">{signingOut ? "…" : "Sign out"}</span> : null}
+          {!collapsed ? (
+            <span className="ms-2">{signingOut ? "…" : t("navigation.signOut")}</span>
+          ) : null}
         </Button>
       </div>
     </aside>

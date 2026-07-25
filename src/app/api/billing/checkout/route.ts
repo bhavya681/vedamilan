@@ -4,13 +4,21 @@ import { requireSession } from "@/lib/auth/session";
 import { billingService } from "@/application/billing/billing.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { assertSameOriginMutation } from "@/lib/security/csrf";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `billing:checkout:${session.user.id}`,
+      limit: 10,
+      windowSec: 60,
     });
     const body = z
       .object({

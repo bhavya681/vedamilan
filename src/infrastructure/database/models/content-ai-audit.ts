@@ -145,6 +145,7 @@ const aiConversationSchema = new Schema(
         "NOTIFICATION",
         "REPORT",
         "SUPPORT",
+        "WISDOM_GUIDE",
       ],
       required: true,
       index: true,
@@ -181,6 +182,56 @@ export type AiConversationDocument = InferSchemaType<typeof aiConversationSchema
 export const AiConversation =
   (models.AiConversation as Model<AiConversationDocument>) ||
   model<AiConversationDocument>("AiConversation", aiConversationSchema, "ai_conversations");
+
+const wisdomJournalSchema = new Schema(
+  {
+    userId: { type: String, required: true, index: true },
+    guideId: { type: String, default: null, index: true },
+    guideName: { type: String, default: "" },
+    category: {
+      type: String,
+      enum: ["Marriage", "Career", "Personal Growth", "Family", "Relationships", "Other"],
+      default: "Other",
+      index: true,
+    },
+    question: { type: String, default: "" },
+    insight: { type: String, required: true },
+    reflection: { type: String, default: "" },
+  },
+  baseSchemaOptions,
+);
+
+softDeletePlugin(wisdomJournalSchema);
+wisdomJournalSchema.index({ userId: 1, createdAt: -1 });
+
+export type WisdomJournalDocument = InferSchemaType<typeof wisdomJournalSchema> & {
+  _id: Schema.Types.ObjectId;
+};
+export const WisdomJournal =
+  (models.WisdomJournal as Model<WisdomJournalDocument>) ||
+  model<WisdomJournalDocument>("WisdomJournal", wisdomJournalSchema, "wisdom_journal");
+
+const wisdomVoiceUsageSchema = new Schema(
+  {
+    userId: { type: String, required: true, index: true },
+    day: { type: String, required: true, index: true },
+    secondsUsed: { type: Number, default: 0 },
+    sessions: { type: Number, default: 0 },
+    turns: { type: Number, default: 0 },
+    lastSessionId: { type: String, default: null },
+  },
+  baseSchemaOptions,
+);
+
+softDeletePlugin(wisdomVoiceUsageSchema);
+wisdomVoiceUsageSchema.index({ userId: 1, day: 1 }, { unique: true });
+
+export type WisdomVoiceUsageDocument = InferSchemaType<typeof wisdomVoiceUsageSchema> & {
+  _id: Schema.Types.ObjectId;
+};
+export const WisdomVoiceUsage =
+  (models.WisdomVoiceUsage as Model<WisdomVoiceUsageDocument>) ||
+  model<WisdomVoiceUsageDocument>("WisdomVoiceUsage", wisdomVoiceUsageSchema, "wisdom_voice_usage");
 
 /** OTP for phone/email login (app-level; Better Auth verification also used for email flows) */
 const otpSchema = new Schema(

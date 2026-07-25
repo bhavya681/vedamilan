@@ -1,17 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import { PageTransition } from "@/components/animations/motion";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { adminNav } from "@/config/navigation";
 import { cn } from "@/lib/utils/cn";
 
 /** Preserves existing admin chrome; auth gating happens in the server layout. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
 
   return (
     <div className="bg-background flex h-dvh max-h-dvh flex-col overflow-hidden md:flex-row">
@@ -28,7 +26,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             {adminNav.map((item) => {
               const active = pathname === item.href;
               return (
-                <Link
+                <LocaleLink
                   key={item.href}
                   href={item.href}
                   className={cn(
@@ -40,7 +38,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   aria-current={active ? "page" : undefined}
                 >
                   {item.title}
-                </Link>
+                </LocaleLink>
               );
             })}
           </div>

@@ -1,0 +1,9 @@
+{
+  "generic": "حدث خطأ. حاول مرة أخرى.",
+  "unauthorized": "سجّل الدخول للمتابعة.",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "المحتوى غير متاح"
+}

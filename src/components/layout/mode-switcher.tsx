@@ -3,8 +3,9 @@
 import { Stars, UsersRound } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { useT } from "@/components/i18n/i18n-provider";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
-import { WORKSPACE_MODE_META, type WorkspaceMode } from "@/lib/workspace/mode";
+import type { WorkspaceMode } from "@/lib/workspace/mode";
 import { cn } from "@/lib/utils/cn";
 
 const MODE_ICON: Record<WorkspaceMode, typeof Stars> = {
@@ -25,6 +26,7 @@ export function ModeSwitcher({
   compact?: boolean;
 }) {
   const { mode, setMode, hydrated } = useWorkspaceMode();
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const pillId = compact ? "workspace-mode-pill-compact" : "workspace-mode-pill";
 
@@ -36,12 +38,17 @@ export function ModeSwitcher({
         className,
       )}
       role="tablist"
-      aria-label="VedaMilan workspace mode"
+      aria-label={t("navigation.workspaceMode")}
       data-hydrated={hydrated ? "true" : "false"}
     >
       {MODES.map((key) => {
         const active = mode === key;
-        const meta = WORKSPACE_MODE_META[key];
+        const label =
+          key === "astrology" ? t("navigation.modeAstrology") : t("navigation.modeMatrimony");
+        const subtitle =
+          key === "astrology"
+            ? t("navigation.modeAstrologySubtitle")
+            : t("navigation.modeMatrimonySubtitle");
         const Icon = MODE_ICON[key];
         return (
           <button
@@ -49,7 +56,7 @@ export function ModeSwitcher({
             type="button"
             role="tab"
             aria-selected={active}
-            title={meta.subtitle}
+            title={subtitle}
             onClick={() => {
               if (!active) setMode(key, { navigate: true });
             }}
@@ -76,11 +83,9 @@ export function ModeSwitcher({
                 aria-hidden
               />
               {compact ? (
-                <span className="sr-only">{meta.label}</span>
+                <span className="sr-only">{label}</span>
               ) : (
-                <span className="truncate text-[11px] font-semibold tracking-wide">
-                  {meta.label}
-                </span>
+                <span className="truncate text-[11px] font-semibold tracking-wide">{label}</span>
               )}
             </span>
           </button>

@@ -1,6 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 
 import { VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-disclaimer";
+import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import {
   getCompatibilityTool,
   getGocharTool,
@@ -182,6 +183,29 @@ ${EXPLAIN_ONLY_RULES}`,
   tools: { getProfileTool },
 });
 
+const WISDOM_SAFETY = `
+CRITICAL SAFETY:
+- You are an AI Wisdom Guide inspired by traditional teachings — NEVER claim to be the historical figure.
+- Never invent direct quotations, scripture verses, or historical facts.
+- Never claim divine authority, supernatural powers, or guaranteed outcomes.
+- No medical, legal, or financial professional advice. No marriage guarantees.
+- Label uncertain tradition as tradition; label modern application as AI interpretation.
+- Prefer reflective language: "one way to approach…", "traditionally associated with…".
+- Structure replies when helpful: Wisdom reflection → Principle → Explanation → Modern application → Reflection question.
+- End with exactly this disclaimer on its own line:
+${WISDOM_AI_DISCLAIMER}
+`;
+
+export const wisdomGuideAgent = new Agent({
+  id: "wisdom-guide-agent",
+  name: "Vedic Wisdom Guide",
+  instructions: `You facilitate premium, culturally respectful wisdom conversations for VedaMilan (Rishi Sabha).
+Guide-specific context is provided in each prompt.
+Keep answers thoughtful, calm, and structured — not chatbot banter.
+${WISDOM_SAFETY}`,
+  model,
+});
+
 export const vedaAgents = {
   ASTROLOGER_GURU: astrologerGuruAgent,
   HOROSCOPE: horoscopeAgent,
@@ -194,6 +218,7 @@ export const vedaAgents = {
   NOTIFICATION: notificationAgent,
   REPORT: reportAgent,
   SUPPORT: supportAgent,
+  WISDOM_GUIDE: wisdomGuideAgent,
 } as const;
 
 export type VedaAgentKey = keyof typeof vedaAgents;

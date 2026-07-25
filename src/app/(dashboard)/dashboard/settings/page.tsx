@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/components/i18n/i18n-provider";
 import { routes } from "@/lib/constants/routes";
 import { authClient } from "@/lib/auth/client";
 
@@ -22,6 +23,7 @@ type Bundle = {
 };
 
 export default function SettingsPage() {
+  const t = useT();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [name, setName] = useState("");
   const [about, setAbout] = useState("");
@@ -91,7 +93,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-display text-3xl">Settings</h1>
+        <h1 className="font-display text-3xl">{t("pages.settingsTitle")}</h1>
         <p className="text-muted-foreground mt-2">Profile and privacy preferences.</p>
       </div>
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
@@ -135,16 +137,19 @@ export default function SettingsPage() {
                 <Link href={routes.editProfile}>Full profile editor</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
-                <Link href={routes.appearance}>Appearance</Link>
+                <Link href={routes.languageRegion}>{t("navigation.languageRegion")}</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
-                <Link href={routes.privacySettings}>Privacy</Link>
+                <Link href={routes.appearance}>{t("settings.appearance")}</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
-                <Link href={routes.blocked}>Blocked</Link>
+                <Link href={routes.privacySettings}>{t("settings.privacy")}</Link>
               </Button>
               <Button asChild type="button" variant="ghost">
-                <Link href={routes.security}>Security</Link>
+                <Link href={routes.blocked}>{t("pages.blockedTitle")}</Link>
+              </Button>
+              <Button asChild type="button" variant="ghost">
+                <Link href={routes.security}>{t("settings.security")}</Link>
               </Button>
             </div>
           </form>

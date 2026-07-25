@@ -4,15 +4,17 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-disclaimer";
+import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import { cn } from "@/lib/utils/cn";
 
-function splitDisclaimer(content: string): { body: string; hasDisclaimer: boolean } {
+function splitDisclaimer(content: string): { body: string; hasDisclaimer: boolean; text?: string } {
   const trimmed = content.trim();
-  if (!trimmed.includes(VEDIC_AI_DISCLAIMER)) {
-    return { body: trimmed, hasDisclaimer: false };
+  for (const line of [VEDIC_AI_DISCLAIMER, WISDOM_AI_DISCLAIMER]) {
+    if (trimmed.includes(line)) {
+      return { body: trimmed.replace(line, "").trim(), hasDisclaimer: true, text: line };
+    }
   }
-  const body = trimmed.replace(VEDIC_AI_DISCLAIMER, "").trim();
-  return { body, hasDisclaimer: true };
+  return { body: trimmed, hasDisclaimer: false };
 }
 
 export function GuruMarkdown({
@@ -24,7 +26,7 @@ export function GuruMarkdown({
   className?: string;
   tone?: "assistant" | "user";
 }) {
-  const { body, hasDisclaimer } = splitDisclaimer(content);
+  const { body, hasDisclaimer, text: disclaimerText } = splitDisclaimer(content);
   const isUser = tone === "user";
 
   return (
@@ -146,7 +148,7 @@ export function GuruMarkdown({
               : "border-border/40 text-muted-foreground",
           )}
         >
-          {VEDIC_AI_DISCLAIMER}
+          {disclaimerText || VEDIC_AI_DISCLAIMER}
         </p>
       ) : null}
     </div>

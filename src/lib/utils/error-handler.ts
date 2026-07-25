@@ -54,6 +54,27 @@ export class ConflictError extends AppError {
   }
 }
 
+export class PaymentRequiredError extends AppError {
+  constructor(message = "Premium subscription required") {
+    super("PAYMENT_REQUIRED", message, 402);
+    this.name = "PaymentRequiredError";
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message = "Service temporarily unavailable. Please try again shortly.") {
+    super("SERVICE_UNAVAILABLE", message, 503);
+    this.name = "ServiceUnavailableError";
+  }
+}
+
+/** Client-safe details only — never forward raw provider / DB payloads on 5xx. */
+function clientSafeDetails(statusCode: number, details: unknown): unknown | undefined {
+  if (details === undefined || statusCode >= 500) return undefined;
+  if (statusCode === 429 || statusCode === 400 || statusCode === 409) return details;
+  return undefined;
+}
+
 export function toApiError(error: unknown): {
   code: string;
   message: string;
@@ -65,7 +86,7 @@ export function toApiError(error: unknown): {
       code: error.code,
       message: error.message,
       statusCode: error.statusCode,
-      details: error.details,
+      details: clientSafeDetails(error.statusCode, error.details),
     };
   }
 
@@ -79,17 +100,10 @@ export function toApiError(error: unknown): {
     };
   }
 
-  if (error instanceof Error) {
-    return {
-      code: "INTERNAL_ERROR",
-      message: error.message || "An unexpected error occurred",
-      statusCode: 500,
-    };
-  }
-
+  // Never echo unexpected Error.message — it often contains stack internals / DB text.
   return {
     code: "INTERNAL_ERROR",
-    message: "An unexpected error occurred",
+    message: "Something went wrong.",
     statusCode: 500,
   };
 }
@@ -100,7 +114,7 @@ export function handleRouteError(error: unknown): NextResponse {
   if (parsed.statusCode >= 500) {
     logger.error({ err: error }, "Unhandled route error");
   } else {
-    logger.warn({ err: error, code: parsed.code }, "Handled route error");
+    logger.warn({ code: parsed.code }, "Handled route error");
   }
 
   return errorResponse(parsed.code, parsed.message, parsed.statusCode, parsed.details);

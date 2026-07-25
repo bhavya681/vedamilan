@@ -49,17 +49,7 @@ export function HeroSection() {
         </motion.div>
         <div className="from-navy/95 via-navy/78 to-navy/35 absolute inset-0 bg-gradient-to-r" />
         <div className="from-navy to-navy/55 absolute inset-0 bg-gradient-to-t via-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_35%,rgba(212,175,55,0.16),transparent_52%)]" />
       </motion.div>
-
-      {!reduceMotion ? (
-        <motion.div
-          aria-hidden
-          className="border-gold/20 pointer-events-none absolute top-[18%] right-[8%] -z-10 hidden h-72 w-72 rounded-full border xl:block"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
-        />
-      ) : null}
 
       <motion.div
         style={reduceMotion ? undefined : { y: contentY, opacity }}
@@ -93,17 +83,17 @@ export function HeroSection() {
             id="hero-heading"
             className="font-display text-ivory mt-7 max-w-2xl text-2xl leading-[1.15] text-balance sm:mt-8 sm:text-4xl md:text-5xl"
           >
-            Find a life partner aligned with you.
+            Finding someone is easy. Finding someone aligned with your life is different.
           </h1>
 
           <p className="text-ivory/75 mt-5 max-w-lg text-base leading-relaxed sm:text-lg">
-            Vedic kundli, compatibility, and intelligent matchmaking—in one calm, private workspace.
+            Preferences, personality, and Vedic compatibility — in one calm, private workspace.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button asChild size="lg" className="shadow-gold h-12 min-w-[11.5rem]">
+            <Button asChild size="lg" className="h-12 min-w-[11.5rem]">
               <Link href={routes.register}>
-                Begin your journey
+                Begin
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -111,7 +101,7 @@ export function HeroSection() {
               asChild
               size="lg"
               variant="outline"
-              className="border-ivory/25 bg-ivory/5 text-ivory hover:bg-ivory/12 h-12 backdrop-blur-md"
+              className="border-ivory/25 bg-ivory/5 text-ivory hover:bg-ivory/12 h-12"
             >
               <Link href="/#how">See how it works</Link>
             </Button>

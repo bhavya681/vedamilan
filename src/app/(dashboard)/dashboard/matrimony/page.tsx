@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles, Stars } from "lucide-react";
+import { ArrowRight, Stars } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skeletons";
-import { SoftEmoji, moodFromScore } from "@/features/compatibility/compatibility-visuals";
+import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { routes } from "@/lib/constants/routes";
-import { cn } from "@/lib/utils/cn";
 
 type Bundle = {
   userName: string;
@@ -44,6 +44,7 @@ function greetingForHour(hour: number) {
 }
 
 export default function MatrimonyHomePage() {
+  const t = useT();
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const { setMode } = useWorkspaceMode();
@@ -121,13 +122,11 @@ export default function MatrimonyHomePage() {
   }
 
   return (
-    <div className="relative space-y-8 sm:space-y-10">
-      <div className="pointer-events-none absolute inset-x-0 -top-6 h-40 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--gold)_12%,transparent),transparent_70%)]" />
-
+    <div className="space-y-8 sm:space-y-10">
       <ContentReveal className="space-y-8 sm:space-y-10">
         <PageHeader
           title={`${greeting}, ${firstName}`}
-          description="Discover meaningful compatibility — preferences, personality, and Vedic alignment."
+          description="Your journey continues — people who may align with your values and life path."
           actions={
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button asChild className="w-full sm:w-auto">
@@ -147,11 +146,7 @@ export default function MatrimonyHomePage() {
 
         {bundle ? (
           <>
-            <motion.section
-              className="border-border/70 from-card via-card to-gold/5 shadow-soft grid gap-4 rounded-2xl border bg-gradient-to-br p-5 sm:grid-cols-3 sm:p-6"
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+            <section className="border-border/60 grid gap-6 border-y py-5 sm:grid-cols-3 sm:gap-8">
               <div>
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
                   <Stars className="h-3.5 w-3.5" /> Moon
@@ -175,7 +170,7 @@ export default function MatrimonyHomePage() {
                   <Link href={routes.notifications}>Notifications</Link>
                 </Button>
               </div>
-            </motion.section>
+            </section>
 
             <section className="space-y-4">
               <div className="flex items-end justify-between gap-3">
@@ -191,17 +186,17 @@ export default function MatrimonyHomePage() {
                 </Button>
               </div>
               {bundle.matches.length ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                   {bundle.matches.map((m, index) => {
                     const mood = moodFromScore(m.compatibilityScore);
                     const reasons = (m.reasons || []).filter(Boolean).slice(0, 3);
                     return (
                       <motion.div
                         key={m.userId}
-                        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: reduceMotion ? 0 : 0.05 * index }}
-                        className="space-y-2"
+                        transition={{ delay: reduceMotion ? 0 : 0.04 * index }}
+                        className="space-y-3"
                       >
                         <MatchCard
                           name={m.name}
@@ -213,23 +208,20 @@ export default function MatrimonyHomePage() {
                             m.reasons?.[0] ||
                             m.cardSummary ||
                             m.headline ||
-                            "Explore this connection"
+                            "A thoughtful connection"
                           }
                           photo={m.photo || undefined}
                           href={`${routes.matchProfile}?id=${m.userId}`}
                         />
                         {reasons.length ? (
-                          <ul className="text-muted-foreground space-y-1 px-1 text-xs">
-                            <li className="text-foreground/80 font-medium">Why this person?</li>
+                          <ul className="text-muted-foreground space-y-1 px-0.5 text-xs leading-relaxed">
+                            <li className="text-foreground/80 font-medium">Why you may align</li>
                             {reasons.map((r) => (
                               <li key={r}>· {r}</li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-muted-foreground flex items-center gap-1.5 px-1 text-xs">
-                            <SoftEmoji emoji={mood.emoji} size="sm" pulse={false} />
-                            {mood.title}
-                          </p>
+                          <p className="text-muted-foreground px-0.5 text-xs">{t(mood.titleKey)}</p>
                         )}
                       </motion.div>
                     );
@@ -237,8 +229,8 @@ export default function MatrimonyHomePage() {
                 </div>
               ) : (
                 <EmptyState
-                  title="Finding meaningful connections"
-                  description="Your profile is ready — check back as more aligned members appear."
+                  title="No recommendations yet"
+                  description="Complete your preferences and birth details so we can surface people whose values and life paths may align with yours."
                   action={
                     <Button asChild>
                       <Link href={routes.search}>Explore Search</Link>
@@ -249,18 +241,11 @@ export default function MatrimonyHomePage() {
             </section>
 
             {bundle.insight ? (
-              <section
-                className={cn(
-                  "border-border/70 bg-card shadow-soft relative overflow-hidden rounded-2xl border p-5 sm:p-6",
-                )}
-              >
-                <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  AI Guru · Your compatibility guide
-                </p>
-                <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
-                <Button asChild variant="outline" size="sm" className="mt-4">
-                  <Link href={routes.aiInsights}>Ask AI Guru</Link>
+              <section className="border-border/60 space-y-3 border-t pt-8">
+                <h2 className="font-display text-xl">A closer look at your compatibility</h2>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={routes.aiInsights}>Explore further</Link>
                 </Button>
               </section>
             ) : null}

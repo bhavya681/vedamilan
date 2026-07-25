@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { requireSession } from "@/lib/auth/session";
 import { aiService } from "@/application/ai/ai.service";
+import { hasActiveSubscription } from "@/application/billing/entitlements";
 import type { VedaAgentKey } from "@/mastra/agents/veda-agents";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
@@ -23,6 +24,7 @@ const schema = z.object({
       "NOTIFICATION",
       "REPORT",
       "SUPPORT",
+      "WISDOM_GUIDE",
     ])
     .default("ASTROLOGER_GURU"),
   message: z.string().min(1).max(4000),
@@ -50,10 +52,16 @@ export async function POST(request: Request) {
       throw new UnauthorizedError();
     });
     const body = schema.parse(await request.json());
+    const premium = await hasActiveSubscription(session.user.id);
     await enforceRateLimit({
       key: `ai:chat:${session.user.id}`,
-      limit: 20,
+      limit: premium ? 40 : 15,
       windowSec: 60,
+    });
+    await enforceRateLimit({
+      key: `ai:chat:day:${session.user.id}`,
+      limit: premium ? 500 : 60,
+      windowSec: 60 * 60 * 24,
     });
     const result = await aiService.chat({
       userId: session.user.id,

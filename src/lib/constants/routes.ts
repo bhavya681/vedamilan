@@ -50,6 +50,10 @@ export const routes = {
   compatibility: "/dashboard/compatibility",
   compatibilityReport: "/dashboard/compatibility/report",
   aiInsights: "/dashboard/ai-insights",
+  vedicWisdom: "/dashboard/vedic-wisdom",
+  wisdomJournal: "/dashboard/vedic-wisdom/journal",
+  askTheSages: "/dashboard/vedic-wisdom/ask-the-sages",
+  wisdomVoice: "/dashboard/vedic-wisdom", // append `/${guideId}/voice`
   recommendations: "/dashboard/recommendations",
 
   search: "/dashboard/search",
@@ -61,6 +65,7 @@ export const routes = {
   likes: "/dashboard/likes",
   shortlisted: "/dashboard/shortlisted",
   connections: "/dashboard/connections",
+  yourConnection: "/dashboard/your-connection",
 
   messages: "/dashboard/messages",
   chat: "/dashboard/chat",
@@ -86,6 +91,7 @@ export const routes = {
   security: "/dashboard/settings/security",
   privacySettings: "/dashboard/settings/privacy",
   appearance: "/dashboard/settings/appearance",
+  languageRegion: "/dashboard/settings/language",
   blocked: "/dashboard/settings/blocked",
 
   admin: "/admin",

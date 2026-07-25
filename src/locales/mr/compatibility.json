@@ -1,0 +1,77 @@
+{
+  "title": "अनुकूलता",
+  "overallAlignment": "एकूण सामंजस्य",
+  "vedicCompatibility": "वैदिक अनुकूलता",
+  "lifePathAlignment": "जीवनमार्ग सामंजस्य",
+  "valuesAlignment": "मूल्यांचे सामंजस्य",
+  "whereYouAlign": "जिथे तुम्ही जुळता",
+  "whereYouDiffer": "जिथे तुम्ही वेगळे आहात",
+  "worthDiscussing": "चर्चेस योग्य",
+  "shareInsight": "ही अंतर्दृष्टी शेअर करा",
+  "keepPrivate": "खाजगी ठेवा",
+  "strongAlignment": "मजबूत सामंजस्य",
+  "goodAlignment": "चांगले सामंजस्य",
+  "mixedAlignment": "मिश्र सामंजस्य",
+  "needsDiscussion": "चर्चा आवश्यक",
+  "notAPrediction": "चिंतनशील मार्गदर्शन — भविष्यवाणी किंवा हमी नाही।",
+  "checkCompatibility": "अनुकूलता तपासा",
+  "deepReport": "सखोल अनुकूलता अहवाल",
+  "verdicts": {
+    "excellent_match": "उत्कृष्ट जुळणी",
+    "very_good_match": "खूप चांगली जुळणी",
+    "good_match": "चांगली जुळणी",
+    "needs_conscious_effort": "जाणीवपूर्वक प्रयत्न आवश्यक",
+    "high_challenge": "उच्च आव्हान",
+    "not_recommended": "शिफारस नाही"
+  },
+  "moods": {
+    "excellent": {
+      "title": "मजबूत सामंजस्य",
+      "blurb": "कुंडली उबदार रसायन आणि दीर्घकालीन शक्यता दर्शवते।"
+    },
+    "strong": {
+      "title": "उज्ज्वल वचन",
+      "blurb": "सहायक जुळणी — एकत्र मजबूत करता येईल।"
+    },
+    "balanced": {
+      "title": "स्थिर शक्यता",
+      "blurb": "भक्कम पाया — विचारशील संवाद सामंजस्य वाढवेल।"
+    },
+    "cautious": {
+      "title": "काळजीपूर्वक पहा",
+      "blurb": "काही तणाव दिसतो। फरक समजून घेणे महत्त्वाचे।"
+    },
+    "challenging": {
+      "title": "आव्हानात्मक मिश्रण",
+      "blurb": "कुंडलीत तणाव आहे। स्पष्टता आवश्यक।"
+    }
+  },
+  "kootas": {
+    "Varna": "वर्ण",
+    "Vashya": "वश्य",
+    "Tara": "तारा",
+    "Yoni": "योनि",
+    "GrahaMaitri": "ग्रह मैत्री",
+    "Gana": "गण",
+    "Bhakoot": "भकूट",
+    "Nadi": "नाडी"
+  },
+  "reasons": {
+    "kootaStrong": "{koota} मजबूत आहे",
+    "kootaAttention": "{koota} कडे लक्ष आवश्यक",
+    "manglik.needs_review": "मांगलिक: समीक्षा आवश्यक",
+    "manglik.both_neutralizing": "मांगलिक: दोन्ही मांगलिक — पारंपरिक समतोल",
+    "manglik.partial": "मांगलिक: अंशतः — मऊ समीक्षा",
+    "manglik.compatible": "मांगलिक: अनुकूल"
+  },
+  "score": {
+    "matchLabel": "जुळणी स्कोर",
+    "matchShort": "जुळणी",
+    "matchMeaning": "शोधामध्ये ही प्रोफाइल तुमच्यासाठी किती संबंधित आहे।",
+    "matchDetail": "तुमच्या प्राधान्यांवर आणि जलद वैदिक मिश्रणावर आधारित।",
+    "compatLabel": "अनुकूलता स्कोर",
+    "compatShort": "अनुकूलता",
+    "compatMeaning": "सखोल तुलनेत प्रोफाइल आणि वैदिक चार्ट किती जुळतात।",
+    "compatDetail": "पूर्ण अनुकूलता इंजिनमधून: अष्टकूट, शुक्र मिलन आणि संबंध मॉड्यूल्स।"
+  }
+}

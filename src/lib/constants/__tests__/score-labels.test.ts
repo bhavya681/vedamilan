@@ -9,5 +9,7 @@ describe("Sprint 1 — score label copy", () => {
     expect(MATCH_SCORE.meaning).toMatch(/discovery|relevant/i);
     expect(COMPATIBILITY_SCORE.meaning).toMatch(/align|deep|chart/i);
     expect(MATCH_SCORE.detail).not.toEqual(COMPATIBILITY_SCORE.detail);
+    expect(MATCH_SCORE.labelKey).toBe("compatibility.score.matchLabel");
+    expect(COMPATIBILITY_SCORE.labelKey).toBe("compatibility.score.compatLabel");
   });
 });

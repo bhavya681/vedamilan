@@ -23,6 +23,7 @@ import {
   AdvancedMarriageDynamicsPanel,
   type AdvancedMarriageDynamicsView,
 } from "@/features/compatibility/advanced-marriage-dynamics-panel";
+import { WisdomCompatibilityBridge } from "@/features/wisdom/components/wisdom-compatibility-bridge";
 import { CompatibilitySkeleton, ContentReveal } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
@@ -176,6 +177,8 @@ export default function CompatibilityReportPage() {
               <Link href={routes.aiInsights}>Ask AI Guru to explain</Link>
             </Button>
           </GlassCard>
+
+          <WisdomCompatibilityBridge />
 
           {report.timingPrediction ? (
             <TimingPredictionPanel timing={report.timingPrediction} pairMode />

@@ -1,28 +1,30 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Heart,
   LayoutDashboard,
   MessageCircle,
   MoreHorizontal,
-  Sparkles,
   Stars,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { cn } from "@/lib/utils/cn";
-import { routes } from "@/lib/constants/routes";
+import { useT } from "@/components/i18n/i18n-provider";
+import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
+import { ModeSwitcher } from "@/components/layout/mode-switcher";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
-import { ModeSwitcher } from "@/components/layout/mode-switcher";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { navGroupKey, navTitleKey } from "@/lib/i18n/nav-labels";
+import { routes } from "@/lib/constants/routes";
+import { cn } from "@/lib/utils/cn";
 
 export function MobileBottomNav() {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
+  const t = useT();
   const { mode, homeHref } = useWorkspaceMode();
   const [moreOpen, setMoreOpen] = useState(false);
   const items = navForMode(mode);
@@ -31,17 +33,17 @@ export function MobileBottomNav() {
   const primary = useMemo(() => {
     if (mode === "astrology") {
       return [
-        { href: homeHref, label: "Home", icon: LayoutDashboard },
-        { href: routes.kundli, label: "Kundli", icon: Stars },
-        { href: routes.rajaYogas, label: "Yogas", icon: Sparkles },
-        { href: routes.lalKitab, label: "Lal Kitab", icon: Sparkles },
+        { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
+        { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
+        { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
+        { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: MessageCircle },
       ];
     }
     return [
-      { href: homeHref, label: "Home", icon: LayoutDashboard },
-      { href: routes.matches, label: "Matches", icon: Heart },
-      { href: routes.compatibility, label: "Compat", icon: Stars },
-      { href: routes.chat, label: "Chat", icon: MessageCircle },
+      { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
+      { href: routes.matches, labelKey: "navigation.matches", icon: Heart },
+      { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
+      { href: routes.chat, labelKey: "navigation.messages", icon: MessageCircle },
     ];
   }, [mode, homeHref]);
 
@@ -49,7 +51,7 @@ export function MobileBottomNav() {
     <>
       <nav
         className="border-border/40 bg-background/92 dark:bg-background/88 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shadow-[0_-10px_36px_rgba(20,17,14,0.08)] backdrop-blur-2xl md:hidden dark:shadow-[0_-10px_36px_rgba(0,0,0,0.4)]"
-        aria-label="Primary workspace"
+        aria-label={t("navigation.workspaceMode")}
         data-mode={mode}
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0.5">
@@ -59,7 +61,7 @@ export function MobileBottomNav() {
             const Icon = item.icon;
             return (
               <li key={item.href} className="flex-1">
-                <Link
+                <LocaleLink
                   href={item.href}
                   className={cn(
                     "relative flex flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
@@ -75,14 +77,14 @@ export function MobileBottomNav() {
                   >
                     <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
                   </span>
-                  {item.label}
+                  {t(item.labelKey)}
                   {active ? (
                     <span
                       className="bg-gold absolute bottom-0.5 h-1 w-1 rounded-full"
                       aria-hidden
                     />
                   ) : null}
-                </Link>
+                </LocaleLink>
               </li>
             );
           })}
@@ -94,7 +96,7 @@ export function MobileBottomNav() {
                 moreOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => setMoreOpen(true)}
-              aria-label="More dashboard links"
+              aria-label={t("navigation.more")}
             >
               <span
                 className={cn(
@@ -104,26 +106,23 @@ export function MobileBottomNav() {
               >
                 <MoreHorizontal className="h-[1.15rem] w-[1.15rem]" aria-hidden />
               </span>
-              More
+              {t("navigation.more")}
             </button>
           </li>
         </ul>
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent
-          side="bottom"
-          className="bg-background border-border/50 scrollbar-premium max-h-[min(80vh,36rem)] overflow-y-auto rounded-t-3xl pb-8"
-        >
-          <SheetHeader className="text-left">
-            <SheetTitle className="font-display">Workspace</SheetTitle>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle>{t("navigation.more")}</SheetTitle>
           </SheetHeader>
           <ModeSwitcher className="mt-4 w-full" />
           <div className="mt-4 space-y-4">
             {groups.map((group) => (
               <div key={group}>
                 <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-[0.16em] uppercase">
-                  {group}
+                  {t(navGroupKey(group))}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {items
@@ -132,7 +131,7 @@ export function MobileBottomNav() {
                       const active = isDashboardNavActive(pathname, item.href);
                       const Icon = dashboardNavIcons[item.href];
                       return (
-                        <Link
+                        <LocaleLink
                           key={`${item.group}-${item.href}`}
                           href={item.href}
                           onClick={() => setMoreOpen(false)}
@@ -149,8 +148,8 @@ export function MobileBottomNav() {
                               aria-hidden
                             />
                           ) : null}
-                          {item.title}
-                        </Link>
+                          {t(navTitleKey(item.href, item.title))}
+                        </LocaleLink>
                       );
                     })}
                 </div>
@@ -158,8 +157,8 @@ export function MobileBottomNav() {
             ))}
             <SignOutButton
               className="w-full"
+              label={t("navigation.signOut")}
               redirectTo={routes.home}
-              onSignedOut={() => setMoreOpen(false)}
             />
           </div>
         </SheetContent>

@@ -1,0 +1,8 @@
+{
+  "guruName": "AI Guru",
+  "respondInLanguage": "Respond in {language}. Keep Vedic terms like Kundli, Nakshatra, Dasha, Lagna, and Guna Milan in their canonical form with a short local explanation when helpful.",
+  "reflectiveNotPredictive": "Stay reflective and neutral. Do not diagnose, predict certainty, or pressure relationship decisions.",
+  "translateMessage": "Traduzir mensagem",
+  "showOriginal": "Mostrar original",
+  "chatTranslateHint": "Optional translation — the original message is always kept."
+}

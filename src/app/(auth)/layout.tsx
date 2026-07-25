@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { BrandLogo, BrandMark } from "@/components/brand/brand-logo";
+import { LanguageSelector } from "@/components/i18n/language-selector";
 import { brand } from "@/lib/constants/brand";
 import { landingImages } from "@/lib/constants/images";
 import { routes } from "@/lib/constants/routes";
@@ -32,6 +33,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <div className="bg-background relative flex items-center justify-center px-4 py-12">
         <div className="mandala-bg absolute inset-0 opacity-20 lg:opacity-10" aria-hidden />
+        <div className="absolute end-4 top-4 z-10">
+          <LanguageSelector compact />
+        </div>
         <div className="relative w-full max-w-md">
           <div className="mb-8 text-center lg:text-left">
             <BrandLogo href={routes.home} size="lg" priority />

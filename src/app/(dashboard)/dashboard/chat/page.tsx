@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Ban, Mic, Phone, Send, Sparkles, Video, X } from "lucide-react";
+import { Ban, Mic, Phone, Send, MessageSquareText, Video, X } from "lucide-react";
 import Pusher from "pusher-js";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { authClient } from "@/lib/auth/client";
 import { ChatSkeleton } from "@/components/ui/page-skeletons";
+import { TranslateMessageButton } from "@/components/i18n/translate-message-button";
+import { useT } from "@/components/i18n/i18n-provider";
 
 const ICE_BREAKERS_HIDDEN_KEY = "vedamilan.chat.ice-breakers.hidden.v1";
 
@@ -65,6 +67,7 @@ function writeHiddenIceBreakerChats(ids: Set<string>) {
 }
 
 export default function ChatPage() {
+  const t = useT();
   const searchParams = useSearchParams();
   const withUserId = searchParams.get("with");
   const { data: session } = authClient.useSession();
@@ -304,14 +307,12 @@ export default function ChatPage() {
     <div className="grid h-[calc(100vh-10rem)] min-h-0 gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
       <aside className="glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl">
         <div className="border-border/60 shrink-0 border-b p-4">
-          <h1 className="font-display text-xl">Messages</h1>
+          <h1 className="font-display text-xl">{t("pages.messagesTitle")}</h1>
         </div>
         <ScrollArea className="min-h-0 w-full flex-1">
           <div className="w-full max-w-full space-y-1 p-2">
             {chats.length === 0 ? (
-              <p className="text-muted-foreground p-3 text-sm">
-                No conversations yet. Connect with someone first, then message from Connections.
-              </p>
+              <p className="text-muted-foreground p-3 text-sm">{t("pages.messagesEmpty")}</p>
             ) : null}
             {chats.map((conversation) => (
               <button
@@ -354,9 +355,9 @@ export default function ChatPage() {
               <AvatarFallback>{active?.name ? initials(active.name) : "?"}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">{active?.name || "Select a conversation"}</p>
+              <p className="font-medium">{active?.name || t("pages.selectConversation")}</p>
               <p className="text-muted-foreground text-xs">
-                {typing ? "Typing…" : "Secure conversation"}
+                {typing ? t("pages.typing") : t("pages.secureConversation")}
               </p>
             </div>
           </div>
@@ -406,6 +407,9 @@ export default function ChatPage() {
                           ? "📷 Photo"
                           : message.body}
                     </p>
+                    {!mine && message.type === "TEXT" && message.body ? (
+                      <TranslateMessageButton text={message.body} />
+                    ) : null}
                     <p className="mt-1 text-[10px] opacity-70">
                       {message.createdAt
                         ? new Date(message.createdAt).toLocaleTimeString([], {
@@ -435,14 +439,14 @@ export default function ChatPage() {
                 onClick={showIceBreakers}
                 className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                Show AI suggestions
+                <MessageSquareText className="h-3.5 w-3.5" />
+                Show suggested replies
               </button>
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-                    <Sparkles className="h-3.5 w-3.5" /> AI suggested replies
+                    <MessageSquareText className="h-3.5 w-3.5" /> Suggested replies
                   </span>
                   <Button
                     type="button"

@@ -1,0 +1,9 @@
+{
+  "generic": "Une erreur est survenue. Réessayez.",
+  "unauthorized": "Connectez-vous pour continuer.",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "Content unavailable"
+}

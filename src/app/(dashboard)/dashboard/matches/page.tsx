@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Search, Sparkles, Stars, Users } from "lucide-react";
+import { Search, HeartHandshake, Stars, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { useT } from "@/components/i18n/i18n-provider";
 import { MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, MatchesPageSkeleton } from "@/components/ui/page-skeletons";
 import { ScoreExplainCallout } from "@/features/matchmaking/components/score-explain";
@@ -51,6 +52,7 @@ function whyMatch(match: MatchItem) {
 }
 
 export default function MatchesPage() {
+  const t = useT();
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [hasSelfChart, setHasSelfChart] = useState(true);
   const [interestedInYou, setInterestedInYou] = useState<InterestPerson[]>([]);
@@ -231,14 +233,14 @@ export default function MatchesPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
-        title="Potential connections"
+        title={t("pages.matchesTitle")}
         description="Ranked by match score — how relevant each profile is for you in discovery. Open Compatibility for a deep chart compare."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href={routes.connections}>
                 <Users className="mr-1.5 h-4 w-4" />
-                Connections
+                {t("navigation.connections")}
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -274,9 +276,9 @@ export default function MatchesPage() {
           {mutual.length || interestedInYou.length ? (
             <section className="space-y-4">
               {mutual.length ? (
-                <div className="border-gold/30 bg-gold/5 space-y-3 rounded-2xl border p-4 sm:p-5">
+                <div className="border-border/60 space-y-3 border-y py-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="text-gold h-4 w-4" />
+                    <HeartHandshake className="text-primary h-4 w-4" />
                     <h2 className="font-display text-xl">Mutual Interest</h2>
                   </div>
                   <div className="flex flex-wrap gap-2">

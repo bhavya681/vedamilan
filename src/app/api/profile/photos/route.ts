@@ -2,6 +2,8 @@ import { requireSession } from "@/lib/auth/session";
 import { profileService } from "@/application/profile/profile.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { assertSameOriginMutation } from "@/lib/security/csrf";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,8 +16,14 @@ type PhotoBody = {
 
 export async function POST(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `profile:photos:${session.user.id}`,
+      limit: 15,
+      windowSec: 60,
     });
     const body = (await request.json()) as PhotoBody;
     const makePrimary = Boolean(body.makePrimary);
@@ -45,6 +53,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
     });

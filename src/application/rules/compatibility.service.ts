@@ -113,6 +113,9 @@ export class CompatibilityService {
     if (userAId === userBId) throw new ValidationError("Cannot compare a profile with itself");
     await connectMongo();
 
+    const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+    await assertCandidateAccessible(userAId, userBId);
+
     const [profileA, profileB] = await Promise.all([
       Profile.findOne({ userId: userAId }).lean(),
       Profile.findOne({ userId: userBId }).lean(),

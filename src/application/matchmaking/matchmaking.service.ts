@@ -10,7 +10,7 @@ import {
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
 import { relationshipService } from "@/application/relationship/relationship.service";
-import { ForbiddenError } from "@/lib/utils/error-handler";
+import { escapeRegex } from "@/lib/security/url-safety";
 import {
   normalizePagination,
   toPaginatedResult,
@@ -264,8 +264,8 @@ export class MatchmakingService {
     if (filters.religion) {
       query.religion = filters.religion;
     }
-    if (filters.profession) query.profession = new RegExp(filters.profession, "i");
-    if (filters.education) query.education = new RegExp(filters.education, "i");
+    if (filters.profession) query.profession = new RegExp(escapeRegex(filters.profession), "i");
+    if (filters.education) query.education = new RegExp(escapeRegex(filters.education), "i");
     if (filters.language) query.languages = filters.language;
 
     const minHeight =
@@ -447,9 +447,8 @@ export class MatchmakingService {
 
   async getCandidate(viewerUserId: string, candidateUserId: string) {
     await connectMongo();
-    if (await relationshipService.isBlockedEitherWay(viewerUserId, candidateUserId)) {
-      throw new ForbiddenError("This profile is not available");
-    }
+    const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+    await assertCandidateAccessible(viewerUserId, candidateUserId);
     const [profile, chart, names, match] = await Promise.all([
       Profile.findOne({ userId: candidateUserId, status: "ACTIVE" }).lean(),
       Horoscope.findOne({ userId: candidateUserId }).sort({ calculatedAt: -1 }).lean(),
@@ -530,6 +529,8 @@ export class MatchmakingService {
     type: "LIKE" | "SUPER_LIKE" | "INTEREST" = "LIKE",
   ) {
     await connectMongo();
+    const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+    await assertCandidateAccessible(fromUserId, toUserId);
     return Like.findOneAndUpdate(
       { fromUserId, toUserId, type },
       { $set: { fromUserId, toUserId, type, deletedAt: null, status: "ACTIVE" } },
@@ -539,6 +540,8 @@ export class MatchmakingService {
 
   async shortlist(userId: string, targetUserId: string, note = "") {
     await connectMongo();
+    const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+    await assertCandidateAccessible(userId, targetUserId);
     return Shortlist.findOneAndUpdate(
       { userId, targetUserId },
       { $set: { userId, targetUserId, note, deletedAt: null, status: "ACTIVE" } },

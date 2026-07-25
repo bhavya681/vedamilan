@@ -1,0 +1,58 @@
+{
+  "fallbackTitle": "Notificación",
+  "markAllRead": "Marcar todo como leído",
+  "today": "Hoy",
+  "earlier": "Anteriores",
+  "emptyTitle": "Estás al día",
+  "emptyHint": "Nuevos intereses, mensajes y actualizaciones de conexión aparecerán aquí.",
+  "types": {
+    "WELCOME": {
+      "title": "Bienvenido/a a VedaMilan AI",
+      "body": "Completa tu perfil, añade datos de nacimiento y genera tu kundli para desbloquear matching y explicaciones de IA."
+    },
+    "KUNDLI_HINT": {
+      "title": "Genera tu primer kundli",
+      "body": "Los datos de nacimiento impulsan cálculos védicos deterministas. La IA solo explica los resultados."
+    },
+    "INTEREST": {
+      "title": "Nuevo interés",
+      "body": "{name} mostró interés en conectar contigo."
+    },
+    "MUTUAL_INTEREST": {
+      "title": "Interés mutuo",
+      "body": "Tú y {name} estáis interesados — considera enviar una solicitud de conexión."
+    },
+    "CONNECTION_REQUEST": {
+      "title": "Solicitud de conexión",
+      "body": "{name} desea conectar contigo."
+    },
+    "CONNECTION_ACCEPTED": {
+      "title": "Estáis conectados",
+      "body": "Tú y {name} ahora estáis conectados. Vuestro Connection Space está listo."
+    },
+    "MESSAGE": {
+      "title": "Nuevo mensaje",
+      "body": "{name}: {preview}"
+    },
+    "PAYMENT_SUCCESS": {
+      "title": "Pago correcto",
+      "body": "Tu suscripción Premium ya está activa."
+    },
+    "JOURNEY_SPACE_READY": {
+      "title": "Tu Connection Space está listo",
+      "body": "Explora compatibilidad y reflexiones compartidas con {name}."
+    },
+    "JOURNEY_SHARED_INSIGHT": {
+      "title": "Perspectiva compartida",
+      "body": "{name} compartió una perspectiva de compatibilidad contigo."
+    },
+    "JOURNEY_SHARED_ANSWER": {
+      "title": "Respuesta compartida",
+      "body": "{name} compartió una reflexión en vuestro Connection Space."
+    },
+    "COMPATIBILITY": {
+      "title": "Actualización de compatibilidad",
+      "body": "Hay una nueva perspectiva de compatibilidad lista para revisar."
+    }
+  }
+}

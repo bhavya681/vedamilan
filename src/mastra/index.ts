@@ -15,6 +15,7 @@ export const mastra = new Mastra({
     notificationAgent: vedaAgents.NOTIFICATION,
     reportAgent: vedaAgents.REPORT,
     supportAgent: vedaAgents.SUPPORT,
+    wisdomGuideAgent: vedaAgents.WISDOM_GUIDE,
   },
 });
 

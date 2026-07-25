@@ -1,0 +1,21 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "unauthorized": "Please sign in to continue.",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "Content unavailable",
+  "codes": {
+    "UNAUTHORIZED": "Please sign in to continue.",
+    "FORBIDDEN": "You don't have access to this.",
+    "NOT_FOUND": "We couldn't find that.",
+    "VALIDATION_ERROR": "Please check your details and try again.",
+    "RATE_LIMITED": "Too many requests. Please try again shortly.",
+    "PAYMENT_REQUIRED": "This feature requires an active Premium subscription.",
+    "SERVICE_UNAVAILABLE": "Service temporarily unavailable. Please try again shortly.",
+    "INTERNAL_ERROR": "Something went wrong. Please try again.",
+    "INVALID_BIRTH_TIME": "Please enter a valid birth time.",
+    "INVALID_EMAIL": "Please enter a valid email address."
+  }
+}

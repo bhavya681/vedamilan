@@ -1,0 +1,9 @@
+{
+  "generic": "Algo salió mal. Inténtalo de nuevo.",
+  "unauthorized": "Inicia sesión para continuar.",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "Contenido no disponible"
+}

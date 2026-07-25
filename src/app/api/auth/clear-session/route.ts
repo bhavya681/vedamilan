@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { routes } from "@/lib/constants/routes";
+import { sanitizeInternalPath } from "@/lib/security/safe-redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,8 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const next = url.searchParams.get("next") || routes.dashboard;
+  const next = sanitizeInternalPath(url.searchParams.get("next"), routes.dashboard);
   const login = new URL(routes.login, url.origin);
-  login.searchParams.set("next", next.startsWith("/") ? next : routes.dashboard);
+  login.searchParams.set("next", next);
   return NextResponse.redirect(login);
 }

@@ -1,0 +1,9 @@
+{
+  "generic": "कुछ गलत हुआ। कृपया फिर कोशिश करें।",
+  "unauthorized": "जारी रखने के लिए साइन इन करें।",
+  "forbidden": "You don't have access to this.",
+  "notFound": "We couldn't find that.",
+  "validation": "Please check your details and try again.",
+  "network": "Connection issue — try again.",
+  "missingTranslation": "सामग्री उपलब्ध नहीं"
+}

@@ -39,11 +39,12 @@ export async function POST(request: Request, context: { params: Promise<{ chatId
     const body = z
       .object({
         body: z.string().max(5000).optional(),
-        type: z.enum(["TEXT", "IMAGE", "VOICE", "SYSTEM"]).optional(),
+        // SYSTEM is server-only — clients may not invent system messages.
+        type: z.enum(["TEXT", "IMAGE", "VOICE"]).optional(),
         mediaUrl: z.string().url().optional(),
-        mediaPublicId: z.string().optional(),
-        durationSec: z.number().optional(),
-        clientMessageId: z.string().optional(),
+        mediaPublicId: z.string().max(200).optional(),
+        durationSec: z.number().min(0).max(600).optional(),
+        clientMessageId: z.string().max(120).optional(),
       })
       .parse(await request.json());
 

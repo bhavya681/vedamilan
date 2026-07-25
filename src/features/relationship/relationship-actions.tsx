@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Link2, MessageCircle, Undo2 } from "lucide-react";
+import { Heart, Link2, MessageCircle, Undo2, HeartHandshake } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/constants/routes";
@@ -35,7 +35,8 @@ const STATE_COPY: Record<RelationshipStatePayload["state"], string> = {
   MUTUAL_INTEREST: "You're both interested. Connect when you're ready.",
   REQUEST_SENT: "Connection request pending their response.",
   REQUEST_RECEIVED: "They sent you a connection request.",
-  CONNECTED: "You're connected — you can message each other.",
+  CONNECTED:
+    "You're connected — open Your Connection to explore alignment and get to know each other.",
   DECLINED: "Previous request was declined. Mutual interest can reopen Connect.",
   BLOCKED: "This conversation path is unavailable.",
   REMOVED: "Connection was removed. You may express interest again.",
@@ -214,7 +215,7 @@ export function RelationshipActions({ otherUserId, className, compact, onStateCh
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {rel.canInterest ? (
           <Button type="button" disabled={busy} onClick={() => void expressInterest()}>
-            <Sparkles className="h-4 w-4" />
+            <Heart className="h-4 w-4" />
             Interested
           </Button>
         ) : null}
@@ -274,6 +275,18 @@ export function RelationshipActions({ otherUserId, className, compact, onStateCh
               Decline
             </Button>
           </>
+        ) : null}
+
+        {rel.state === "CONNECTED" ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy}
+            onClick={() => router.push(`${routes.yourConnection}?partner=${otherUserId}`)}
+          >
+            <HeartHandshake className="h-4 w-4" />
+            Your Connection
+          </Button>
         ) : null}
 
         {rel.canMessage ? (

@@ -1,4 +1,5 @@
-import { AppError, ForbiddenError } from "@/lib/utils/error-handler";
+import { AppError, ForbiddenError, ServiceUnavailableError } from "@/lib/utils/error-handler";
+import { logger } from "@/lib/utils/logger";
 
 export class RateLimitError extends AppError {
   constructor(message = "Too many requests. Please try again shortly.", retryAfterSec = 60) {
@@ -12,9 +13,10 @@ type Bucket = { count: number; resetAt: number };
 const memoryBuckets = new Map<string, Bucket>();
 
 /**
- * Sliding-window style rate limit with in-memory fallback.
- * Uses Redis when REDIS_URL is configured; otherwise process-local buckets
- * (fine for single-node / local dev).
+ * Sliding-window style rate limit.
+ * Uses Redis when REDIS_URL is configured (required for multi-instance production).
+ * Falls back to process-local buckets only when Redis is intentionally unset (local/dev).
+ * When Redis is configured but unavailable, fails closed in production.
  */
 export async function enforceRateLimit(options: {
   key: string;
@@ -41,7 +43,11 @@ export async function enforceRateLimit(options: {
       return;
     } catch (error) {
       if (error instanceof RateLimitError) throw error;
-      // Fall through to memory if Redis is misconfigured mid-request
+      logger.error({ err: error, key }, "Rate limit Redis failure");
+      if (process.env.NODE_ENV === "production") {
+        throw new ServiceUnavailableError("Rate limiting temporarily unavailable");
+      }
+      // Dev only: fall through to memory so local work continues if Redis is down.
     }
   }
 

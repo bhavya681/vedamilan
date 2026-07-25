@@ -213,6 +213,18 @@ export class AiService {
     await connectMongo();
     const { userId, agent, message, conversationId, candidateUserId } = input;
 
+    let allowlistedCandidate: string | null = null;
+    if (candidateUserId) {
+      const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+      await assertCandidateAccessible(userId, candidateUserId);
+      allowlistedCandidate = candidateUserId;
+    }
+
+    if (agent === "REPORT") {
+      const { requireEntitlement } = await import("@/application/billing/entitlements");
+      await requireEntitlement(userId, "premium_reports");
+    }
+
     let conversation = conversationId
       ? await AiConversation.findById(conversationId).where({ userId })
       : null;
@@ -222,7 +234,7 @@ export class AiService {
         agent,
         title: message.slice(0, 80),
         messages: [],
-        contextRefs: candidateUserId ? { candidateUserId } : {},
+        contextRefs: allowlistedCandidate ? { candidateUserId: allowlistedCandidate } : {},
         model: hasLlmCredentials() ? "llm" : "deterministic-explain",
       });
     }
@@ -248,16 +260,24 @@ export class AiService {
     let modelUsed = "deterministic-explain";
     let tokenUsage = conversation.tokenUsage || { prompt: 0, completion: 0, total: 0 };
 
+    const profile = await Profile.findOne({ userId, status: "ACTIVE" }).lean();
+    const preferredLanguage =
+      (profile?.localization?.aiLanguage as string | null | undefined) ||
+      (profile?.localization?.language as string | null | undefined) ||
+      "en";
+    const languageInstruction = `Respond in the user's preferred language code "${preferredLanguage}". Keep Vedic terms (Kundli, Nakshatra, Dasha, Lagna, Guna Milan, Gochar, Yoga, Dosha) in canonical form with a short local explanation when helpful. Stay reflective — never invent planet positions, guna scores, or certainty about outcomes.`;
+
     if (hasLlmCredentials()) {
       try {
         const agentInstance = vedaAgents[agent];
         const prompt = [
           "Tools are already bound to the authenticated member — do not invent user ids.",
-          candidateUserId
-            ? `An allowlisted candidate partner id is available for compatibility tools only: ${candidateUserId}`
+          allowlistedCandidate
+            ? `An allowlisted candidate partner id is available for compatibility tools only: ${allowlistedCandidate}`
             : "No candidate partner in context; use list mode for compatibility history.",
           "Always call the relevant tool before explaining.",
-          "Reply in simple English. Keep it short: 3–6 sentences or up to 5 bullets. Answer only what was asked.",
+          languageInstruction,
+          "Keep it short: 3–6 sentences or up to 5 bullets. Answer only what was asked.",
           `Member message: ${message}`,
         ]
           .filter(Boolean)
@@ -266,7 +286,7 @@ export class AiService {
         const result = await runWithAiToolContext(
           {
             sessionUserId: userId,
-            allowedCandidateUserId: candidateUserId || null,
+            allowedCandidateUserId: allowlistedCandidate,
           },
           () => agentInstance.generate(prompt),
         );

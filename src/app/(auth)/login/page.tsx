@@ -10,12 +10,12 @@ import { Label } from "@/components/ui/label";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { authClient, useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
+import { sanitizeInternalPath } from "@/lib/security/safe-redirect";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || routes.dashboard;
-  const safeNext = nextPath.startsWith("/") ? nextPath : routes.dashboard;
+  const safeNext = sanitizeInternalPath(searchParams.get("next"), routes.dashboard);
   const { data: session, isPending } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

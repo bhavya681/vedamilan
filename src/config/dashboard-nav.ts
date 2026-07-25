@@ -5,16 +5,17 @@ import {
   Compass,
   Crown,
   Heart,
+  HeartHandshake,
   Home,
   Link2,
   MessageCircle,
   Search,
   Settings,
-  Sparkles,
   Stars,
   UserRound,
   Users,
   Bookmark,
+  BookOpen,
 } from "lucide-react";
 
 import { routes } from "@/lib/constants/routes";
@@ -26,21 +27,25 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.matrimony]: Heart,
   [routes.matches]: Heart,
   [routes.connections]: Link2,
+  [routes.yourConnection]: HeartHandshake,
   [routes.chat]: MessageCircle,
   [routes.kundli]: Stars,
   [routes.search]: Search,
   [routes.compatibility]: Compass,
-  [routes.horoscope]: Sparkles,
+  [routes.horoscope]: CalendarDays,
   [routes.gochar]: Compass,
   [routes.predictions]: CalendarDays,
-  [routes.lalKitab]: Sparkles,
+  [routes.lalKitab]: BookOpen,
   [routes.yogas]: Stars,
   [routes.rajaYogas]: Crown,
   [routes.natalProfile]: UserRound,
   [routes.divisionalCharts]: Compass,
   [routes.ashtakavarga]: CalendarDays,
   [routes.calendar]: CalendarDays,
-  [routes.aiInsights]: Sparkles,
+  [routes.aiInsights]: MessageCircle,
+  [routes.vedicWisdom]: BookOpen,
+  [routes.askTheSages]: Users,
+  [routes.wisdomJournal]: Bookmark,
   [routes.birthDetails]: CalendarDays,
   [routes.profile]: UserRound,
   [routes.shortlisted]: Bookmark,
@@ -63,6 +68,7 @@ export function isDashboardNavActive(pathname: string, href: string) {
     return true;
   }
   if (href === routes.aiInsights && pathname.startsWith(routes.aiInsights)) return true;
+  if (href === routes.vedicWisdom && pathname.startsWith(routes.vedicWisdom)) return true;
   if (href === routes.rajaYogas && pathname.startsWith(routes.rajaYogas)) return true;
   if (href === routes.yogas && pathname === routes.yogas) return true;
   return pathname.startsWith(`${href}/`) || pathname.startsWith(href);

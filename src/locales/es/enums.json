@@ -1,0 +1,20 @@
+{
+  "gender": {
+    "MALE": "Hombre",
+    "FEMALE": "Mujer",
+    "OTHER": "Otro",
+    "UNDISCLOSED": "Prefiero no decirlo"
+  },
+  "maritalStatus": {
+    "NEVER_MARRIED": "Nunca casado/a",
+    "DIVORCED": "Divorciado/a",
+    "WIDOWED": "Viudo/a",
+    "AWAITING_DIVORCE": "En proceso de divorcio",
+    "UNKNOWN": "—"
+  },
+  "visibility": {
+    "PUBLIC": "Público",
+    "MEMBERS": "Miembros",
+    "HIDDEN": "Oculto"
+  }
+}

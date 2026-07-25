@@ -2,7 +2,8 @@ import { headers } from "next/headers";
 
 import { getAuth } from "@/lib/auth";
 import type { UserRoleCode } from "@/infrastructure/database/base";
-import { UnauthorizedError } from "@/lib/utils/error-handler";
+import { ForbiddenError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { assertSameUser } from "@/lib/security/rate-limit";
 
 export type SessionUser = {
   id: string;
@@ -51,4 +52,24 @@ export function hasRole(user: SessionUser | null | undefined, roles: UserRoleCod
 
 export function isAdmin(user: SessionUser | null | undefined): boolean {
   return hasRole(user, ["ADMIN", "SUPER_ADMIN"]);
+}
+
+/** Authenticated session + one of the allowed roles. */
+export async function requireRole(roles: UserRoleCode[]) {
+  const session = await requireSession();
+  if (!hasRole(session.user as SessionUser, roles)) {
+    throw new ForbiddenError("Insufficient role for this action");
+  }
+  return session;
+}
+
+export async function requireAdmin() {
+  return requireRole(["ADMIN", "SUPER_ADMIN"]);
+}
+
+/** Authenticated caller must own the resource user id. */
+export async function requireOwnership(resourceUserId: string) {
+  const session = await requireSession();
+  assertSameUser(session.user.id, resourceUserId);
+  return session;
 }

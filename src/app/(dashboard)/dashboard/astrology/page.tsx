@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles, Stars } from "lucide-react";
+import { ArrowRight, Stars } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { routes } from "@/lib/constants/routes";
-import { cn } from "@/lib/utils/cn";
 
 type AstrologyBundle = {
   userName: string;
@@ -133,13 +132,11 @@ export default function AstrologyHomePage() {
   }
 
   return (
-    <div className="relative space-y-8 sm:space-y-10">
-      <div className="pointer-events-none absolute inset-x-0 -top-6 h-40 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--gold)_10%,transparent),transparent_70%)]" />
-
+    <div className="space-y-8 sm:space-y-10">
       <ContentReveal className="space-y-8 sm:space-y-10">
         <PageHeader
           title={`${greeting}, ${firstName}`}
-          description="Your Vedic astrology overview — what is active in your chart right now."
+          description="Your Vedic profile — what is active in your chart right now."
           actions={
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button asChild className="w-full sm:w-auto">
@@ -149,7 +146,7 @@ export default function AstrologyHomePage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link href={routes.aiInsights}>Ask AI Guru</Link>
+                <Link href={routes.aiInsights}>Ask about your chart</Link>
               </Button>
             </div>
           }
@@ -159,7 +156,7 @@ export default function AstrologyHomePage() {
 
         {bundle ? (
           <>
-            <section className="border-border/70 from-card via-card to-gold/5 shadow-soft grid gap-4 rounded-2xl border bg-gradient-to-br p-5 sm:grid-cols-3 sm:p-6">
+            <section className="border-border/60 grid gap-6 border-y py-5 sm:grid-cols-3 sm:gap-8">
               <div>
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
                   <Stars className="h-3.5 w-3.5" /> Current Dasha
@@ -175,7 +172,9 @@ export default function AstrologyHomePage() {
                 </Button>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">Snapshot</p>
+                <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                  Your Vedic profile
+                </p>
                 <dl className="mt-2 space-y-1.5 text-sm">
                   <div className="flex justify-between gap-3">
                     <dt className="text-muted-foreground">Lagna</dt>
@@ -197,7 +196,7 @@ export default function AstrologyHomePage() {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  Live astrological weather
+                  Current transits
                 </p>
                 {bundle.gocharHighlights.length ? (
                   <ul className="mt-2 space-y-1.5 text-sm">
@@ -208,47 +207,40 @@ export default function AstrologyHomePage() {
                 ) : (
                   <p className="mt-2 text-sm leading-relaxed">
                     {bundle.gocharError
-                      ? "Live transit analysis needs birth details and a calculated Kundli."
-                      : "Loading live Gochar…"}
+                      ? "Transit analysis needs birth details and a calculated Kundli."
+                      : "Loading Gochar…"}
                   </p>
                 )}
                 <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
                   <Link href={routes.gochar}>Open Gochar</Link>
                 </Button>
                 <p className="text-muted-foreground mt-2 text-[11px]">
-                  Calculated from your Kundli · Verified planetary data
+                  Calculated from your Kundli · deterministic planetary data
                 </p>
               </div>
             </section>
 
             <section className="space-y-3">
               <div>
-                <h2 className="font-display text-2xl">Today&apos;s insight</h2>
+                <h2 className="font-display text-2xl">What this means for you</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  AI Guru interpretation of engine-generated chart context — not a fresh
-                  calculation.
+                  Interpretation of your chart context — astrology calculates; guidance explains.
                 </p>
               </div>
               {bundle.insight ? (
-                <div className="border-border/70 bg-card shadow-soft rounded-2xl border p-5 sm:p-6">
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    AI Guru Interpretation
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">
-                    {bundle.insight}
-                  </p>
-                  <Button asChild variant="outline" size="sm" className="mt-4">
-                    <Link href={routes.aiInsights}>Continue with AI Guru</Link>
+                <div className="space-y-3">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={routes.aiInsights}>Continue the conversation</Link>
                   </Button>
                 </div>
               ) : (
                 <EmptyState
-                  title="Ask AI Guru for today’s reading"
-                  description="Insights appear once your chart is ready and the guide has context."
+                  title="Chart insight unavailable"
+                  description="Add birth details and generate your Kundli to receive a reading grounded in your chart."
                   action={
                     <Button asChild>
-                      <Link href={routes.aiInsights}>Open AI Guru</Link>
+                      <Link href={routes.kundli}>Open Kundli</Link>
                     </Button>
                   }
                 />
@@ -262,37 +254,34 @@ export default function AstrologyHomePage() {
                   Explore themes without leaving your astrology workspace.
                 </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="divide-border/60 border-border/60 divide-y border-y">
                 {LIFE_AREAS.map((area) => (
                   <Link
                     key={area.title}
                     href={area.href}
-                    className={cn(
-                      "border-border/60 bg-card hover:border-gold/35 group rounded-2xl border p-4 transition-colors",
-                    )}
+                    className="group hover:bg-muted/40 flex items-center justify-between gap-4 py-3.5 transition-colors sm:px-1"
                   >
-                    <p className="font-medium">{area.title}</p>
-                    <p className="text-muted-foreground mt-1 text-sm">{area.hint}</p>
-                    <span className="text-gold mt-3 inline-flex items-center gap-1 text-sm font-medium">
-                      Explore
-                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </span>
+                    <div>
+                      <p className="font-medium">{area.title}</p>
+                      <p className="text-muted-foreground mt-0.5 text-sm">{area.hint}</p>
+                    </div>
+                    <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 ))}
               </div>
             </section>
 
-            <section className="border-border/70 bg-card shadow-soft rounded-2xl border p-5 sm:p-6">
-              <p className="text-muted-foreground text-xs font-semibold tracking-[0.14em] uppercase">
-                AI Guru · Your personal Vedic guide
+            <section className="border-border/60 space-y-3 border-t pt-8">
+              <h2 className="font-display text-xl">Reflect on your chart</h2>
+              <p className="text-muted-foreground text-sm">
+                Start a conversation grounded in your calculated Kundli.
               </p>
-              <h2 className="font-display mt-2 text-xl">Ask me anything about your chart</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 {AI_PROMPTS.map((prompt) => (
                   <Link
                     key={prompt}
                     href={`${routes.aiInsights}?q=${encodeURIComponent(prompt)}`}
-                    className="border-border/60 bg-muted/40 hover:border-gold/30 rounded-full border px-3 py-1.5 text-xs transition-colors sm:text-sm"
+                    className="border-border/60 hover:border-foreground/25 rounded-md border px-3 py-1.5 text-xs transition-colors sm:text-sm"
                   >
                     {prompt}
                   </Link>

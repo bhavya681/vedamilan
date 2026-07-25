@@ -1,0 +1,77 @@
+{
+  "title": "अनुकूलता",
+  "overallAlignment": "समग्र सामंजस्य",
+  "vedicCompatibility": "वैदिक अनुकूलता",
+  "lifePathAlignment": "जीवन पथ सामंजस्य",
+  "valuesAlignment": "मूल्यों का सामंजस्य",
+  "whereYouAlign": "जहाँ आप मेल खाते हैं",
+  "whereYouDiffer": "जहाँ आप भिन्न हैं",
+  "worthDiscussing": "चर्चा के योग्य",
+  "shareInsight": "यह अंतर्दृष्टि साझा करें",
+  "keepPrivate": "निजी रखें",
+  "strongAlignment": "मजबूत सामंजस्य",
+  "goodAlignment": "अच्छा सामंजस्य",
+  "mixedAlignment": "मिश्रित सामंजस्य",
+  "needsDiscussion": "चर्चा आवश्यक",
+  "notAPrediction": "चिंतनशील मार्गदर्शन — भविष्यवाणी या गारंटी नहीं।",
+  "checkCompatibility": "अनुकूलता जाँचें",
+  "deepReport": "गहन अनुकूलता रिपोर्ट",
+  "verdicts": {
+    "excellent_match": "उत्कृष्ट मैच",
+    "very_good_match": "बहुत अच्छा मैच",
+    "good_match": "अच्छा मैच",
+    "needs_conscious_effort": "सचेत प्रयास आवश्यक",
+    "high_challenge": "उच्च चुनौती",
+    "not_recommended": "अनुशंसित नहीं"
+  },
+  "moods": {
+    "excellent": {
+      "title": "मजबूत सामंजस्य",
+      "blurb": "कुंडली गर्म रसायन और दीर्घकालिक संभावना दर्शाती है।"
+    },
+    "strong": {
+      "title": "उज्ज्वल वादा",
+      "blurb": "एक सहायक मैच — साथ मिलकर मजबूत किया जा सकता है।"
+    },
+    "balanced": {
+      "title": "स्थिर संभावना",
+      "blurb": "ठोस आधार — विचारशील संवाद सामंजस्य गहरा करेगा।"
+    },
+    "cautious": {
+      "title": "सावधानी से देखें",
+      "blurb": "कुछ तनाव दिखता है। भिन्नताओं को समझना महत्वपूर्ण होगा।"
+    },
+    "challenging": {
+      "title": "चुनौतीपूर्ण मिश्रण",
+      "blurb": "कुंडली में तनाव है। स्पष्टता आवश्यक है।"
+    }
+  },
+  "kootas": {
+    "Varna": "वर्ण",
+    "Vashya": "वश्य",
+    "Tara": "तारा",
+    "Yoni": "योनि",
+    "GrahaMaitri": "ग्रह मैत्री",
+    "Gana": "गण",
+    "Bhakoot": "भकूट",
+    "Nadi": "नाड़ी"
+  },
+  "reasons": {
+    "kootaStrong": "{koota} मजबूत है",
+    "kootaAttention": "{koota} पर ध्यान आवश्यक",
+    "manglik.needs_review": "मांगलिक: समीक्षा आवश्यक",
+    "manglik.both_neutralizing": "मांगलिक: दोनों मांगलिक — पारंपरिक रूप से संतुलित",
+    "manglik.partial": "मांगलिक: आंशिक — नरम समीक्षा",
+    "manglik.compatible": "मांगलिक: अनुकूल"
+  },
+  "score": {
+    "matchLabel": "मैच स्कोर",
+    "matchShort": "मैच",
+    "matchMeaning": "खोज में यह प्रोफ़ाइल आपके लिए कितनी प्रासंगिक है।",
+    "matchDetail": "आपकी प्राथमिकताओं और तेज़ वैदिक मिश्रण पर आधारित। यह अनुशंसाओं में क्रम तय करता है — पूर्ण संबंध मूल्यांकन नहीं।",
+    "compatLabel": "अनुकूलता स्कोर",
+    "compatShort": "अनुकूलता",
+    "compatMeaning": "गहन तुलना में प्रोफ़ाइल और वैदिक चार्ट कितने मेल खाते हैं।",
+    "compatDetail": "पूर्ण अनुकूलता इंजन से: अष्टकूट, शुक्र मिलान, और संबंध मॉड्यूल। पूरी रिपोर्ट के लिए गहन तुलना चलाएँ।"
+  }
+}

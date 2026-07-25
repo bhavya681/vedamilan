@@ -8,6 +8,7 @@ import {
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { notificationService } from "@/application/notifications/notification.service";
+import { relationshipJourneyService } from "@/application/relationship/journey.service";
 import {
   ConflictError,
   ForbiddenError,
@@ -325,14 +326,22 @@ export class RelationshipService {
           type: "MUTUAL_INTEREST",
           title: "Mutual Interest",
           body: `Your interest is mutual with ${fromName}.`,
-          data: { otherUserId: fromUserId, href: `/dashboard/matches/profile?id=${fromUserId}` },
+          data: {
+            otherUserId: fromUserId,
+            senderName: fromName,
+            href: `/dashboard/matches/profile?id=${fromUserId}`,
+          },
         }),
         notificationService.create({
           userId: fromUserId,
           type: "MUTUAL_INTEREST",
           title: "Mutual Interest",
           body: `You and ${otherName} are both interested.`,
-          data: { otherUserId: toUserId, href: `/dashboard/matches/profile?id=${toUserId}` },
+          data: {
+            otherUserId: toUserId,
+            senderName: otherName,
+            href: `/dashboard/matches/profile?id=${toUserId}`,
+          },
         }),
       ]);
     } else {
@@ -341,7 +350,11 @@ export class RelationshipService {
         type: "INTEREST",
         title: "New Interest",
         body: `${fromName} is interested in getting to know you.`,
-        data: { otherUserId: fromUserId, href: `/dashboard/matches/profile?id=${fromUserId}` },
+        data: {
+          otherUserId: fromUserId,
+          senderName: fromName,
+          href: `/dashboard/matches/profile?id=${fromUserId}`,
+        },
       });
     }
 
@@ -470,16 +483,39 @@ export class RelationshipService {
     ).lean();
 
     const receiverName = await resolveDisplayName(receiverId);
-    await notificationService.create({
-      userId: request.senderId,
-      type: "CONNECTION_ACCEPTED",
-      title: "Connection Accepted",
-      body: `${receiverName} accepted your connection request.`,
-      data: {
-        otherUserId: receiverId,
-        href: `/dashboard/chat?with=${receiverId}`,
-      },
-    });
+    const senderName = await resolveDisplayName(request.senderId);
+    await Promise.all([
+      notificationService.create({
+        userId: request.senderId,
+        type: "CONNECTION_ACCEPTED",
+        title: "Connection Accepted",
+        body: `${receiverName} accepted your connection request.`,
+        data: {
+          otherUserId: receiverId,
+          href: `/dashboard/your-connection?partner=${receiverId}`,
+        },
+      }),
+      notificationService.create({
+        userId: request.senderId,
+        type: "JOURNEY_SPACE_READY",
+        title: "Your Connection Space is ready",
+        body: `You and ${receiverName} can explore Life Path, Get to Know each other, and more.`,
+        data: {
+          otherUserId: receiverId,
+          href: `/dashboard/your-connection?partner=${receiverId}`,
+        },
+      }),
+      notificationService.create({
+        userId: receiverId,
+        type: "JOURNEY_SPACE_READY",
+        title: "Your Connection Space is ready",
+        body: `You and ${senderName} can explore Life Path, Get to Know each other, and more.`,
+        data: {
+          otherUserId: request.senderId,
+          href: `/dashboard/your-connection?partner=${request.senderId}`,
+        },
+      }),
+    ]);
 
     return {
       connection,
@@ -530,6 +566,7 @@ export class RelationshipService {
       { new: true },
     ).lean();
     if (!updated) throw new NotFoundError("Connection not found");
+    await relationshipJourneyService.archivePairSpace(key);
     return this.getState(userId, otherUserId);
   }
 
@@ -567,6 +604,7 @@ export class RelationshipService {
         },
       },
     );
+    await relationshipJourneyService.archivePairSpace(key);
 
     return this.getState(blockerId, blockedId);
   }

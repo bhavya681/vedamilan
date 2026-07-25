@@ -4,6 +4,9 @@ import { relationshipService } from "@/application/relationship/relationship.ser
 import { requireSession } from "@/lib/auth/session";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { assertSameOriginMutation } from "@/lib/security/csrf";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { recordSecurityEvent, clientIpFromRequest } from "@/lib/security/security-log";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +33,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `blocks:${session.user.id}`,
+      limit: 30,
+      windowSec: 60,
     });
     const body = blockSchema.parse(await request.json());
     const data = await relationshipService.blockUser(
@@ -39,6 +48,15 @@ export async function POST(request: Request) {
       body.blockedId,
       body.reason || "",
     );
+    await recordSecurityEvent({
+      action: "relationship.block",
+      resource: "user",
+      resourceId: body.blockedId,
+      actorUserId: session.user.id,
+      severity: "INFO",
+      ipAddress: clientIpFromRequest(request),
+      userAgent: request.headers.get("user-agent"),
+    });
     return successResponse(data, { status: 201 });
   } catch (error) {
     return handleRouteError(error);
@@ -47,6 +65,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
     });

@@ -258,10 +258,20 @@ async function upsertBirthAndKundli(userId: string, member: (typeof DEMO_MEMBERS
 }
 
 async function seed() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DB_SEED !== "true") {
+    throw new Error(
+      "Refusing to seed in production. Set ALLOW_DB_SEED=true only for controlled staging resets.",
+    );
+  }
+
   if (!process.env.BETTER_AUTH_SECRET) {
     process.env.BETTER_AUTH_SECRET = "vedamilan-local-dev-secret-key-32chars";
     logger.warn("BETTER_AUTH_SECRET missing — using temporary local seed secret");
   }
+
+  logger.warn(
+    "Seeding demo users with known passwords — never point this at a production user database",
+  );
 
   await connectMongo();
   await ensureSeedPlans();

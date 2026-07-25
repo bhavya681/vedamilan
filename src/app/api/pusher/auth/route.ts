@@ -3,6 +3,7 @@ import { getPusher, isPusherConfigured } from "@/infrastructure/realtime/pusher"
 import { ForbiddenError, UnauthorizedError, handleRouteError } from "@/lib/utils/error-handler";
 import { Chat } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
+import { recordSecurityEvent, clientIpFromRequest } from "@/lib/security/security-log";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,18 @@ export async function POST(request: Request) {
     const chatId = channel.replace("private-chat-", "");
     await connectMongo();
     const chat = await Chat.findById(chatId).lean();
-    if (!chat?.participantIds.includes(session.user.id)) {
+    const chatStatus = (chat as { status?: string } | null)?.status;
+    if (!chat || chatStatus !== "ACTIVE" || !chat.participantIds.includes(session.user.id)) {
+      await recordSecurityEvent({
+        action: "pusher.channel_denied",
+        resource: "chat",
+        resourceId: chatId,
+        actorUserId: session.user.id,
+        severity: "WARN",
+        ipAddress: clientIpFromRequest(request),
+        userAgent: request.headers.get("user-agent"),
+        metadata: { channel },
+      });
       throw new ForbiddenError("Not allowed for this channel");
     }
 

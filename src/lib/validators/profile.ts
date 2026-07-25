@@ -1,51 +1,53 @@
 import { z } from "zod";
 
-export const profileUpdateSchema = z.object({
-  name: z.string().trim().min(1).max(120).optional(),
-  headline: z.string().max(160).optional(),
-  about: z.string().max(4000).optional(),
-  gender: z.enum(["MALE", "FEMALE", "OTHER", "UNDISCLOSED"]).optional(),
-  dateOfBirth: z
-    .string()
-    .datetime()
-    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
-    .optional()
-    .nullable(),
-  heightCm: z.number().min(100).max(250).optional().nullable(),
-  maritalStatus: z.enum(["NEVER_MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"]).optional(),
-  religion: z.string().max(80).optional().nullable(),
-  community: z.string().max(80).optional().nullable(),
-  motherTongue: z.string().max(80).optional().nullable(),
-  languages: z.array(z.string()).optional(),
-  education: z.string().max(120).optional().nullable(),
-  profession: z.string().max(120).optional().nullable(),
-  company: z.string().max(120).optional().nullable(),
-  incomeRange: z.string().max(80).optional().nullable(),
-  city: z.string().max(80).optional().nullable(),
-  state: z.string().max(80).optional().nullable(),
-  country: z.string().max(80).optional(),
-  lifestyle: z
-    .object({
-      diet: z.string().optional().nullable(),
-      smoking: z.string().optional().nullable(),
-      drinking: z.string().optional().nullable(),
-    })
-    .optional(),
-  visibility: z.enum(["PUBLIC", "MEMBERS", "HIDDEN"]).optional(),
-  privacy: z
-    .object({
-      showAge: z.boolean().optional(),
-      showMoonSign: z.boolean().optional(),
-      showLagna: z.boolean().optional(),
-      showManglik: z.boolean().optional(),
-      showNakshatra: z.boolean().optional(),
-      acceptInterests: z.boolean().optional(),
-      showOnlineStatus: z.boolean().optional(),
-    })
-    .optional(),
-  /** Pass true to mark guided onboarding finished (or skipped). */
-  completeOnboarding: z.boolean().optional(),
-});
+export const profileUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    headline: z.string().max(160).optional(),
+    about: z.string().max(4000).optional(),
+    gender: z.enum(["MALE", "FEMALE", "OTHER", "UNDISCLOSED"]).optional(),
+    dateOfBirth: z
+      .string()
+      .datetime()
+      .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+      .optional()
+      .nullable(),
+    heightCm: z.number().min(100).max(250).optional().nullable(),
+    maritalStatus: z.enum(["NEVER_MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"]).optional(),
+    religion: z.string().max(80).optional().nullable(),
+    community: z.string().max(80).optional().nullable(),
+    motherTongue: z.string().max(80).optional().nullable(),
+    languages: z.array(z.string()).optional(),
+    education: z.string().max(120).optional().nullable(),
+    profession: z.string().max(120).optional().nullable(),
+    company: z.string().max(120).optional().nullable(),
+    incomeRange: z.string().max(80).optional().nullable(),
+    city: z.string().max(80).optional().nullable(),
+    state: z.string().max(80).optional().nullable(),
+    country: z.string().max(80).optional(),
+    lifestyle: z
+      .object({
+        diet: z.string().optional().nullable(),
+        smoking: z.string().optional().nullable(),
+        drinking: z.string().optional().nullable(),
+      })
+      .optional(),
+    visibility: z.enum(["PUBLIC", "MEMBERS", "HIDDEN"]).optional(),
+    privacy: z
+      .object({
+        showAge: z.boolean().optional(),
+        showMoonSign: z.boolean().optional(),
+        showLagna: z.boolean().optional(),
+        showManglik: z.boolean().optional(),
+        showNakshatra: z.boolean().optional(),
+        acceptInterests: z.boolean().optional(),
+        showOnlineStatus: z.boolean().optional(),
+      })
+      .optional(),
+    /** Pass true to mark guided onboarding finished (or skipped). */
+    completeOnboarding: z.boolean().optional(),
+  })
+  .strict();
 
 export const partnerPreferencesSchema = z.object({
   ageMin: z.number().min(18).max(80).optional(),

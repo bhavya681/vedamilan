@@ -1,0 +1,58 @@
+{
+  "fallbackTitle": "Notification",
+  "markAllRead": "Mark all as read",
+  "today": "Today",
+  "earlier": "Earlier",
+  "emptyTitle": "You're all caught up",
+  "emptyHint": "New interests, messages, and connection updates will appear here.",
+  "types": {
+    "WELCOME": {
+      "title": "Welcome to VedaMilan AI",
+      "body": "Complete your profile, add birth details, and generate your kundli to unlock matching and AI explanations."
+    },
+    "KUNDLI_HINT": {
+      "title": "Generate your first kundli",
+      "body": "Birth details power deterministic Vedic calculations. AI only explains the results."
+    },
+    "INTEREST": {
+      "title": "New interest",
+      "body": "{name} expressed interest in connecting with you."
+    },
+    "MUTUAL_INTEREST": {
+      "title": "Mutual interest",
+      "body": "You and {name} are both interested — consider sending a connection request."
+    },
+    "CONNECTION_REQUEST": {
+      "title": "Connection request",
+      "body": "{name} would like to connect with you."
+    },
+    "CONNECTION_ACCEPTED": {
+      "title": "You're connected",
+      "body": "You and {name} are now connected. Your Connection Space is ready."
+    },
+    "MESSAGE": {
+      "title": "New message",
+      "body": "{name}: {preview}"
+    },
+    "PAYMENT_SUCCESS": {
+      "title": "Payment successful",
+      "body": "Your Premium subscription is now active."
+    },
+    "JOURNEY_SPACE_READY": {
+      "title": "Your Connection Space is ready",
+      "body": "Explore compatibility and shared reflections with {name}."
+    },
+    "JOURNEY_SHARED_INSIGHT": {
+      "title": "Shared insight",
+      "body": "{name} shared a compatibility insight with you."
+    },
+    "JOURNEY_SHARED_ANSWER": {
+      "title": "Shared answer",
+      "body": "{name} shared a reflection in your Connection Space."
+    },
+    "COMPATIBILITY": {
+      "title": "Compatibility update",
+      "body": "A new compatibility insight is ready to review."
+    }
+  }
+}

@@ -6,12 +6,14 @@ import { formatDistanceToNow, isToday } from "date-fns";
 import { Bell } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { useT } from "@/components/i18n/i18n-provider";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { ContentReveal, ListSkeleton } from "@/components/ui/page-skeletons";
 import { emitNotificationsUpdated } from "@/lib/notifications/events";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
+import { localizeNotification } from "@/lib/i18n/catalogs/localize";
 
 type Note = {
   _id?: string;
@@ -21,7 +23,7 @@ type Note = {
   readAt?: string | null;
   createdAt?: string;
   type?: string;
-  data?: { href?: string; otherUserId?: string };
+  data?: { href?: string; otherUserId?: string; senderName?: string; preview?: string };
 };
 
 function noteId(note: Note) {
@@ -37,8 +39,14 @@ function hrefFor(note: Note) {
         ? `${routes.matchProfile}?id=${note.data.otherUserId}`
         : routes.connections;
     case "CONNECTION_REQUEST":
-    case "CONNECTION_ACCEPTED":
       return routes.connections;
+    case "CONNECTION_ACCEPTED":
+    case "JOURNEY_SPACE_READY":
+    case "JOURNEY_SHARED_INSIGHT":
+    case "JOURNEY_SHARED_ANSWER":
+      return note.data?.otherUserId
+        ? `${routes.yourConnection}?partner=${note.data.otherUserId}`
+        : routes.yourConnection;
     case "MESSAGE":
       return note.data?.otherUserId ? `${routes.chat}?with=${note.data.otherUserId}` : routes.chat;
     case "COMPATIBILITY":
@@ -62,6 +70,7 @@ async function patchRead(body: { markAll?: boolean; notificationId?: string }) {
 }
 
 export default function NotificationsPage() {
+  const t = useT();
   const [notes, setNotes] = useState<Note[]>([]);
   const [unread, setUnread] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +162,7 @@ export default function NotificationsPage() {
         {items.map((n) => {
           const id = noteId(n);
           const unreadItem = !n.readAt;
+          const copy = localizeNotification(t, n);
           return (
             <Link key={id} href={hrefFor(n)} className="block" onClick={() => void onOpenNote(n)}>
               <GlassCard
@@ -166,7 +176,7 @@ export default function NotificationsPage() {
                     {unreadItem ? (
                       <span className="bg-gold h-2 w-2 shrink-0 rounded-full" aria-hidden />
                     ) : null}
-                    <p className="font-medium">{n.title}</p>
+                    <p className="font-medium">{copy.title}</p>
                   </div>
                   <span className="text-muted-foreground text-xs">
                     {n.createdAt
@@ -174,12 +184,7 @@ export default function NotificationsPage() {
                       : ""}
                   </span>
                 </div>
-                <p className="text-muted-foreground mt-1 text-sm">{n.body}</p>
-                {n.type ? (
-                  <p className="text-muted-foreground mt-2 text-xs tracking-wide uppercase">
-                    {n.type.replaceAll("_", " ")}
-                  </p>
-                ) : null}
+                <p className="text-muted-foreground mt-1 text-sm">{copy.body}</p>
               </GlassCard>
             </Link>
           );
@@ -191,8 +196,8 @@ export default function NotificationsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        title="Notifications"
-        description="Interest, connections, messages, and compatibility updates."
+        title={t("pages.notificationsTitle")}
+        description={t("notifications.emptyHint")}
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
@@ -201,10 +206,10 @@ export default function NotificationsPage() {
               disabled={marking || unread === 0}
               onClick={() => void markAll()}
             >
-              {marking ? "Updating…" : "Mark all read"}
+              {marking ? t("common.loading") : t("notifications.markAllRead")}
             </Button>
             <Button asChild variant="secondary">
-              <Link href={routes.connections}>Connections</Link>
+              <Link href={routes.connections}>{t("navigation.connections")}</Link>
             </Button>
           </div>
         }
@@ -216,8 +221,8 @@ export default function NotificationsPage() {
       {!loading && notes.length === 0 ? (
         <EmptyState
           icon={<Bell className="h-8 w-8" />}
-          title="You're all caught up"
-          description="Interest signals, connection requests, and messages will appear here."
+          title={t("notifications.emptyTitle")}
+          description={t("notifications.emptyHint")}
         />
       ) : null}
 
@@ -225,13 +230,13 @@ export default function NotificationsPage() {
         <ContentReveal className="space-y-8">
           {grouped.today.length ? (
             <section className="space-y-3">
-              <h2 className="font-display text-xl">Today</h2>
+              <h2 className="font-display text-xl">{t("notifications.today")}</h2>
               {renderList(grouped.today)}
             </section>
           ) : null}
           {grouped.earlier.length ? (
             <section className="space-y-3">
-              <h2 className="font-display text-xl">Earlier</h2>
+              <h2 className="font-display text-xl">{t("notifications.earlier")}</h2>
               {renderList(grouped.earlier)}
             </section>
           ) : null}

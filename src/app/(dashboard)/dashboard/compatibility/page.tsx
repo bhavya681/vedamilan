@@ -24,6 +24,7 @@ import {
   type TimingPredictionView,
 } from "@/features/compatibility/timing-prediction-panel";
 import { AdvancedMarriageDynamicsPanel } from "@/features/compatibility/advanced-marriage-dynamics-panel";
+import { WisdomCompatibilityBridge } from "@/features/wisdom/components/wisdom-compatibility-bridge";
 import { CompatibilitySkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -405,6 +406,8 @@ export default function CompatibilityPage() {
               Ask AI Guru
             </Button>
           </div>
+
+          <WisdomCompatibilityBridge description="Compatibility can raise questions about communication, duty, and conflict. Reflect with wisdom guides — principles for decisions, not destiny claims." />
 
           {/* Meaning */}
           {whyPoints.length ? (

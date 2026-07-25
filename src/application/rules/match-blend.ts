@@ -53,6 +53,8 @@ export type MatchBlendResult = {
   gunaBreakdown: GunaItem[];
   strengths: string[];
   challenges: string[];
+  strengthCodes: string[];
+  challengeCodes: string[];
   factors: Array<{ name: string; score: number; weight: number }>;
 };
 
@@ -105,6 +107,9 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
     ...(shukra?.challenges || []).slice(0, 1),
   ].slice(0, 3);
 
+  const strengthCodes = ashta.strengthCodes.slice(0, 3);
+  const challengeCodes = ashta.challengeCodes.slice(0, 3);
+
   return {
     compatibilityScore,
     totalGuna: ashta.totalGuna,
@@ -112,6 +117,8 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
     gunaBreakdown: ashta.gunaBreakdown,
     strengths: strengths.length ? strengths : ashta.strengths.slice(0, 3),
     challenges,
+    strengthCodes,
+    challengeCodes,
     factors,
   };
 }

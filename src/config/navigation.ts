@@ -78,11 +78,13 @@ export const dashboardNav: NavItem[] = [
   { title: "Matches", href: routes.matches, group: "Discover", modes: ["matrimony"] },
   { title: "Search", href: routes.search, group: "Discover", modes: ["matrimony"] },
   { title: "Connections", href: routes.connections, group: "Connect", modes: ["matrimony"] },
+  { title: "Your Connection", href: routes.yourConnection, group: "Connect", modes: ["matrimony"] },
   { title: "Messages", href: routes.chat, group: "Connect", modes: ["matrimony"] },
   { title: "Shortlist", href: routes.shortlisted, group: "Connect", modes: ["matrimony"] },
 
   { title: "Compatibility", href: routes.compatibility, group: "Discover", modes: ["matrimony"] },
   { title: "AI Guru", href: routes.aiInsights, group: "Shared", modes: ["matrimony"] },
+  { title: "Vedic Wisdom", href: routes.vedicWisdom, group: "Wisdom" },
 
   { title: "My profile", href: routes.profile, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },

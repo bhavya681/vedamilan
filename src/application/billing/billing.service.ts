@@ -286,8 +286,11 @@ export class BillingService {
       throw new ForbiddenError("Payment does not belong to this account");
     }
 
-    await Payment.findOneAndUpdate(
-      { providerPaymentId: input.orderPaymentId },
+    const claimed = await Payment.findOneAndUpdate(
+      {
+        providerPaymentId: input.orderPaymentId,
+        paymentStatus: { $ne: "SUCCEEDED" },
+      },
       {
         $set: {
           userId: input.userId,
@@ -306,9 +309,26 @@ export class BillingService {
           status: "ACTIVE",
           deletedAt: null,
         },
+        ...(existing
+          ? {}
+          : {
+              $setOnInsert: {
+                providerPaymentId: input.orderPaymentId,
+              },
+            }),
       },
-      { upsert: true, new: true },
-    );
+      { upsert: !existing, new: true },
+    ).lean();
+
+    // Lost the race — another worker already marked SUCCEEDED (filter matched nothing).
+    if (!claimed) {
+      const sub = await Subscription.findOne({
+        userId: input.userId,
+        planCode: plan.code,
+        subscriptionStatus: { $in: ["ACTIVE", "TRIALING"] },
+      }).lean();
+      return sub;
+    }
 
     const start = new Date();
     const end = addPeriod(plan.interval, start);
@@ -362,7 +382,12 @@ export class BillingService {
       .createHmac("sha256", secret)
       .update(`${input.orderId}|${input.paymentId}`)
       .digest("hex");
-    if (expected !== input.signature) {
+    const expectedBuf = Buffer.from(expected);
+    const actualBuf = Buffer.from(input.signature);
+    if (
+      expectedBuf.length !== actualBuf.length ||
+      !crypto.timingSafeEqual(expectedBuf, actualBuf)
+    ) {
       throw new ValidationError("Invalid Razorpay signature");
     }
 
@@ -417,6 +442,16 @@ export class BillingService {
       const metaUserId = session.metadata?.userId;
       const metaPlanCode = session.metadata?.planCode;
 
+      // Never unlock premium on unpaid / incomplete Checkout sessions.
+      if (session.payment_status !== "paid") {
+        return {
+          received: true,
+          type: event.type,
+          activated: false,
+          reason: "payment_not_paid",
+        };
+      }
+
       await connectMongo();
       const payment =
         (await Payment.findOne({ providerPaymentId: sessionId, provider: "STRIPE" }).lean()) ||
@@ -438,13 +473,24 @@ export class BillingService {
         throw new ForbiddenError("Stripe payment user mismatch");
       }
 
+      const plan = await Plan.findOne({ code: planCode, isActive: true }).lean();
+      if (!plan) {
+        return { received: true, type: event.type, activated: false, reason: "plan_missing" };
+      }
+
+      const expectedAmount = plan.priceUsd ? Math.round(plan.priceUsd * 100) : plan.priceInr * 100;
+      const paidAmount = session.amount_total ?? payment?.amount ?? 0;
+      if (paidAmount !== expectedAmount) {
+        throw new ValidationError("Paid amount does not match the catalog plan price");
+      }
+
       await this.activatePaid({
         userId,
         planCode,
         provider: "STRIPE",
         orderPaymentId: payment?.providerPaymentId || sessionId,
         captureId: sessionId,
-        amount: session.amount_total || payment?.amount || 0,
+        amount: paidAmount,
         currency: (session.currency || payment?.currency || "inr").toUpperCase(),
         invoiceUrl: session.url,
         raw: { session, stripeEventId: event.id },

@@ -1,0 +1,20 @@
+{
+  "gender": {
+    "MALE": "पुरुष",
+    "FEMALE": "स्त्री",
+    "OTHER": "इतर",
+    "UNDISCLOSED": "सांगू इच्छित नाही"
+  },
+  "maritalStatus": {
+    "NEVER_MARRIED": "अविवाहित",
+    "DIVORCED": "घटस्फोटित",
+    "WIDOWED": "विधवा/विधुर",
+    "AWAITING_DIVORCE": "घटस्फोट प्रक्रियेत",
+    "UNKNOWN": "—"
+  },
+  "visibility": {
+    "PUBLIC": "सार्वजनिक",
+    "MEMBERS": "सदस्य",
+    "HIDDEN": "लपविलेले"
+  }
+}

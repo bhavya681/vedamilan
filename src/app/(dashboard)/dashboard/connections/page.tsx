@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Link2, MessageCircle, Sparkles, Users } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { ContentReveal, ListSkeleton } from "@/components/ui/page-skeletons";
@@ -87,6 +88,7 @@ function PersonRow({
 }
 
 export default function ConnectionsPage() {
+  const t = useT();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("interested");
   const [hub, setHub] = useState<Hub | null>(null);
@@ -167,11 +169,11 @@ export default function ConnectionsPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
-        title="Your Connections"
+        title={t("pages.connectionsTitle")}
         description="Interest is curiosity. Mutual interest is shared openness. Connection is intention."
         actions={
           <Button asChild variant="outline">
-            <Link href={routes.matches}>Find people</Link>
+            <Link href={routes.matches}>{t("pages.browseMatches")}</Link>
           </Button>
         }
       />
@@ -216,7 +218,7 @@ export default function ConnectionsPage() {
                     <PersonRow
                       key={p.otherUserId}
                       person={p}
-                      subtitle="You're both interested."
+                      subtitle={t("pages.connectionsMutual")}
                       actions={
                         <>
                           <Button
@@ -357,11 +359,17 @@ export default function ConnectionsPage() {
                 <PersonRow
                   key={p.id || p.otherUserId}
                   person={p}
-                  subtitle="You can now message each other."
+                  subtitle={t("pages.connectionsConnected")}
                   actions={
                     <>
+                      <Button asChild size="sm">
+                        <Link href={`${routes.yourConnection}?partner=${p.otherUserId}`}>
+                          Your Connection
+                        </Link>
+                      </Button>
                       <Button
                         size="sm"
+                        variant="secondary"
                         disabled={busy === p.otherUserId}
                         onClick={() => void message(p.otherUserId)}
                       >
@@ -384,11 +392,11 @@ export default function ConnectionsPage() {
           ) : (
             <EmptyState
               icon={<Users className="h-8 w-8" />}
-              title="No connections yet"
-              description="When mutual interest becomes a connection, conversations begin here."
+              title={t("pages.connectionsEmpty")}
+              description={t("pages.connectionsEmptyHint")}
               action={
                 <Button asChild>
-                  <Link href={routes.matches}>Browse matches</Link>
+                  <Link href={routes.matches}>{t("pages.browseMatches")}</Link>
                 </Button>
               }
             />

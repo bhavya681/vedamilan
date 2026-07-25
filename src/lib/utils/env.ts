@@ -25,6 +25,7 @@ const serverSchema = clientSchema.extend({
   DATABASE_URL: z.string().optional().default(""),
   REDIS_URL: z.string().optional().default(""),
   REDIS_PASSWORD: z.string().optional().default(""),
+  /** Required (≥32 chars) when NODE_ENV=production — enforced in superRefine. */
   BETTER_AUTH_SECRET: z.string().optional().default(""),
   BETTER_AUTH_URL: z.string().optional().default(""),
   GOOGLE_CLIENT_ID: z.string().optional().default(""),
@@ -130,6 +131,15 @@ export function getServerEnv(): ServerEnv {
 
   if (!parsed.success) {
     throw new Error(`Invalid server environment: ${parsed.error.message}`);
+  }
+
+  if (parsed.data.NODE_ENV === "production") {
+    const secret = parsed.data.BETTER_AUTH_SECRET?.trim() ?? "";
+    if (secret.length < 32) {
+      throw new Error(
+        "Invalid server environment: BETTER_AUTH_SECRET must be at least 32 characters in production",
+      );
+    }
   }
 
   cachedServerEnv = parsed.data;

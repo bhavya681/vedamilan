@@ -1,0 +1,77 @@
+{
+  "title": "Compatibilidad",
+  "overallAlignment": "Alineación general",
+  "vedicCompatibility": "Compatibilidad védica",
+  "lifePathAlignment": "Alineación del camino de vida",
+  "valuesAlignment": "Alineación de valores",
+  "whereYouAlign": "Donde coinciden",
+  "whereYouDiffer": "Donde difieren",
+  "worthDiscussing": "Vale la pena hablarlo",
+  "shareInsight": "Compartir esta idea",
+  "keepPrivate": "Mantener privado",
+  "strongAlignment": "Alineación fuerte",
+  "goodAlignment": "Buena alineación",
+  "mixedAlignment": "Alineación mixta",
+  "needsDiscussion": "Necesita conversación",
+  "notAPrediction": "Orientación reflexiva — no es una predicción ni una garantía.",
+  "checkCompatibility": "Comprobar compatibilidad",
+  "deepReport": "Informe profundo de compatibilidad",
+  "verdicts": {
+    "excellent_match": "Excelente compatibilidad",
+    "very_good_match": "Muy buena compatibilidad",
+    "good_match": "Buena compatibilidad",
+    "needs_conscious_effort": "Requiere esfuerzo consciente",
+    "high_challenge": "Alto desafío",
+    "not_recommended": "No recomendado"
+  },
+  "moods": {
+    "excellent": {
+      "title": "Alineación fuerte",
+      "blurb": "Las cartas sugieren química cálida y potencial a largo plazo."
+    },
+    "strong": {
+      "title": "Promesa cálida",
+      "blurb": "Una pareja solidaria con fortalezas que pueden construir juntos."
+    },
+    "balanced": {
+      "title": "Potencial estable",
+      "blurb": "Una base sólida — la comunicación profunda la armonía."
+    },
+    "cautious": {
+      "title": "Explorar con cuidado",
+      "blurb": "Aparece cierta fricción. Entender las diferencias importará."
+    },
+    "challenging": {
+      "title": "Mezcla desafiante",
+      "blurb": "Las cartas muestran tensión. La claridad es esencial."
+    }
+  },
+  "kootas": {
+    "Varna": "Varna",
+    "Vashya": "Vashya",
+    "Tara": "Tara",
+    "Yoni": "Yoni",
+    "GrahaMaitri": "Graha Maitri",
+    "Gana": "Gana",
+    "Bhakoot": "Bhakoot",
+    "Nadi": "Nadi"
+  },
+  "reasons": {
+    "kootaStrong": "{koota} es fuerte",
+    "kootaAttention": "{koota} necesita atención",
+    "manglik.needs_review": "Manglik: requiere revisión",
+    "manglik.both_neutralizing": "Manglik: ambos Manglik — tradicionalmente neutralizante",
+    "manglik.partial": "Manglik: parcial — revisión suave",
+    "manglik.compatible": "Manglik: compatible"
+  },
+  "score": {
+    "matchLabel": "Puntuación de match",
+    "matchShort": "Match",
+    "matchMeaning": "Qué tan relevante es este perfil para ti en el descubrimiento.",
+    "matchDetail": "Basado en tus preferencias y una mezcla védica rápida.",
+    "compatLabel": "Puntuación de compatibilidad",
+    "compatShort": "Compatibilidad",
+    "compatMeaning": "Qué tan bien se alinean perfiles y cartas en una comparación profunda.",
+    "compatDetail": "Del motor completo: Ashta Koota, Shukra Milan y módulos de relación."
+  }
+}

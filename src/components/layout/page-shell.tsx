@@ -67,12 +67,11 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="border-border/70 bg-card shadow-soft flex flex-col items-center rounded-2xl border px-6 py-16 text-center sm:py-20">
-      <div className="bg-border mb-8 h-px w-16" aria-hidden />
-      {icon ? <div className="text-primary mb-4">{icon}</div> : null}
+    <div className="border-border/60 flex flex-col items-start border-y px-1 py-10 sm:py-12">
+      {icon ? <div className="text-primary mb-3">{icon}</div> : null}
       <h2 className="font-display text-2xl sm:text-3xl">{title}</h2>
       <p className="text-muted-foreground mt-3 max-w-md text-sm leading-relaxed">{description}</p>
-      {action ? <div className="mt-8">{action}</div> : null}
+      {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 }

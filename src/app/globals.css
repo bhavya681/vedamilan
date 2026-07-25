@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* VedaMilan AI — Modern Vedic Romance · calm · trustworthy */
+/* VedaMilan — calm, trustworthy relationship intelligence */
 :root {
   --royal-gold: #d4af37;
   --deep-saffron: #c47a1a;
@@ -18,8 +18,6 @@
   --ruby: #e11d48;
   --rose-gold: #b76e79;
   --cosmic-blue: #2a4a6f;
-  --ai-start: #c47a1a;
-  --ai-end: #d4af37;
 
   --background: #f7f1e3;
   --foreground: #14110e;
@@ -47,18 +45,27 @@
   --gold: #d4af37;
   --rose: #b76e79;
   --ivory: #f7f1e3;
-  --ai: #b8860b;
+  /* Reserved for actual AI surfaces — do not use as general brand chrome */
+  --ai: #8a6a1f;
+  --ai-start: #8a6a1f;
+  --ai-end: #c47a1a;
   --cosmic: #1f3a5f;
   --crimson: #9f1239;
 
+  /* Semantic radii — prefer these over arbitrary rem values */
   --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 
-  --shadow-soft: 0 4px 18px rgba(20, 17, 14, 0.05);
-  --shadow-elevated: 0 16px 40px rgba(20, 17, 14, 0.08);
-  --shadow-gold: 0 10px 28px rgba(212, 175, 55, 0.18);
-  --shadow-rose: 0 10px 24px rgba(183, 110, 121, 0.14);
-  --shadow-dual: 0 10px 28px rgba(196, 122, 26, 0.12);
-  --shadow-aurora: 0 0 40px rgba(212, 175, 55, 0.1);
+  --shadow-soft: 0 1px 2px rgba(20, 17, 14, 0.04), 0 4px 16px rgba(20, 17, 14, 0.04);
+  --shadow-elevated: 0 8px 28px rgba(20, 17, 14, 0.08);
+  --shadow-gold: 0 6px 20px rgba(212, 175, 55, 0.12);
+  --shadow-rose: 0 6px 18px rgba(183, 110, 121, 0.1);
+  --shadow-dual: 0 6px 20px rgba(196, 122, 26, 0.08);
+  --shadow-aurora: none;
 
   --duration-fast: 160ms;
   --duration-base: 280ms;
@@ -100,7 +107,7 @@
   --shadow-gold: 0 10px 28px rgba(212, 175, 55, 0.14);
   --shadow-rose: 0 10px 24px rgba(212, 160, 168, 0.12);
   --shadow-dual: 0 10px 28px rgba(212, 175, 55, 0.1);
-  --shadow-aurora: 0 0 40px rgba(212, 175, 55, 0.1);
+  --shadow-aurora: none;
 }
 
 @theme inline {
@@ -133,11 +140,11 @@
   --color-crimson: var(--crimson);
   --color-emerald: var(--emerald);
   --color-amber: var(--amber);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
   --shadow-soft: var(--shadow-soft);
@@ -217,43 +224,31 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body), ui-sans-serif, sans-serif;
-    background-image:
-      radial-gradient(
-        ellipse 90% 50% at 0% -10%,
-        color-mix(in srgb, var(--gold) 10%, transparent),
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse 70% 45% at 100% 0%,
-        color-mix(in srgb, var(--cosmic) 6%, transparent),
-        transparent 48%
-      ),
-      radial-gradient(
-        ellipse 55% 40% at 50% 100%,
-        color-mix(in srgb, var(--rose) 4%, transparent),
-        transparent 55%
-      );
+    font-family: var(--font-body), var(--font-indic), ui-sans-serif, sans-serif;
+    /* Single soft wash — avoid stacked aurora “AI kit” backgrounds */
+    background-image: radial-gradient(
+      ellipse 80% 45% at 100% -5%,
+      color-mix(in srgb, var(--gold) 6%, transparent),
+      transparent 55%
+    );
     min-height: 100dvh;
   }
 
+  /* Prefer Devanagari-capable UI font for sa / hi / mr */
+  html[data-script="devanagari"] body {
+    font-family: var(--font-indic), var(--font-body), ui-sans-serif, sans-serif;
+  }
+
+  html[data-script="devanagari"] .font-display {
+    font-family: var(--font-indic), var(--font-display), ui-serif, serif;
+  }
+
   .dark body {
-    background-image:
-      radial-gradient(
-        ellipse 90% 50% at 0% -10%,
-        color-mix(in srgb, var(--gold) 7%, transparent),
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse 70% 45% at 100% 0%,
-        color-mix(in srgb, var(--cosmic) 10%, transparent),
-        transparent 48%
-      ),
-      radial-gradient(
-        ellipse 55% 40% at 50% 100%,
-        color-mix(in srgb, var(--rose) 5%, transparent),
-        transparent 55%
-      );
+    background-image: radial-gradient(
+      ellipse 70% 40% at 0% -5%,
+      color-mix(in srgb, var(--gold) 5%, transparent),
+      transparent 50%
+    );
   }
 
   .font-display {
@@ -357,30 +352,12 @@
   }
 
   .bg-aurora {
-    background-image:
-      radial-gradient(
-        ellipse at 20% 20%,
-        color-mix(in srgb, var(--gold) 14%, transparent),
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse at 80% 30%,
-        color-mix(in srgb, var(--primary) 10%, transparent),
-        transparent 45%
-      ),
-      radial-gradient(
-        ellipse at 50% 80%,
-        color-mix(in srgb, var(--cosmic) 8%, transparent),
-        transparent 50%
-      );
+    /* Deprecated decorative utility — kept as quiet solid for legacy call sites */
+    background-color: transparent;
   }
 
   .bg-brand-dual-soft {
-    background-image: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--gold) 10%, transparent),
-      color-mix(in srgb, var(--deep-saffron) 6%, transparent)
-    );
+    background-color: color-mix(in srgb, var(--muted) 80%, var(--gold));
   }
 
   .text-brand-dual {
@@ -399,17 +376,18 @@
     color: var(--ai);
   }
 
-  /* Glass — overlays / floating AI only */
+  /* Overlays / floating panels only — not a page default */
   .glass-panel {
-    @apply border-border/50 bg-card/90 shadow-soft border backdrop-blur-xl;
+    @apply border-border/60 bg-card/95 border shadow-sm backdrop-blur-md;
   }
 
   .glass-elevated {
-    @apply shadow-elevated border border-white/20 bg-white/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+    @apply border-border/50 bg-card shadow-elevated border;
   }
 
   .glow-border {
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 28%, transparent);
+    /* Decorative glow retired — keep class as no-op for legacy call sites */
+    box-shadow: none;
   }
 
   .text-balance {
@@ -502,4 +480,16 @@
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* RTL readiness — prefer logical properties; mirror directional chrome only */
+[dir="rtl"] .mirror-in-rtl {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .kundli-chart-root,
+[dir="rtl"] [data-astro-chart] {
+  /* Charts keep fixed astrological orientation */
+  direction: ltr;
+  unicode-bidi: isolate;
 }

@@ -2,7 +2,13 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-import { SoftEmoji, moodFromScore } from "@/features/compatibility/compatibility-visuals";
+import {
+  SoftEmoji,
+  moodFromScore,
+  useCompatMood,
+} from "@/features/compatibility/compatibility-visuals";
+import { useT } from "@/components/i18n/i18n-provider";
+import { localizeDecisionSummary } from "@/lib/i18n/catalogs/localize";
 import { cn } from "@/lib/utils/cn";
 
 export type PairPerson = {
@@ -99,7 +105,8 @@ function MoodCenter({
   decisionSummary?: string | null;
   compact?: boolean;
 }) {
-  const mood = moodFromScore(score);
+  const mood = useCompatMood(score);
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const toneRing =
     mood.tone === "excellent"
@@ -111,6 +118,8 @@ function MoodCenter({
           : mood.tone === "cautious"
             ? "bg-saffron/12 ring-saffron/30"
             : "bg-rose/10 ring-rose/25";
+
+  const summaryLabel = decisionSummary ? localizeDecisionSummary(t, decisionSummary) : null;
 
   return (
     <div className="flex max-w-sm min-w-0 flex-1 flex-col items-center px-2 text-center lg:max-w-md">
@@ -143,8 +152,8 @@ function MoodCenter({
       >
         {mood.title}
       </p>
-      {decisionSummary ? (
-        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{decisionSummary}</p>
+      {summaryLabel ? (
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{summaryLabel}</p>
       ) : (
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{mood.blurb}</p>
       )}

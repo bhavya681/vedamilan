@@ -35,6 +35,14 @@ export type DeepCompatibilityResult = {
     | "Needs Conscious Effort"
     | "High Challenge"
     | "Not Recommended";
+  /** Stable code for UI localization — prefer over decisionSummary label. */
+  decisionSummaryCode:
+    | "excellent_match"
+    | "very_good_match"
+    | "good_match"
+    | "needs_conscious_effort"
+    | "high_challenge"
+    | "not_recommended";
   decisionReason: string;
   topStrengths: string[];
   topChallenges: string[];
@@ -515,6 +523,19 @@ export function scoreDeepCompatibility(input: {
               ? "High Challenge"
               : "Not Recommended";
 
+  const decisionSummaryCode: DeepCompatibilityResult["decisionSummaryCode"] =
+    overallScore >= 85
+      ? "excellent_match"
+      : overallScore >= 75
+        ? "very_good_match"
+        : overallScore >= 65
+          ? "good_match"
+          : overallScore >= 55
+            ? "needs_conscious_effort"
+            : overallScore >= 45
+              ? "high_challenge"
+              : "not_recommended";
+
   const decisionReason = `This ${decisionSummary} verdict is a weighted blend of Personality, Moon, Shukra Milan, 7th house, Navamsa (D9), Ashta Koota, intimacy, family, life goals, communication, and longevity — never a single koota or rule. Modules average to ${overallScore}%. Guided assessment, not a guarantee; practice strengths and agree on soft areas.`;
 
   const topStrengths = modules
@@ -601,6 +622,7 @@ export function scoreDeepCompatibility(input: {
     categoryScores,
     overallScore,
     decisionSummary,
+    decisionSummaryCode,
     decisionReason,
     topStrengths,
     topChallenges,

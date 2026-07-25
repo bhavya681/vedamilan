@@ -163,15 +163,15 @@ export function CompatibilityPreviewSection() {
       <FadeIn>
         <SectionIntro
           eyebrow="Compatibility"
-          title="Ashta Koota, made clear"
-          description="Classical scoring presented so couples and families can decide together."
+          title="Understand not just the score, but why"
+          description="Classical Ashta Koota presented so couples and families can decide together. Astrology calculates; guidance explains."
           align="center"
         />
       </FadeIn>
-      <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+      <div className="border-border/60 mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-6 border-y py-8 md:grid-cols-4 md:gap-x-8">
         {mockGunaMilan.map((item, index) => (
           <FadeIn key={item.koota} delay={0.03 * index}>
-            <div className="border-border/60 bg-card shadow-soft rounded-2xl border px-4 py-5 text-center sm:px-5 sm:py-6">
+            <div className="text-center">
               <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
                 {item.koota}
               </p>

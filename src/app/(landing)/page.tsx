@@ -1,7 +1,6 @@
 import { HeroSection } from "@/features/matchmaking/components/hero-section";
 import {
   LandingSearchSection,
-  AiDemoSection,
   CompatibilityPreviewSection,
   SuccessStoriesStrip,
 } from "@/features/matchmaking/components/landing-extras";
@@ -10,20 +9,21 @@ import { FeaturesGridSection } from "@/features/matchmaking/components/features-
 import { TestimonialsSection } from "@/features/matchmaking/components/testimonials-section";
 import { PricingSection } from "@/features/payments/components/pricing-section";
 import { FaqSection } from "@/features/matchmaking/components/faq-section";
-import { AnimatedStatsSection } from "@/features/matchmaking/components/animated-stats";
 import { FinalCtaSection } from "@/features/matchmaking/components/final-cta";
 import { HomeGuideChat } from "@/features/ai/components/home-guide-chat";
 
+/**
+ * Narrative landing — problem → approach → discovery → compatibility → trust → CTA.
+ * Stats counters and AI demo kits intentionally omitted (vibe-code landing pattern).
+ */
 export default function LandingPage() {
   return (
     <>
       <main id="main-content">
         <HeroSection />
-        <AnimatedStatsSection />
         <HowItWorksSection />
         <FeaturesGridSection />
         <CompatibilityPreviewSection />
-        <AiDemoSection />
         <LandingSearchSection />
         <SuccessStoriesStrip />
         <TestimonialsSection />

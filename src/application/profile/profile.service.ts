@@ -7,6 +7,7 @@ import type {
   ProfileUpdateInput,
 } from "@/lib/validators/profile";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
+import { assertSafePublicHttpsUrl } from "@/lib/security/url-safety";
 
 const COMPLETION_WEIGHTS: Array<{
   key: string;
@@ -59,18 +60,10 @@ export function calculateProfileCompletion(profile: Record<string, unknown>): {
 }
 
 const MAX_PROFILE_PHOTOS = 6;
+const MAX_DATA_URL_CHARS = 7 * 1024 * 1024; // ~5MB binary after base64 overhead
 
 function assertHttpsImageUrl(raw: string): URL {
-  let parsed: URL;
-  try {
-    parsed = new URL(raw.trim());
-  } catch {
-    throw new ValidationError("Enter a valid image URL");
-  }
-  if (parsed.protocol !== "https:") {
-    throw new ValidationError("Image links must use HTTPS");
-  }
-  return parsed;
+  return assertSafePublicHttpsUrl(raw, "Image link");
 }
 
 function ageFromDob(dob?: Date | string | null): number | null {
@@ -252,6 +245,12 @@ export class ProfileService {
     if (!dataUrl.startsWith("data:image/")) {
       throw new ValidationError("Expected a valid image file");
     }
+    if (!/^data:image\/(jpeg|jpg|png|webp|gif);base64,/i.test(dataUrl)) {
+      throw new ValidationError("Only JPEG, PNG, WEBP, or GIF uploads are allowed");
+    }
+    if (dataUrl.length > MAX_DATA_URL_CHARS) {
+      throw new ValidationError("Image is too large (max 5MB)");
+    }
 
     if (cloudinaryService.isConfigured()) {
       const uploaded = await cloudinaryService.uploadImage({
@@ -293,36 +292,25 @@ export class ProfileService {
     const parsed = assertHttpsImageUrl(imageUrl);
     const href = parsed.toString();
 
-    if (cloudinaryService.isConfigured()) {
-      try {
-        const uploaded = await cloudinaryService.uploadImage({
-          data: href,
-          folder: `vedamilan/profiles/${userId}`,
-        });
-        return this.attachPhoto(
-          userId,
-          {
-            cloudinaryPublicId: uploaded.public_id,
-            url: uploaded.url,
-            secureUrl: uploaded.secure_url,
-            width: uploaded.width,
-            height: uploaded.height,
-          },
-          makePrimary,
-        );
-      } catch {
-        // Fall through to direct URL storage if remote fetch fails
-      }
+    // Never store arbitrary remote URLs without Cloudinary ingest — prevents SSRF/store of attacker hosts.
+    if (!cloudinaryService.isConfigured()) {
+      throw new ValidationError(
+        "Remote image links require Cloudinary. Upload a file instead, or configure Cloudinary.",
+      );
     }
 
+    const uploaded = await cloudinaryService.uploadImage({
+      data: href,
+      folder: `vedamilan/profiles/${userId}`,
+    });
     return this.attachPhoto(
       userId,
       {
-        cloudinaryPublicId: `remote/${userId}/${Buffer.from(href).toString("base64url").slice(0, 48)}`,
-        url: href,
-        secureUrl: href,
-        width: null,
-        height: null,
+        cloudinaryPublicId: uploaded.public_id,
+        url: uploaded.url,
+        secureUrl: uploaded.secure_url,
+        width: uploaded.width,
+        height: uploaded.height,
       },
       makePrimary,
     );

@@ -4,6 +4,9 @@ import { requireSession } from "@/lib/auth/session";
 import { billingService } from "@/application/billing/billing.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
+import { assertSameOriginMutation } from "@/lib/security/csrf";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+import { recordSecurityEvent, clientIpFromRequest } from "@/lib/security/security-log";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +16,14 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request) {
   try {
+    assertSameOriginMutation(request);
     const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `billing:verify:${session.user.id}`,
+      limit: 20,
+      windowSec: 60,
     });
     const body = z
       .object({
@@ -29,6 +38,15 @@ export async function POST(request: Request) {
       orderId: body.orderId,
       paymentId: body.paymentId,
       signature: body.signature,
+    });
+    await recordSecurityEvent({
+      action: "billing.razorpay_verified",
+      resource: "payment",
+      resourceId: body.orderId,
+      actorUserId: session.user.id,
+      severity: "INFO",
+      ipAddress: clientIpFromRequest(request),
+      userAgent: request.headers.get("user-agent"),
     });
     return successResponse({ subscription });
   } catch (error) {

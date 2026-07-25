@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bell, Heart, Menu, MessageCircle, Palette, Search, Sparkles, Stars } from "lucide-react";
-import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { LanguageSelector } from "@/components/i18n/language-selector";
+import { useT } from "@/components/i18n/i18n-provider";
+import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { MobileDashboardMenu } from "@/components/layout/mobile-dashboard-menu";
@@ -15,21 +17,22 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { mainNav } from "@/config/navigation";
 import { useWorkspaceModeOptional } from "@/components/providers/workspace-mode-provider";
+import { navTitleKey } from "@/lib/i18n/nav-labels";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { useSession } from "@/lib/auth/client";
 import { NOTIFICATIONS_UPDATED_EVENT } from "@/lib/notifications/events";
 
 const MATRIMONY_QUICK = [
-  { href: routes.matches, label: "Matches", icon: Heart },
-  { href: routes.chat, label: "Messages", icon: MessageCircle },
-  { href: routes.search, label: "Search", icon: Search },
+  { href: routes.matches, labelKey: "navigation.matches", icon: Heart },
+  { href: routes.chat, labelKey: "navigation.messages", icon: MessageCircle },
+  { href: routes.search, labelKey: "navigation.search", icon: Search },
 ] as const;
 
 const ASTROLOGY_QUICK = [
-  { href: routes.kundli, label: "Kundli", icon: Stars },
-  { href: routes.divisionalCharts, label: "Charts", icon: Sparkles },
-  { href: routes.rajaYogas, label: "Yogas", icon: Sparkles },
+  { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
+  { href: routes.divisionalCharts, labelKey: "navigation.charts", icon: Sparkles },
+  { href: routes.rajaYogas, labelKey: "navigation.rajaYogas", icon: Sparkles },
 ] as const;
 
 export function Navbar({
@@ -43,7 +46,8 @@ export function Navbar({
   const [scrolled, setScrolled] = useState(false);
   const [unread, setUnread] = useState(0);
   const isOverlay = variant === "overlay";
-  const pathname = usePathname();
+  const pathname = useAppPathname();
+  const t = useT();
   const { data: session, isPending } = useSession();
   const workspace = useWorkspaceModeOptional();
   const isDashboard = pathname.startsWith("/dashboard");
@@ -94,7 +98,7 @@ export function Navbar({
   }, [isDashboard, isAuthed, pathname]);
 
   const floating = isOverlay && !scrolled;
-  const userName = session?.user?.name?.trim() || "You";
+  const userName = session?.user?.name?.trim() || t("pages.you");
 
   return (
     <header
@@ -129,7 +133,7 @@ export function Navbar({
         {!isDashboard ? (
           <nav className="hidden items-center gap-6 md:flex lg:gap-8" aria-label="Primary">
             {mainNav.map((item) => (
-              <Link
+              <LocaleLink
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -139,8 +143,12 @@ export function Navbar({
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {item.title}
-              </Link>
+                {item.href === "/#how"
+                  ? t("navigation.howItWorks")
+                  : item.href === "/#compatibility"
+                    ? t("navigation.compatibility")
+                    : t(navTitleKey(item.href, item.title))}
+              </LocaleLink>
             ))}
           </nav>
         ) : (
@@ -152,7 +160,7 @@ export function Navbar({
               const active = pathname === item.href || pathname.startsWith(item.href);
               const Icon = item.icon;
               return (
-                <Link
+                <LocaleLink
                   key={item.href}
                   href={item.href}
                   className={cn(
@@ -163,14 +171,22 @@ export function Navbar({
                   )}
                 >
                   <Icon className={cn("h-3.5 w-3.5", active && "text-gold")} aria-hidden />
-                  {item.label}
-                </Link>
+                  {t(item.labelKey)}
+                </LocaleLink>
               );
             })}
           </nav>
         )}
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <LanguageSelector
+            compact
+            variant="ghost"
+            className={cn(
+              "hidden sm:inline-flex",
+              floating && "text-ivory hover:bg-ivory/10 hover:text-ivory",
+            )}
+          />
           <ThemeToggle
             className={cn(floating && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
           />
@@ -185,7 +201,7 @@ export function Navbar({
                     size="icon"
                     className="text-muted-foreground hover:text-foreground relative hidden sm:inline-flex"
                   >
-                    <Link href={routes.notifications} aria-label="Notifications">
+                    <Link href={routes.notifications} aria-label={t("navigation.notifications")}>
                       <Bell className="h-4 w-4" />
                       {unread > 0 ? (
                         <span className="bg-primary text-primary-foreground absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
@@ -215,7 +231,7 @@ export function Navbar({
                 </>
               ) : (
                 <Button asChild className="shadow-gold hidden sm:inline-flex">
-                  <Link href={routes.dashboard}>Dashboard</Link>
+                  <Link href={routes.dashboard}>{t("navigation.dashboard")}</Link>
                 </Button>
               )}
               <SignOutButton

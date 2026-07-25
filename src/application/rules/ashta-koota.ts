@@ -119,6 +119,9 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
   overallScore: number;
   strengths: string[];
   challenges: string[];
+  /** Stable codes for localization — prefer over English strengths/challenges in UI. */
+  strengthCodes: string[];
+  challengeCodes: string[];
   yoni: { you: YoniAnimal; them: YoniAnimal; score: number; harmony: string };
 } {
   const sA = signIndex(input.moonSignA);
@@ -285,11 +288,25 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
 
   const strengths: string[] = [];
   const challenges: string[] = [];
+  const strengthCodes: string[] = [];
+  const challengeCodes: string[] = [];
   for (const item of gunaBreakdown) {
-    if (item.score / item.max >= 0.75) strengths.push(`${item.koota} is strong`);
-    if (item.score === 0) challenges.push(`${item.koota} needs attention`);
+    const code = item.koota.replace(/\s+/g, "");
+    if (item.score / item.max >= 0.75) {
+      strengths.push(`${item.koota} is strong`);
+      strengthCodes.push(`kootaStrong.${code}`);
+    }
+    if (item.score === 0) {
+      challenges.push(`${item.koota} needs attention`);
+      challengeCodes.push(`kootaAttention.${code}`);
+    }
   }
-  if (manglikCompatibility !== "Compatible") challenges.push(`Manglik: ${manglikCompatibility}`);
+  if (manglikCompatibility !== "Compatible") {
+    challenges.push(`Manglik: ${manglikCompatibility}`);
+    if (manglikCompatibility.includes("Both")) challengeCodes.push("manglik.both_neutralizing");
+    else if (manglikCompatibility.includes("Partial")) challengeCodes.push("manglik.partial");
+    else challengeCodes.push("manglik.needs_review");
+  }
 
   const overallScore = Math.round((totalGuna / 36) * 100);
 
@@ -303,6 +320,8 @@ export function scoreAshtaKoota(input: CompatibilityInput): {
     overallScore,
     strengths,
     challenges,
+    strengthCodes,
+    challengeCodes,
     yoni: {
       you: yoniA,
       them: yoniB,

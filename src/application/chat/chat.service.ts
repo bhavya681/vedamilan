@@ -156,8 +156,19 @@ export class ChatService {
   }) {
     const chat = await this.assertParticipant(input.chatId, input.senderId);
     const type = input.type || "TEXT";
+    if (type === "SYSTEM") {
+      throw new ValidationError("System messages cannot be sent by clients");
+    }
     if (type === "TEXT" && !input.body?.trim()) {
       throw new ValidationError("Message body is required");
+    }
+    if (input.mediaUrl) {
+      const cloud =
+        process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
+      const allowedPrefix = cloud ? `https://res.cloudinary.com/${cloud}/` : null;
+      if (!allowedPrefix || !input.mediaUrl.startsWith(allowedPrefix)) {
+        throw new ValidationError("mediaUrl must be a Cloudinary HTTPS URL for this app");
+      }
     }
 
     let message;
@@ -265,9 +276,11 @@ export class ChatService {
 
   async iceBreakers(userId: string, otherUserId: string) {
     await connectMongo();
+    const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+    await assertCandidateAccessible(userId, otherUserId);
     const [me, other] = await Promise.all([
       Profile.findOne({ userId }).lean(),
-      Profile.findOne({ userId: otherUserId }).lean(),
+      Profile.findOne({ userId: otherUserId, status: "ACTIVE" }).lean(),
     ]);
     const city = other?.city || "your city";
     const profession = other?.profession || "your work";
