@@ -622,15 +622,63 @@ export function buildGuideSystemContext(guide: WisdomGuide): string {
 
 /** Deterministic reflection when LLM credentials are unavailable. */
 export function wisdomDeterministicReply(guide: WisdomGuide, message: string): string {
-  const topicHint = guide.topics.find((t) =>
-    message.toLowerCase().includes(t.toLowerCase().slice(0, 5)),
-  );
-  const principle = guide.coreTeachings[0] || "Act with clarity and responsibility.";
+  const q = message.trim();
+  const lower = q.toLowerCase();
+
+  // Direct answers for simple prompts — never recycle the same template.
+  const mathMatch =
+    /(?:what(?:'s| is)\s+)?(-?\d+(?:\.\d+)?)\s*([+\-*/x×÷])\s*(-?\d+(?:\.\d+)?)\s*\??$/i.exec(
+      q.replace(/\s+/g, " "),
+    );
+  if (mathMatch) {
+    const a = Number(mathMatch[1]);
+    const op = mathMatch[2];
+    const b = Number(mathMatch[3]);
+    let result: number | null = null;
+    if (op === "+") result = a + b;
+    else if (op === "-") result = a - b;
+    else if (op === "*" || op === "x" || op === "×") result = a * b;
+    else if ((op === "/" || op === "÷") && b !== 0) result = a / b;
+    if (result != null && Number.isFinite(result)) {
+      const pretty = Number.isInteger(result) ? String(result) : String(Number(result.toFixed(6)));
+      return [
+        `**Direct answer**`,
+        `${a} ${op === "x" || op === "×" ? "×" : op === "/" || op === "÷" ? "÷" : op} ${b} = **${pretty}**.`,
+        ``,
+        `**Wisdom lens (optional)**`,
+        `Clarity in small things trains clarity in larger choices — a theme often associated with ${guide.displayName}'s tradition of careful attention.`,
+        ``,
+        `**Reflect**`,
+        `Where else in your life would a clear, honest answer help you today?`,
+      ].join("\n");
+    }
+  }
+
+  if (/^(hi|hello|hey|namaste)\b/i.test(q) && q.length < 40) {
+    return [
+      `**Wisdom reflection**`,
+      `Namaste. I am an **AI Wisdom Guide** inspired by teachings traditionally associated with **${guide.displayName}** — not the historical figure speaking.`,
+      ``,
+      `**Invite**`,
+      `Share a real question — conflict, duty, choice, relationships, or inner calm — and I will reflect with themes from ${guide.primarySources[0] || "this tradition"}.`,
+    ].join("\n");
+  }
+
+  const topicHint =
+    guide.topics.find((t) => lower.includes(t.toLowerCase().slice(0, 5))) ||
+    guide.topics.find((t) => lower.split(/\s+/).some((w) => t.toLowerCase().includes(w)));
+  const principle =
+    guide.coreTeachings.find((t) =>
+      lower.split(/\s+/).some((w) => w.length > 4 && t.toLowerCase().includes(w.slice(0, 4))),
+    ) ||
+    guide.coreTeachings[0] ||
+    "Act with clarity and responsibility.";
+
   return [
     `**Wisdom reflection**`,
-    `Your question touches themes ${guide.displayName} is traditionally associated with${
-      topicHint ? ` — especially ${topicHint.toLowerCase()}` : ""
-    }.`,
+    `Regarding your question — “${q.slice(0, 180)}” — themes traditionally linked with ${guide.displayName}${
+      topicHint ? ` (especially ${topicHint.toLowerCase()})` : ""
+    } can help you look at it with more steadiness.`,
     ``,
     `**Principle**`,
     principle,
@@ -639,10 +687,10 @@ export function wisdomDeterministicReply(guide: WisdomGuide, message: string): s
     `${guide.shortPhilosophy} This AI guide draws on sources such as ${guide.primarySources[0] || "classical tradition"} — as interpretation, not as a live teacher.`,
     ``,
     `**Modern application**`,
-    `Pause before deciding. Name your values. Consider consequences for dignity — yours and others'. Then choose the smallest next step that aligns with those values.`,
+    `Name the values at stake in *this* situation. Consider dignity — yours and others'. Then take the smallest next step that protects those values.`,
     ``,
     `**Reflect**`,
-    `What part of this situation feels most important to protect — and why?`,
+    `If you followed ${guide.displayName}'s spirit of ${guide.domain.split("·")[0]?.trim().toLowerCase() || "clarity"} for one week, what would you do differently tomorrow morning?`,
   ].join("\n");
 }
 

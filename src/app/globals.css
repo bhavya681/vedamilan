@@ -220,6 +220,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
 
   body {
@@ -232,6 +233,7 @@
       transparent 55%
     );
     min-height: 100dvh;
+    overflow-x: clip;
   }
 
   /* Prefer Devanagari-capable UI font for sa / hi / mr */
@@ -399,6 +401,58 @@
     background-repeat: no-repeat;
     background-position: center;
     height: 24px;
+  }
+
+  /* Sage AI discourse — parchment chamber (chat / voice) */
+  .sage-discourse {
+    background-color: color-mix(in srgb, var(--card) 88%, var(--gold));
+  }
+
+  .dark .sage-discourse {
+    background-color: color-mix(in srgb, var(--card) 92%, var(--gold));
+  }
+
+  .sage-discourse-wash {
+    background-image:
+      radial-gradient(
+        ellipse 70% 55% at 50% -10%,
+        color-mix(in srgb, var(--gold) 14%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 100% 100%,
+        color-mix(in srgb, var(--primary) 8%, transparent),
+        transparent 55%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--warm-ivory) 55%, transparent),
+        transparent 40%
+      );
+  }
+
+  .dark .sage-discourse-wash {
+    background-image:
+      radial-gradient(
+        ellipse 70% 55% at 50% -10%,
+        color-mix(in srgb, var(--gold) 10%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 0% 100%,
+        color-mix(in srgb, var(--primary) 7%, transparent),
+        transparent 55%
+      );
+  }
+
+  .sage-md.guru-md p,
+  .sage-manuscript .guru-md p {
+    line-height: 1.7;
+  }
+
+  .sage-md.guru-md,
+  .sage-manuscript .guru-md {
+    font-size: 0.9375rem;
   }
 
   .mandala-bg {

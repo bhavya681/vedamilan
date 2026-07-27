@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Ban, Mic, Phone, Send, MessageSquareText, Video, X } from "lucide-react";
+import { Ban, ChevronLeft, Mic, Phone, Send, MessageSquareText, Video, X } from "lucide-react";
 import Pusher from "pusher-js";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -85,7 +85,7 @@ export default function ChatPage() {
   const openedWith = useRef<string | null>(null);
 
   const active = useMemo(
-    () => chats.find((item) => item.id === activeId) || chats[0],
+    () => chats.find((item) => item.id === activeId) ?? null,
     [chats, activeId],
   );
 
@@ -135,7 +135,12 @@ export default function ChatPage() {
               if (created) setActiveId(created.id);
             }
           }
-        } else if (!activeId && list[0]) {
+        } else if (
+          !activeId &&
+          list[0] &&
+          typeof window !== "undefined" &&
+          window.matchMedia("(min-width: 1024px)").matches
+        ) {
           setActiveId(list[0].id);
         }
       } catch {
@@ -304,8 +309,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="grid h-[calc(100vh-10rem)] min-h-0 gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
-      <aside className="glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl">
+    <div className="flex h-[min(42rem,calc(100dvh-11.5rem))] min-h-[28rem] min-w-0 flex-col gap-3 sm:h-[min(44rem,calc(100dvh-10rem))] sm:gap-4 md:h-[calc(100dvh-9rem)] lg:grid lg:h-[calc(100dvh-9rem)] lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+      <aside
+        className={cn(
+          "glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl",
+          activeId ? "hidden max-h-none lg:flex" : "flex max-h-none flex-1",
+        )}
+      >
         <div className="border-border/60 shrink-0 border-b p-4">
           <h1 className="font-display text-xl">{t("pages.messagesTitle")}</h1>
         </div>
@@ -347,21 +357,40 @@ export default function ChatPage() {
         </ScrollArea>
       </aside>
 
-      <section className="glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl">
-        <header className="border-border/60 flex items-center justify-between border-b px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Avatar>
+      <section
+        className={cn(
+          "glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl",
+          activeId ? "flex flex-1" : "hidden lg:flex",
+        )}
+      >
+        <header className="border-border/60 flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            {activeId ? (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-9 w-9 shrink-0 lg:hidden"
+                aria-label="Back to conversations"
+                onClick={() => setActiveId("")}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            ) : null}
+            <Avatar className="size-9 shrink-0 sm:size-10">
               {active?.photo ? <AvatarImage src={active.photo} alt={active.name} /> : null}
               <AvatarFallback>{active?.name ? initials(active.name) : "?"}</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-medium">{active?.name || t("pages.selectConversation")}</p>
-              <p className="text-muted-foreground text-xs">
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {active?.name || t("pages.selectConversation")}
+              </p>
+              <p className="text-muted-foreground truncate text-xs">
                 {typing ? t("pages.typing") : t("pages.secureConversation")}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-1.5 sm:gap-2">
             {active?.otherUserId ? (
               <Button
                 size="icon"
@@ -396,7 +425,7 @@ export default function ChatPage() {
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
+                      "max-w-[min(100%,20rem)] rounded-2xl px-3 py-2 text-sm sm:max-w-[80%]",
                       mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
                     )}
                   >

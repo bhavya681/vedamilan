@@ -132,7 +132,7 @@ export default function AshtakavargaPage() {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6">
               {(data.bhinna[planet] || []).map((row) => (
                 <div
                   key={row.house}

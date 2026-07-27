@@ -9,7 +9,6 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { useT } from "@/components/i18n/i18n-provider";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
-import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
@@ -48,8 +47,7 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
         <SheetHeader className="border-border/50 from-card to-background border-b bg-gradient-to-b p-4 text-left">
           <SheetTitle className="sr-only">{t("navigation.dashboard")}</SheetTitle>
           <BrandLogo href={homeHref} size="sm" />
-          <ModeSwitcher className="mt-3 w-full" />
-          <p className="text-muted-foreground mt-2 truncate text-[11px] leading-snug">
+          <p className="text-muted-foreground mt-2 text-[11px] leading-snug">
             {mode === "astrology"
               ? t("navigation.modeAstrologySubtitle")
               : mode === "wisdom"

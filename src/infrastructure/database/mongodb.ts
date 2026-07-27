@@ -24,6 +24,7 @@ ensurePublicDnsResolvers();
 const globalForMongo = globalThis as unknown as {
   mongoosePromise?: Promise<typeof mongoose>;
   resolvedMongoUri?: string;
+  resolveUriPromise?: Promise<string>;
 };
 
 function getMongoUri(): string {
@@ -203,45 +204,98 @@ async function getResolvedMongoUri(): Promise<string> {
     return globalForMongo.resolvedMongoUri;
   }
 
-  globalForMongo.resolvedMongoUri = await resolveMongoSrvUri(uri);
-  logger.info("Resolved mongodb+srv URI for DNS compatibility");
-  return globalForMongo.resolvedMongoUri;
+  if (!globalForMongo.resolveUriPromise) {
+    globalForMongo.resolveUriPromise = resolveMongoSrvUri(uri)
+      .then((resolved) => {
+        globalForMongo.resolvedMongoUri = resolved;
+        logger.info("Resolved mongodb+srv URI for DNS compatibility");
+        return resolved;
+      })
+      .catch((error) => {
+        globalForMongo.resolveUriPromise = undefined;
+        throw error;
+      });
+  }
+
+  return globalForMongo.resolveUriPromise;
 }
 
 export async function connectMongo(): Promise<typeof mongoose> {
-  if (mongoose.connection.readyState === 1) {
+  // Read as number so TypeScript does not narrow across awaits (readyState mutates).
+  const readyState = () => Number(mongoose.connection.readyState);
+
+  if (readyState() === 1) {
+    return mongoose;
+  }
+
+  // Connecting — wait on the in-flight promise instead of opening another URI.
+  if (readyState() === 2 && globalForMongo.mongoosePromise) {
+    await globalForMongo.mongoosePromise;
+  }
+
+  // Re-check after awaiting — readyState may have advanced to connected.
+  if (readyState() === 1) {
     return mongoose;
   }
 
   // Drop a stale resolved/rejected promise after disconnect or a failed attempt
   // so the next call always opens a fresh connection.
-  if (mongoose.connection.readyState === 0) {
+  if (readyState() === 0) {
     globalForMongo.mongoosePromise = undefined;
   }
 
   if (!globalForMongo.mongoosePromise) {
-    const uri = await getResolvedMongoUri();
-    globalForMongo.mongoosePromise = mongoose
-      .connect(uri, {
-        maxPoolSize: 20,
-        minPoolSize: 2,
-        serverSelectionTimeoutMS: 15_000,
-        autoIndex: process.env.NODE_ENV !== "production",
-      })
-      .catch((error) => {
-        globalForMongo.mongoosePromise = undefined;
+    // Assign the promise *before* any await so concurrent callers share one connect.
+    globalForMongo.mongoosePromise = (async () => {
+      const uri = await getResolvedMongoUri();
+      if (readyState() === 1) {
+        return mongoose;
+      }
+      // readyState 2: another connect may already be in flight on this singleton
+      if (readyState() === 2) {
+        // Wait briefly for the active connection to finish
+        for (let i = 0; i < 50; i += 1) {
+          await new Promise((r) => setTimeout(r, 100));
+          if (readyState() === 1) return mongoose;
+          if (readyState() === 0) break;
+        }
+      }
+      if (readyState() === 1) {
+        return mongoose;
+      }
+      try {
+        await mongoose.connect(uri, {
+          maxPoolSize: 20,
+          minPoolSize: 2,
+          serverSelectionTimeoutMS: 15_000,
+          autoIndex: process.env.NODE_ENV !== "production",
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        // Concurrent connect with different resolved host strings — reuse if already up.
+        if (
+          /different connection strings|openUri\(\) on an active connection/i.test(message) &&
+          readyState() === 1
+        ) {
+          return mongoose;
+        }
         throw error;
-      });
+      }
+      return mongoose;
+    })().catch((error) => {
+      globalForMongo.mongoosePromise = undefined;
+      throw error;
+    });
   }
 
   try {
     await globalForMongo.mongoosePromise;
-    const readyState = mongoose.connection.readyState as number;
-    if (readyState !== 1) {
+    const state = readyState();
+    if (state !== 1) {
       globalForMongo.mongoosePromise = undefined;
-      throw new Error(`MongoDB connect finished with readyState=${readyState}`);
+      throw new Error(`MongoDB connect finished with readyState=${state}`);
     }
-    logger.info({ readyState }, "MongoDB connected");
+    logger.info({ readyState: state }, "MongoDB connected");
     return mongoose;
   } catch (error) {
     globalForMongo.mongoosePromise = undefined;
@@ -278,6 +332,7 @@ export async function disconnectMongo(): Promise<void> {
     await mongoose.disconnect();
     globalForMongo.mongoosePromise = undefined;
     globalForMongo.resolvedMongoUri = undefined;
+    globalForMongo.resolveUriPromise = undefined;
   }
 }
 

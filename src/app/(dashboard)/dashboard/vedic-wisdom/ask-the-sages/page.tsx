@@ -121,11 +121,16 @@ export default function AskTheSagesPage() {
         </form>
 
         {answer ? (
-          <section className="border-border/60 space-y-3 border-y py-6">
-            <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-              Council reflection · AI interpretation
-            </p>
-            <GuruMarkdown content={answer} />
+          <section className="sage-discourse border-gold/20 relative overflow-hidden rounded-3xl border px-5 py-6 sm:px-7">
+            <div className="sage-discourse-wash pointer-events-none absolute inset-0" aria-hidden />
+            <div className="relative space-y-3">
+              <p className="text-gold/80 text-[10px] font-medium tracking-[0.18em] uppercase">
+                Council reflection · AI interpretation
+              </p>
+              <div className="sage-manuscript">
+                <GuruMarkdown content={answer} />
+              </div>
+            </div>
           </section>
         ) : null}
 

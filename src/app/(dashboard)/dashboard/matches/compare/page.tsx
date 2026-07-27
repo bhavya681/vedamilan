@@ -163,7 +163,10 @@ function CompareMatchesInner() {
           <Card className="glass-panel overflow-x-auto">
             <CardContent className="divide-border/60 divide-y p-0">
               {rows.map(([label, a, b]) => (
-                <div key={label} className="grid min-w-[320px] grid-cols-3 gap-3 px-4 py-3 text-sm">
+                <div
+                  key={label}
+                  className="grid min-w-[17.5rem] grid-cols-3 gap-2 px-3 py-3 text-sm sm:min-w-[20rem] sm:gap-3 sm:px-4"
+                >
                   <p className="text-muted-foreground font-medium">{label}</p>
                   <p className="break-words">{a}</p>
                   <p className="break-words">{b}</p>

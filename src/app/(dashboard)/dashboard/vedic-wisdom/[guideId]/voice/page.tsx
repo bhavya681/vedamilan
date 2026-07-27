@@ -6,8 +6,12 @@ import { useParams } from "next/navigation";
 import { Mic, MicOff, PhoneOff, Volume2, VolumeX, MessageSquareText, ArrowUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { WisdomPortrait } from "@/features/wisdom/components/wisdom-portrait";
+import {
+  SageDiscourseShell,
+  SageMessageTurn,
+  SageOrnamentLine,
+} from "@/features/wisdom/components/sage-discourse";
 import { VoiceOrbVisualizer } from "@/features/wisdom/voice/voice-visualizer";
 import { useWisdomVoiceSession } from "@/features/wisdom/voice/use-wisdom-voice-session";
 import { getWisdomGuide } from "@/domain/wisdom/guides";
@@ -79,22 +83,35 @@ export default function WisdomVoicePage() {
     voice.state === "ended";
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-7rem)] max-w-6xl flex-col gap-6 pb-[max(1rem,env(safe-area-inset-bottom))] lg:flex-row lg:gap-10">
-      <aside className="border-border/60 space-y-4 lg:w-72 lg:shrink-0 lg:border-r lg:pr-8">
+    <div className="mx-auto flex h-[calc(100dvh-11.5rem)] w-full max-w-6xl min-w-0 flex-col gap-3 sm:h-[calc(100dvh-9.5rem)] sm:gap-4 md:h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-7.5rem)] lg:flex-row lg:gap-8">
+      <aside className="border-border/50 shrink-0 space-y-3 lg:w-72 lg:space-y-4 lg:border-r lg:pr-7">
         <Link
           href={`${routes.vedicWisdom}/${guide.id}`}
           className="text-muted-foreground hover:text-foreground text-xs transition-colors"
         >
           ← {guide.displayName}
         </Link>
-        <div className="flex items-center gap-4 lg:flex-col lg:items-start">
-          <WisdomPortrait guide={guide} size="lg" />
-          <div>
-            <h1 className="font-display text-2xl">{guide.displayName}</h1>
-            <p className="text-muted-foreground mt-1 text-sm">{guide.domain}</p>
+        <div className="flex items-center gap-3 sm:gap-4 lg:flex-col lg:items-start">
+          <div className="relative shrink-0">
+            <div className="from-gold/25 absolute -inset-2 rounded-full bg-gradient-to-b to-transparent blur-sm" />
+            <WisdomPortrait
+              guide={guide}
+              size="lg"
+              className="ring-gold/30 shadow-gold relative !h-12 !w-12 ring-2 sm:!h-16 sm:!w-16 lg:!h-24 lg:!w-24"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="text-gold/80 text-[10px] font-medium tracking-[0.16em] uppercase">
+              Voice satsang
+            </p>
+            <h1 className="font-display text-lg tracking-tight sm:text-xl lg:text-2xl">
+              {guide.displayName}
+            </h1>
+            <p className="text-muted-foreground mt-0.5 hidden text-sm sm:block">{guide.domain}</p>
           </div>
         </div>
-        <p className="text-muted-foreground text-xs leading-relaxed">
+        <SageOrnamentLine className="hidden lg:flex" />
+        <p className="text-muted-foreground hidden text-xs leading-relaxed lg:block">
           AI Wisdom Guide inspired by the teachings of {guide.displayName}. This is an AI-generated
           voice designed to accompany the wisdom experience.
         </p>
@@ -120,42 +137,57 @@ export default function WisdomVoicePage() {
             ))}
           </div>
         </div>
-        <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={voice.includeLifeContext}
-            onChange={(e) => voice.setIncludeLifeContext(e.target.checked)}
-          />
-          <span className="text-muted-foreground">
-            Personalized wisdom context (gentle profile cues)
-          </span>
-        </label>
-        <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed">
-          <input
-            type="checkbox"
-            className="mt-0.5"
-            checked={voice.handsFree}
-            onChange={(e) => voice.setHandsFree(e.target.checked)}
-          />
-          <span className="text-muted-foreground">Hands-free listening after each reply</span>
-        </label>
-        {voice.remainingSeconds != null ? (
-          <p className="text-muted-foreground text-xs">
-            About {Math.max(0, Math.floor(voice.remainingSeconds / 60))} min remaining today
-          </p>
-        ) : null}
-        <Button asChild variant="outline" size="sm" className="w-full">
+        <div className="hidden space-y-3 lg:block">
+          <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={voice.includeLifeContext}
+              onChange={(e) => voice.setIncludeLifeContext(e.target.checked)}
+            />
+            <span className="text-muted-foreground">
+              Personalized wisdom context (gentle profile cues)
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={voice.handsFree}
+              onChange={(e) => voice.setHandsFree(e.target.checked)}
+            />
+            <span className="text-muted-foreground">Hands-free listening after each reply</span>
+          </label>
+          {voice.remainingSeconds != null ? (
+            <p className="text-muted-foreground text-xs">
+              About {Math.max(0, Math.floor(voice.remainingSeconds / 60))} min remaining today
+            </p>
+          ) : null}
+          <Button asChild variant="outline" size="sm" className="w-full">
+            <Link href={`${routes.vedicWisdom}/${guide.id}/chat`}>Continue with text</Link>
+          </Button>
+        </div>
+        <Button asChild variant="outline" size="sm" className="w-full lg:hidden">
           <Link href={`${routes.vedicWisdom}/${guide.id}/chat`}>Continue with text</Link>
         </Button>
       </aside>
 
-      <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-1 flex-col items-center justify-center px-2 py-6 text-center">
-          <WisdomPortrait guide={guide} size="xl" className="mb-4 hidden sm:flex" />
-          <p className="font-display text-2xl sm:text-3xl">{guide.displayName}</p>
+      <SageDiscourseShell className="border-border/50 shadow-soft flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem]">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-3 py-4 text-center sm:px-6 sm:py-6">
+          <WisdomPortrait
+            guide={guide}
+            size="xl"
+            className="ring-gold/30 shadow-gold mb-5 hidden ring-2 sm:flex"
+          />
+          <p className="text-gold/80 font-display text-xs tracking-[0.28em] uppercase">
+            Speak with the sage
+          </p>
+          <p className="font-display mt-2 text-2xl tracking-tight sm:text-3xl">
+            {guide.displayName}
+          </p>
           <p className="text-muted-foreground mt-1 text-sm">{guide.domain}</p>
-          <p className="text-muted-foreground mt-6 max-w-md text-sm" aria-live="polite">
+          <SageOrnamentLine className="mx-auto mt-5 w-full max-w-xs" />
+          <p className="text-muted-foreground mt-5 max-w-md text-sm" aria-live="polite">
             {voice.statusLabel}
           </p>
           {voice.partial ? (
@@ -255,28 +287,17 @@ export default function WisdomVoicePage() {
         </div>
 
         {(voice.showTranscript || voice.messages.length > 0) && voice.showTranscript ? (
-          <div className="border-border/60 max-h-64 space-y-3 overflow-y-auto border-t pt-4 lg:max-h-[40vh]">
-            <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-              Live transcript
+          <div className="border-border/40 max-h-64 space-y-1 overflow-y-auto border-t px-4 pt-4 pb-2 sm:px-5 lg:max-h-[40vh]">
+            <p className="text-gold/80 mb-2 text-[10px] font-medium tracking-[0.18em] uppercase">
+              Live discourse
             </p>
             {voice.messages.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Your conversation will appear here.</p>
+              <p className="text-muted-foreground font-display text-sm italic">
+                Your conversation will appear here as a quiet transcript.
+              </p>
             ) : (
               voice.messages.map((m) => (
-                <div key={m.id} className={cn(m.role === "user" ? "text-right" : "text-left")}>
-                  <p className="text-muted-foreground mb-1 text-[10px] uppercase">
-                    {m.role === "user" ? "You" : guide.displayName} · {m.source}
-                  </p>
-                  {m.role === "assistant" ? (
-                    <div className="border-border/50 inline-block max-w-[min(100%,36rem)] rounded-xl border px-3 py-2 text-left">
-                      <GuruMarkdown content={m.content} />
-                    </div>
-                  ) : (
-                    <p className="bg-primary text-primary-foreground inline-block max-w-[min(100%,36rem)] rounded-xl px-3 py-2 text-sm">
-                      {m.content}
-                    </p>
-                  )}
-                </div>
+                <SageMessageTurn key={m.id} role={m.role} guide={guide} content={m.content} />
               ))
             )}
           </div>
@@ -284,21 +305,26 @@ export default function WisdomVoicePage() {
 
         <form
           onSubmit={onTextSubmit}
-          className="border-border/60 mt-3 flex gap-2 border-t pt-3"
+          className="border-border/40 from-card/90 to-card/70 mt-auto flex gap-2.5 border-t bg-gradient-to-t px-4 pt-3 pb-3 backdrop-blur-md sm:px-5"
           aria-label="Type instead of speaking"
         >
           <input
             value={textDraft}
             onChange={(e) => setTextDraft(e.target.value)}
-            placeholder="Or type your reflection…"
-            className="border-border bg-card focus-visible:ring-ring min-h-11 flex-1 rounded-xl border px-3 text-sm outline-none focus-visible:ring-2"
+            placeholder="Or offer a written reflection…"
+            className="border-border/60 bg-background/80 focus-visible:border-gold/45 focus-visible:ring-gold/20 min-h-11 flex-1 rounded-2xl border px-3.5 text-sm outline-none focus-visible:ring-2"
           />
-          <Button type="submit" size="icon" className="h-11 w-11" disabled={!textDraft.trim()}>
+          <Button
+            type="submit"
+            size="icon"
+            className="shadow-gold h-11 w-11 rounded-2xl"
+            disabled={!textDraft.trim()}
+          >
             <ArrowUp className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>
         </form>
-      </section>
+      </SageDiscourseShell>
     </div>
   );
 }

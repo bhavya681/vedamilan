@@ -157,7 +157,7 @@ export default function AstrologyHomePage() {
 
         {bundle ? (
           <>
-            <section className="border-border/60 grid gap-6 border-y py-5 sm:grid-cols-3 sm:gap-8">
+            <section className="border-border/60 grid gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
               <div>
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
                   <Stars className="h-3.5 w-3.5" /> Current Dasha

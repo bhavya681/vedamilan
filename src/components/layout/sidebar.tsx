@@ -33,7 +33,13 @@ export function Sidebar({ className }: { className?: string }) {
 
   useEffect(() => {
     try {
-      setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === "1");
+      const stored = window.localStorage.getItem(COLLAPSE_KEY);
+      if (stored === "1" || stored === "0") {
+        setCollapsed(stored === "1");
+        return;
+      }
+      // Tablet (md–lg): start collapsed so main content has room
+      setCollapsed(window.matchMedia("(max-width: 1023px)").matches);
     } catch {
       /* ignore */
     }
@@ -68,7 +74,7 @@ export function Sidebar({ className }: { className?: string }) {
     <aside
       className={cn(
         "border-border/40 bg-card/95 dark:bg-card/90 relative hidden h-full shrink-0 flex-col border-r backdrop-blur-xl transition-[width] duration-300 md:flex",
-        collapsed ? "w-[4.5rem]" : "w-[15.75rem] xl:w-[16.5rem]",
+        collapsed ? "w-[4.5rem]" : "w-[14rem] lg:w-[15.75rem] xl:w-[16.5rem]",
         className,
       )}
       aria-label="Dashboard sidebar"
@@ -109,18 +115,8 @@ export function Sidebar({ className }: { className?: string }) {
           </Button>
         </div>
         {!collapsed ? (
-          <div className="mt-3 space-y-2">
+          <div className="mt-3">
             <ModeSwitcher className="w-full" />
-            <p
-              key={mode}
-              className="text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 truncate px-0.5 text-[10px] leading-snug duration-300"
-            >
-              {mode === "astrology"
-                ? t("navigation.modeAstrologySubtitle")
-                : mode === "wisdom"
-                  ? t("navigation.modeRishiSageSubtitle")
-                  : t("navigation.modeMatrimonySubtitle")}
-            </p>
           </div>
         ) : (
           <div className="mt-3 flex justify-center">

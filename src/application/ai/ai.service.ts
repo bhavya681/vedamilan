@@ -2,6 +2,14 @@ import { withVedicDisclaimer, VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-dis
 import { AiConversation, Horoscope, Dasha, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { runWithAiToolContext } from "@/application/ai/ai-tool-context";
+import {
+  buildGuruSystemDirectives,
+  classifyQuestionIntent,
+  formatChatHistory,
+  needsAstrologyTools,
+  trySolveMath,
+  type QuestionIntent,
+} from "@/application/ai/chat-intent";
 import { compatibilityService } from "@/application/rules/compatibility.service";
 import { matchmakingService } from "@/application/matchmaking/matchmaking.service";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
@@ -15,7 +23,46 @@ function hasLlmCredentials(): boolean {
   );
 }
 
-async function guruDeterministicExplain(userId: string, message: string) {
+function greetingReply() {
+  return withVedicDisclaimer(
+    "Namaste. I am **AI Guru** — your Vedic astrology guide on VedaMilan. Ask about your chart, dashas, timing, career, or relationships, and I will answer clearly from your Kundli data.",
+  );
+}
+
+function identityReply() {
+  return withVedicDisclaimer(
+    "I am **AI Guru**, VedaMilan’s professional Vedic astrology assistant. I explain your calculated Kundli, dashas, yogas, and compatibility in plain language. I do not invent planet positions — the rule engine calculates; I interpret.",
+  );
+}
+
+function thanksReply() {
+  return withVedicDisclaimer(
+    "You’re welcome. Whenever you are ready, ask another clear question about your chart or life theme.",
+  );
+}
+
+async function guruDeterministicExplain(
+  userId: string,
+  message: string,
+  intent: QuestionIntent = classifyQuestionIntent(message),
+) {
+  const math = trySolveMath(message);
+  if (math) return withVedicDisclaimer(math);
+  if (intent === "greeting") return greetingReply();
+  if (intent === "identity") return identityReply();
+  if (intent === "thanks") return thanksReply();
+
+  // Non-astrology questions: answer directly — never paste the same chart dump.
+  if (!needsAstrologyTools(intent) && intent !== "unknown") {
+    return withVedicDisclaimer(
+      [
+        `I heard your question: “${message.trim().slice(0, 200)}”.`,
+        "Without the live language model connected right now, I can still help best with **Kundli, dasha, timing, career, and relationship** questions grounded in your chart.",
+        "Ask something like: “What does my current Mahadasha mean?” or “How does Venus show in relationships for me?”",
+      ].join("\n\n"),
+    );
+  }
+
   await connectMongo();
   const [chart, dasha] = await Promise.all([
     Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
@@ -40,50 +87,81 @@ async function guruDeterministicExplain(userId: string, message: string) {
     /raja|gajakesari|dharma.?karma|budhaditya|ruchaka/i.test(`${y.code} ${y.name}`),
   );
   const venus = chart.planets?.find((p) => p.planet === "Venus");
-  const q = message.toLowerCase();
-  const wantsMarriage = /marri|partner|spouse|relat|love|7th|vivah/.test(q);
-  const wantsCareer = /career|job|work|business|success|raja/.test(q);
-  const wantsTiming = /when|timing|this (month|year)|gochar|transit|now|dasha/.test(q);
+  const tenth = chart.planets?.find((p) => p.house === 10);
 
-  const lines: string[] = [
-    `Your rising sign (Lagna) is **${chart.lagnaSign}**, Moon is in **${chart.moonSign}**, and Sun is in **${chart.sunSign}**.`,
-  ];
+  const lines: string[] = [`**Your question:** ${message.trim().slice(0, 220)}`, ""];
 
-  if (dasha?.currentMaha) {
+  if (intent === "relationship") {
     lines.push(
-      `Right now your main period (Mahadasha) is **${dasha.currentMaha}**${
-        dasha.currentAntar ? `, with Antardasha **${dasha.currentAntar}**` : ""
-      }.`,
+      `For relationships, your Lagna is **${chart.lagnaSign}** and Moon is in **${chart.moonSign}** — these shape emotional needs.`,
     );
+    if (venus) {
+      lines.push(
+        `Venus in **${venus.sign}** (house ${venus.house}) shows how affection and partnership themes may express.`,
+      );
+    }
+    if (dasha?.currentMaha) {
+      lines.push(
+        `Current Mahadasha **${dasha.currentMaha}**${
+          dasha.currentAntar ? ` / Antardasha **${dasha.currentAntar}**` : ""
+        } can colour relationship timing — use it as context, not a verdict.`,
+      );
+    }
+  } else if (intent === "career") {
+    lines.push(
+      `For career themes, Lagna **${chart.lagnaSign}** and the 10th-house picture matter most alongside your dasha.`,
+    );
+    if (tenth) {
+      lines.push(
+        `A planet in the 10th from this chart view: **${tenth.planet}** in **${tenth.sign}**.`,
+      );
+    }
+    if (raja[0]) {
+      lines.push(
+        `Supportive combination: **${raja[0].name}** — ${raja[0].description || "may favour recognition when effort is steady."}`,
+      );
+    }
+    if (dasha?.currentMaha) {
+      lines.push(
+        `Work with your current Mahadasha **${dasha.currentMaha}** — steady skill-building usually outperforms rushing.`,
+      );
+    }
+  } else if (intent === "timing") {
+    if (dasha?.currentMaha) {
+      lines.push(
+        `Timing lens: Mahadasha **${dasha.currentMaha}**${
+          dasha.currentAntar ? `, Antardasha **${dasha.currentAntar}**` : ""
+        }.`,
+      );
+    }
+    if (gochar?.highlights?.[0]) {
+      lines.push(`Current transit note: ${gochar.highlights[0]}`);
+    }
+    lines.push(
+      "Exact muhurta for ceremonies still needs classical electional work — this is directional guidance only.",
+    );
+  } else {
+    // astrology / unknown but chart-related
+    lines.push(
+      `From your Kundli: Lagna **${chart.lagnaSign}**, Moon **${chart.moonSign}**, Sun **${chart.sunSign}**.`,
+    );
+    if (dasha?.currentMaha) {
+      lines.push(
+        `Current period: Mahadasha **${dasha.currentMaha}**${
+          dasha.currentAntar ? ` · Antardasha **${dasha.currentAntar}**` : ""
+        }.`,
+      );
+    }
+    if (intent === "astrology" && raja[0]) {
+      lines.push(`Notable yoga: **${raja[0].name}**.`);
+    } else if (gochar?.highlights?.[0]) {
+      lines.push(`Transit note: ${gochar.highlights[0]}`);
+    }
   }
 
-  if (raja[0]) {
-    lines.push(
-      `A supportive yoga on your chart: **${raja[0].name}** — ${
-        raja[0].description || "it can support growth when you act with focus."
-      }`,
-    );
-  } else if (yogas[0]) {
-    lines.push(`Notable combination: **${yogas[0].name}**.`);
-  }
+  lines.push("", "Ask a follow-up if you want one house, planet, or dasha explained more deeply.");
 
-  if (wantsMarriage && venus) {
-    lines.push(
-      `For relationships, Venus in **${venus.sign}** (house ${venus.house}) shows how you give and receive love.`,
-    );
-  } else if (wantsCareer) {
-    lines.push(
-      "For career, watch your 10th-house themes with the current dasha — steady effort usually works better than rushing.",
-    );
-  } else if (wantsTiming && gochar?.highlights?.[0]) {
-    lines.push(`In the sky now: ${gochar.highlights[0]}`);
-  } else if (gochar?.highlights?.[0]) {
-    lines.push(`Current transit note: ${gochar.highlights[0]}`);
-  }
-
-  lines.push("Ask me one clear question — I will keep the answer short and easy.");
-
-  return withVedicDisclaimer(lines.join("\n\n"));
+  return withVedicDisclaimer(lines.filter((l) => l !== undefined).join("\n"));
 }
 
 async function guruOpeningGreeting(userId: string) {
@@ -114,11 +192,17 @@ async function guruOpeningGreeting(userId: string) {
   return withVedicDisclaimer(parts.join(" "));
 }
 
-async function deterministicExplain(agent: VedaAgentKey, userId: string, message: string) {
+async function deterministicExplain(
+  agent: VedaAgentKey,
+  userId: string,
+  message: string,
+  intent?: QuestionIntent,
+) {
   await connectMongo();
+  const resolvedIntent = intent ?? classifyQuestionIntent(message);
 
   if (agent === "ASTROLOGER_GURU" || agent === "HOROSCOPE") {
-    return guruDeterministicExplain(userId, message);
+    return guruDeterministicExplain(userId, message, resolvedIntent);
   }
 
   switch (agent) {
@@ -197,7 +281,7 @@ async function deterministicExplain(agent: VedaAgentKey, userId: string, message
       );
     }
     default: {
-      return guruDeterministicExplain(userId, message);
+      return guruDeterministicExplain(userId, message, resolvedIntent);
     }
   }
 }
@@ -256,6 +340,8 @@ export class AiService {
       },
     ];
 
+    const intent = classifyQuestionIntent(message);
+
     let answer: string;
     let modelUsed = "deterministic-explain";
     let tokenUsage = conversation.tokenUsage || { prompt: 0, completion: 0, total: 0 };
@@ -267,21 +353,35 @@ export class AiService {
       "en";
     const languageInstruction = `Respond in the user's preferred language code "${preferredLanguage}". Keep Vedic terms (Kundli, Nakshatra, Dasha, Lagna, Guna Milan, Gochar, Yoga, Dosha) in canonical form with a short local explanation when helpful. Stay reflective — never invent planet positions, guna scores, or certainty about outcomes.`;
 
-    if (hasLlmCredentials()) {
+    // Fast path: math / greetings work even when LLM is down — and avoid identical chart spam.
+    const mathAnswer = trySolveMath(message);
+    if (
+      mathAnswer &&
+      (agent === "ASTROLOGER_GURU" || agent === "HOROSCOPE" || agent === "SUPPORT")
+    ) {
+      answer = withVedicDisclaimer(mathAnswer);
+      modelUsed = "deterministic-direct";
+    } else if (hasLlmCredentials()) {
       try {
         const agentInstance = vedaAgents[agent];
+        const history = formatChatHistory(messages, { limit: 10, excludeLastUser: true });
         const prompt = [
+          buildGuruSystemDirectives(intent),
           "Tools are already bound to the authenticated member — do not invent user ids.",
           allowlistedCandidate
             ? `An allowlisted candidate partner id is available for compatibility tools only: ${allowlistedCandidate}`
             : "No candidate partner in context; use list mode for compatibility history.",
-          "Always call the relevant tool before explaining.",
+          needsAstrologyTools(intent)
+            ? "Call relevant astrology tools before stating chart facts."
+            : "Do not call astrology tools for this message.",
           languageInstruction,
-          "Keep it short: 3–6 sentences or up to 5 bullets. Answer only what was asked.",
+          "Keep it short: 3–6 sentences or up to 5 bullets unless the member asks for detail.",
+          history ? `Recent conversation:\n${history}` : "This is the start of the conversation.",
+          `Classified intent: ${intent}`,
           `Member message: ${message}`,
         ]
           .filter(Boolean)
-          .join("\n");
+          .join("\n\n");
 
         const result = await runWithAiToolContext(
           {
@@ -307,10 +407,10 @@ export class AiService {
         }
       } catch (error) {
         console.error("Mastra generate failed, falling back to deterministic explain", error);
-        answer = await deterministicExplain(agent, userId, message);
+        answer = await deterministicExplain(agent, userId, message, intent);
       }
     } else {
-      answer = await deterministicExplain(agent, userId, message);
+      answer = await deterministicExplain(agent, userId, message, intent);
     }
 
     messages.push({

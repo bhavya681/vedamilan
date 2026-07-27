@@ -26,28 +26,28 @@ export function PageHeader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
+        "mb-6 flex min-w-0 flex-col gap-4 sm:mb-8 md:flex-row md:items-end md:justify-between",
         className,
       )}
     >
-      <div className="max-w-2xl">
+      <div className="max-w-2xl min-w-0">
         {eyebrow ? <p className="text-muted-foreground text-sm font-medium">{eyebrow}</p> : null}
         <h1
           className={cn(
-            "font-display tracking-tight text-balance sm:text-4xl lg:text-[2.75rem]",
-            eyebrow ? "mt-1 text-3xl" : "text-3xl",
+            "font-display text-2xl tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-[2.75rem]",
+            eyebrow ? "mt-1" : undefined,
           )}
         >
           {title}
         </h1>
         {description ? (
-          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed sm:text-base">
+          <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed sm:mt-3 sm:text-base">
             {description}
           </p>
         ) : null}
       </div>
       {actions ? (
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+        <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto md:justify-end">
           {actions}
         </div>
       ) : null}

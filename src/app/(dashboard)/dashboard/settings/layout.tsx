@@ -20,12 +20,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const t = useT();
 
   return (
-    <div className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[13.5rem_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-4 lg:self-start">
+    <div className="mx-auto grid w-full max-w-5xl gap-6 sm:gap-8 lg:grid-cols-[12rem_minmax(0,1fr)] xl:grid-cols-[13.5rem_minmax(0,1fr)]">
+      <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
         <p className="text-muted-foreground mb-3 text-[10px] font-semibold tracking-[0.16em] uppercase">
           {t("settings.title")}
         </p>
-        <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
+        <nav className="scrollbar-hidden -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0">
           {SETTINGS_NAV.map((item) => {
             const active = item.exact
               ? pathname === item.href

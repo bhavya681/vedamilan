@@ -3,6 +3,12 @@ import { AiConversation, Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { runWithAiToolContext } from "@/application/ai/ai-tool-context";
 import {
+  buildWisdomSystemDirectives,
+  classifyQuestionIntent,
+  formatChatHistory,
+  trySolveMath,
+} from "@/application/ai/chat-intent";
+import {
   buildGuideSystemContext,
   getWisdomGuide,
   wisdomDailyReflection,
@@ -94,14 +100,29 @@ export class WisdomService {
     let modelUsed = "deterministic-wisdom";
     let tokenUsage = conversation.tokenUsage || { prompt: 0, completion: 0, total: 0 };
 
-    if (hasLlmCredentials()) {
+    const intent = classifyQuestionIntent(input.message);
+    const mathAnswer = trySolveMath(input.message);
+    if (mathAnswer) {
+      answer = withWisdomDisclaimer(
+        [
+          mathAnswer,
+          "",
+          `*(Optional lens inspired by ${guide.displayName}: clarity in small truths trains clarity in larger choices.)*`,
+        ].join("\n"),
+      );
+      modelUsed = "deterministic-direct";
+    } else if (hasLlmCredentials()) {
       try {
         const agentInstance = vedaAgents.WISDOM_GUIDE;
+        const history = formatChatHistory(messages, { limit: 10, excludeLastUser: true });
         const prompt = [
           buildGuideSystemContext(guide),
+          buildWisdomSystemDirectives(intent),
           `Respond in language code "${preferredLanguage}". Keep Sanskrit names accurate.`,
           input.topic ? `Suggested topic focus: ${input.topic}` : "",
           lifeContext,
+          history ? `Recent conversation:\n${history}` : "This is the start of the conversation.",
+          `Classified intent: ${intent}`,
           "Member question:",
           input.message,
         ]

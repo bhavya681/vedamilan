@@ -26,9 +26,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Navbar className="shrink-0" />
         <main
           id="main-content"
-          className="scrollbar-premium bg-background/50 min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-24 sm:p-5 md:p-6 md:pb-6 lg:p-8"
+          className="scrollbar-premium bg-background/50 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-5 md:px-5 md:py-6 md:pb-6 lg:px-8 lg:py-8"
         >
-          <div className="mx-auto w-full max-w-6xl xl:max-w-7xl">
+          <div className="mx-auto w-full max-w-6xl min-w-0 2xl:max-w-[90rem]">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

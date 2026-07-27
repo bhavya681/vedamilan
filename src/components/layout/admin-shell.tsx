@@ -53,9 +53,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </header>
         <main
           id="main-content"
-          className="scrollbar-premium min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8"
+          className="scrollbar-premium min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-3 sm:p-5 md:p-6 lg:p-8"
         >
-          <div className="mx-auto w-full max-w-6xl xl:max-w-7xl">
+          <div className="mx-auto w-full max-w-6xl min-w-0 xl:max-w-7xl">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

@@ -85,7 +85,7 @@ export default function RishiSageHomePage() {
               spoken exchange.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
             {featured.map((guide) => (
               <RishiSageTile key={guide.id} guide={guide} />
             ))}
@@ -116,7 +116,7 @@ export default function RishiSageHomePage() {
               </p>
             </div>
           </div>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch]">
             <button
               type="button"
               onClick={() => setCategory("all")}

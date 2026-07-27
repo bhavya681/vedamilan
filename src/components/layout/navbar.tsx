@@ -175,7 +175,7 @@ export function Navbar({
           </nav>
         ) : (
           <nav
-            className="bg-muted/40 dark:bg-muted/25 border-border/40 hidden items-center gap-1 rounded-full border p-1 lg:flex"
+            className="bg-muted/40 dark:bg-muted/25 border-border/40 hidden items-center gap-1 rounded-full border p-1 md:flex"
             aria-label="Quick"
           >
             {dashQuick.map((item) => {
@@ -186,14 +186,15 @@ export function Navbar({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-all lg:px-3.5",
                     active
                       ? "bg-card text-foreground shadow-soft"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className={cn("h-3.5 w-3.5", active && "text-gold")} aria-hidden />
-                  {t(item.labelKey)}
+                  <span className="hidden lg:inline">{t(item.labelKey)}</span>
+                  <span className="sr-only lg:hidden">{t(item.labelKey)}</span>
                 </LocaleLink>
               );
             })}

@@ -1,4 +1,5 @@
 import { routes } from "@/lib/constants/routes";
+import { trySolveMath } from "@/application/ai/chat-intent";
 
 type GuideTopic = {
   keys: string[];
@@ -166,6 +167,15 @@ export function answerProductGuide(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return FALLBACK;
 
+  const math = trySolveMath(trimmed);
+  if (math) {
+    return `${math}\n\nFor VedaMilan help, ask about getting started, kundli, matching, compatibility, or AI Guru.`;
+  }
+
+  if (/^(hi|hello|hey|namaste)\b/i.test(trimmed) && trimmed.length < 40) {
+    return `Namaste — I am the **landing guide** for VedaMilan.\n\nAsk me how the app works, how kundli is calculated, matching, compatibility, or billing. For chart readings after login, open **AI Guru** in your dashboard.`;
+  }
+
   let best: GuideTopic | null = null;
   let bestScore = 0;
   for (const topic of TOPICS) {
@@ -176,7 +186,9 @@ export function answerProductGuide(message: string): string {
     }
   }
 
-  if (!best || bestScore < 1) return FALLBACK;
+  if (!best || bestScore < 1) {
+    return `I am best at product questions about VedaMilan (getting started, kundli, matching, compatibility, AI Guru, billing).\n\nYou asked: “${trimmed.slice(0, 160)}” — try rephrasing toward how the platform works, or [register](${routes.register}) and ask **AI Guru** for chart-backed guidance.`;
+  }
 
   return `### ${best.title}\n\n${best.answer}`;
 }

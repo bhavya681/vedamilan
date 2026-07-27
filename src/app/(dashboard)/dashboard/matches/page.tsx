@@ -186,7 +186,7 @@ export default function MatchesPage() {
 
   function renderGrid(items: MatchItem[]) {
     return (
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-2 xl:grid-cols-3">
         {items.map((match, index) => (
           <motion.div
             key={match.userId}

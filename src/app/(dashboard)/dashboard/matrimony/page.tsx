@@ -146,7 +146,7 @@ export default function MatrimonyHomePage() {
 
         {bundle ? (
           <>
-            <section className="border-border/60 grid gap-6 border-y py-5 sm:grid-cols-3 sm:gap-8">
+            <section className="border-border/60 grid gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
               <div>
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
                   <Stars className="h-3.5 w-3.5" /> Moon
@@ -173,15 +173,15 @@ export default function MatrimonyHomePage() {
             </section>
 
             <section className="space-y-4">
-              <div className="flex items-end justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="font-display text-2xl">Recommended for you</h2>
                   <p className="text-muted-foreground mt-1 text-sm">
                     Preferences and activity first — astrology enhances ranking, it does not replace
                     it.
                   </p>
                 </div>
-                <Button asChild variant="outline" size="sm">
+                <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
                   <Link href={routes.matches}>See all</Link>
                 </Button>
               </div>
