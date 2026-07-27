@@ -7,7 +7,6 @@ import {
   type CompatMoodCode,
   type DecisionSummaryCode,
   type GenderCode,
-  type MaritalStatusCode,
 } from "@/lib/i18n/catalogs/codes";
 
 type Messages = Record<string, MessageTree>;

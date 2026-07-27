@@ -51,14 +51,21 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
   const micMutedRef = useRef(micMuted);
   const includeLifeContextRef = useRef(includeLifeContext);
   const beginListeningRef = useRef<() => void>(() => undefined);
+  const [sttSupported, setSttSupported] = useState(false);
 
-  stateRef.current = state;
-  sessionIdRef.current = sessionId;
-  conversationIdRef.current = conversationId;
-  languageRef.current = language;
-  handsFreeRef.current = handsFree;
-  micMutedRef.current = micMuted;
-  includeLifeContextRef.current = includeLifeContext;
+  useEffect(() => {
+    stateRef.current = state;
+    sessionIdRef.current = sessionId;
+    conversationIdRef.current = conversationId;
+    languageRef.current = language;
+    handsFreeRef.current = handsFree;
+    micMutedRef.current = micMuted;
+    includeLifeContextRef.current = includeLifeContext;
+  }, [state, sessionId, conversationId, language, handsFree, micMuted, includeLifeContext]);
+
+  useEffect(() => {
+    setSttSupported(sttRef.current.isSupported());
+  }, []);
 
   useEffect(() => {
     ttsRef.current = new HybridTextToSpeechProvider(persona);
@@ -221,7 +228,9 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
     });
   }, [sendTurn]);
 
-  beginListeningRef.current = beginListening;
+  useEffect(() => {
+    beginListeningRef.current = beginListening;
+  }, [beginListening]);
 
   const toggleMic = useCallback(async () => {
     if (stateRef.current === "ended") return;
@@ -276,7 +285,7 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
     handsFree,
     setHandsFree,
     privacyNotice: VOICE_PRIVACY_NOTICE,
-    sttSupported: typeof window !== "undefined" ? sttRef.current.isSupported() : false,
+    sttSupported,
     startSession,
     toggleMic,
     sendText,

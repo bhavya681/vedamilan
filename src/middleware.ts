@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 import {
-  DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_EXPLICIT_COOKIE,
   LOCALE_HEADER,

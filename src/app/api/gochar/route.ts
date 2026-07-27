@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { requireSession } from "@/lib/auth/session";
 import { successResponse } from "@/lib/utils/api-response";

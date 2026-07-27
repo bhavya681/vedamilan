@@ -39,7 +39,7 @@ function isCurrent(start: string, end: string, now = Date.now()) {
 
 export default function DashaPage() {
   const { data, error, loading } = useHoroscope();
-  const periods = data?.dasha?.periods || [];
+  const periods = useMemo(() => data?.dasha?.periods || [], [data?.dasha?.periods]);
   const maha = useMemo(() => periods.filter((p) => p.level === "MAHA"), [periods]);
   const antarByParent = useMemo(() => {
     const map = new Map<string, typeof periods>();

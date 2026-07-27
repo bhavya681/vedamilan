@@ -178,7 +178,7 @@ export default function ChatPage() {
     setIceBreakersHidden(false);
   }
 
-  function useIceBreaker(reply: string) {
+  function applyIceBreaker(reply: string) {
     setDraft(reply);
     // Show suggestions only once — hide after picking one.
     hideIceBreakers();
@@ -497,7 +497,7 @@ export default function ChatPage() {
                       size="sm"
                       variant="outline"
                       className="h-auto max-w-full py-2 text-left text-xs whitespace-normal"
-                      onClick={() => useIceBreaker(reply)}
+                      onClick={() => applyIceBreaker(reply)}
                     >
                       {reply}
                     </Button>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ function CompareMatchesInner() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function loadPair(a: string, b: string) {
+  const loadPair = useCallback(async (a: string, b: string) => {
     if (!a || !b) {
       setError("Provide two member ids to compare.");
       return;
@@ -55,14 +55,13 @@ function CompareMatchesInner() {
     }
     setLeft(la.data.profile);
     setRight(ra.data.profile);
-  }
+  }, []);
 
   useEffect(() => {
     const a = searchParams.get("a");
     const b = searchParams.get("b");
     if (a && b) void loadPair(a, b).catch(() => setError("Compare failed"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, loadPair]);
 
   const rows =
     left && right

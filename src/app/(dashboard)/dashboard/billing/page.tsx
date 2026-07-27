@@ -63,11 +63,13 @@ export default function BillingPage() {
       return;
     }
     if (json.data.checkoutUrl) {
-      window.location.href = json.data.checkoutUrl;
+      window.location.assign(json.data.checkoutUrl);
       return;
     }
     if (json.data.orderId) {
-      window.location.href = `${routes.checkout}?orderId=${json.data.orderId}&plan=${planCode}&amount=${json.data.amount}&key=${json.data.keyId || ""}`;
+      window.location.assign(
+        `${routes.checkout}?orderId=${json.data.orderId}&plan=${planCode}&amount=${json.data.amount}&key=${json.data.keyId || ""}`,
+      );
     }
   }
 

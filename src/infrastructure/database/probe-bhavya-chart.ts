@@ -34,7 +34,7 @@ function main() {
   const ascNak = longitudeToNakshatra(ascLon);
   const moon = planets.find((p) => p.planet === "Moon")!;
   const rahu = planets.find((p) => p.planet === "Rahu")!;
-  const moonNak = longitudeToNakshatra(moon.longitude);
+  const _moonNak = longitudeToNakshatra(moon.longitude);
 
   const out = {
     utc: utc.toISOString(),
