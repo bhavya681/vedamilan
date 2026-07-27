@@ -78,26 +78,51 @@ export function WisdomPortrait({
 
 /** Compact tile: portrait + chat / speak actions for the Rishi Sage home. */
 export function RishiSageTile({ guide }: { guide: WisdomGuide }) {
+  const accentBar: Record<WisdomGuide["accent"], string> = {
+    gold: "from-gold/80 via-gold/40 to-transparent",
+    saffron: "from-primary/80 via-primary/40 to-transparent",
+    cosmic: "from-cosmic/80 via-cosmic/40 to-transparent",
+    rose: "from-rose/80 via-rose/40 to-transparent",
+    ivory: "from-foreground/35 via-foreground/15 to-transparent",
+  };
+
   return (
-    <article className="border-border/60 bg-card/40 hover:border-foreground/20 flex flex-col gap-4 rounded-2xl border p-4 transition-colors sm:p-5">
-      <div className="flex items-start gap-3">
-        <WisdomPortrait guide={guide} size="lg" className="!h-20 !w-20 shrink-0 !text-2xl" />
+    <article className="border-border/55 from-card/95 via-card/80 group to-muted/25 shadow-soft hover:border-gold/35 hover:shadow-gold relative flex flex-col gap-4 overflow-hidden rounded-2xl border bg-gradient-to-br p-4 transition-all duration-300 hover:-translate-y-0.5 sm:p-5">
+      <span
+        className={cn(
+          "absolute top-0 left-0 h-full w-0.5 bg-gradient-to-b opacity-80",
+          accentBar[guide.accent],
+        )}
+        aria-hidden
+      />
+      <div className="flex items-start gap-3 pl-1">
+        <div className="ring-gold/20 group-hover:ring-gold/40 relative shrink-0 rounded-full ring-1 transition-shadow duration-300">
+          <WisdomPortrait guide={guide} size="lg" className="!h-20 !w-20 shrink-0 !text-2xl" />
+        </div>
         <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-[10px] font-medium tracking-[0.14em] uppercase">
+          <p className="text-gold/75 text-[10px] font-medium tracking-[0.14em] uppercase">
             {guide.role}
           </p>
           <h3 className="font-display mt-0.5 truncate text-lg leading-tight tracking-tight">
             {guide.displayName}
           </h3>
+          {guide.sanskritName ? (
+            <p className="text-muted-foreground mt-0.5 truncate text-[11px]">
+              {guide.sanskritName}
+            </p>
+          ) : null}
           <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
             {guide.domain}
           </p>
         </div>
       </div>
-      <p className="font-display text-foreground/85 line-clamp-2 text-sm leading-snug">
-        “{guide.shortPhilosophy}”
+      <p className="font-display text-foreground/85 line-clamp-2 pl-1 text-sm leading-snug">
+        <span className="text-gold/55 mr-1" aria-hidden>
+          ॥
+        </span>
+        {guide.shortPhilosophy}
       </p>
-      <div className="mt-auto flex flex-wrap gap-2">
+      <div className="mt-auto flex flex-wrap gap-2 pl-1">
         <Link
           href={`${routes.vedicWisdom}/${guide.id}/chat`}
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition-colors sm:flex-none"
@@ -107,7 +132,7 @@ export function RishiSageTile({ guide }: { guide: WisdomGuide }) {
         </Link>
         <Link
           href={`${routes.vedicWisdom}/${guide.id}/voice`}
-          className="border-border hover:bg-muted inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors sm:flex-none"
+          className="border-border/70 hover:border-gold/35 hover:bg-gold/8 inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors sm:flex-none"
         >
           <Mic className="h-3.5 w-3.5" aria-hidden />
           Speak
