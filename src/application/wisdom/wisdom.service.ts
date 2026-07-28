@@ -25,6 +25,21 @@ function hasLlmCredentials(): boolean {
   );
 }
 
+function buildLanguageDirective(code: string): string {
+  switch (code) {
+    case "hi":
+      return "Respond entirely in Hindi (हिन्दी) using Devanagari script. Keep Sanskrit names accurate. Do not reply in English unless the member explicitly asks for English.";
+    case "mr":
+      return "Respond entirely in Marathi (मराठी) using Devanagari script. Keep Sanskrit names accurate. Do not reply in English unless the member explicitly asks for English.";
+    case "es":
+      return "Respond entirely in Spanish. Keep Sanskrit names accurate.";
+    case "en":
+      return "Respond in clear English. Keep Sanskrit names accurate.";
+    default:
+      return `Respond in language code "${code}". Keep Sanskrit names accurate.`;
+  }
+}
+
 export class WisdomService {
   async chat(input: {
     userId: string;
@@ -33,6 +48,10 @@ export class WisdomService {
     conversationId?: string;
     topic?: string;
     includeLifeContext?: boolean;
+    /** Override profile language (e.g. voice satsang language chip). */
+    language?: string;
+    /** Voice channel: short spoken answers, no sermon template. */
+    channel?: "text" | "voice";
   }) {
     await connectMongo();
     const guide = getWisdomGuide(input.guideId);
@@ -79,10 +98,13 @@ export class WisdomService {
     ];
 
     const profile = await Profile.findOne({ userId: input.userId, status: "ACTIVE" }).lean();
+    const sessionLanguage = input.language && input.language !== "auto" ? input.language : null;
     const preferredLanguage =
+      sessionLanguage ||
       (profile?.localization?.aiLanguage as string | null | undefined) ||
       (profile?.localization?.language as string | null | undefined) ||
       "en";
+    const languageDirective = buildLanguageDirective(preferredLanguage);
 
     let lifeContext = "";
     if (input.includeLifeContext && profile) {
@@ -114,15 +136,29 @@ export class WisdomService {
     } else if (hasLlmCredentials()) {
       try {
         const agentInstance = vedaAgents.WISDOM_GUIDE;
-        const history = formatChatHistory(messages, { limit: 10, excludeLastUser: true });
+        const history = formatChatHistory(messages, { limit: 8, excludeLastUser: true });
+        const isVoice = input.channel === "voice";
         const prompt = [
           buildGuideSystemContext(guide),
           buildWisdomSystemDirectives(intent),
-          `Respond in language code "${preferredLanguage}". Keep Sanskrit names accurate.`,
+          languageDirective,
+          isVoice
+            ? [
+                "CHANNEL: VOICE SATSANG — your reply will be spoken aloud.",
+                "Speak only the answer to THIS question. No greetings, no biography, no section headings, no disclaimer.",
+                "Max ~90 words. First sentence must answer their exact ask. Then one concrete next step.",
+                "Do not say 'you asked' or repeat the question. Do not give a generic nice sermon.",
+              ].join("\n")
+            : "",
           input.topic ? `Suggested topic focus: ${input.topic}` : "",
           lifeContext,
-          history ? `Recent conversation:\n${history}` : "This is the start of the conversation.",
+          history
+            ? `Recent conversation (do not repeat the same answer pattern):\n${history}`
+            : "This is the start of the conversation.",
           `Classified intent: ${intent}`,
+          isVoice
+            ? "TASK: Give a short spoken answer to the member question. Relevant and specific — not pleasant filler."
+            : "TASK: Answer the member question below directly and specifically. First sentences must address their exact ask. No generic sermon.",
           "Member question:",
           input.message,
         ]
@@ -211,8 +247,9 @@ export class WisdomService {
         const agentInstance = vedaAgents.WISDOM_GUIDE;
         const prompt = [
           "You are facilitating an 'Ask the Sages' reflective council for VedaMilan.",
-          "For each guide below, write a short perspective inspired by their traditional themes.",
-          "Never invent quotations. Label each block clearly. End with a Modern Reflection section.",
+          "Each guide must answer the SAME member question from their own angle — concrete and different from the others.",
+          "Do NOT paste biographies or the same generic advice for every guide.",
+          "Never invent quotations. Label each block as AI interpretation.",
           `Respond in language code "${preferredLanguage}".`,
           "",
           ...guides.map(
@@ -222,10 +259,14 @@ export class WisdomService {
           "",
           `Member question: ${input.message}`,
           "",
+          "Format rules:",
+          "- For each guide: 3–5 sentences that directly address the question + 1 concrete next step.",
+          "- Perspectives must disagree or complement — not repeat the same paragraph in different names.",
+          "- End with ### Modern Reflection: synthesize what the member should do this week + one reflection question.",
+          "",
           "Format:",
           guides.map((g) => `### ${g.displayName}'s Perspective\n(AI interpretation)`).join("\n"),
           "### Modern Reflection",
-          "One closing reflection question.",
         ].join("\n");
 
         const result = await runWithAiToolContext({ sessionUserId: input.userId }, () =>
@@ -255,22 +296,34 @@ export class WisdomService {
   }
 
   private fallbackCouncil(guides: WisdomGuide[], message: string) {
-    const blocks = guides.map((g) =>
-      [
+    const q = message.trim();
+    const snippet = q.length > 140 ? `${q.slice(0, 140).trim()}…` : q;
+    const blocks = guides.map((g, index) => {
+      const teaching =
+        g.coreTeachings[index % Math.max(g.coreTeachings.length, 1)] ||
+        g.coreTeachings[0] ||
+        "Act with clarity and responsibility.";
+      const angle =
+        index === 0
+          ? "Focus on the immediate choice in front of you."
+          : index === 1
+            ? "Protect long-term trust and dignity, not short-term ego."
+            : "Take the smallest practical next step within a day.";
+      return [
         `### ${g.displayName}'s Perspective`,
         `*(AI interpretation inspired by ${g.primarySources[0] || "traditional teachings"})*`,
         "",
-        g.coreTeachings[0],
-        "",
-        g.shortPhilosophy,
-      ].join("\n"),
-    );
+        `On your question — “${snippet}” — ${angle}`,
+        teaching,
+        `Next step: apply this to your situation today, not as abstract philosophy.`,
+      ].join("\n");
+    });
     return [
       ...blocks,
       "### Modern Reflection",
-      `Regarding your question — “${message.slice(0, 160)}” — notice which perspective feels most truthful for your values today, not which sounds most impressive.`,
+      `Your question was: “${snippet}”. Compare the perspectives above and pick the one action that best protects your integrity this week.`,
       "",
-      "**Reflect:** What outcome would align with your integrity this week?",
+      "**Reflect:** What will you do in the next 24 hours that answers this question in deeds, not words?",
     ].join("\n\n");
   }
 

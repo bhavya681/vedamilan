@@ -3,48 +3,53 @@
  * These are respectful synthetic styles — never claims of historical authenticity.
  */
 
+export type OpenAiTtsVoice =
+  "alloy" | "ash" | "coral" | "echo" | "fable" | "onyx" | "nova" | "sage" | "shimmer";
+
 export type VoicePersona = {
   guideId: string;
-  /** Preferred browser / server voice hints */
   tone: "calm" | "warm" | "precise" | "gentle" | "reflective";
   pace: "slow" | "measured" | "moderate";
   energy: "low" | "moderate";
   warmth: "low" | "moderate" | "high";
-  /** OpenAI TTS voice id when server TTS is enabled */
-  serverVoice?: "alloy" | "ash" | "coral" | "echo" | "fable" | "onyx" | "nova" | "sage" | "shimmer";
-  /** speechSynthesis rate 0.7–1.1 */
+  gender: "male" | "female" | "neutral";
+  serverVoice?: OpenAiTtsVoice;
   rate: number;
   pitch: number;
 };
+
+const MALE_SERVER_VOICES: OpenAiTtsVoice[] = ["onyx", "echo", "ash", "fable"];
+const FEMALE_SERVER_VOICES: OpenAiTtsVoice[] = ["nova", "coral", "shimmer", "sage"];
 
 const DEFAULT_PERSONA: Omit<VoicePersona, "guideId"> = {
   tone: "calm",
   pace: "measured",
   energy: "low",
   warmth: "moderate",
-  serverVoice: "sage",
+  gender: "male",
+  serverVoice: "onyx",
   rate: 0.92,
-  pitch: 1,
+  pitch: 0.85,
 };
 
 const PERSONAS: Record<string, Partial<VoicePersona>> = {
   chanakya: { tone: "precise", pace: "measured", warmth: "low", serverVoice: "onyx", rate: 0.9 },
-  vidura: { tone: "gentle", pace: "slow", warmth: "high", serverVoice: "sage", rate: 0.88 },
-  krishna: { tone: "warm", pace: "measured", warmth: "high", serverVoice: "coral", rate: 0.9 },
+  vidura: { tone: "gentle", pace: "slow", warmth: "high", serverVoice: "onyx", rate: 0.88 },
+  krishna: { tone: "warm", pace: "measured", warmth: "high", serverVoice: "onyx", rate: 0.9 },
   bhishma: { tone: "precise", pace: "slow", warmth: "low", serverVoice: "onyx", rate: 0.86 },
   dronacharya: {
     tone: "precise",
     pace: "measured",
     warmth: "low",
-    serverVoice: "echo",
+    serverVoice: "onyx",
     rate: 0.92,
   },
-  patanjali: { tone: "calm", pace: "slow", warmth: "moderate", serverVoice: "sage", rate: 0.85 },
+  patanjali: { tone: "calm", pace: "slow", warmth: "moderate", serverVoice: "onyx", rate: 0.85 },
   "adi-shankaracharya": {
     tone: "reflective",
     pace: "measured",
     warmth: "moderate",
-    serverVoice: "fable",
+    serverVoice: "onyx",
     rate: 0.9,
   },
   "swami-vivekananda": {
@@ -52,21 +57,21 @@ const PERSONAS: Record<string, Partial<VoicePersona>> = {
     pace: "moderate",
     energy: "moderate",
     warmth: "high",
-    serverVoice: "ash",
+    serverVoice: "onyx",
     rate: 0.95,
   },
   "ramana-maharshi": {
     tone: "gentle",
     pace: "slow",
     warmth: "moderate",
-    serverVoice: "sage",
+    serverVoice: "onyx",
     rate: 0.82,
   },
-  vasistha: { tone: "calm", pace: "measured", serverVoice: "sage" },
-  vishwamitra: { tone: "precise", pace: "measured", serverVoice: "echo" },
-  vyasa: { tone: "reflective", pace: "measured", serverVoice: "fable" },
-  valmiki: { tone: "warm", pace: "measured", serverVoice: "coral" },
-  yajnavalkya: { tone: "reflective", pace: "slow", serverVoice: "sage" },
+  vasistha: { tone: "calm", pace: "measured", serverVoice: "onyx" },
+  vishwamitra: { tone: "precise", pace: "measured", serverVoice: "onyx" },
+  vyasa: { tone: "reflective", pace: "measured", serverVoice: "onyx" },
+  valmiki: { tone: "warm", pace: "measured", serverVoice: "onyx" },
+  yajnavalkya: { tone: "reflective", pace: "slow", serverVoice: "onyx" },
 };
 
 export function getVoicePersona(guideId: string): VoicePersona {
@@ -75,6 +80,30 @@ export function getVoicePersona(guideId: string): VoicePersona {
     ...DEFAULT_PERSONA,
     ...PERSONAS[guideId],
   };
+}
+
+/** Hindi/Marathi use female TTS for clear Indic speech; English keeps male. */
+export function resolveSpeechGender(
+  persona: VoicePersona,
+  language?: string | null,
+): "male" | "female" | "neutral" {
+  if (language === "hi" || language === "mr") return "female";
+  return persona.gender;
+}
+
+export function resolveServerVoice(
+  persona: VoicePersona,
+  language?: string | null,
+): OpenAiTtsVoice {
+  const isIndic = language === "hi" || language === "mr";
+  if (isIndic) return "nova";
+  if (persona.gender === "female") {
+    const base = persona.serverVoice || "nova";
+    return FEMALE_SERVER_VOICES.includes(base) ? base : "nova";
+  }
+  const base = persona.serverVoice || DEFAULT_PERSONA.serverVoice || "onyx";
+  if (MALE_SERVER_VOICES.includes(base)) return base;
+  return "onyx";
 }
 
 export const VOICE_PRIVACY_NOTICE =

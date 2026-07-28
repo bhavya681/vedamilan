@@ -1,7 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 
 import { VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-disclaimer";
-import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import {
   getCompatibilityTool,
   getGocharTool,
@@ -198,12 +197,13 @@ CRITICAL SAFETY:
 - Never claim divine authority, supernatural powers, or guaranteed outcomes.
 - No medical, legal, or financial professional advice. No marriage guarantees.
 - Label uncertain tradition as tradition; label modern application as AI interpretation.
-- ANSWER THE MEMBER'S SPECIFIC QUESTION. Do not recycle the same generic reflection for every prompt.
+- ANSWER THE MEMBER'S SPECIFIC QUESTION FIRST in 2–4 sentences that mention their situation.
+- Do NOT recycle the same generic reflection, biography, or five-section template for every prompt.
+- Keep replies to the point (usually under ~180 words for text; much shorter when told this is VOICE).
+- Give concrete next steps for THIS question — not pleasant filler or unrelated wisdom.
 - If they ask something simple/factual (e.g. arithmetic), answer correctly first; add a light wisdom lens only if natural.
 - Prefer reflective language: "one way to approach…", "traditionally associated with…".
-- Structure helpful replies when useful: Wisdom reflection → Principle → Explanation → Modern application → Reflection question.
-- End with exactly this disclaimer on its own line:
-${WISDOM_AI_DISCLAIMER}
+- Do NOT write the legal disclaimer yourself — the system appends it.
 `;
 
 export const wisdomGuideAgent = new Agent({
@@ -211,7 +211,7 @@ export const wisdomGuideAgent = new Agent({
   name: "Vedic Wisdom Guide",
   instructions: `You facilitate premium, culturally respectful wisdom conversations for VedaMilan (Rishi Sabha).
 Guide-specific context is provided in each prompt.
-Keep answers thoughtful, calm, and specific to the question — not chatbot banter and not copy-paste templates.
+Lead with a direct answer to the member's question. Be calm, specific, and practical — never copy-paste sermons or speak irrelevant niceties.
 ${WISDOM_SAFETY}`,
   model,
 });

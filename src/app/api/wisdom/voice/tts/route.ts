@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth/session";
-import { assertVoiceQuota } from "@/application/wisdom/voice-quota.service";
+import { getVoiceQuotaSnapshot } from "@/application/wisdom/voice-quota.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
@@ -12,15 +12,14 @@ const schema = z.object({
   text: z.string().min(1).max(4000),
   voice: z
     .enum(["alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer"])
-    .default("sage"),
+    .default("nova"),
   language: z.enum(["en", "hi", "mr", "es", "auto"]).optional(),
+  gender: z.enum(["male", "female", "neutral"]).optional(),
 });
 
-/**
- * Server TTS — OpenAI when OPENAI_API_KEY is set.
- * Returns audio/mpeg. Falls back with 204 so the client uses browser synthesis.
- * Raw microphone audio is never accepted here (text only).
- */
+const FEMALE_VOICES = new Set(["nova", "coral", "shimmer", "sage"]);
+const MALE_VOICES = new Set(["onyx", "echo", "ash", "fable"]);
+
 export async function POST(request: Request) {
   try {
     const session = await requireSession().catch(() => {
@@ -31,7 +30,15 @@ export async function POST(request: Request) {
       limit: 30,
       windowSec: 60,
     });
-    await assertVoiceQuota(session.user.id, 5);
+
+    const quota = await getVoiceQuotaSnapshot(session.user.id);
+    if (
+      quota.exhausted &&
+      process.env.NODE_ENV !== "development" &&
+      process.env.VOICE_QUOTA_DISABLED !== "true"
+    ) {
+      return new Response(null, { status: 204 });
+    }
 
     const body = schema.parse(await request.json());
     const apiKey = process.env.OPENAI_API_KEY;
@@ -45,6 +52,16 @@ export async function POST(request: Request) {
       .slice(0, 3500);
     if (!cleaned) throw new ValidationError("Empty speech text");
 
+    const isIndic = body.language === "hi" || body.language === "mr";
+    const wantsFemale = body.gender === "female" || isIndic;
+
+    let voice = body.voice;
+    if (wantsFemale) {
+      voice = FEMALE_VOICES.has(voice) ? voice : "nova";
+    } else if (!MALE_VOICES.has(voice)) {
+      voice = "onyx";
+    }
+
     const openaiRes = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: {
@@ -53,14 +70,13 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: process.env.OPENAI_TTS_MODEL || "tts-1",
-        voice: body.voice,
+        voice,
         input: cleaned,
         response_format: "mp3",
       }),
     });
 
     if (!openaiRes.ok) {
-      // Client will fall back to browser TTS
       return new Response(null, { status: 204 });
     }
 
@@ -77,7 +93,6 @@ export async function POST(request: Request) {
   }
 }
 
-/** Capability probe for clients */
 export async function GET() {
   try {
     await requireSession().catch(() => {

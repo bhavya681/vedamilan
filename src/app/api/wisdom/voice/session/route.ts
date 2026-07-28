@@ -6,6 +6,7 @@ import { getVoicePersona, VOICE_PRIVACY_NOTICE } from "@/domain/wisdom/voice-per
 import {
   assertVoiceQuota,
   createVoiceSessionRecord,
+  getVoiceQuotaSnapshot,
   getVoiceUsageToday,
   recordVoiceUsage,
 } from "@/application/wisdom/voice-quota.service";
@@ -27,7 +28,7 @@ export async function GET() {
       throw new UnauthorizedError();
     });
     const usage = await getVoiceUsageToday(session.user.id);
-    const { remaining, limit } = await assertVoiceQuota(session.user.id, 0);
+    const { remaining, limit } = await getVoiceQuotaSnapshot(session.user.id);
     return successResponse({
       usage,
       remainingSeconds: remaining,
@@ -98,15 +99,17 @@ export async function PUT(request: Request) {
       message: body.message,
       conversationId: body.conversationId,
       includeLifeContext: body.includeLifeContext,
+      language: body.language,
+      channel: "voice",
     });
 
-    const approxTtsSeconds = Math.ceil(result.answer.length / 14);
+    const approxTtsSeconds = Math.min(20, Math.ceil(result.answer.length / 24));
     await recordVoiceUsage(session.user.id, {
-      seconds: (body.speechSeconds || 8) + Math.min(45, approxTtsSeconds),
+      seconds: (body.speechSeconds || 8) + approxTtsSeconds,
       sessionId: body.sessionId,
     });
 
-    const { remaining, limit } = await assertVoiceQuota(session.user.id, 0);
+    const { remaining, limit } = await getVoiceQuotaSnapshot(session.user.id);
 
     return successResponse({
       ...result,

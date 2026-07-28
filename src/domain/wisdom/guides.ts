@@ -952,10 +952,59 @@ export function buildGuideSystemContext(guide: WisdomGuide): string {
     `Knowledge scope: ${guide.knowledgeScope.join("; ")}.`,
     `Hard limits: ${guide.limitations.join("; ")}.`,
     "Never invent direct quotations or scripture citations. If paraphrasing a theme, label it as traditional theme or AI interpretation.",
-    "Structure helpful replies as: Wisdom reflection → Principle → Brief explanation → Modern application → One reflection question.",
+    "RESPONSE RULES (mandatory):",
+    "1) Answer THIS member's question first in 2–4 concrete sentences — use their situation/words, not a generic sermon.",
+    "2) Add at most ONE principle from this guide that changes the advice for THIS question.",
+    "3) Give 1–2 concrete next steps for their situation.",
+    "4) Optional: one short reflection question.",
+    "FORBIDDEN: fixed five-section templates, opening namaste/praise unless they greeted, biography paste, the same principle every turn, pleasant filler unrelated to the ask.",
     "For relationships and life decisions: invite reflection; never guarantee marriage, money, health, or legal outcomes.",
     "Prefer 'Based on principles traditionally associated with…' over 'Chanakya says…'.",
   ].join("\n");
+}
+
+/** Pick the teaching most relevant to the question text. */
+function pickRelevantTeaching(guide: WisdomGuide, lower: string): string {
+  const words = lower
+    .split(/[^a-zA-Z\u0900-\u097F0-9]+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 3);
+
+  let best = guide.coreTeachings[0] || "Act with clarity and responsibility.";
+  let bestScore = 0;
+  for (const teaching of guide.coreTeachings) {
+    const t = teaching.toLowerCase();
+    let score = 0;
+    for (const w of words) {
+      if (t.includes(w.slice(0, Math.min(5, w.length)))) score += 2;
+      if (t.includes(w)) score += 3;
+    }
+    for (const topic of guide.topics) {
+      const tl = topic.toLowerCase();
+      if (lower.includes(tl) || words.some((w) => tl.includes(w))) score += 2;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = teaching;
+    }
+  }
+  return best;
+}
+
+function detectWisdomScenario(lower: string): string {
+  if (/\b(anger|angry|rage|irritat|fight|argument|conflict|quarrel)\b/.test(lower))
+    return "conflict";
+  if (/\b(marry|marriage|spouse|partner|relationship|love|dating|compat)\b/.test(lower))
+    return "relationship";
+  if (/\b(job|career|work|boss|office|business|money|finance|debt)\b/.test(lower)) return "career";
+  if (/\b(decide|decision|choice|should i|what should|confused|dilemma)\b/.test(lower))
+    return "decision";
+  if (/\b(fear|anxious|anxiety|worry|stress|peace|calm|meditat|sad|grief|lonely)\b/.test(lower))
+    return "inner";
+  if (/\b(duty|dharma|family|parents|responsibility|obligation)\b/.test(lower)) return "duty";
+  if (/\b(how to|how do|tips|steps|advice|suggest)\b/.test(lower)) return "howto";
+  if (/\b(what is|who is|meaning|define|explain)\b/.test(lower)) return "explain";
+  return "general";
 }
 
 /** Deterministic reflection when LLM credentials are unavailable. */
@@ -963,7 +1012,6 @@ export function wisdomDeterministicReply(guide: WisdomGuide, message: string): s
   const q = message.trim();
   const lower = q.toLowerCase();
 
-  // Direct answers for simple prompts — never recycle the same template.
   const mathMatch =
     /(?:what(?:'s| is)\s+)?(-?\d+(?:\.\d+)?)\s*([+\-*/x×÷])\s*(-?\d+(?:\.\d+)?)\s*\??$/i.exec(
       q.replace(/\s+/g, " "),
@@ -980,55 +1028,42 @@ export function wisdomDeterministicReply(guide: WisdomGuide, message: string): s
     if (result != null && Number.isFinite(result)) {
       const pretty = Number.isInteger(result) ? String(result) : String(Number(result.toFixed(6)));
       return [
-        `**Direct answer**`,
-        `${a} ${op === "x" || op === "×" ? "×" : op === "/" || op === "÷" ? "÷" : op} ${b} = **${pretty}**.`,
+        `**${a} ${op === "x" || op === "×" ? "×" : op === "/" || op === "÷" ? "÷" : op} ${b} = ${pretty}.**`,
         ``,
-        `**Wisdom lens (optional)**`,
-        `Clarity in small things trains clarity in larger choices — a theme often associated with ${guide.displayName}'s tradition of careful attention.`,
-        ``,
-        `**Reflect**`,
-        `Where else in your life would a clear, honest answer help you today?`,
+        `If you want guidance on a real life question next — duty, conflict, or choice — ask in plain words.`,
       ].join("\n");
     }
   }
 
   if (/^(hi|hello|hey|namaste)\b/i.test(q) && q.length < 40) {
     return [
-      `**Wisdom reflection**`,
-      `Namaste. I am an **AI Wisdom Guide** inspired by teachings traditionally associated with **${guide.displayName}** — not the historical figure speaking.`,
+      `Namaste. I am an **AI Wisdom Guide** inspired by teachings traditionally associated with **${guide.displayName}** — not the historical figure.`,
       ``,
-      `**Invite**`,
-      `Share a real question — conflict, duty, choice, relationships, or inner calm — and I will reflect with themes from ${guide.primarySources[0] || "this tradition"}.`,
+      `Ask a concrete question (a conflict, decision, relationship worry, or duty) and I will answer that situation directly.`,
     ].join("\n");
   }
 
-  const topicHint =
-    guide.topics.find((t) => lower.includes(t.toLowerCase().slice(0, 5))) ||
-    guide.topics.find((t) => lower.split(/\s+/).some((w) => t.toLowerCase().includes(w)));
-  const principle =
-    guide.coreTeachings.find((t) =>
-      lower.split(/\s+/).some((w) => w.length > 4 && t.toLowerCase().includes(w.slice(0, 4))),
-    ) ||
-    guide.coreTeachings[0] ||
-    "Act with clarity and responsibility.";
+  const principle = pickRelevantTeaching(guide, lower);
+  const scenario = detectWisdomScenario(lower);
+
+  const scenarioAdvice: Record<string, string> = {
+    conflict: `In this conflict, pause before reacting. State the facts without blame, protect dignity on both sides, then choose the smallest repair step you can take today.`,
+    relationship: `For this relationship question, clarify what you need versus what you fear losing. Speak one honest need calmly; do not demand a guaranteed outcome.`,
+    career: `On this work/money question, separate what you control (effort, skill, boundaries) from what you cannot. Take one practical step this week that strengthens your position without harming integrity.`,
+    decision: `For this decision, write the two real options, the values each protects, and the cost of delay. Prefer the option that you can stand behind even if results are slow.`,
+    inner: `For this inner unrest, name the feeling in one sentence, then do one grounding act (breath, short walk, or honest talk). Clarity returns after the body settles.`,
+    duty: `On this duty question, ask: what responsibility is truly yours, and what is guilt or pressure? Fulfill the duty that protects long-term trust, not short-term approval.`,
+    howto: `Here is a practical path for what you asked: (1) define the outcome in one line, (2) remove one obstacle today, (3) review after three days and adjust.`,
+    explain: `In themes associated with ${guide.displayName}, the heart of your question points to: ${principle}`,
+    general: `Addressing your question directly: focus on the concrete choice in front of you, not on abstract worry. Apply one clear principle, then act in a small measurable way.`,
+  };
 
   return [
-    `**Wisdom reflection**`,
-    `Regarding your question — “${q.slice(0, 180)}” — themes traditionally linked with ${guide.displayName}${
-      topicHint ? ` (especially ${topicHint.toLowerCase()})` : ""
-    } can help you look at it with more steadiness.`,
+    scenarioAdvice[scenario] || scenarioAdvice.general,
     ``,
-    `**Principle**`,
-    principle,
+    `From ${guide.displayName}'s tradition: ${principle}`,
     ``,
-    `**Explanation**`,
-    `${guide.shortPhilosophy} This AI guide draws on sources such as ${guide.primarySources[0] || "classical tradition"} — as interpretation, not as a live teacher.`,
-    ``,
-    `**Modern application**`,
-    `Name the values at stake in *this* situation. Consider dignity — yours and others'. Then take the smallest next step that protects those values.`,
-    ``,
-    `**Reflect**`,
-    `If you followed ${guide.displayName}'s spirit of ${guide.domain.split("·")[0]?.trim().toLowerCase() || "clarity"} for one week, what would you do differently tomorrow morning?`,
+    `Next step: within 24 hours, take one action that matches this principle in your situation.`,
   ].join("\n");
 }
 

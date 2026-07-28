@@ -2,15 +2,77 @@
 
 import type { TextToSpeechProvider, VoiceConfig } from "@/features/wisdom/voice/types";
 import { mapSpeechLocale } from "@/features/wisdom/voice/types";
-import type { VoicePersona } from "@/domain/wisdom/voice-persona";
+import { prepareSpeechText } from "@/features/wisdom/voice/prepare-speech-text";
+import {
+  resolveServerVoice,
+  resolveSpeechGender,
+  type VoicePersona,
+} from "@/domain/wisdom/voice-persona";
 
-function pickVoice(language: string, preferred?: SpeechSynthesisVoice[]) {
+const FEMALE_VOICE_HINT =
+  /female|woman|girl|zira|swara|heera|neerja|kalpana|ananya|sonia|hazel|susan|karen|moira|tessa|fiona|veena|aria|jenny|sara|samantha|victoria|microsoft hindi(?!.*hemant)/i;
+
+const MALE_VOICE_HINT =
+  /male|man|boy|\bhemant\b|\bravi\b|\bprabhat\b|\bdinesh\b|\bdavid\b|\bmark\b|\bgeorge\b|\bdaniel\b|\bthomas\b|\brishi\b|\bashish\b|\bkumar\b/i;
+
+function scoreVoice(
+  voice: SpeechSynthesisVoice,
+  langPrefix: string,
+  preferFemale: boolean,
+): number {
+  const name = voice.name;
+  const lang = voice.lang.toLowerCase();
+  let score = 0;
+  if (lang.startsWith(langPrefix)) score += 40;
+  else if (lang.startsWith("en") && (lang.includes("in") || /en-in/i.test(lang))) score += 8;
+
+  if (preferFemale) {
+    if (FEMALE_VOICE_HINT.test(name)) score += 50;
+    if (MALE_VOICE_HINT.test(name)) score -= 40;
+    if (/swara|neerja|heera|kalpana|ananya|veena/i.test(name) && langPrefix === "hi") score += 30;
+  } else {
+    if (FEMALE_VOICE_HINT.test(name)) score -= 100;
+    if (MALE_VOICE_HINT.test(name)) score += 50;
+    if (/hemant/i.test(name) && langPrefix === "hi") score += 30;
+  }
+
+  if (/natural|neural|premium|online/i.test(name)) score += 8;
+  return score;
+}
+
+function pickVoice(
+  language: string,
+  options?: { preferFemale?: boolean; preferred?: SpeechSynthesisVoice[] },
+) {
   const voices =
-    preferred || (typeof window !== "undefined" ? window.speechSynthesis.getVoices() : []);
+    options?.preferred || (typeof window !== "undefined" ? window.speechSynthesis.getVoices() : []);
+  if (!voices.length) return null;
+
   const langPrefix = language.slice(0, 2).toLowerCase();
+  const preferFemale = Boolean(options?.preferFemale);
+
+  const ranked = [...voices]
+    .map((v) => ({ v, score: scoreVoice(v, langPrefix, preferFemale) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (ranked[0]) return ranked[0].v;
+
+  if (preferFemale) {
+    return (
+      voices.find(
+        (v) => v.lang.toLowerCase().startsWith(langPrefix) && FEMALE_VOICE_HINT.test(v.name),
+      ) ||
+      voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix)) ||
+      voices.find((v) => v.default) ||
+      voices[0] ||
+      null
+    );
+  }
+
   return (
     voices.find(
-      (v) => v.lang.toLowerCase().startsWith(langPrefix) && /natural|neural|premium/i.test(v.name),
+      (v) => v.lang.toLowerCase().startsWith(langPrefix) && !FEMALE_VOICE_HINT.test(v.name),
     ) ||
     voices.find((v) => v.lang.toLowerCase().startsWith(langPrefix)) ||
     voices.find((v) => v.default) ||
@@ -19,7 +81,6 @@ function pickVoice(language: string, preferred?: SpeechSynthesisVoice[]) {
   );
 }
 
-/** Browser speechSynthesis TTS — always available as fallback. */
 export class BrowserTextToSpeechProvider implements TextToSpeechProvider {
   readonly id = "browser-speech-synthesis";
   private utterance: SpeechSynthesisUtterance | null = null;
@@ -68,21 +129,35 @@ export class BrowserTextToSpeechProvider implements TextToSpeechProvider {
     }
 
     this.interrupt();
-    const cleaned = text
-      .replace(/\*\*/g, "")
-      .replace(/^#+\s*/gm, "")
-      .replace(/\n{2,}/g, ". ")
-      .trim();
+    const cleaned = prepareSpeechText(text);
+    if (!cleaned) {
+      handlers?.onEnd?.();
+      return;
+    }
 
     await new Promise<void>((resolve) => {
       const utter = new SpeechSynthesisUtterance(cleaned);
       this.utterance = utter;
-      const locale = mapSpeechLocale(config.language === "auto" ? "en" : config.language);
+      const langCode = config.language === "auto" ? "en" : config.language;
+      const locale = mapSpeechLocale(langCode);
+      const gender = this.persona
+        ? resolveSpeechGender(this.persona, langCode)
+        : langCode === "hi" || langCode === "mr"
+          ? "female"
+          : "male";
+      const preferFemale = gender === "female";
+
       utter.lang = locale;
       utter.rate = config.rate ?? this.persona?.rate ?? 0.92;
-      utter.pitch = config.pitch ?? this.persona?.pitch ?? 1;
-      const voice = pickVoice(locale);
-      if (voice) utter.voice = voice;
+      utter.pitch = preferFemale
+        ? (config.pitch ?? 1.05)
+        : (config.pitch ?? this.persona?.pitch ?? 0.85);
+
+      const applyVoiceAndSpeak = () => {
+        const v = pickVoice(locale, { preferFemale });
+        if (v) utter.voice = v;
+        window.speechSynthesis.speak(utter);
+      };
 
       utter.onstart = () => handlers?.onStart?.();
       utter.onend = () => {
@@ -96,28 +171,17 @@ export class BrowserTextToSpeechProvider implements TextToSpeechProvider {
         resolve();
       };
 
-      // Chrome sometimes needs voices loaded asynchronously
-      const speakNow = () => window.speechSynthesis.speak(utter);
       const voices = window.speechSynthesis.getVoices();
       if (!voices.length) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          const v = pickVoice(locale);
-          if (v) utter.voice = v;
-          speakNow();
-        };
-        // Fallback if event never fires
-        setTimeout(speakNow, 250);
+        window.speechSynthesis.onvoiceschanged = () => applyVoiceAndSpeak();
+        setTimeout(applyVoiceAndSpeak, 250);
       } else {
-        speakNow();
+        applyVoiceAndSpeak();
       }
     });
   }
 }
 
-/**
- * Prefers server OpenAI TTS when available; falls back to browser synthesis.
- * Audio is played from a blob URL and never uploaded for storage.
- */
 export class HybridTextToSpeechProvider implements TextToSpeechProvider {
   readonly id = "hybrid-tts";
   private browser: BrowserTextToSpeechProvider;
@@ -168,12 +232,14 @@ export class HybridTextToSpeechProvider implements TextToSpeechProvider {
       return;
     }
 
-    const cleaned = text
-      .replace(/\*\*/g, "")
-      .replace(/^#+\s*/gm, "")
-      .replace(/Vedic Wisdom provides educational[\s\S]*$/i, "")
-      .trim()
-      .slice(0, 3500);
+    const cleaned = prepareSpeechText(text);
+    if (!cleaned) {
+      handlers?.onEnd?.();
+      return;
+    }
+
+    const voice = resolveServerVoice(this.persona, config.language);
+    const gender = resolveSpeechGender(this.persona, config.language);
 
     try {
       const res = await fetch("/api/wisdom/voice/tts", {
@@ -181,8 +247,9 @@ export class HybridTextToSpeechProvider implements TextToSpeechProvider {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: cleaned,
-          voice: this.persona.serverVoice || "sage",
+          voice,
           language: config.language,
+          gender,
         }),
       });
 

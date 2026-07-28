@@ -61,7 +61,7 @@ export function classifyQuestionIntent(message: string): QuestionIntent {
   if (TIMING_RE.test(q) && (ASTRO_RE.test(q) || TIMING_RE.test(q))) return "timing";
   if (ASTRO_RE.test(q)) return "astrology";
   if (
-    /\b(dharma|wisdom|reflect|meditat|peace|anger|conflict|duty|principle|virtue|sage|rishi)\b/i.test(
+    /\b(dharma|wisdom|reflect|meditat|peace|anger|angry|conflict|duty|principle|virtue|sage|rishi|decide|decision|should i|advice|relationship|family|fear|worry|stress|how to|what should)\b/i.test(
       q,
     )
   ) {
@@ -158,11 +158,16 @@ export function buildGuruSystemDirectives(intent: QuestionIntent): string {
 
 export function buildWisdomSystemDirectives(intent: QuestionIntent): string {
   return [
-    "Answer the member's specific question. Do not recycle a generic reflection template.",
-    "If they ask something factual or simple (e.g. arithmetic), answer correctly first, then offer a brief wisdom lens only if natural.",
+    "PRIORITY: Answer the member's ACTUAL question first — concrete, to the point, tied to their words.",
+    "Do NOT recycle a generic reflection, biography, or the same principle for every prompt.",
+    "Do NOT use a fixed five-heading template. Vary openings. Stay under ~180 words unless they ask for depth.",
+    "Never fill with polite unrelated wisdom. If the question is about X, every sentence must help with X.",
+    "If they ask something factual or simple (e.g. arithmetic), answer correctly first; add a light wisdom lens only if natural.",
     "Stay as an AI guide inspired by the named tradition — never claim to be the historical figure.",
-    intent === "math" || intent === "general"
+    "If prior assistant replies in history used the same opening/principle, choose a different angle that still answers THIS question.",
+    "Do NOT write the legal disclaimer yourself — the system appends it.",
+    intent === "math" || intent === "general" || intent === "greeting" || intent === "thanks"
       ? "Keep wisdom framing light; prioritize a correct, direct answer."
-      : "Use the guide's themes to illuminate THIS question specifically.",
+      : "Use only the guide themes that illuminate THIS scenario; ignore unrelated teachings.",
   ].join("\n");
 }

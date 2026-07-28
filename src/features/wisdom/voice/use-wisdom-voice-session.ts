@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getVoicePersona, VOICE_PRIVACY_NOTICE } from "@/domain/wisdom/voice-persona";
 import { BrowserSpeechToTextProvider } from "@/features/wisdom/voice/providers/browser-stt";
 import { HybridTextToSpeechProvider } from "@/features/wisdom/voice/providers/browser-tts";
+import { prepareSpeechText } from "@/features/wisdom/voice/prepare-speech-text";
 import {
   VOICE_STATE_COPY,
   type TranscriptMessage,
@@ -126,9 +127,14 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
 
   const speakAnswer = useCallback(
     async (text: string) => {
+      const spoken = prepareSpeechText(text);
+      if (!spoken) {
+        setState("idle");
+        return;
+      }
       setState("speaking");
       await ttsRef.current.speak(
-        text,
+        spoken,
         {
           language: languageRef.current,
           rate: persona.rate,

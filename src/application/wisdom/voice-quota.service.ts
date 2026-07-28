@@ -7,10 +7,24 @@ function dayKey(d = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
-/** Soft daily caps — seconds of active listening+speaking billed per turn. */
+function envSeconds(name: string, fallback: number): number {
+  const n = Number(process.env[name]);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+/**
+ * Soft daily caps — seconds of active listening+speaking billed per turn.
+ * Dev / VOICE_QUOTA_DISABLED skips hard limits so local testing is not blocked.
+ */
 export async function getVoiceDailyLimitSeconds(userId: string): Promise<number> {
+  if (process.env.VOICE_QUOTA_DISABLED === "true" || process.env.NODE_ENV === "development") {
+    return envSeconds("VOICE_DAILY_LIMIT_SECONDS", 8 * 60 * 60);
+  }
   const premium = await hasActiveSubscription(userId);
-  return premium ? 30 * 60 : 5 * 60;
+  if (premium) {
+    return envSeconds("VOICE_PREMIUM_DAILY_LIMIT_SECONDS", 60 * 60);
+  }
+  return envSeconds("VOICE_DAILY_LIMIT_SECONDS", 30 * 60);
 }
 
 export async function getVoiceUsageToday(userId: string) {
@@ -25,17 +39,37 @@ export async function getVoiceUsageToday(userId: string) {
   };
 }
 
-export async function assertVoiceQuota(userId: string, upcomingSeconds = 15) {
+export async function getVoiceQuotaSnapshot(userId: string) {
   const [usage, limit] = await Promise.all([
     getVoiceUsageToday(userId),
     getVoiceDailyLimitSeconds(userId),
   ]);
-  if (usage.secondsUsed + upcomingSeconds > limit) {
+  return {
+    usage,
+    limit,
+    remaining: Math.max(0, limit - usage.secondsUsed),
+    exhausted: usage.secondsUsed >= limit,
+  };
+}
+
+/**
+ * Hard gate before starting a turn/session.
+ * upcomingSeconds <= 0 is status-only and never throws (avoids 402 after a successful turn).
+ */
+export async function assertVoiceQuota(userId: string, upcomingSeconds = 15) {
+  const snapshot = await getVoiceQuotaSnapshot(userId);
+  if (upcomingSeconds <= 0) {
+    return snapshot;
+  }
+  if (process.env.VOICE_QUOTA_DISABLED === "true" || process.env.NODE_ENV === "development") {
+    return snapshot;
+  }
+  if (snapshot.usage.secondsUsed + upcomingSeconds > snapshot.limit) {
     throw new PaymentRequiredError(
       "You have reached today's voice wisdom limit. Upgrade Premium for more time, or continue with text.",
     );
   }
-  return { usage, limit, remaining: Math.max(0, limit - usage.secondsUsed) };
+  return snapshot;
 }
 
 export async function recordVoiceUsage(
@@ -56,7 +90,7 @@ export async function recordVoiceUsage(
       },
       $set: { lastSessionId: input.sessionId || null },
     },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: "after" },
   );
 }
 
@@ -69,7 +103,7 @@ export async function createVoiceSessionRecord(input: {
   await assertVoiceQuota(input.userId, 5);
   const sessionId = `vs_${input.userId.slice(0, 8)}_${Date.now().toString(36)}`;
   await recordVoiceUsage(input.userId, { seconds: 0, sessionId, isNewSession: true });
-  const { usage, limit, remaining } = await assertVoiceQuota(input.userId, 0);
+  const { usage, limit, remaining } = await getVoiceQuotaSnapshot(input.userId);
   return {
     sessionId,
     guideId: input.guideId,
