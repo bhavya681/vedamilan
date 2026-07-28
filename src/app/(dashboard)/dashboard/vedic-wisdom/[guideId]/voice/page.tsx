@@ -83,7 +83,7 @@ export default function WisdomVoicePage() {
     voice.state === "ended";
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-11.5rem)] w-full max-w-6xl min-w-0 flex-col gap-3 sm:h-[calc(100dvh-9.5rem)] sm:gap-4 md:h-[calc(100dvh-8.5rem)] lg:h-[calc(100dvh-7.5rem)] lg:flex-row lg:gap-8">
+    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-8">
       <aside className="border-border/50 shrink-0 space-y-3 lg:w-72 lg:space-y-4 lg:border-r lg:pr-7">
         <Link
           href={`${routes.vedicWisdom}/${guide.id}`}
@@ -172,7 +172,7 @@ export default function WisdomVoicePage() {
         </Button>
       </aside>
 
-      <SageDiscourseShell className="border-border/50 shadow-soft flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem]">
+      <SageDiscourseShell className="border-border/50 shadow-soft dashboard-fill-h flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem] lg:h-full lg:max-h-none">
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-3 py-4 text-center sm:px-6 sm:py-6">
           <WisdomPortrait
             guide={guide}

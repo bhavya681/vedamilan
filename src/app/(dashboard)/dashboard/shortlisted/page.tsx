@@ -72,12 +72,12 @@ export default function ShortlistedPage() {
         <ContentReveal className="space-y-3">
           {items.map((s) => (
             <GlassCard key={s._id}>
-              <div className="flex justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+                <div className="min-w-0">
                   <p className="font-display text-xl">{s.name}</p>
                   <p className="text-muted-foreground mt-2 text-sm">{s.note || "No note yet"}</p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
                   <Badge>{s.compatibilityScore || 0}%</Badge>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`${routes.matchProfile}?id=${s.targetUserId}`}>View</Link>

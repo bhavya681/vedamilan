@@ -201,7 +201,7 @@ export function Navbar({
           </nav>
         )}
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
           <LanguageSelector
             compact
             variant="ghost"
@@ -222,7 +222,7 @@ export function Navbar({
                     asChild
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-foreground relative hidden sm:inline-flex"
+                    className="text-muted-foreground hover:text-foreground relative"
                   >
                     <Link href={routes.notifications} aria-label={t("navigation.notifications")}>
                       <Bell className="h-4 w-4" />
@@ -310,14 +310,7 @@ export function Navbar({
                 <MobileNav onNavigate={() => setOpen(false)} authed={isAuthed} />
               </SheetContent>
             </Sheet>
-          ) : (
-            <SignOutButton
-              className="sm:hidden"
-              variant="outline"
-              size="sm"
-              redirectTo={routes.home}
-            />
-          )}
+          ) : null}
         </div>
       </div>
     </header>

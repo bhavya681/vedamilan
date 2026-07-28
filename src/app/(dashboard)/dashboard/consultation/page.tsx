@@ -34,7 +34,7 @@ export default function ConsultationPage() {
           </div>
         }
       />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {["Kundli review", "Marriage timing", "Family compatibility"].map((topic) => (
           <GlassCard key={topic}>
             <h2 className="font-display text-lg">{topic}</h2>

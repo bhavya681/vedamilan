@@ -71,6 +71,36 @@
   --duration-base: 280ms;
   --duration-slow: 520ms;
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Dashboard chrome — keep full-height panes clear of navbar + mobile bottom nav */
+  --dashboard-navbar-h: 3.5rem;
+  --dashboard-bottom-nav-h: 4.75rem;
+  --dashboard-main-pad-y: 1rem;
+  --dashboard-chrome: calc(
+    var(--dashboard-navbar-h) + var(--dashboard-bottom-nav-h) + var(--dashboard-main-pad-y) +
+      env(safe-area-inset-bottom, 0px)
+  );
+}
+
+@media (min-width: 640px) {
+  :root {
+    --dashboard-navbar-h: 4rem;
+    --dashboard-main-pad-y: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --dashboard-bottom-nav-h: 0px;
+    --dashboard-main-pad-y: 1.5rem;
+    --dashboard-chrome: calc(var(--dashboard-navbar-h) + var(--dashboard-main-pad-y) * 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --dashboard-main-pad-y: 2rem;
+  }
 }
 
 .dark {
@@ -533,6 +563,27 @@
 
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Full-height dashboard panes (chat, AI, sage discourse) */
+  .dashboard-fill-h {
+    height: calc(100dvh - var(--dashboard-chrome));
+    max-height: calc(100dvh - var(--dashboard-chrome));
+    min-height: 16rem;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-fill-h {
+      min-height: 22rem;
+    }
+  }
+
+  /* Fluid kundli chart square — never wider than viewport */
+  .kundli-chart-square {
+    width: min(100%, 24rem);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
   }
 }
 

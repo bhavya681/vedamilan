@@ -1,8 +1,8 @@
 /**
- * Curated portrait URLs for Rishi Sage guides.
- * Sources: Wikimedia Commons / Wikipedia (public historical art & photographs
- * commonly surfaced via Google image search). Artistic depictions — not
- * claimed historical photographs of ancient figures.
+ * Curated portrait URLs for Wisdom Council guides.
+ * Sources: Wikimedia Commons / Wikipedia (public historical art & photographs).
+ * Artistic depictions — not claimed historical photographs of ancient figures.
+ * Guides without an entry here must not appear in the product catalog.
  */
 
 export const SAGE_PORTRAIT_URLS: Record<string, string> = {
@@ -21,6 +21,22 @@ export const SAGE_PORTRAIT_URLS: Record<string, string> = {
   gautama:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Rishi_Gautam_saptrishi_100.jpg/640px-Rishi_Gautam_saptrishi_100.jpg",
   bhrigu: "https://commons.wikimedia.org/wiki/Special:FilePath/Maharishi_Bhrighuji.jpg?width=640",
+  parashara: "https://upload.wikimedia.org/wikipedia/commons/8/89/Parasara-kl.jpg",
+  agastya: "https://upload.wikimedia.org/wikipedia/commons/0/0b/AgasthiyarG.jpg",
+  narada: "https://upload.wikimedia.org/wikipedia/commons/c/c0/Narad_-_Vintage_Print.jpg",
+  kapila: "https://upload.wikimedia.org/wikipedia/commons/0/09/Kapila_muni.jpg",
+  ashtavakra: "https://commons.wikimedia.org/wiki/Special:FilePath/Ashtavakra.jpg?width=640",
+  brihaspati: "https://upload.wikimedia.org/wikipedia/commons/8/84/Sculpture_of_Brihaspati.jpg",
+  tulsidas:
+    "https://upload.wikimedia.org/wikipedia/commons/a/a4/Tulsidas_composing_his_famous_Avadhi_Ramcharitmanas.jpg",
+  kabir: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Kabir004.jpg",
+  mirabai:
+    "https://upload.wikimedia.org/wikipedia/commons/a/a8/Kangra_painting_of_Mirabai%2C_the_female_Bhakti_saint.jpg",
+  thiruvalluvar:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Thiruvalluvar_Statue.jpg?width=640",
+  "sri-aurobindo": "https://upload.wikimedia.org/wikipedia/commons/7/71/Sri_aurobindo.jpg",
+  "paramahansa-yogananda":
+    "https://upload.wikimedia.org/wikipedia/commons/3/3f/Paramahansa_Yogananda_Standard_Pose.jpg",
   chanakya: "https://commons.wikimedia.org/wiki/Special:FilePath/Chanakya.jpg?width=640",
   vidura:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Vidura_confers_Dhritarashtra_%28cropped%29.jpg/640px-Vidura_confers_Dhritarashtra_%28cropped%29.jpg",
@@ -41,4 +57,8 @@ export const SAGE_PORTRAIT_URLS: Record<string, string> = {
 
 export function sagePortraitUrl(guideId: string): string | null {
   return SAGE_PORTRAIT_URLS[guideId] ?? null;
+}
+
+export function hasSagePortrait(guideId: string): boolean {
+  return Boolean(SAGE_PORTRAIT_URLS[guideId]);
 }

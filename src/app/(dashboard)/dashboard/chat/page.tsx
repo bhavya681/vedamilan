@@ -309,7 +309,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[min(42rem,calc(100dvh-11.5rem))] min-h-[28rem] min-w-0 flex-col gap-3 sm:h-[min(44rem,calc(100dvh-10rem))] sm:gap-4 md:h-[calc(100dvh-9rem)] lg:grid lg:h-[calc(100dvh-9rem)] lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+    <div className="dashboard-fill-h flex min-w-0 flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
       <aside
         className={cn(
           "glass-panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl",

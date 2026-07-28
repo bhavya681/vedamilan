@@ -43,13 +43,21 @@ const SheetContent = React.forwardRef<
         "border-border/60 bg-background fixed z-50 flex h-auto flex-col border",
         side === "bottom" && "inset-x-0 bottom-0 mt-24 rounded-t-2xl",
         side === "top" && "inset-x-0 top-0 mb-24 rounded-b-2xl",
-        side === "left" && "inset-y-0 left-0 h-full w-3/4 rounded-r-2xl sm:max-w-sm",
-        side === "right" && "inset-y-0 right-0 h-full w-3/4 rounded-l-2xl sm:max-w-sm",
+        side === "left" &&
+          "inset-y-0 left-0 h-full w-[min(100%,19.5rem)] max-w-[85vw] rounded-r-2xl sm:max-w-sm",
+        side === "right" &&
+          "inset-y-0 right-0 h-full w-[min(100%,19.5rem)] max-w-[85vw] rounded-l-2xl sm:max-w-sm",
         className,
       )}
       {...props}
     >
-      <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] rounded-full md:block" />
+      <div
+        className={cn(
+          "bg-muted mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full",
+          (side === "left" || side === "right") && "hidden",
+          (side === "top" || side === "bottom") && "md:hidden",
+        )}
+      />
       {children}
     </DrawerPrimitive.Content>
   </SheetPortal>

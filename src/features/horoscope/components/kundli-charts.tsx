@@ -278,7 +278,7 @@ export function NorthIndianKundli({
     <div className={cn("flex flex-col items-center", className)}>
       <svg
         viewBox="0 0 100 100"
-        className="h-72 w-72 sm:h-[24rem] sm:w-[24rem]"
+        className="kundli-chart-square"
         role="img"
         aria-label="North Indian kundli chart"
       >
@@ -339,7 +339,7 @@ export function SouthIndianKundli({
   return (
     <div className={cn("flex flex-col items-center", className)}>
       <div
-        className="border-gold bg-gold/25 grid h-72 w-72 grid-cols-4 grid-rows-4 gap-px overflow-hidden rounded-xl border-2 sm:h-[24rem] sm:w-[24rem]"
+        className="border-gold bg-gold/25 kundli-chart-square grid grid-cols-4 grid-rows-4 gap-px overflow-hidden rounded-xl border-2"
         role="img"
         aria-label="South Indian kundli chart"
       >
@@ -421,7 +421,7 @@ export function EastIndianKundli({
       <div className={cn("flex flex-col items-center", className)}>
         <svg
           viewBox="0 0 100 100"
-          className="h-72 w-72 sm:h-[24rem] sm:w-[24rem]"
+          className="kundli-chart-square"
           role="img"
           aria-label="East Indian kundli chart"
         >

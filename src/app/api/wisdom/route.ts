@@ -5,10 +5,10 @@ import { wisdomService } from "@/application/wisdom/wisdom.service";
 import { hasActiveSubscription } from "@/application/billing/entitlements";
 import {
   WISDOM_CATEGORIES,
-  WISDOM_GUIDES,
   getWisdomGuide,
   listFeaturedSages,
   listRelationshipGuides,
+  listWisdomGuides,
 } from "@/domain/wisdom/guides";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import { successResponse } from "@/lib/utils/api-response";
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     }
     return successResponse({
       categories: WISDOM_CATEGORIES,
-      guides: WISDOM_GUIDES,
+      guides: listWisdomGuides(),
       featuredSages: listFeaturedSages(),
       relationshipGuides: listRelationshipGuides(),
       daily: wisdomService.dailyReflection(),

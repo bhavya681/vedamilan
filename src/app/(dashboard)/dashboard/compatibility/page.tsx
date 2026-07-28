@@ -446,29 +446,29 @@ export default function CompatibilityPage() {
                 Guna Milan {active.totalGuna}/{active.maxGuna ?? 36}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
               {SIMPLE_BREAKDOWN.map(({ key, label }) => {
                 const value = active.categoryScores?.[key];
                 const mood = value != null ? moodFromScore(value) : null;
                 return (
                   <div
                     key={key}
-                    className="border-border/60 bg-card rounded-xl border px-3 py-3 sm:px-4"
+                    className="border-border/60 bg-card min-w-0 rounded-xl border px-3 py-3 sm:px-4"
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-muted-foreground text-xs">{label}</p>
+                      <p className="text-muted-foreground truncate text-xs">{label}</p>
                       {mood ? <SoftEmoji emoji={mood.emoji} size="sm" pulse={false} /> : null}
                     </div>
-                    <p className="font-display mt-1 text-2xl">
+                    <p className="font-display mt-1 text-xl sm:text-2xl">
                       {value != null ? `${value}%` : "—"}
                     </p>
                     {value != null ? <Progress value={value} className="mt-2 h-1" /> : null}
                   </div>
                 );
               })}
-              <div className="border-border/60 bg-card col-span-2 rounded-xl border px-3 py-3 sm:col-span-1 sm:px-4 md:col-span-3 lg:col-span-1">
+              <div className="border-border/60 bg-card col-span-2 min-w-0 rounded-xl border px-3 py-3 sm:col-span-1 sm:px-4">
                 <p className="text-muted-foreground text-xs">Vedic</p>
-                <p className="font-display mt-1 text-2xl">
+                <p className="font-display mt-1 text-xl sm:text-2xl">
                   {active.totalGuna}/{active.maxGuna ?? 36}
                 </p>
               </div>
@@ -534,8 +534,16 @@ export default function CompatibilityPage() {
 
           {/* Deep analysis */}
           <Tabs value={view} onValueChange={setView} className="w-full">
-            <div className="scrollbar-hidden -mx-1 mb-4 overflow-x-auto px-1">
-              <TabsList className="bg-muted/50 inline-flex h-auto w-max min-w-full flex-nowrap justify-start gap-1 rounded-xl p-1 sm:min-w-0">
+            <div className="mb-4">
+              <label className="sr-only" htmlFor="compat-view-select">
+                Analysis view
+              </label>
+              <select
+                id="compat-view-select"
+                className="border-border/60 bg-card text-foreground focus:ring-ring w-full rounded-xl border px-3 py-2.5 text-sm focus:ring-2 focus:outline-none sm:hidden"
+                value={view}
+                onChange={(e) => setView(e.target.value)}
+              >
                 {(
                   [
                     ["why", "Overview"],
@@ -548,15 +556,35 @@ export default function CompatibilityPage() {
                     ["scores", "All scores"],
                   ] as const
                 ).map(([value, label]) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="data-[state=active]:bg-card data-[state=active]:shadow-soft shrink-0 rounded-lg px-3 py-1.5 text-xs"
-                  >
+                  <option key={value} value={value}>
                     {label}
-                  </TabsTrigger>
+                  </option>
                 ))}
-              </TabsList>
+              </select>
+              <div className="scrollbar-hidden -mx-1 hidden overflow-x-auto px-1 sm:block">
+                <TabsList className="bg-muted/50 inline-flex h-auto w-max min-w-full flex-nowrap justify-start gap-1 rounded-xl p-1">
+                  {(
+                    [
+                      ["why", "Overview"],
+                      ["marriage", "Marriage dynamics"],
+                      ["timing", "Timing"],
+                      ["ai", "AI Guru"],
+                      ["deep", "Deep modules"],
+                      ["shukra", "Shukra Milan"],
+                      ["guna", "Ashta Koota"],
+                      ["scores", "All scores"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="data-[state=active]:bg-card data-[state=active]:shadow-soft shrink-0 rounded-lg px-3 py-1.5 text-xs"
+                    >
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
             </div>
 
             <TabsContent value="why" className="mt-0">

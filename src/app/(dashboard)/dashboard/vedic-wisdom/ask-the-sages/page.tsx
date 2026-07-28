@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
-import { WISDOM_GUIDES, listRelationshipGuides } from "@/domain/wisdom/guides";
+import { listWisdomGuides, listRelationshipGuides } from "@/domain/wisdom/guides";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -74,7 +74,7 @@ export default function AskTheSagesPage() {
           <div className="space-y-3">
             <p className="text-muted-foreground text-sm">Choose 2–3 guides</p>
             <div className="flex flex-wrap gap-2">
-              {(relationship.length ? relationship : WISDOM_GUIDES).slice(0, 12).map((g) => {
+              {(relationship.length ? relationship : listWisdomGuides()).slice(0, 12).map((g) => {
                 const on = selected.includes(g.id);
                 return (
                   <button

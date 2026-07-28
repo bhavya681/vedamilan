@@ -285,7 +285,7 @@ export default function AiInsightsPage() {
   const userAsked = messages.some((m) => m.role === "user");
 
   const chatPanel = (
-    <section className="border-border/50 bg-card/40 dark:bg-card/30 shadow-soft flex h-[min(72dvh,760px)] flex-col overflow-hidden rounded-[1.75rem] border backdrop-blur-xl lg:h-[calc(100dvh-11.5rem)]">
+    <section className="border-border/50 bg-card/40 dark:bg-card/30 shadow-soft dashboard-fill-h flex flex-col overflow-hidden rounded-[1.25rem] border backdrop-blur-xl sm:rounded-[1.75rem] lg:max-h-[min(760px,calc(100dvh-var(--dashboard-chrome)))]">
       <header className="border-border/40 from-card via-card to-muted/30 dark:to-muted/20 relative shrink-0 border-b bg-gradient-to-r px-4 py-3.5 sm:px-5">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--gold)_14%,transparent),transparent_55%)]" />
         <div className="relative">
@@ -403,7 +403,7 @@ export default function AiInsightsPage() {
 
       <div className="hidden gap-5 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.75fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.78fr)] xl:gap-6">
         {chatPanel}
-        <aside className="scrollbar-premium max-h-[calc(100dvh-11.5rem)] space-y-4 overflow-y-auto pr-1">
+        <aside className="scrollbar-premium dashboard-fill-h space-y-4 overflow-y-auto pr-1 lg:max-h-[min(760px,calc(100dvh-var(--dashboard-chrome)))]">
           <GuruChartPanels data={bundle} />
           {bundle?.disclaimer ? (
             <p className="text-muted-foreground px-1 text-[11px] leading-relaxed">

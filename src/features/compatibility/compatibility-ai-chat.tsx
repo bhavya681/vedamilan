@@ -135,7 +135,7 @@ export function CompatibilityAiChat({
   const userAsked = messages.some((m) => m.role === "user");
 
   return (
-    <section className="border-border/70 bg-card shadow-soft flex h-[min(58dvh,520px)] flex-col overflow-hidden rounded-2xl border sm:h-[min(62dvh,600px)] md:h-[min(68dvh,680px)]">
+    <section className="border-border/70 bg-card shadow-soft flex h-[min(52dvh,28rem)] flex-col overflow-hidden rounded-2xl border sm:h-[min(58dvh,32rem)] md:h-[min(64dvh,40rem)]">
       <header className="border-border/50 shrink-0 border-b px-3 py-3 sm:px-4">
         <AiGuruHeader
           subtitle={

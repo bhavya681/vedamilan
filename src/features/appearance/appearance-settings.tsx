@@ -34,7 +34,7 @@ function ModeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "border-border/60 bg-card flex flex-col items-center gap-2 rounded-2xl border px-4 py-4 text-sm font-medium transition-all",
+        "border-border/60 bg-card flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-4 sm:text-sm",
         active
           ? "border-primary/50 ring-primary/25 shadow-soft ring-2"
           : "hover:border-primary/30 hover:bg-muted/40",
@@ -119,7 +119,7 @@ export function AppearanceSettingsPanel() {
             Default follows your device (System).
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <ModeCard
             mode="light"
             label="Light"

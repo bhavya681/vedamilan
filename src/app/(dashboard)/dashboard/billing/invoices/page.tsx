@@ -62,17 +62,20 @@ export default function InvoicesPage() {
       ) : (
         <div className="space-y-3">
           {payments.map((p) => (
-            <GlassCard key={p._id} className="flex items-center justify-between gap-3">
-              <div>
+            <GlassCard
+              key={p._id}
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
                 <p className="font-medium">
                   {p.provider} · {(p.amount / 100).toFixed(2)} {p.currency}
                 </p>
-                <p className="text-muted-foreground text-xs">
+                <p className="text-muted-foreground truncate text-xs">
                   {p.providerPaymentId}
                   {p.createdAt ? ` · ${new Date(p.createdAt).toLocaleString("en-IN")}` : ""}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <Badge>{p.paymentStatus}</Badge>
                 {p.invoiceUrl ? (
                   <Button asChild size="sm" variant="outline">

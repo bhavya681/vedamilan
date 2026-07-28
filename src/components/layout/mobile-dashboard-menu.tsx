@@ -1,14 +1,16 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { LanguageSelector } from "@/components/i18n/language-selector";
 import { useT } from "@/components/i18n/i18n-provider";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
+import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { navForMode, navGroupsForMode } from "@/config/navigation";
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
@@ -54,7 +56,22 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
                 ? t("navigation.modeRishiSageSubtitle")
                 : t("navigation.modeMatrimonySubtitle")}
           </p>
+          <div className="mt-3 w-full">
+            <ModeSwitcher className="w-full" />
+          </div>
         </SheetHeader>
+        <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
+          <LanguageSelector compact className="min-w-0 flex-1" />
+          <Button asChild variant="outline" size="icon" className="shrink-0 rounded-xl">
+            <LocaleLink
+              href={routes.notifications}
+              onClick={() => setOpen(false)}
+              aria-label={t("navigation.notifications")}
+            >
+              <Bell className="h-4 w-4" />
+            </LocaleLink>
+          </Button>
+        </div>
         <nav className="space-y-5 p-4" aria-label={t("navigation.dashboard")}>
           {groups.map((group) => (
             <div key={group}>

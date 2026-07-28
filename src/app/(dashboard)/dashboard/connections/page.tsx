@@ -178,7 +178,7 @@ export default function ConnectionsPage() {
         }
       />
 
-      <div className="border-border/60 flex gap-1 overflow-x-auto rounded-xl border p-1">
+      <div className="border-border/60 flex gap-1 overflow-x-auto rounded-xl border p-1 [-webkit-overflow-scrolling:touch]">
         {tabs.map((t) => (
           <button
             key={t.id}

@@ -105,11 +105,11 @@ export default function SearchPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <div className="mt-3 flex gap-2">
-            <Button type="submit" disabled={loading}>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Searching…" : "Search"}
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href={routes.filters}>Advanced filters</Link>
             </Button>
           </div>
@@ -119,7 +119,7 @@ export default function SearchPage() {
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
       {results.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {results.map((m) => (
             <MatchCard
               key={m.userId}

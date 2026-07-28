@@ -136,7 +136,7 @@ export default function WisdomChatPage() {
       ];
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-11.5rem)] w-full max-w-6xl min-w-0 flex-col gap-3 sm:h-[calc(100dvh-9.5rem)] sm:gap-4 md:h-[calc(100dvh-8.5rem)] md:gap-5 lg:h-[calc(100dvh-8rem)] lg:flex-row lg:gap-8">
+    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 md:gap-5 lg:flex-row lg:gap-8">
       <aside className="border-border/50 from-card/60 via-muted/20 relative shrink-0 space-y-3 overflow-hidden rounded-2xl border bg-gradient-to-b to-transparent p-3 sm:space-y-4 sm:rounded-3xl sm:p-4 lg:w-[17.5rem] lg:space-y-5 lg:border-0 lg:border-r lg:bg-transparent lg:p-0 lg:pr-7">
         <div className="pointer-events-none absolute inset-0 opacity-30 lg:hidden" aria-hidden>
           <div className="sage-discourse-wash absolute inset-0" />
@@ -242,7 +242,7 @@ export default function WisdomChatPage() {
         </div>
       </aside>
 
-      <SageDiscourseShell className="border-border/50 shadow-soft flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem]">
+      <SageDiscourseShell className="border-border/50 shadow-soft dashboard-fill-h flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem] lg:h-full lg:max-h-none">
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2 sm:px-6 sm:pt-5">
           {messages.length === 0 ? (
             <SageEmptyInvite

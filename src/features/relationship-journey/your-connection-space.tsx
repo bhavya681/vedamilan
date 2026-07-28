@@ -425,7 +425,7 @@ export function YourConnectionSpace({ partnerUserId }: { partnerUserId: string }
               <div
                 key={row.key}
                 className={cn(
-                  "border-border/60 grid gap-2 rounded-2xl border px-4 py-3 sm:grid-cols-[8rem_1fr_1fr_6rem]",
+                  "border-border/60 grid gap-2 rounded-2xl border px-4 py-3 md:grid-cols-[8rem_1fr_1fr_6rem]",
                   row.status === "ALIGN" && "bg-emerald/5",
                   row.status === "DIFFER" && "bg-gold/5",
                 )}

@@ -13,7 +13,7 @@ import { RishiSageTile, WisdomPortrait } from "@/features/wisdom/components/wisd
 import { SageOrnamentLine, SageYantraMark } from "@/features/wisdom/components/sage-discourse";
 import {
   WISDOM_CATEGORIES,
-  WISDOM_GUIDES,
+  listWisdomGuides,
   listFeaturedSages,
   wisdomDailyReflection,
   type WisdomCategoryId,
@@ -49,8 +49,8 @@ export default function RishiSageHomePage() {
   const featured = useMemo(() => listFeaturedSages(), []);
   const spotlight = featured.slice(0, 7);
   const guides = useMemo(() => {
-    if (category === "all") return WISDOM_GUIDES;
-    return WISDOM_GUIDES.filter((g) => g.categoryIds.includes(category));
+    if (category === "all") return listWisdomGuides();
+    return listWisdomGuides().filter((g) => g.categoryIds.includes(category));
   }, [category]);
 
   useEffect(() => {
