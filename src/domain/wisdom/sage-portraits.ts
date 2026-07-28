@@ -10,16 +10,14 @@ export const SAGE_PORTRAIT_URLS: Record<string, string> = {
     "https://commons.wikimedia.org/wiki/Special:FilePath/Vasi%E1%B9%A3%E1%B9%ADha_Greets_Shiva_and_Parvati.jpg?width=640",
   vishwamitra:
     "https://commons.wikimedia.org/wiki/Special:FilePath/Varma_-_Vishvamitra_Meditation.jpg?width=640",
-  vyasa:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Sculpture_of_Vyasa.jpeg/640px-Sculpture_of_Vyasa.jpeg",
+  vyasa: "/images/sages/vyasa.png",
   valmiki: "https://commons.wikimedia.org/wiki/Special:FilePath/Valmiki_Ramayana.jpg?width=640",
   yajnavalkya:
     "https://commons.wikimedia.org/wiki/Special:FilePath/Yajnavalkya_and_Janaka.jpg?width=640",
   atri: "https://commons.wikimedia.org/wiki/Special:FilePath/Rama_visits_Atri.jpg?width=640",
   kashyapa:
     "https://commons.wikimedia.org/wiki/Special:FilePath/Kashyapa_muni_statue_in_Andhra_Pradesh.JPG?width=640",
-  gautama:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Rishi_Gautam_saptrishi_100.jpg/640px-Rishi_Gautam_saptrishi_100.jpg",
+  gautama: "/images/sages/gautama.png",
   bhrigu: "https://commons.wikimedia.org/wiki/Special:FilePath/Maharishi_Bhrighuji.jpg?width=640",
   parashara: "https://upload.wikimedia.org/wikipedia/commons/8/89/Parasara-kl.jpg",
   agastya: "https://upload.wikimedia.org/wikipedia/commons/0/0b/AgasthiyarG.jpg",
@@ -37,15 +35,12 @@ export const SAGE_PORTRAIT_URLS: Record<string, string> = {
   "sri-aurobindo": "https://upload.wikimedia.org/wikipedia/commons/7/71/Sri_aurobindo.jpg",
   "paramahansa-yogananda":
     "https://upload.wikimedia.org/wikipedia/commons/3/3f/Paramahansa_Yogananda_Standard_Pose.jpg",
-  chanakya: "https://commons.wikimedia.org/wiki/Special:FilePath/Chanakya.jpg?width=640",
-  vidura:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Vidura_confers_Dhritarashtra_%28cropped%29.jpg/640px-Vidura_confers_Dhritarashtra_%28cropped%29.jpg",
+  chanakya: "/images/sages/chanakya.png",
+  vidura: "/images/sages/vidura.png",
   krishna:
     "https://commons.wikimedia.org/wiki/Special:FilePath/Krishna_holding_flute.jpg?width=640",
-  bhishma:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Statue_of_Bhishma.jpg/640px-Statue_of_Bhishma.jpg",
-  dronacharya:
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Myths_of_the_Hindus_%26_Buddhists_-_The_Trial_of_the_Princes.jpg/640px-Myths_of_the_Hindus_%26_Buddhists_-_The_Trial_of_the_Princes.jpg",
+  bhishma: "/images/sages/bhishma.png",
+  dronacharya: "/images/sages/dronacharya.png",
   patanjali: "https://commons.wikimedia.org/wiki/Special:FilePath/Patanjali.jpg?width=640",
   "adi-shankaracharya":
     "https://commons.wikimedia.org/wiki/Special:FilePath/Shankaracharya.jpg?width=640",
