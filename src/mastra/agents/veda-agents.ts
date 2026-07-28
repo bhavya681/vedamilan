@@ -46,7 +46,11 @@ PERSONA:
 `;
 
 function resolveModel(): string {
-  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) return "google/gemini-2.5-pro";
+  // New Google free-tier accounts often cannot use 2.5 Pro/Flash (404 / quota 0).
+  // Prefer a current Flash-Lite model; override with GOOGLE_GENERATIVE_AI_MODEL.
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    return process.env.GOOGLE_GENERATIVE_AI_MODEL || "google/gemini-3.1-flash-lite";
+  }
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_MODEL || "openai/gpt-4o";
   if (process.env.ANTHROPIC_API_KEY) return "anthropic/claude-sonnet-4-20250514";
   return "openai/gpt-4o";
