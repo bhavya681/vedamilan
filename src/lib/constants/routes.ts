@@ -36,8 +36,9 @@ export const routes = {
   dasha: "/dashboard/kundli/dasha",
   transit: "/dashboard/kundli/transit",
   gochar: "/dashboard/kundli/gochar",
+  /** Yogas & doshas detail view (implemented on the transit extras page). */
   yogas: "/dashboard/kundli/transit",
-  rajaYogas: "/dashboard/kundli/yogas/raja",
+  rajaYogas: "/dashboard/kundli/raja-yogas",
   natalProfile: "/dashboard/kundli/natal-profile",
   divisionalCharts: "/dashboard/kundli/charts",
   ashtakavarga: "/dashboard/kundli/ashtakavarga",
@@ -107,3 +108,10 @@ export const routes = {
 } as const;
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
+
+/** Consultation virtual-astrologer deep links */
+export const consultationPaths = {
+  astrologer: (id: string) => `${routes.consultation}/${id}`,
+  chat: (id: string) => `${routes.consultation}/${id}/chat`,
+  voice: (id: string) => `${routes.consultation}/${id}/voice`,
+} as const;

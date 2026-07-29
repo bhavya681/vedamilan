@@ -9,6 +9,7 @@
  * block does not crash the whole Next.js process at import time.
  */
 import { createRequire } from "node:module";
+import path from "node:path";
 
 import { AppError } from "@/lib/utils/error-handler";
 import { logger } from "@/lib/utils/logger";
@@ -66,7 +67,8 @@ type SwephModule = {
   close: () => void;
 };
 
-const requireSweph = createRequire(__filename);
+/** Resolve from package root so Turbopack/webpack bundling does not break native require. */
+const requireSweph = createRequire(path.join(process.cwd(), "package.json"));
 
 let swephCached: SwephModule | null = null;
 let swephLoadError: AppError | null = null;
@@ -85,7 +87,7 @@ function loadSweph(): SwephModule {
       blocked ? "SWISS_EPHEMERIS_BLOCKED" : "SWISS_EPHEMERIS_LOAD_FAILED",
       blocked
         ? "Swiss Ephemeris is blocked by Windows Application Control (sweph.node). Allow the file or run outside the restricted policy, then restart the server."
-        : "Failed to load Swiss Ephemeris native module",
+        : `Failed to load Swiss Ephemeris native module (${message.slice(0, 180)}). Run "npm rebuild sweph" and restart the dev server.`,
       blocked ? 503 : 500,
       error,
     );
@@ -140,11 +142,17 @@ export class SwissEphemerisService {
 
     try {
       const sweph = loadSweph();
-      const path = ephePath || process.env.SWISS_EPHEMERIS_PATH || "./ephe";
-      sweph.set_ephe_path(path);
+      const configured = ephePath || process.env.SWISS_EPHEMERIS_PATH || "./ephe";
+      const resolved = path.isAbsolute(configured)
+        ? configured
+        : path.resolve(process.cwd(), configured);
+      sweph.set_ephe_path(resolved);
       this.setAyanamsha("LAHIRI");
       this.initialized = true;
-      logger.info({ path, ayanamsha: this.ayanamsha }, "Swiss Ephemeris initialized (sidereal)");
+      logger.info(
+        { path: resolved, ayanamsha: this.ayanamsha },
+        "Swiss Ephemeris initialized (sidereal)",
+      );
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(

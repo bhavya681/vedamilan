@@ -8,6 +8,14 @@ import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
+import {
+  EastIndianKundli,
+  isEastChart,
+  isNorthChart,
+  isSouthChart,
+  NorthIndianKundli,
+  SouthIndianKundli,
+} from "@/features/horoscope/components/kundli-charts";
 import { routes } from "@/lib/constants/routes";
 
 type GocharPlanet = {
@@ -27,12 +35,16 @@ type GocharPayload = {
   natalMoon: string;
   highlights: string[];
   planets: GocharPlanet[];
+  chartNorth?: unknown;
+  chartSouth?: unknown;
+  chartEast?: unknown;
 };
 
 export default function GocharPage() {
   const [data, setData] = useState<GocharPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [style, setStyle] = useState<"north" | "south" | "east">("north");
 
   useEffect(() => {
     void fetch("/api/gochar")
@@ -47,6 +59,14 @@ export default function GocharPage() {
       .catch(() => setError("Unable to load live Gochar"))
       .finally(() => setLoading(false));
   }, []);
+
+  const north = data?.chartNorth;
+  const south = data?.chartSouth;
+  const east = data?.chartEast;
+  const hasChart =
+    (style === "north" && isNorthChart(north)) ||
+    (style === "south" && isSouthChart(south)) ||
+    (style === "east" && isEastChart(east));
 
   return (
     <div className="relative space-y-6">
@@ -80,9 +100,14 @@ export default function GocharPage() {
           title="Gochar unavailable"
           description={error}
           action={
-            <Button asChild>
-              <Link href={routes.birthDetails}>Check birth details</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild>
+                <Link href={routes.birthDetails}>Check birth details</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={routes.kundli}>Open Kundli</Link>
+              </Button>
+            </div>
           }
         />
       ) : null}
@@ -122,6 +147,48 @@ export default function GocharPage() {
                 ))}
               </ul>
             ) : null}
+          </GlassCard>
+
+          <GlassCard className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-display text-xl">Transit kundli</p>
+                <p className="text-muted-foreground text-sm">
+                  Current sky planets placed from your natal Lagna · North, South, or East style
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    ["north", "North"],
+                    ["south", "South"],
+                    ["east", "East"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    size="sm"
+                    variant={style === key ? "default" : "outline"}
+                    onClick={() => setStyle(key)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-center py-2">
+              {style === "north" && isNorthChart(north) ? (
+                <NorthIndianKundli chart={north} />
+              ) : null}
+              {style === "south" && isSouthChart(south) ? (
+                <SouthIndianKundli chart={south} />
+              ) : null}
+              {style === "east" && isEastChart(east) ? <EastIndianKundli chart={east} /> : null}
+              {!hasChart ? (
+                <p className="text-muted-foreground text-sm">Transit chart unavailable.</p>
+              ) : null}
+            </div>
           </GlassCard>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

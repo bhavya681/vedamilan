@@ -65,7 +65,7 @@ export default function KundliPage() {
   const [loading, setLoading] = useState(false);
   const [genPhase, setGenPhase] = useState(0);
   const [style, setStyle] = useState<"north" | "south" | "east">("north");
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showChart, setShowChart] = useState(true);
   const [needsRegen, setNeedsRegen] = useState(false);
 
   async function load() {
@@ -224,15 +224,15 @@ export default function KundliPage() {
           {insight ? (
             <p className="text-muted-foreground text-sm leading-relaxed">{insight}</p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button asChild>
               <Link href={routes.matrimony}>Find compatible partners</Link>
             </Button>
-            <Button type="button" variant="outline" onClick={() => setShowAdvanced((v) => !v)}>
-              {showAdvanced ? "Hide advanced" : "Explore advanced details"}
+            <Button type="button" variant="outline" onClick={() => setShowChart((v) => !v)}>
+              {showChart ? "Hide chart" : "Show chart"}
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href={routes.aiInsights}>Explain my Kundli</Link>
+            <Button asChild variant="ai">
+              <Link href={routes.aiInsights}>Explain my chart</Link>
             </Button>
           </div>
         </GlassCard>
@@ -248,7 +248,7 @@ export default function KundliPage() {
         />
       ) : null}
 
-      {showAdvanced && hasChart ? (
+      {showChart && hasChart ? (
         <>
           <GlassCard className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -330,7 +330,7 @@ export default function KundliPage() {
         </>
       ) : null}
 
-      {showAdvanced && !hasChart && h ? (
+      {showChart && !hasChart && h ? (
         <p className="text-muted-foreground text-sm">
           Regenerate your chart to view diagram and planet tables.
         </p>

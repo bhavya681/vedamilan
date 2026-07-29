@@ -7,6 +7,9 @@ import { MessageCircle, Mic } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { routes } from "@/lib/constants/routes";
 import { sagePortraitUrl } from "@/domain/wisdom/sage-portraits";
+import { astrologerAvatarTheme } from "@/domain/consultation/astrologer-portraits";
+import { getVirtualAstrologer } from "@/domain/consultation/virtual-astrologers";
+import { AiAstrologerAvatar } from "@/features/consultation/components/ai-astrologer-avatar";
 import type { WisdomGuide } from "@/domain/wisdom/guides";
 
 const accentClass: Record<WisdomGuide["accent"], string> = {
@@ -26,7 +29,6 @@ export function WisdomPortrait({
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
-  const portrait = sagePortraitUrl(guide.id);
   const [failed, setFailed] = useState(false);
   const sizeClass =
     size === "sm"
@@ -36,6 +38,25 @@ export function WisdomPortrait({
         : size === "xl"
           ? "h-32 w-32 text-4xl sm:h-40 sm:w-40 sm:text-5xl"
           : "h-16 w-16 text-2xl";
+
+  // Consultation AI astrologers — stylized illustration, never a real photo
+  if (astrologerAvatarTheme(guide.id)) {
+    const a = getVirtualAstrologer(guide.id);
+    return (
+      <AiAstrologerAvatar
+        astrologer={{
+          id: guide.id,
+          displayName: guide.displayName,
+          monogram: guide.monogram,
+          accent: guide.accent,
+          gender: a?.gender || "male",
+        }}
+        className={cn("ring-border/60 ring-1", sizeClass, className)}
+      />
+    );
+  }
+
+  const portrait = sagePortraitUrl(guide.id);
 
   if (portrait && !failed) {
     return (

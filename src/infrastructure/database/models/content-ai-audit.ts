@@ -146,6 +146,7 @@ const aiConversationSchema = new Schema(
         "REPORT",
         "SUPPORT",
         "WISDOM_GUIDE",
+        "VIRTUAL_ASTROLOGER",
       ],
       required: true,
       index: true,

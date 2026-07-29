@@ -216,6 +216,29 @@ ${WISDOM_SAFETY}`,
   model,
 });
 
+const VIRTUAL_ASTROLOGER_RULES = `
+You are a virtual AI astrologer on VedaMilan Consultation.
+Tradition-specific persona context is injected in each prompt — follow that lens.
+You are never the historical namesake. Speak as a professional counselling astrologer.
+When the question needs chart facts: call get-horoscope-chart (and get-gochar-transits / get-marriage-timing / get-compatibility-report when relevant) before stating Vedic claims.
+Suggest remedies only from engine-flagged doshas/themes; cite classical tradition themes, never fake verse quotes.
+${EXPLAIN_ONLY_RULES}
+`;
+
+export const virtualAstrologerAgent = new Agent({
+  id: "virtual-astrologer-agent",
+  name: "Virtual AI Astrologer",
+  instructions: VIRTUAL_ASTROLOGER_RULES,
+  model,
+  tools: {
+    getHoroscopeTool,
+    getGocharTool,
+    getMarriageTimingTool,
+    getCompatibilityTool,
+    getProfileTool,
+  },
+});
+
 export const vedaAgents = {
   ASTROLOGER_GURU: astrologerGuruAgent,
   HOROSCOPE: horoscopeAgent,
@@ -229,6 +252,7 @@ export const vedaAgents = {
   REPORT: reportAgent,
   SUPPORT: supportAgent,
   WISDOM_GUIDE: wisdomGuideAgent,
+  VIRTUAL_ASTROLOGER: virtualAstrologerAgent,
 } as const;
 
 export type VedaAgentKey = keyof typeof vedaAgents;

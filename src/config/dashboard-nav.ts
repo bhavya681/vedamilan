@@ -1,17 +1,26 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bell,
+  Baby,
+  CalendarClock,
   CalendarDays,
+  CalendarRange,
   Compass,
   Crown,
+  Grid3X3,
   Heart,
   HeartHandshake,
   Home,
+  Hourglass,
   Link2,
   MessageCircle,
+  MoonStar,
+  Orbit,
   Search,
   Settings,
+  Sparkles,
   Stars,
+  SunMedium,
   UserRound,
   Users,
   Bookmark,
@@ -30,24 +39,24 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.yourConnection]: HeartHandshake,
   [routes.chat]: MessageCircle,
   [routes.kundli]: Stars,
-  [routes.dasha]: CalendarDays,
+  [routes.dasha]: Hourglass,
   [routes.search]: Search,
   [routes.compatibility]: Compass,
-  [routes.horoscope]: CalendarDays,
-  [routes.gochar]: Compass,
-  [routes.predictions]: CalendarDays,
+  [routes.horoscope]: SunMedium,
+  [routes.gochar]: Orbit,
+  [routes.predictions]: Sparkles,
   [routes.lalKitab]: BookOpen,
-  [routes.yogas]: Stars,
+  [routes.yogas]: MoonStar,
   [routes.rajaYogas]: Crown,
   [routes.natalProfile]: UserRound,
-  [routes.divisionalCharts]: Compass,
-  [routes.ashtakavarga]: CalendarDays,
-  [routes.calendar]: CalendarDays,
+  [routes.divisionalCharts]: Grid3X3,
+  [routes.ashtakavarga]: CalendarClock,
+  [routes.calendar]: CalendarRange,
   [routes.aiInsights]: MessageCircle,
   [routes.vedicWisdom]: BookOpen,
   [routes.askTheSages]: Users,
   [routes.wisdomJournal]: Bookmark,
-  [routes.birthDetails]: CalendarDays,
+  [routes.birthDetails]: Baby,
   [routes.profile]: UserRound,
   [routes.shortlisted]: Bookmark,
   [routes.premium]: Crown,
@@ -56,26 +65,54 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.settings]: Settings,
 };
 
+/** Kundli sub-routes that have their own sidebar entries — parent “My Kundli” stays inactive on these. */
+const KUNDLI_NAV_CHILDREN = [
+  routes.dasha,
+  routes.divisionalCharts,
+  routes.ashtakavarga,
+  routes.natalProfile,
+  routes.rajaYogas,
+  routes.yogas,
+  routes.gochar,
+] as const;
+
+function matchesPath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function isDashboardNavActive(pathname: string, href: string) {
   if (pathname === href) return true;
+
+  // Mode / hub homes: exact match only (already handled above).
   if (
     href === routes.dashboard ||
     href === routes.astrology ||
     href === routes.matrimony ||
     href === routes.vedicWisdom
   ) {
-    return pathname === href;
+    return false;
   }
-  if (href === routes.matches && pathname.startsWith(routes.matches)) return true;
-  if (
-    href === routes.chat &&
-    (pathname.startsWith(routes.chat) || pathname.startsWith(routes.messages))
-  ) {
-    return true;
+
+  // My Kundli: active on the hub itself, or on kundli pages that are not separate nav tabs.
+  if (href === routes.kundli) {
+    if (!pathname.startsWith(`${routes.kundli}/`)) return false;
+    return !KUNDLI_NAV_CHILDREN.some((child) => matchesPath(pathname, child));
   }
-  if (href === routes.aiInsights && pathname.startsWith(routes.aiInsights)) return true;
-  if (href === routes.vedicWisdom && pathname.startsWith(routes.vedicWisdom)) return true;
-  if (href === routes.rajaYogas && pathname.startsWith(routes.rajaYogas)) return true;
-  if (href === routes.yogas && pathname === routes.yogas) return true;
-  return pathname.startsWith(`${href}/`) || pathname.startsWith(href);
+
+  if (href === routes.matches) return matchesPath(pathname, routes.matches);
+  if (href === routes.chat) {
+    return matchesPath(pathname, routes.chat) || matchesPath(pathname, routes.messages);
+  }
+  if (href === routes.aiInsights) return matchesPath(pathname, routes.aiInsights);
+  if (href === routes.compatibility) return matchesPath(pathname, routes.compatibility);
+  if (href === routes.settings) return matchesPath(pathname, routes.settings);
+  if (href === routes.profile) return matchesPath(pathname, routes.profile);
+  if (href === routes.consultation) return matchesPath(pathname, routes.consultation);
+  if (href === routes.search) return matchesPath(pathname, routes.search);
+  if (href === routes.premium) return matchesPath(pathname, routes.premium);
+  if (href === routes.askTheSages) return matchesPath(pathname, routes.askTheSages);
+  if (href === routes.wisdomJournal) return matchesPath(pathname, routes.wisdomJournal);
+
+  // Default: require a path segment boundary so /kundli does not match /kundli/dasha via bare prefix.
+  return pathname.startsWith(`${href}/`);
 }

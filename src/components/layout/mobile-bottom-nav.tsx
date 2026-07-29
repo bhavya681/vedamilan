@@ -64,8 +64,7 @@ export function MobileBottomNav() {
       >
         <ul className="mx-auto flex max-w-lg items-stretch justify-between gap-0.5">
           {primary.map((item) => {
-            const active =
-              pathname === item.href || (item.href !== homeHref && pathname.startsWith(item.href));
+            const active = isDashboardNavActive(pathname, item.href);
             const Icon = item.icon;
             return (
               <li key={item.href} className="flex-1">

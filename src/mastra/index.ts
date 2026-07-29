@@ -16,6 +16,7 @@ export const mastra = new Mastra({
     reportAgent: vedaAgents.REPORT,
     supportAgent: vedaAgents.SUPPORT,
     wisdomGuideAgent: vedaAgents.WISDOM_GUIDE,
+    virtualAstrologerAgent: vedaAgents.VIRTUAL_ASTROLOGER,
   },
 });
 

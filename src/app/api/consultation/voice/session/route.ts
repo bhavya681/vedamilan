@@ -1,0 +1,121 @@
+import { z } from "zod";
+
+import { requireSession } from "@/lib/auth/session";
+import { getVirtualAstrologer } from "@/domain/consultation/virtual-astrologers";
+import { getVoicePersona, VOICE_PRIVACY_NOTICE } from "@/domain/wisdom/voice-persona";
+import {
+  assertVoiceQuota,
+  createVoiceSessionRecord,
+  getVoiceQuotaSnapshot,
+  getVoiceUsageToday,
+  recordVoiceUsage,
+} from "@/application/wisdom/voice-quota.service";
+import { virtualAstrologerService } from "@/application/consultation/virtual-astrologer.service";
+import { successResponse } from "@/lib/utils/api-response";
+import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
+import { enforceRateLimit } from "@/lib/security/rate-limit";
+
+export const dynamic = "force-dynamic";
+
+const startSchema = z.object({
+  astrologerId: z.string().min(1),
+  language: z.enum(["en", "hi", "mr", "es", "auto"]).default("en"),
+});
+
+export async function GET() {
+  try {
+    const session = await requireSession().catch(() => {
+      throw new UnauthorizedError();
+    });
+    const usage = await getVoiceUsageToday(session.user.id);
+    const { remaining, limit } = await getVoiceQuotaSnapshot(session.user.id);
+    return successResponse({
+      usage,
+      remainingSeconds: remaining,
+      dailyLimitSeconds: limit,
+      storesRawAudio: false,
+      privacyNotice: VOICE_PRIVACY_NOTICE,
+    });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await requireSession().catch(() => {
+      throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `consultation:voice:session:${session.user.id}`,
+      limit: 20,
+      windowSec: 60,
+    });
+    const body = startSchema.parse(await request.json());
+    if (!getVirtualAstrologer(body.astrologerId)) throw new ValidationError("Unknown astrologer");
+    const started = await createVoiceSessionRecord({
+      userId: session.user.id,
+      guideId: body.astrologerId,
+      language: body.language,
+    });
+    return successResponse({
+      ...started,
+      persona: getVoicePersona(body.astrologerId),
+      privacyNotice: VOICE_PRIVACY_NOTICE,
+    });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
+
+const turnSchema = z.object({
+  astrologerId: z.string().min(1),
+  message: z.string().min(1).max(4000),
+  conversationId: z.string().optional(),
+  sessionId: z.string().optional(),
+  language: z.enum(["en", "hi", "mr", "es", "auto"]).optional(),
+  includeLifeContext: z.boolean().optional(),
+  speechSeconds: z.number().min(0).max(120).optional(),
+});
+
+export async function PUT(request: Request) {
+  try {
+    const session = await requireSession().catch(() => {
+      throw new UnauthorizedError();
+    });
+    await enforceRateLimit({
+      key: `consultation:voice:turn:${session.user.id}`,
+      limit: 20,
+      windowSec: 60,
+    });
+    const body = turnSchema.parse(await request.json());
+    if (!getVirtualAstrologer(body.astrologerId)) throw new ValidationError("Unknown astrologer");
+    await assertVoiceQuota(session.user.id, body.speechSeconds || 10);
+
+    const result = await virtualAstrologerService.chat({
+      userId: session.user.id,
+      astrologerId: body.astrologerId,
+      message: body.message,
+      conversationId: body.conversationId,
+      language: body.language,
+      channel: "voice",
+    });
+
+    const approxTtsSeconds = Math.min(20, Math.ceil(result.answer.length / 24));
+    await recordVoiceUsage(session.user.id, {
+      seconds: (body.speechSeconds || 8) + approxTtsSeconds,
+      sessionId: body.sessionId,
+    });
+
+    const { remaining, limit } = await getVoiceQuotaSnapshot(session.user.id);
+
+    return successResponse({
+      ...result,
+      remainingSeconds: remaining,
+      dailyLimitSeconds: limit,
+      storesRawAudio: false,
+    });
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}

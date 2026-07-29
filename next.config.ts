@@ -37,6 +37,21 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
+  async redirects() {
+    return [
+      // Legacy deep path that 404'd under locale rewrite + Turbopack route discovery.
+      {
+        source: "/:locale/dashboard/kundli/yogas/raja",
+        destination: "/:locale/dashboard/kundli/raja-yogas",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/kundli/yogas/raja",
+        destination: "/dashboard/kundli/raja-yogas",
+        permanent: false,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

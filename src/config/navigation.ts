@@ -80,6 +80,12 @@ export const dashboardNav: NavItem[] = [
     group: "Astrology",
     modes: ["astrology"],
   },
+  {
+    title: "Consultation",
+    href: routes.consultation,
+    group: "Astrology",
+    modes: ["astrology"],
+  },
   { title: "Birth details", href: routes.birthDetails, group: "Astrology", modes: ["astrology"] },
 
   { title: "Matches", href: routes.matches, group: "Discover", modes: ["matrimony"] },
@@ -97,7 +103,6 @@ export const dashboardNav: NavItem[] = [
 
   { title: "My profile", href: routes.profile, group: "Account" },
   { title: "Premium", href: routes.premium, group: "Account" },
-  { title: "Consultation", href: routes.consultation, group: "Account" },
   { title: "Notifications", href: routes.notifications, group: "Account" },
   { title: "Settings", href: routes.settings, group: "Account" },
 ];

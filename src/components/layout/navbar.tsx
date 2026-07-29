@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import {
   Bell,
   BookOpen,
-  CalendarDays,
+  Crown,
   Heart,
+  Hourglass,
   Menu,
   MessageCircle,
   Palette,
@@ -27,6 +28,7 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { mainNav } from "@/config/navigation";
+import { isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceModeOptional } from "@/components/providers/workspace-mode-provider";
 import { navTitleKey } from "@/lib/i18n/nav-labels";
 import { routes } from "@/lib/constants/routes";
@@ -42,8 +44,8 @@ const MATRIMONY_QUICK = [
 
 const ASTROLOGY_QUICK = [
   { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
-  { href: routes.dasha, labelKey: "navigation.dashas", icon: CalendarDays },
-  { href: routes.rajaYogas, labelKey: "navigation.rajaYogas", icon: Sparkles },
+  { href: routes.dasha, labelKey: "navigation.dashas", icon: Hourglass },
+  { href: routes.rajaYogas, labelKey: "navigation.rajaYogas", icon: Crown },
 ] as const;
 
 const WISDOM_QUICK = [
@@ -179,7 +181,7 @@ export function Navbar({
             aria-label="Quick"
           >
             {dashQuick.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(item.href);
+              const active = isDashboardNavActive(pathname, item.href);
               const Icon = item.icon;
               return (
                 <LocaleLink

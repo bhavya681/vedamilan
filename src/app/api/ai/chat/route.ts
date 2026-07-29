@@ -25,6 +25,7 @@ const schema = z.object({
       "REPORT",
       "SUPPORT",
       "WISDOM_GUIDE",
+      "VIRTUAL_ASTROLOGER",
     ])
     .default("ASTROLOGER_GURU"),
   message: z.string().min(1).max(4000),

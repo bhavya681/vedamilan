@@ -17,6 +17,10 @@ type Options = {
   guideId: string;
   guideName: string;
   autoListen?: boolean;
+  /** Default: wisdom voice session. Consultation uses `/api/consultation/voice/session`. */
+  sessionApi?: string;
+  /** Body key for the persona id. Default `guideId`; consultation uses `astrologerId`. */
+  idKey?: "guideId" | "astrologerId";
 };
 
 let msgId = 0;
@@ -25,7 +29,13 @@ function nextId() {
   return `vm_${Date.now()}_${msgId}`;
 }
 
-export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }: Options) {
+export function useWisdomVoiceSession({
+  guideId,
+  guideName,
+  autoListen = true,
+  sessionApi = "/api/wisdom/voice/session",
+  idKey = "guideId",
+}: Options) {
   const [state, setState] = useState<VoiceSessionState>("idle");
   const [language, setLanguage] = useState<VoiceLanguageCode>("en");
   const [messages, setMessages] = useState<TranscriptMessage[]>([]);
@@ -107,10 +117,10 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
     }
 
     try {
-      const res = await fetch("/api/wisdom/voice/session", {
+      const res = await fetch(sessionApi, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guideId, language: languageRef.current }),
+        body: JSON.stringify({ [idKey]: guideId, language: languageRef.current }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Could not start voice session");
@@ -123,7 +133,7 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
       setError(e instanceof Error ? e.message : "Could not start voice session");
       return false;
     }
-  }, [guideId]);
+  }, [guideId, idKey, sessionApi]);
 
   const speakAnswer = useCallback(
     async (text: string) => {
@@ -170,11 +180,11 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
       setPartial("");
       setState("thinking");
       try {
-        const res = await fetch("/api/wisdom/voice/session", {
+        const res = await fetch(sessionApi, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            guideId,
+            [idKey]: guideId,
             message: trimmed,
             conversationId: conversationIdRef.current,
             sessionId: sessionIdRef.current,
@@ -204,7 +214,7 @@ export function useWisdomVoiceSession({ guideId, guideName, autoListen = true }:
         setError(e instanceof Error ? e.message : "Could not complete reflection");
       }
     },
-    [guideId, speakAnswer],
+    [guideId, idKey, sessionApi, speakAnswer],
   );
 
   const beginListening = useCallback(() => {
