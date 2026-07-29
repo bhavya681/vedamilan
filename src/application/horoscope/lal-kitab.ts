@@ -210,10 +210,6 @@ function ratingLabel(r: LalKitabRating): string {
   }
 }
 
-function planetsInHouse(planets: ChartPlanetLite[], house: number): string[] {
-  return planets.filter((p) => p.house === house).map((p) => p.planet);
-}
-
 function findPlanet(planets: ChartPlanetLite[], name: string) {
   return planets.find((p) => p.planet === name);
 }

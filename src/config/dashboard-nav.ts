@@ -3,7 +3,6 @@ import {
   Bell,
   Baby,
   CalendarClock,
-  CalendarDays,
   CalendarRange,
   Compass,
   Crown,
