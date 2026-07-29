@@ -56,7 +56,7 @@ export default function RajaYogasPage() {
       <PageHeader
         eyebrow="Calculated from your Kundli"
         title="Raja Yogas"
-        description="Auspicious combinations — tap each yoga for meaning and when it may activate with your current dasha."
+        description="Auspicious combinations linked with recognition and rise — see the public-life parallel for each yoga, then how to use your edge with dasha timing."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">

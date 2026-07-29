@@ -5,6 +5,13 @@ import {
   type ChartPlanetGlyph,
 } from "@/application/horoscope/chart-builder";
 import { buildNavamsaChart } from "@/application/horoscope/navamsa-chart";
+import {
+  IMPORTANT_VARGAS,
+  longitudeToVargaSign,
+  resolveLagnaLongitude,
+  type VargaId,
+  type VargaMeta,
+} from "@/application/horoscope/varga";
 
 function signIdOf(sign: string) {
   const i = SIGNS.indexOf(sign as (typeof SIGNS)[number]);
@@ -90,8 +97,127 @@ export function buildNavamsaNorthChart(input: {
   };
 }
 
+/** Generic Parashari varga (D2–D60) as North Indian whole-sign chart. */
+export function buildVargaNorthChart(input: {
+  planets: ChartPlanet[];
+  lagnaSign: string;
+  lagnaDegree?: number | null;
+  lagnaLongitude?: number | null;
+  varga: VargaId;
+  meta?: VargaMeta;
+}) {
+  const meta = input.meta || IMPORTANT_VARGAS.find((v) => v.id === input.varga);
+  const notes: string[] = [];
+  const lagnaResolved = resolveLagnaLongitude({
+    lagnaSign: input.lagnaSign,
+    lagnaDegree: input.lagnaDegree,
+    lagnaLongitude: input.lagnaLongitude,
+  });
+  if (lagnaResolved.note) notes.push(lagnaResolved.note);
+
+  if (input.varga === 9) {
+    return buildNavamsaNorthChart(input);
+  }
+
+  if (input.varga === 1) {
+    const lagnaSignId = signIdOf(input.lagnaSign);
+    const chart = buildNorthChart(
+      input.planets,
+      lagnaSignId,
+      degreeInSign(lagnaResolved.longitude),
+    );
+    return {
+      ...chart,
+      lagnaLabel: `D1 Asc ${input.lagnaSign}`,
+      reference: meta?.name || "Rashi (D1)",
+      referenceSign: input.lagnaSign,
+      notes,
+      vargaId: 1 as VargaId,
+      theme: meta?.theme,
+    };
+  }
+
+  const vLagna = longitudeToVargaSign(lagnaResolved.longitude, input.varga);
+  const asD1Style: ChartPlanet[] = [];
+  for (const p of input.planets) {
+    if (typeof p.longitude !== "number" || Number.isNaN(p.longitude)) {
+      notes.push(`Skipped ${p.planet} in ${meta?.code || `D${input.varga}`} — missing longitude.`);
+      continue;
+    }
+    const v = longitudeToVargaSign(p.longitude, input.varga);
+    asD1Style.push({
+      planet: p.planet,
+      sign: v.sign,
+      signId: v.signId,
+      house: ((v.signId - vLagna.signId + 12) % 12) + 1,
+      longitude: v.signId * 30 + 15,
+      latitude: 0,
+      speed: 0,
+      isRetrograde: Boolean(p.isRetrograde),
+      nakshatra: "",
+      nakshatraPada: 1,
+      dignity: p.dignity ?? null,
+    });
+  }
+
+  const chart = buildNorthChart(asD1Style, vLagna.signId, 15);
+  return {
+    ...chart,
+    lagnaLabel: `${meta?.code || `D${input.varga}`} Asc ${vLagna.sign}`,
+    reference: meta?.name || `D${input.varga}`,
+    referenceSign: vLagna.sign,
+    notes,
+    vargaId: input.varga,
+    theme: meta?.theme,
+  };
+}
+
+/** Build all important vargas for the Charts hub / API. */
+export function buildImportantVargaCharts(input: {
+  planets: ChartPlanet[];
+  lagnaSign: string;
+  lagnaDegree?: number | null;
+  lagnaLongitude?: number | null;
+  d1North?: unknown;
+}) {
+  const catalog = IMPORTANT_VARGAS.map((meta) => ({
+    id: meta.id,
+    code: meta.code,
+    name: meta.name,
+    theme: meta.theme,
+  }));
+
+  const byCode: Record<string, ReturnType<typeof buildVargaNorthChart> | unknown> = {};
+  for (const meta of IMPORTANT_VARGAS) {
+    if (meta.id === 1 && input.d1North) {
+      byCode.D1 = {
+        ...(input.d1North as object),
+        lagnaLabel: `D1 Asc ${input.lagnaSign}`,
+        reference: meta.name,
+        referenceSign: input.lagnaSign,
+        theme: meta.theme,
+        vargaId: 1,
+      };
+      continue;
+    }
+    byCode[meta.code] = buildVargaNorthChart({
+      planets: input.planets,
+      lagnaSign: input.lagnaSign,
+      lagnaDegree: input.lagnaDegree,
+      lagnaLongitude: input.lagnaLongitude,
+      varga: meta.id,
+      meta,
+    });
+  }
+
+  return { catalog, byCode };
+}
+
 export type VariantChart = ReturnType<typeof buildChartFromLagnaSign> & {
   notes?: string[];
+  theme?: string;
+  vargaId?: VargaId;
 };
 
-export type { ChartPlanetGlyph };
+export type { ChartPlanetGlyph, VargaId, VargaMeta };
+export { IMPORTANT_VARGAS };

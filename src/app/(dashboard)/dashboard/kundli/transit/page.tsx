@@ -72,7 +72,7 @@ export default function YogasDoshasPage() {
       <PageHeader
         eyebrow="Calculated from your Kundli"
         title="Yogas & Doshas"
-        description="Tap any item for meaning, when it may activate, and what to watch — deterministic engine output."
+        description="See which combinations you carry — and how similar themes show up in public leadership, craft, and comeback stories. Tap any item for the parallel and your edge."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
@@ -105,11 +105,21 @@ export default function YogasDoshasPage() {
       {data ? (
         <div className="grid gap-4 lg:grid-cols-2">
           <GlassCard className="space-y-3">
-            <h2 className="font-display text-xl">Yogas</h2>
+            <div>
+              <h2 className="font-display text-xl">Yogas</h2>
+              <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+                Supportive combinations — each with a public-life parallel and how to use your edge.
+              </p>
+            </div>
             <YogaDetailList items={data.yogas} empty="No yogas flagged by the rule engine." />
           </GlassCard>
           <GlassCard className="space-y-3">
-            <h2 className="font-display text-xl">Doshas</h2>
+            <div>
+              <h2 className="font-display text-xl">Doshas</h2>
+              <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+                Friction themes reframed — intensity that admired comeback stories also carry.
+              </p>
+            </div>
             <DoshaDetailList items={data.doshas} />
           </GlassCard>
         </div>

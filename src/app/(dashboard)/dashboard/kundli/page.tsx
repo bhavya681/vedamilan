@@ -128,7 +128,7 @@ export default function KundliPage() {
       : null;
 
   const links = [
-    { t: "Charts (Moon/Sun/D9)", h: routes.divisionalCharts },
+    { t: "Charts (D1–D60 Vargas)", h: routes.divisionalCharts },
     { t: "Ashtakavarga", h: routes.ashtakavarga },
     { t: "Varna & Gana", h: routes.natalProfile },
     { t: "Raja Yogas", h: routes.rajaYogas },

@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/auth/session";
 import { horoscopeService } from "@/application/horoscope/horoscope.service";
 import { computeAshtakavarga } from "@/application/horoscope/ashtakavarga";
 import {
+  buildImportantVargaCharts,
   buildMoonChart,
   buildNavamsaNorthChart,
   buildSunChart,
@@ -110,17 +111,34 @@ export async function GET() {
       doshas,
       natalKoota: natalKootaFromMoon({ moonSign: h.moonSign, nakshatra: moonNak }),
       ashtakavarga: computeAshtakavarga({ lagnaSign: h.lagnaSign, planets }),
-      charts: {
-        d1North: h.chartNorth,
-        moon: buildMoonChart(planets),
-        sun: buildSunChart(planets),
-        navamsa: buildNavamsaNorthChart({
+      charts: (() => {
+        const vargas = buildImportantVargaCharts({
           planets,
           lagnaSign: h.lagnaSign,
           lagnaDegree: h.lagnaDegree,
           lagnaLongitude: h.shadbala?.lagnaLongitude,
-        }),
-      },
+          d1North: h.chartNorth,
+        });
+        return {
+          d1North: h.chartNorth,
+          moon: buildMoonChart(planets),
+          sun: buildSunChart(planets),
+          navamsa:
+            vargas.byCode.D9 ||
+            buildNavamsaNorthChart({
+              planets,
+              lagnaSign: h.lagnaSign,
+              lagnaDegree: h.lagnaDegree,
+              lagnaLongitude: h.shadbala?.lagnaLongitude,
+            }),
+          catalog: [
+            { id: "moon", code: "Moon", name: "Moon chart", theme: "Houses from Chandra Lagna." },
+            { id: "sun", code: "Sun", name: "Sun chart", theme: "Houses from Surya Lagna." },
+            ...vargas.catalog,
+          ],
+          vargas: vargas.byCode,
+        };
+      })(),
     });
   } catch (error) {
     return handleRouteError(error);

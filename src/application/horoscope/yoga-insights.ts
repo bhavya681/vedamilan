@@ -1,3 +1,9 @@
+import {
+  exemplarForDosha,
+  exemplarForYoga,
+  type YogaExemplar,
+} from "@/application/horoscope/yoga-exemplars";
+
 export type YogaInsight = {
   meaning: string;
   whenActivates: string;
@@ -110,7 +116,11 @@ export function insightForYoga(input: {
   description?: string;
   currentMaha?: string | null;
   currentAntar?: string | null;
-}): YogaInsight & { activationNow: string; engineNote: string } {
+}): YogaInsight & {
+  activationNow: string;
+  engineNote: string;
+  exemplar: YogaExemplar;
+} {
   const base =
     (input.code && BY_CODE[input.code]) ||
     (input.category && BY_CATEGORY[input.category]) ||
@@ -127,6 +137,11 @@ export function insightForYoga(input: {
     activationNow,
     engineNote:
       "Calculated from your Kundli by the rule engine — AI may explain, not invent, yogas.",
+    exemplar: exemplarForYoga({
+      code: input.code,
+      category: input.category,
+      name: input.name,
+    }),
   };
 }
 
@@ -137,7 +152,12 @@ export function insightForDosha(input: {
   severity?: string;
   notes?: string;
   currentMaha?: string | null;
-}): YogaInsight & { activationNow: string; engineNote: string; statusLabel: string } {
+}): YogaInsight & {
+  activationNow: string;
+  engineNote: string;
+  statusLabel: string;
+  exemplar: YogaExemplar;
+} {
   const map: Record<string, YogaInsight> = {
     MANGLIK: {
       meaning:
@@ -181,5 +201,6 @@ export function insightForDosha(input: {
       : `${dashaBits} Not flagged as present in the current engine pass.`,
     engineNote: "Deterministic dosha scan from your stored planets — not AI invention.",
     statusLabel: input.present ? `Present · ${input.severity || "noted"}` : "Not present",
+    exemplar: exemplarForDosha(input.code),
   };
 }

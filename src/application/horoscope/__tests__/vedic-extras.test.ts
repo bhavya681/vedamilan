@@ -47,6 +47,8 @@ describe("yoga insights", () => {
     });
     expect(insight.whenActivates.length).toBeGreaterThan(10);
     expect(insight.activationNow).toMatch(/Jupiter/);
+    expect(insight.exemplar.badge).toBeTruthy();
+    expect(insight.exemplar.yourEdge.length).toBeGreaterThan(10);
   });
 });
 

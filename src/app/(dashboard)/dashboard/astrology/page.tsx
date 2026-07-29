@@ -35,7 +35,7 @@ function greetingForHour(hour: number) {
 const LIFE_AREAS = [
   { title: "Dashas", href: routes.dasha, hint: "Mahadasha and Antardasha timeline" },
   { title: "Career", href: routes.rajaYogas, hint: "Raja Yogas and recognition themes" },
-  { title: "Charts", href: routes.divisionalCharts, hint: "Moon, Sun, and Navamsha views" },
+  { title: "Charts", href: routes.divisionalCharts, hint: "Moon, Sun, D9, D10, D30 & more Vargas" },
   { title: "Ashtakavarga", href: routes.ashtakavarga, hint: "House bindu strength" },
   { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
   { title: "Doshas", href: routes.yogas, hint: "Manglik, Kaal Sarp and more" },
