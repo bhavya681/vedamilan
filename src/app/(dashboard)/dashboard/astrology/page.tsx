@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Stars } from "lucide-react";
 
-import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skeletons";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
@@ -257,32 +257,22 @@ export default function AstrologyHomePage() {
               </div>
             </section>
 
-            <section className="space-y-3">
-              <div>
-                <h2 className="font-display text-2xl">What this means for you</h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Interpretation of your chart context — astrology calculates; guidance explains.
-                </p>
-              </div>
-              {bundle.insight ? (
+            {bundle.insight ? (
+              <section className="space-y-3">
+                <div>
+                  <h2 className="font-display text-2xl">What this means for you</h2>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Interpretation of your chart context — astrology calculates; guidance explains.
+                  </p>
+                </div>
                 <div className="space-y-3">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
                   <Button asChild variant="outline" size="sm">
                     <Link href={routes.aiInsights}>Continue the conversation</Link>
                   </Button>
                 </div>
-              ) : (
-                <EmptyState
-                  title="Chart insight unavailable"
-                  description="Add birth details and generate your Kundli to receive a reading grounded in your chart."
-                  action={
-                    <Button asChild>
-                      <Link href={routes.kundli}>Open Kundli</Link>
-                    </Button>
-                  }
-                />
-              )}
-            </section>
+              </section>
+            ) : null}
 
             <section className="space-y-4">
               <div>
