@@ -81,6 +81,7 @@ export function MatchCard({
   city,
   profession,
   score,
+  mindApprox,
   headline,
   photo,
   href = routes.matchProfile,
@@ -95,6 +96,8 @@ export function MatchCard({
   city: string;
   profession: string;
   score: number;
+  /** Approx mind/temperament alignment from core kundli preview */
+  mindApprox?: number;
   /** @deprecated Ignored — one score only */
   aiScore?: number;
   headline: string;
@@ -107,6 +110,8 @@ export function MatchCard({
   interestBusy?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
+  const mindLabel =
+    typeof mindApprox === "number" && mindApprox > 0 ? ` · Mind ~${mindApprox}%` : "";
 
   return (
     <motion.article
@@ -130,14 +135,17 @@ export function MatchCard({
         <div className="from-navy via-navy/50 absolute inset-0 bg-gradient-to-t to-transparent" />
 
         <div
-          className="border-ivory/20 bg-navy/80 absolute top-3 right-3 min-w-[3rem] rounded-md border px-2 py-1 text-center"
-          title={`${score}% match score — how relevant this profile is for you in discovery`}
-          aria-label={`${score}% match score — relevance for discovery`}
+          className="border-ivory/20 bg-navy/80 absolute top-3 right-3 min-w-[3.25rem] rounded-md border px-2 py-1 text-center"
+          title={`~${score}% approx core kundli match${mindLabel}. Deep compatibility is on the Compatibility page.`}
+          aria-label={`Approximately ${score} percent core match score${mindLabel}`}
         >
-          <p className="text-ivory text-sm leading-none font-semibold tabular-nums">{score}%</p>
+          <p className="text-ivory text-sm leading-none font-semibold tabular-nums">~{score}%</p>
           <p className="text-ivory/65 mt-0.5 text-[9px] font-medium tracking-wide uppercase">
             Match
           </p>
+          {typeof mindApprox === "number" && mindApprox > 0 ? (
+            <p className="text-ivory/55 mt-0.5 text-[8px] tracking-wide">Mind ~{mindApprox}%</p>
+          ) : null}
         </div>
 
         <div className="text-ivory absolute inset-x-0 bottom-0 space-y-3 p-5">

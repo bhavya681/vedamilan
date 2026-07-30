@@ -3,6 +3,7 @@ import { connectMongo } from "@/infrastructure/database/mongodb";
 import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 import { pairKey, scoreAshtaKoota } from "./ashta-koota";
 import { scoreAdvancedMarriageDynamics, type AmdChartInput } from "./advanced-marriage-dynamics";
 import { scoreDeepCompatibility, type DeepChartInput } from "./deep-compatibility";
@@ -219,15 +220,58 @@ export class CompatibilityService {
     );
 
     // Decision reason always cites multi-module bond — never a single koota
-    const decisionReason = `${deep.decisionReason} Timing read (dasha + gochar + bond): ${timingPrediction.marryNowTitle} (${timingPrediction.marryNowScore}/100).`;
+    let decisionReason = `${deep.decisionReason} Timing read (dasha + gochar + bond): ${timingPrediction.marryNowTitle} (${timingPrediction.marryNowScore}/100).`;
+
+    const { situationalAlignmentService } =
+      await import("@/application/compatibility/situational-alignment.service");
+    const sitPair = await situationalAlignmentService.compare(userAId, userBId);
+    const situationalAlignment = sitPair.comparison
+      ? {
+          score: sitPair.comparison.score,
+          aligned: sitPair.comparison.aligned,
+          soft: sitPair.comparison.soft,
+          gaps: sitPair.comparison.gaps,
+          highlights: sitPair.comparison.highlights,
+          discuss: sitPair.comparison.discuss,
+          youComplete: true,
+          themComplete: true,
+        }
+      : {
+          score: null,
+          youComplete: sitPair.youComplete,
+          themComplete: sitPair.themComplete,
+          highlights: [] as string[],
+          discuss: [] as string[],
+        };
+
+    // Soft blend: Vedic deep remains primary; situational adds up to 15% when both completed
+    const overallScore = sitPair.comparison
+      ? Math.round(deep.overallScore * 0.85 + sitPair.comparison.score * 0.15)
+      : deep.overallScore;
+    if (sitPair.comparison) {
+      decisionReason += ` Situational alignment ~${sitPair.comparison.score}% (optional Q&A).`;
+    }
 
     const key = pairKey(userAId, userBId);
     const mergedStrengths = [
-      ...new Set([...(deep.topStrengths || []).slice(0, 6), ...(scored.strengths || [])]),
+      ...new Set([
+        ...(sitPair.comparison?.highlights || []),
+        ...(deep.topStrengths || []).slice(0, 6),
+        ...(scored.strengths || []),
+      ]),
     ].slice(0, 12);
     const mergedChallenges = [
-      ...new Set([...(deep.topChallenges || []).slice(0, 6), ...(scored.challenges || [])]),
+      ...new Set([
+        ...(sitPair.comparison?.discuss || []),
+        ...(deep.topChallenges || []).slice(0, 6),
+        ...(scored.challenges || []),
+      ]),
     ].slice(0, 12);
+
+    const categoryScores = {
+      ...deep.categoryScores,
+      ...(sitPair.comparison ? { situational: sitPair.comparison.score } : {}),
+    };
 
     const doc = await CompatibilityReport.findOneAndUpdate(
       { pairKey: key },
@@ -242,7 +286,7 @@ export class CompatibilityService {
           manglikCompatibility: scored.manglikCompatibility,
           nadiDosha: scored.nadiDosha,
           bhakootDosha: scored.bhakootDosha,
-          overallScore: deep.overallScore,
+          overallScore,
           deepOverallScore: deep.overallScore,
           decisionSummary: deep.decisionSummary,
           decisionReason,
@@ -255,7 +299,8 @@ export class CompatibilityService {
             topStrengths: deep.topStrengths,
             topChallenges: deep.topChallenges,
           },
-          categoryScores: deep.categoryScores,
+          categoryScores,
+          situationalAlignment,
           strengths: mergedStrengths,
           challenges: mergedChallenges,
           marriageWindows: windows,
@@ -282,13 +327,56 @@ export class CompatibilityService {
 
   async listForUser(userId: string) {
     await connectMongo();
-    return CompatibilityReport.find({
+    const reports = await CompatibilityReport.find({
       $or: [{ userAId: userId }, { userBId: userId }],
       status: "ACTIVE",
     })
       .sort({ calculatedAt: -1 })
       .limit(50)
       .lean();
+
+    const peerIds = new Set<string>([userId]);
+    for (const r of reports) {
+      if (r.userAId) peerIds.add(String(r.userAId));
+      if (r.userBId) peerIds.add(String(r.userBId));
+    }
+
+    const profiles = await Profile.find({ userId: { $in: [...peerIds] } })
+      .select("userId name photos city")
+      .lean();
+
+    const profileById = new Map(
+      profiles.map((p) => {
+        const photo =
+          p.photos?.find((ph) => ph.isPrimary)?.secureUrl || p.photos?.[0]?.secureUrl || null;
+        return [
+          String(p.userId),
+          {
+            name: formatPersonName(p.name, "Member"),
+            photo,
+            city: p.city ?? null,
+          },
+        ] as const;
+      }),
+    );
+
+    const self = profileById.get(userId) || { name: "You", photo: null, city: null };
+
+    return reports.map((r) => {
+      const aId = String(r.userAId || "");
+      const bId = String(r.userBId || "");
+      const themId = aId === userId ? bId : aId;
+      const them = profileById.get(themId) || { name: "Match", photo: null, city: null };
+      const score = r.deepOverallScore ?? r.overallScore ?? 0;
+      return {
+        ...r,
+        pair: {
+          you: { userId, name: self.name === "Member" ? "You" : self.name, photo: self.photo },
+          them: { userId: themId, name: them.name, photo: them.photo, city: them.city },
+        },
+        displayScore: score,
+      };
+    });
   }
 
   async marriageTimingForUser(userId: string) {

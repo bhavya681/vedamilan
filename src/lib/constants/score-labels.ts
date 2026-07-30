@@ -11,9 +11,9 @@ export const MATCH_SCORE = {
   /** @deprecated English fallback — use labelKey with t() */
   label: "Match score",
   shortLabel: "Match",
-  meaning: "How relevant this profile is for you in discovery.",
+  meaning: "Approx. core kundli fit for you — best chart matches appear first.",
   detail:
-    "Based on your preferences and a fast Vedic blend (Ashta Koota, Shukra Milan, Manglik, Moon). It ranks who appears in recommendations — not a full relationship assessment.",
+    "Fast Vedic preview from your kundli: Ashta Koota, Shukra Milan, Manglik harmony, and Moon element (plus a mind/temperament approx). Preferences only break ties. Open Compatibility for the full deep analysis.",
 } as const;
 
 export const COMPATIBILITY_SCORE = {
@@ -24,7 +24,7 @@ export const COMPATIBILITY_SCORE = {
   /** @deprecated English fallback — use labelKey with t() */
   label: "Compatibility score",
   shortLabel: "Compatibility",
-  meaning: "How well your profiles and Vedic charts align in a deep compare.",
+  meaning: "Deep chart compare — how your minds, emotions, and life themes may align.",
   detail:
-    "From the full compatibility engine: Ashta Koota, Shukra Milan, and weighted relationship modules. Run a deep compare for the complete report.",
+    "Full compatibility engine: Ashta Koota, Shukra Milan, and weighted relationship modules (mind, emotion, family, longevity, and more). Use this for detailed analysis beyond the discovery Match %.",
 } as const;

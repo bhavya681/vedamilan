@@ -15,6 +15,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 export type ConnectionState =
   | "NONE"
@@ -41,9 +42,9 @@ async function resolveDisplayName(userId: string): Promise<string> {
   const user = await db.collection("user").findOne({
     $or: [{ id: userId }, { _id: userId as never }],
   });
-  if (user?.name) return String(user.name);
+  if (user?.name) return formatPersonName(user.name as string, "Someone");
   const profile = await Profile.findOne({ userId }).lean();
-  return profile?.name || "Someone";
+  return formatPersonName(profile?.name, "Someone");
 }
 
 function orderedPair(a: string, b: string) {
@@ -676,7 +677,7 @@ export class RelationshipService {
     for (const u of users) {
       names.set(
         String((u as { id?: string }).id || u._id),
-        String((u as { name?: string }).name || "Member"),
+        formatPersonName((u as { name?: string }).name, "Member"),
       );
     }
     const map = new Map<string, MemberCard>();
@@ -688,7 +689,7 @@ export class RelationshipService {
       }
       map.set(p.userId, {
         userId: p.userId,
-        name: names.get(p.userId) || p.name || "Member",
+        name: formatPersonName(names.get(p.userId) || p.name, "Member"),
         city: p.city ?? null,
         profession: p.profession ?? null,
         photo: p.photos?.find((ph) => ph.isPrimary)?.secureUrl || p.photos?.[0]?.secureUrl || null,
@@ -699,7 +700,7 @@ export class RelationshipService {
       if (!map.has(id)) {
         map.set(id, {
           userId: id,
-          name: names.get(id) || "Member",
+          name: formatPersonName(names.get(id), "Member"),
           city: null,
           profession: null,
           photo: null,

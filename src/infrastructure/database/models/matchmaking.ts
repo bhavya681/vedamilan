@@ -39,6 +39,8 @@ const compatibilityReportSchema = new Schema(
     timingPrediction: { type: Schema.Types.Mixed, default: null },
     /** Phase-1 Advanced Marriage Dynamics (interpretive layer; not discovery Match score) */
     advancedMarriageDynamics: { type: Schema.Types.Mixed, default: null },
+    /** Optional situational Q&A alignment (null if either partner skipped). */
+    situationalAlignment: { type: Schema.Types.Mixed, default: null },
     engineVersion: { type: String, required: true },
     calculatedAt: { type: Date, default: Date.now },
   },

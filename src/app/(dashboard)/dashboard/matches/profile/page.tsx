@@ -45,6 +45,7 @@ type Candidate = {
   lagnaSign?: string | null;
   acceptInterests?: boolean;
   compatibilityScore: number;
+  mindApprox?: number;
   totalGuna: number;
   maxGuna: number;
   strengths: string[];
@@ -204,12 +205,15 @@ export default function MatchProfilePage() {
 
                 <ProfileSection
                   title="Why this person?"
-                  description="Concise reasons from preferences and soft match scoring — not the full deep report."
+                  description="Approx core kundli preview for discovery — open Compatibility for the full deep report."
                 >
                   {(profile.reasons || profile.strengths || []).slice(0, 4).length ? (
                     <ul className="space-y-2 text-sm">
                       <li className="text-foreground font-medium">
-                        {profile.compatibilityScore}% match alignment
+                        ~{profile.compatibilityScore}% core match
+                        {typeof profile.mindApprox === "number" && profile.mindApprox > 0
+                          ? ` · Mind ~${profile.mindApprox}%`
+                          : ""}
                       </li>
                       {(profile.reasons || profile.strengths).slice(0, 4).map((r) => (
                         <li key={r} className="text-muted-foreground">

@@ -16,6 +16,7 @@ import {
 import { relationshipService } from "@/application/relationship/relationship.service";
 import { notificationService } from "@/application/notifications/notification.service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 import { withVedicDisclaimer } from "@/lib/constants/ai-disclaimer";
 import {
   JOURNEY_STAGES,
@@ -217,7 +218,7 @@ async function partnerCard(userId: string) {
   const profile = await Profile.findOne({ userId }).lean();
   return {
     userId,
-    name: profile?.name || "Member",
+    name: formatPersonName(profile?.name, "Member"),
     city: profile?.city || null,
     profession: profile?.profession || null,
     photo: primaryPhotoUrl(profile?.photos as never) || null,

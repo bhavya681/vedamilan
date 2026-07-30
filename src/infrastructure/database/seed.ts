@@ -15,8 +15,10 @@ import {
   Chat,
   Message,
   Notification,
+  SituationalProfile,
 } from "@/infrastructure/database/models";
 import { DEMO_MEMBERS, PRESERVE_USER_EMAILS } from "@/lib/mock/demo-profiles";
+import { getDemoSituationalAnswers } from "@/lib/mock/celeb-situational-answers";
 import { ensureSeedFaqs, ensureSeedPlans } from "@/repositories";
 import { getAuth } from "@/lib/auth";
 import { horoscopeService } from "@/application/horoscope/horoscope.service";
@@ -230,6 +232,25 @@ async function upsertProfile(userId: string, member: (typeof DEMO_MEMBERS)[numbe
   );
 }
 
+async function upsertSituational(userId: string, member: (typeof DEMO_MEMBERS)[number]) {
+  const answers = getDemoSituationalAnswers(member.id);
+  if (!answers) return false;
+  await SituationalProfile.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        userId,
+        answers,
+        completedAt: new Date(),
+        deletedAt: null,
+        status: "ACTIVE",
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+  return true;
+}
+
 async function upsertBirthAndKundli(userId: string, member: (typeof DEMO_MEMBERS)[number]) {
   await BirthDetails.findOneAndUpdate(
     { userId },
@@ -290,6 +311,7 @@ async function seed() {
 
   let kundliOk = 0;
   let kundliFail = 0;
+  let situationalOk = 0;
 
   for (const member of DEMO_MEMBERS) {
     const userId = await ensureAuthUser({
@@ -299,6 +321,7 @@ async function seed() {
     });
     ids[member.email] = userId;
     await upsertProfile(userId, member);
+    if (await upsertSituational(userId, member)) situationalOk += 1;
 
     if (member.prefs) {
       await PartnerPreferences.findOneAndUpdate(
@@ -356,6 +379,7 @@ async function seed() {
     {
       seeded: DEMO_MEMBERS.length,
       celebrities: DEMO_MEMBERS.filter((m) => m.isCelebrity).length,
+      situationalOk,
       kundliOk,
       kundliFail,
       preserved: preserved.map((u) => u.email),

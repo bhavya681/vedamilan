@@ -16,6 +16,7 @@ import { primaryPhotoUrl } from "@/features/profile/profile-photo";
 import { profileService } from "@/application/profile/profile.service";
 import { getSession } from "@/lib/auth/session";
 import { routes } from "@/lib/constants/routes";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 export const metadata = { title: "My profile" };
 
@@ -43,7 +44,7 @@ export default async function ProfilePage() {
     isPrimary: Boolean(p.isPrimary),
   }));
   const photo = primaryPhotoUrl(photos);
-  const displayName = profile.name || session.user.name || "Member";
+  const displayName = formatPersonName(profile.name || session.user.name, "Member");
   const location = [profile.city, profile.state, profile.country].filter(Boolean).join(", ");
   const headline =
     profile.headline && !String(profile.headline).toLowerCase().endsWith("'s profile")

@@ -20,6 +20,7 @@ type MatchItem = {
   city: string | null;
   profession: string | null;
   compatibilityScore: number;
+  mindApprox?: number;
   totalGuna: number;
   maxGuna?: number;
   manglik: string;
@@ -30,6 +31,8 @@ type MatchItem = {
   gunaBreakdown: Array<{ koota: string; score: number; max: number }>;
   recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
   rank?: number;
+  hasSituationalAlignment?: boolean;
+  situationalScore?: number | null;
 };
 
 type InterestPerson = {
@@ -65,22 +68,29 @@ export default function MatchesPage() {
   );
   const [shortlisting, setShortlisting] = useState<string | null>(null);
   const [interestBusy, setInterestBusy] = useState<string | null>(null);
+  const [requireSituational, setRequireSituational] = useState(false);
+  const [sitFilterBusy, setSitFilterBusy] = useState(false);
   const reduceMotion = useReducedMotion();
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [recRes, profileRes, chartRes, interestRes] = await Promise.all([
+      const [recRes, profileRes, chartRes, interestRes, prefsRes] = await Promise.all([
         fetch("/api/recommendations"),
         fetch("/api/profile"),
         fetch("/api/horoscope"),
         fetch("/api/interests"),
+        fetch("/api/preferences"),
       ]);
       const recJson = await recRes.json();
       const profileJson = await profileRes.json();
       const chartJson = await chartRes.json();
       const interestJson = await interestRes.json();
+      const prefsJson = await prefsRes.json();
+      if (prefsJson.success) {
+        setRequireSituational(Boolean(prefsJson.data?.requireSituationalAlignment));
+      }
       setLoading(false);
 
       if (!recJson.success) {
@@ -167,6 +177,18 @@ export default function MatchesPage() {
     setShortlisting(null);
   }
 
+  async function toggleSituationalFilter(next: boolean) {
+    setSitFilterBusy(true);
+    setRequireSituational(next);
+    await fetch("/api/preferences", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requireSituationalAlignment: next }),
+    });
+    await load();
+    setSitFilterBusy(false);
+  }
+
   async function expressInterest(userId: string) {
     setInterestBusy(userId);
     const res = await fetch("/api/interests", {
@@ -201,6 +223,7 @@ export default function MatchesPage() {
               city={match.city || "—"}
               profession={match.profession || "—"}
               score={match.compatibilityScore}
+              mindApprox={match.mindApprox}
               headline={whyMatch(match)}
               photo={match.photo || undefined}
               href={`${routes.matchProfile}?id=${match.userId}`}
@@ -212,16 +235,24 @@ export default function MatchesPage() {
             />
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 text-xs">
               <span className="text-foreground/80 font-medium">
-                #{match.rank ?? index + 1} by match score
+                #{match.rank ?? index + 1} by kundli match
               </span>
-              <span>{match.compatibilityScore}% match score</span>
+              <span>~{match.compatibilityScore}% core</span>
+              {typeof match.mindApprox === "number" && match.mindApprox > 0 ? (
+                <span>Mind ~{match.mindApprox}%</span>
+              ) : null}
+              {typeof match.situationalScore === "number" ? (
+                <span>Situations ~{match.situationalScore}%</span>
+              ) : match.hasSituationalAlignment ? (
+                <span>Situations answered</span>
+              ) : null}
               <span>
                 Guna {match.totalGuna}/{match.maxGuna || 36}
               </span>
             </div>
             <Button asChild variant="link" className="h-auto px-0 text-sm">
               <Link href={`${routes.compatibility}?candidate=${match.userId}`}>
-                See compatibility score
+                Deep compatibility analysis
               </Link>
             </Button>
           </motion.div>
@@ -234,7 +265,7 @@ export default function MatchesPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title={t("pages.matchesTitle")}
-        description="Ranked by match score — how relevant each profile is for you in discovery. Open Compatibility for a deep chart compare."
+        description="Ranked by your kundli — best approx core matches first. Mind % is a temperament preview; open Compatibility for deep analysis."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -254,6 +285,30 @@ export default function MatchesPage() {
       />
 
       <ScoreExplainCallout kind="match" className="max-w-2xl" />
+
+      <div className="border-border/60 bg-card/80 flex max-w-2xl flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">Situational alignment filter</p>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            Optional Q&A about everyday situations. When on, only members who completed it appear.{" "}
+            <Link
+              href={routes.situationalAlignment}
+              className="text-foreground underline-offset-2 hover:underline"
+            >
+              Answer yours
+            </Link>
+          </p>
+        </div>
+        <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={requireSituational}
+            disabled={sitFilterBusy || loading}
+            onChange={(e) => void toggleSituationalFilter(e.target.checked)}
+          />
+          <span>{requireSituational ? "Filtering on" : "Filter off"}</span>
+        </label>
+      </div>
 
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
@@ -342,7 +397,8 @@ export default function MatchesPage() {
               <div>
                 <h2 className="font-display text-2xl">More suggestions</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Still ranked by your kundli — explore when you want a wider view.
+                  Next-highest match scores (under 68%). Still sorted by kundli blend — not by
+                  partner-preference leftovers. Open Compatibility for a deeper chart compare.
                 </p>
               </div>
               {renderGrid(more)}

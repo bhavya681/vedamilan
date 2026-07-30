@@ -10,7 +10,14 @@ import {
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
 import { relationshipService } from "@/application/relationship/relationship.service";
+import { SituationalProfile } from "@/infrastructure/database/models/situational-alignment";
+import {
+  compareSituationalAnswers,
+  isSituationalComplete,
+  type SituationalAnswers,
+} from "@/domain/compatibility/situational-alignment";
 import { escapeRegex } from "@/lib/security/url-safety";
+import { formatPersonName } from "@/lib/utils/person-name";
 import {
   normalizePagination,
   toPaginatedResult,
@@ -52,6 +59,12 @@ export type MatchFilters = {
   page?: number;
   limit?: number;
   applyPreferences?: boolean;
+  /** Prefer / require profiles that already have a kundli (scoreable Vedic match). */
+  chartedOnly?: boolean;
+  /** Max profiles to score before ranking (default 400; higher for recommendations). */
+  poolSize?: number;
+  /** Only members who completed optional Situational Alignment Q&A. */
+  requireSituational?: boolean;
 };
 
 export type RankedMatch = {
@@ -66,7 +79,10 @@ export type RankedMatch = {
   heightCm: number | null;
   manglik: string;
   nakshatra: string | null;
+  /** Approx core kundli blend % — ranks discovery; not deep compatibility. */
   compatibilityScore: number;
+  /** Approx mind/temperament alignment from Gana, Graha Maitri, Moon. */
+  mindApprox: number;
   totalGuna: number;
   maxGuna: number;
   photo: string | null;
@@ -77,6 +93,10 @@ export type RankedMatch = {
   gunaBreakdown: Array<{ koota: string; score: number; max: number; note: string }>;
   rank: number;
   recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
+  /** True when this member completed Situational Alignment Q&A. */
+  hasSituationalAlignment?: boolean;
+  /** Approx situational alignment % when both completed (optional). */
+  situationalScore?: number | null;
 };
 
 export type MatchSearchResult = PaginatedResult<RankedMatch> & {
@@ -121,15 +141,16 @@ async function resolveUserNames(userIds: string[]): Promise<Map<string, string>>
   const needsBackfill: Array<{ userId: string; name: string }> = [];
 
   for (const p of profiles) {
-    const fromProfile = String(p.name || "").trim();
+    const fromProfile = formatPersonName(p.name, "");
     if (fromProfile) {
       map.set(p.userId, fromProfile);
       continue;
     }
     const fromHeadline = nameFromPlaceholderHeadline(p.headline);
     if (fromHeadline) {
-      map.set(p.userId, fromHeadline);
-      needsBackfill.push({ userId: p.userId, name: fromHeadline });
+      const pretty = formatPersonName(fromHeadline);
+      map.set(p.userId, pretty);
+      needsBackfill.push({ userId: p.userId, name: pretty });
     }
   }
 
@@ -143,7 +164,7 @@ async function resolveUserNames(userIds: string[]): Promise<Map<string, string>>
       .toArray();
 
     for (const u of users) {
-      const raw = String((u as { name?: string }).name || "").trim();
+      const raw = formatPersonName((u as { name?: string }).name, "");
       if (!raw) continue;
       const keys = new Set<string>([
         canonicalUserId(u as { id?: string; _id?: unknown }),
@@ -192,7 +213,7 @@ export function sanitizeHeadline(headline?: string | null, name?: string | null)
 
 /** Prefer profile/user display name — never invent from profession. */
 function displayName(names: Map<string, string>, userId: string) {
-  return names.get(userId)?.trim() || "Member";
+  return formatPersonName(names.get(userId), "Member");
 }
 
 /** Matrimonial default: males see females, females see males. */
@@ -213,6 +234,64 @@ export function oppositeGender(gender?: string | null): "MALE" | "FEMALE" | null
   if (g === "MALE") return "FEMALE";
   if (g === "FEMALE") return "MALE";
   return null;
+}
+
+type DiscoveryProfile = {
+  userId: string;
+  gender?: string | null;
+  dateOfBirth?: Date | string | null;
+  city?: string | null;
+  profession?: string | null;
+  education?: string | null;
+  religion?: string | null;
+  languages?: string[];
+  heightCm?: number | null;
+  about?: string | null;
+  headline?: string | null;
+  photos?: Array<{ secureUrl?: string; isPrimary?: boolean }>;
+};
+
+/**
+ * Load discovery candidates with charted profiles first.
+ * Avoids blind Profile.find().limit(N) which can omit higher-scoring matches.
+ */
+async function loadDiscoveryProfiles(
+  query: Record<string, unknown>,
+  options: { chartedOnly: boolean; poolLimit: number },
+): Promise<DiscoveryProfile[]> {
+  const poolLimit = Math.max(50, Math.min(options.poolLimit, 1500));
+  const rows = await Profile.aggregate<DiscoveryProfile>([
+    { $match: query },
+    {
+      $lookup: {
+        from: "horoscopes",
+        let: { uid: "$userId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$userId", "$$uid"] },
+              $or: [{ status: "ACTIVE" }, { status: { $exists: false } }],
+            },
+          },
+          { $project: { _id: 1 } },
+          { $limit: 1 },
+        ],
+        as: "_chart",
+      },
+    },
+    {
+      $addFields: {
+        _hasChart: { $cond: [{ $gt: [{ $size: "$_chart" }, 0] }, 1, 0] },
+      },
+    },
+    ...(options.chartedOnly ? [{ $match: { _hasChart: 1 } }] : []),
+    // Charted first so the pool is scoreable; then stable by updatedAt if present
+    { $sort: { _hasChart: -1, updatedAt: -1 as const, createdAt: -1 as const } },
+    { $limit: poolLimit },
+    { $project: { _chart: 0, _hasChart: 0 } },
+  ]);
+
+  return rows;
 }
 
 export class MatchmakingService {
@@ -282,9 +361,13 @@ export class MatchmakingService {
       if (maxHeight) (query.heightCm as Record<string, number>).$lte = maxHeight;
     }
 
+    const poolSize = filters.poolSize ?? (filters.chartedOnly ? 800 : 400);
     const [selfChart, rawCandidates] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
-      Profile.find(query).limit(200).lean(),
+      loadDiscoveryProfiles(query, {
+        chartedOnly: Boolean(filters.chartedOnly),
+        poolLimit: poolSize,
+      }),
     ]);
 
     // Defensive: never surface same-gender or undisclosed candidates even if data is inconsistent
@@ -294,16 +377,38 @@ export class MatchmakingService {
 
     const selfMoon = selfChart ? moonMeta(selfChart) : null;
     const candidateIds = candidates.map((c) => c.userId);
-    const [charts, names] = await Promise.all([
+    const [charts, names, selfSitDoc, sitDocs] = await Promise.all([
       Horoscope.find({ userId: { $in: candidateIds } })
         .sort({ calculatedAt: -1 })
         .lean(),
       resolveUserNames(candidateIds),
+      SituationalProfile.findOne({ userId, status: "ACTIVE" }).lean(),
+      candidateIds.length
+        ? SituationalProfile.find({
+            userId: { $in: candidateIds },
+            status: "ACTIVE",
+            completedAt: { $ne: null },
+          })
+            .select("userId answers completedAt")
+            .lean()
+        : Promise.resolve([]),
     ]);
     const chartByUser = new Map<string, (typeof charts)[number]>();
     for (const c of charts) {
       if (!chartByUser.has(c.userId)) chartByUser.set(c.userId, c);
     }
+    const selfSitAnswers = (selfSitDoc?.answers || {}) as SituationalAnswers;
+    const selfSitComplete = isSituationalComplete(selfSitAnswers);
+    const sitByUser = new Map<string, SituationalAnswers>();
+    for (const row of sitDocs) {
+      sitByUser.set(String(row.userId), (row.answers || {}) as SituationalAnswers);
+    }
+    const requireSituational =
+      filters.requireSituational === true ||
+      (filters.applyPreferences !== false &&
+        Boolean(
+          (prefs as { requireSituationalAlignment?: boolean } | null)?.requireSituationalAlignment,
+        ));
 
     const minAge = filters.minAge ?? prefs?.ageMin ?? undefined;
     const maxAge = filters.maxAge ?? prefs?.ageMax ?? undefined;
@@ -322,6 +427,7 @@ export class MatchmakingService {
       const age = ageFromDob(profile.dateOfBirth as Date | null);
       const chart = chartByUser.get(profile.userId);
       let compatibilityScore = 0;
+      let mindApprox = 0;
       let totalGuna = 0;
       let maxGuna = 36;
       let reasons: string[] = [];
@@ -340,9 +446,13 @@ export class MatchmakingService {
           planetsB: toPlanetsLite(chart),
         });
         compatibilityScore = blended.compatibilityScore;
+        mindApprox = blended.mindApprox;
         totalGuna = blended.totalGuna;
         maxGuna = blended.maxGuna;
         reasons = blended.strengths.slice(0, 3);
+        if (mindApprox >= 75) {
+          reasons = [`Mind alignment ~${mindApprox}%`, ...reasons].slice(0, 3);
+        }
         gunaBreakdown = blended.gunaBreakdown;
       } else {
         reasons = ["Complete both kundlis for Vedic ranking"];
@@ -354,6 +464,16 @@ export class MatchmakingService {
         null;
       const name = displayName(names, profile.userId);
       const tagline = sanitizeHeadline(profile.headline, name);
+      const theirSit = sitByUser.get(profile.userId);
+      const hasSituationalAlignment = Boolean(theirSit && isSituationalComplete(theirSit));
+      let situationalScore: number | null = null;
+      if (selfSitComplete && theirSit) {
+        const sit = compareSituationalAnswers(selfSitAnswers, theirSit);
+        situationalScore = sit?.score ?? null;
+        if (situationalScore != null && situationalScore >= 75) {
+          reasons = [`Situational fit ~${situationalScore}%`, ...reasons].slice(0, 3);
+        }
+      }
 
       return {
         userId: profile.userId,
@@ -368,6 +488,7 @@ export class MatchmakingService {
         manglik: chart?.manglikStatus || "UNKNOWN",
         nakshatra: chart ? moonMeta(chart).nakshatra : null,
         compatibilityScore,
+        mindApprox,
         totalGuna,
         maxGuna,
         photo,
@@ -376,8 +497,14 @@ export class MatchmakingService {
         headline: tagline,
         cardSummary: reasons[0] || tagline || profile.about || "Explore this connection",
         gunaBreakdown,
+        hasSituationalAlignment,
+        situationalScore,
       };
     });
+
+    if (requireSituational) {
+      ranked = ranked.filter((m) => m.hasSituationalAlignment);
+    }
 
     if (filters.q) {
       const q = filters.q.toLowerCase();
@@ -514,6 +641,7 @@ export class MatchmakingService {
       lagnaSign: showLagna ? chart?.lagnaSign || null : null,
       acceptInterests,
       compatibilityScore: scored?.compatibilityScore ?? match?.compatibilityScore ?? 0,
+      mindApprox: scored?.mindApprox ?? 0,
       totalGuna: scored?.totalGuna ?? 0,
       maxGuna: scored?.maxGuna ?? 36,
       gunaBreakdown: scored?.gunaBreakdown ?? [],
@@ -679,11 +807,18 @@ export class MatchmakingService {
     }
 
     const prefs = await PartnerPreferences.findOne({ userId }).lean();
+    // Score a large charted pool, then take the highest-ranked page (not an arbitrary DB slice).
     const result = await this.search(userId, {
-      limit: 100,
+      limit: 200,
       page: 1,
       minCompatibility: 0,
       applyPreferences: false,
+      chartedOnly: true,
+      poolSize: 1000,
+      // Honor optional Situational Alignment filter from saved preferences
+      requireSituational: Boolean(
+        (prefs as { requireSituationalAlignment?: boolean } | null)?.requireSituationalAlignment,
+      ),
     });
 
     // Only suggest people who also have a kundli (scoreable Vedic match)
@@ -707,13 +842,13 @@ export class MatchmakingService {
         return { ...m, preferenceBoost };
       })
       .sort((a, b) => {
-        // Primary: kundli compatibility score
+        // Primary: kundli match score (same engine as discovery cards)
         if (b.compatibilityScore !== a.compatibilityScore) {
           return b.compatibilityScore - a.compatibilityScore;
         }
         // Secondary: Ashta Guna total
         if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
-        // Tertiary: soft preference alignment
+        // Tertiary: soft preference alignment (never beats a higher score)
         if (b.preferenceBoost !== a.preferenceBoost) {
           return b.preferenceBoost - a.preferenceBoost;
         }
@@ -730,25 +865,27 @@ export class MatchmakingService {
                 : "EXPLORE";
         const kundliReason =
           m.totalGuna >= 28
-            ? `Strong Ashta Koota (${m.totalGuna}/${m.maxGuna})`
+            ? `Strong Ashta Koota (${m.totalGuna}/${m.maxGuna}) · ~${m.compatibilityScore}% core`
             : m.totalGuna >= 24
-              ? `Solid Guna Milan (${m.totalGuna}/${m.maxGuna})`
-              : m.reasons?.[0] || `Chart compatibility ${m.compatibilityScore}%`;
+              ? `Solid Guna Milan (${m.totalGuna}/${m.maxGuna}) · ~${m.compatibilityScore}% core`
+              : m.reasons?.[0] || `Approx core match ~${m.compatibilityScore}%`;
+        const mindReason = m.mindApprox > 0 ? `Mind / temperament ~${m.mindApprox}%` : null;
         return {
           ...m,
           rank: index + 1,
           recommendationTier: tier,
-          reasons: [kundliReason, ...(m.reasons || []).filter((r) => r !== kundliReason)].slice(
-            0,
-            3,
-          ),
+          reasons: [
+            kundliReason,
+            ...(mindReason ? [mindReason] : []),
+            ...(m.reasons || []).filter((r) => r !== kundliReason && r !== mindReason),
+          ].slice(0, 3),
           cardSummary: kundliReason,
         };
       });
 
+    const top = withPriority.slice(0, 60);
     return {
-      ...toPaginatedResult(withPriority, withPriority.length, 1, 60),
-      data: withPriority.slice(0, 60),
+      ...toPaginatedResult(top, withPriority.length, 1, 60),
       self: { hasChart: true, city: result.self.city },
       hasSelfChart: true,
     };

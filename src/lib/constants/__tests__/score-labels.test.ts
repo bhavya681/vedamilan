@@ -6,7 +6,7 @@ describe("Sprint 1 — score label copy", () => {
   it("keeps match and compatibility meanings distinct", () => {
     expect(MATCH_SCORE.label).toMatch(/match/i);
     expect(COMPATIBILITY_SCORE.label).toMatch(/compatibility/i);
-    expect(MATCH_SCORE.meaning).toMatch(/discovery|relevant/i);
+    expect(MATCH_SCORE.meaning).toMatch(/kundli|core|chart/i);
     expect(COMPATIBILITY_SCORE.meaning).toMatch(/align|deep|chart/i);
     expect(MATCH_SCORE.detail).not.toEqual(COMPATIBILITY_SCORE.detail);
     expect(MATCH_SCORE.labelKey).toBe("compatibility.score.matchLabel");

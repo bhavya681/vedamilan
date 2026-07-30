@@ -36,4 +36,14 @@ describe("isDashboardNavActive", () => {
     expect(isDashboardNavActive(routes.astrology, routes.astrology)).toBe(true);
     expect(isDashboardNavActive(routes.dasha, routes.astrology)).toBe(false);
   });
+
+  it("keeps Partner preferences and Situational quiz tabs exclusive", () => {
+    expect(isDashboardNavActive(routes.preferences, routes.preferences)).toBe(true);
+    expect(isDashboardNavActive(routes.preferences, routes.situationalAlignment)).toBe(false);
+
+    expect(isDashboardNavActive(routes.situationalAlignment, routes.situationalAlignment)).toBe(
+      true,
+    );
+    expect(isDashboardNavActive(routes.situationalAlignment, routes.preferences)).toBe(false);
+  });
 });

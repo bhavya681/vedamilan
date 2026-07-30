@@ -22,12 +22,14 @@ Partner preference `minCompatibilityScore` is on the **guna** scale (0–36).
 
 ## Ranking
 
-1. Load active candidate profiles (exclude self / hidden).
-2. Load latest kundli per candidate.
-3. Score Ashta Koota when both charts exist.
+1. Load active candidate profiles (exclude self / hidden / same gender; photo required).
+2. Prefer profiles that already have a kundli (`$lookup` on `horoscopes`), then take a scoring pool (default 400; recommendations use up to 1000 charted).
+3. Score the Vedic match blend (Ashta Koota, Shukra Milan, Manglik, Moon) when both charts exist.
 4. Filter by age, manglik, min score, text query.
-5. Sort by `compatibilityScore` descending.
+5. Sort by `compatibilityScore` descending, then Guna, then soft preference alignment (prefs never beat a higher score).
 6. Persist `Match` snapshot rows for the page.
+
+Recommendations (`/api/recommendations`) use `chartedOnly` so the highest match-score people are not dropped by an arbitrary unsorted DB slice.
 
 ## Wired pages
 

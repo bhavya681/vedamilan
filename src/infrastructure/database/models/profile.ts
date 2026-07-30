@@ -208,6 +208,8 @@ const partnerPreferencesSchema = new Schema(
     preferSameRegion: { type: Boolean, default: false },
     preferredCountries: { type: [String], default: [] },
     preferredLanguages: { type: [String], default: [] },
+    /** When true, discovery only shows members who completed Situational Alignment Q&A. */
+    requireSituationalAlignment: { type: Boolean, default: false },
     notes: { type: String, default: "", maxlength: 2000 },
   },
   baseSchemaOptions,

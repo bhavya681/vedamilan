@@ -177,7 +177,7 @@ export default function DivisionalChartsPage() {
         <ContentReveal className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,auto)_1fr] lg:gap-6">
           <GlassCard className="flex min-w-0 flex-col items-center justify-center gap-3 p-3 sm:p-6">
             {isNorthChart(active) ? (
-              <NorthIndianKundli chart={active} />
+              <NorthIndianKundli chart={active} planetVoice={tab === "D1"} />
             ) : (
               <p className="text-muted-foreground text-sm">
                 Chart layout unavailable for this view.

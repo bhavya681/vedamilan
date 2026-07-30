@@ -47,7 +47,10 @@ export type MatchBlendInput = {
 };
 
 export type MatchBlendResult = {
+  /** Approx core kundli match % for discovery ranking (not deep compatibility). */
   compatibilityScore: number;
+  /** Approx mind/temperament alignment (Gana + Graha Maitri + Moon element). */
+  mindApprox: number;
   totalGuna: number;
   maxGuna: number;
   gunaBreakdown: GunaItem[];
@@ -57,6 +60,19 @@ export type MatchBlendResult = {
   challengeCodes: string[];
   factors: Array<{ name: string; score: number; weight: number }>;
 };
+
+function kootaPercent(items: GunaItem[], name: string, fallback = 70) {
+  const row = items.find((g) => g.koota === name);
+  if (!row || !row.max) return fallback;
+  return Math.max(0, Math.min(100, Math.round((row.score / row.max) * 100)));
+}
+
+/** Mental / temperamental preview — not the deep communication module. */
+export function scoreMindApprox(gunaBreakdown: GunaItem[], moonElement: number): number {
+  const graha = kootaPercent(gunaBreakdown, "Graha Maitri");
+  const gana = kootaPercent(gunaBreakdown, "Gana");
+  return Math.max(0, Math.min(100, Math.round(graha * 0.4 + gana * 0.35 + moonElement * 0.25)));
+}
 
 export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
   const ashta = scoreAshtaKoota({
@@ -73,6 +89,8 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
       ? scoreShukraMilan(input.planetsA, input.planetsB)
       : null;
 
+  const moonEl = moonElementScore(input.moonSignA, input.moonSignB);
+
   const factors = [
     { name: "Ashta Koota", score: ashta.overallScore, weight: 45 },
     {
@@ -87,7 +105,7 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
     },
     {
       name: "Moon element",
-      score: moonElementScore(input.moonSignA, input.moonSignB),
+      score: moonEl,
       weight: 10,
     },
   ];
@@ -96,6 +114,8 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
     0,
     Math.min(100, Math.round(factors.reduce((s, f) => s + (f.score * f.weight) / 100, 0))),
   );
+
+  const mindApprox = scoreMindApprox(ashta.gunaBreakdown, moonEl);
 
   const strengths = [
     ...ashta.strengths.slice(0, 2),
@@ -112,6 +132,7 @@ export function scoreMatchBlend(input: MatchBlendInput): MatchBlendResult {
 
   return {
     compatibilityScore,
+    mindApprox,
     totalGuna: ashta.totalGuna,
     maxGuna: ashta.maxGuna,
     gunaBreakdown: ashta.gunaBreakdown,

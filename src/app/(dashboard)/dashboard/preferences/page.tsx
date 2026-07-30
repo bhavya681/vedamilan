@@ -16,6 +16,7 @@ type Prefs = {
   diet?: string[];
   religions?: string[];
   minCompatibilityScore?: number;
+  requireSituationalAlignment?: boolean;
   notes?: string;
 };
 
@@ -61,6 +62,7 @@ export default function PreferencesPage() {
         .map((s) => s.trim())
         .filter(Boolean),
       minCompatibilityScore: Number(form.get("minCompatibilityScore") || 18),
+      requireSituationalAlignment: form.get("requireSituationalAlignment") === "on",
       notes: String(form.get("notes") || ""),
     };
     const res = await fetch("/api/preferences", {
@@ -85,91 +87,131 @@ export default function PreferencesPage() {
         title="Partner Preferences"
         description="Intentional filters for discovery"
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.dashboard}>Back to overview</Link>
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href={routes.situationalAlignment}>Situational alignment</Link>
+            </Button>
+            <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Link href={routes.dashboard}>Back to overview</Link>
+            </Button>
+          </div>
         }
       />
       {error ? <p className="text-destructive mb-4 text-sm">{error}</p> : null}
       {message ? <p className="text-emerald mb-4 text-sm">{message}</p> : null}
-      <form onSubmit={onSave}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <GlassCard>
-            <p className="text-muted-foreground text-xs uppercase">Age</p>
-            <div className="mt-3 flex gap-3">
+
+      <GlassCard className="mb-4 space-y-2 p-4 sm:p-5">
+        <p className="font-display text-lg">Optional situational Q&A</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Answer everyday situation preferences (conflict, family, money, support). Complements
+          astrology — not required. Then you can filter Matches to only people who completed it.
+        </p>
+        <Button asChild size="sm" variant="outline">
+          <Link href={routes.situationalAlignment}>Open situational alignment</Link>
+        </Button>
+      </GlassCard>
+
+      {prefs ? (
+        <form
+          key={`prefs-${Boolean(prefs.requireSituationalAlignment)}-${prefs.minCompatibilityScore}`}
+          onSubmit={onSave}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <GlassCard>
+              <p className="text-muted-foreground text-xs uppercase">Age</p>
+              <div className="mt-3 flex gap-3">
+                <input
+                  name="ageMin"
+                  type="number"
+                  className="border-input bg-background w-full rounded-xl border px-3 py-2"
+                  defaultValue={prefs?.ageMin ?? 24}
+                  min={18}
+                  max={80}
+                />
+                <input
+                  name="ageMax"
+                  type="number"
+                  className="border-input bg-background w-full rounded-xl border px-3 py-2"
+                  defaultValue={prefs?.ageMax ?? 36}
+                  min={18}
+                  max={80}
+                />
+              </div>
+            </GlassCard>
+            <GlassCard>
+              <p className="text-muted-foreground text-xs uppercase">Cities</p>
               <input
-                name="ageMin"
-                type="number"
-                className="border-input bg-background w-full rounded-xl border px-3 py-2"
-                defaultValue={prefs?.ageMin ?? 24}
-                min={18}
-                max={80}
+                name="cities"
+                className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
+                defaultValue={(prefs?.cities || []).join(", ")}
+                placeholder="Bengaluru, Mumbai"
+              />
+            </GlassCard>
+            <GlassCard>
+              <p className="text-muted-foreground text-xs uppercase">Education</p>
+              <input
+                name="educations"
+                className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
+                defaultValue={(prefs?.educations || []).join(", ")}
+              />
+            </GlassCard>
+            <GlassCard>
+              <p className="text-muted-foreground text-xs uppercase">Lifestyle / Religion</p>
+              <input
+                name="diet"
+                className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
+                defaultValue={(prefs?.diet || []).join(", ")}
+                placeholder="Diet preferences"
               />
               <input
-                name="ageMax"
-                type="number"
-                className="border-input bg-background w-full rounded-xl border px-3 py-2"
-                defaultValue={prefs?.ageMax ?? 36}
-                min={18}
-                max={80}
+                name="religions"
+                className="border-input bg-background mt-2 w-full rounded-xl border px-3 py-2"
+                defaultValue={(prefs?.religions || []).join(", ")}
+                placeholder="Religions"
               />
-            </div>
-          </GlassCard>
-          <GlassCard>
-            <p className="text-muted-foreground text-xs uppercase">Cities</p>
-            <input
-              name="cities"
-              className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
-              defaultValue={(prefs?.cities || []).join(", ")}
-              placeholder="Bengaluru, Mumbai"
-            />
-          </GlassCard>
-          <GlassCard>
-            <p className="text-muted-foreground text-xs uppercase">Education</p>
-            <input
-              name="educations"
-              className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
-              defaultValue={(prefs?.educations || []).join(", ")}
-            />
-          </GlassCard>
-          <GlassCard>
-            <p className="text-muted-foreground text-xs uppercase">Lifestyle / Religion</p>
-            <input
-              name="diet"
-              className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
-              defaultValue={(prefs?.diet || []).join(", ")}
-              placeholder="Diet preferences"
-            />
-            <input
-              name="religions"
-              className="border-input bg-background mt-2 w-full rounded-xl border px-3 py-2"
-              defaultValue={(prefs?.religions || []).join(", ")}
-              placeholder="Religions"
-            />
-          </GlassCard>
-          <GlassCard className="md:col-span-2">
-            <p className="text-muted-foreground text-xs uppercase">Min compatibility (guna)</p>
-            <input
-              name="minCompatibilityScore"
-              type="number"
-              min={0}
-              max={36}
-              className="border-input bg-background mt-3 w-full max-w-xs rounded-xl border px-3 py-2"
-              defaultValue={prefs?.minCompatibilityScore ?? 18}
-            />
-            <textarea
-              name="notes"
-              className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
-              rows={3}
-              defaultValue={prefs?.notes || ""}
-              placeholder="Notes for your search"
-            />
-            <Button type="submit" className="mt-4" disabled={loading || !prefs}>
-              {loading ? "Saving…" : "Save preferences"}
-            </Button>
-          </GlassCard>
-        </div>
-      </form>
+            </GlassCard>
+            <GlassCard className="md:col-span-2">
+              <p className="text-muted-foreground text-xs uppercase">Min compatibility (guna)</p>
+              <input
+                name="minCompatibilityScore"
+                type="number"
+                min={0}
+                max={36}
+                className="border-input bg-background mt-3 w-full max-w-xs rounded-xl border px-3 py-2"
+                defaultValue={prefs?.minCompatibilityScore ?? 18}
+              />
+              <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="requireSituationalAlignment"
+                  defaultChecked={Boolean(prefs?.requireSituationalAlignment)}
+                  className="border-input mt-1"
+                />
+                <span>
+                  <span className="text-foreground font-medium">
+                    Only show matches who completed Situational alignment
+                  </span>
+                  <span className="text-muted-foreground mt-0.5 block text-xs leading-relaxed">
+                    Filters out members who skipped the optional Q&A. Turn off anytime.
+                  </span>
+                </span>
+              </label>
+              <textarea
+                name="notes"
+                className="border-input bg-background mt-3 w-full rounded-xl border px-3 py-2"
+                rows={3}
+                defaultValue={prefs?.notes || ""}
+                placeholder="Notes for your search"
+              />
+              <Button type="submit" className="mt-4" disabled={loading}>
+                {loading ? "Saving…" : "Save preferences"}
+              </Button>
+            </GlassCard>
+          </div>
+        </form>
+      ) : (
+        <p className="text-muted-foreground text-sm">Loading preferences…</p>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import type {
   ProfileUpdateInput,
 } from "@/lib/validators/profile";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 import { assertSafePublicHttpsUrl } from "@/lib/security/url-safety";
 
 const COMPLETION_WEIGHTS: Array<{
@@ -85,7 +86,7 @@ export class ProfileService {
   async getOrCreateProfile(userId: string, seed?: { name?: string }) {
     await this.ensureConnected();
     let profile = await Profile.findOne({ userId });
-    const seedName = String(seed?.name || "").trim();
+    const seedName = formatPersonName(seed?.name, "");
     if (!profile) {
       profile = await Profile.create({
         userId,
@@ -121,10 +122,12 @@ export class ProfileService {
       );
     }
 
+    const displayName =
+      formatPersonName(profile.name || seed?.name, "") || formatPersonName(seed?.name, "Member");
     return {
       profile: {
         ...profile,
-        name: String(profile.name || seed?.name || "").trim(),
+        name: displayName,
         age: ageFromDob(profile.dateOfBirth as Date | null),
         completion,
       },
@@ -132,7 +135,7 @@ export class ProfileService {
       birthDetails: birthDetails ?? null,
       user: {
         id: userId,
-        name: String(profile.name || seed?.name || "").trim() || seed?.name,
+        name: displayName,
         email: seed?.email,
       },
     };
@@ -148,7 +151,7 @@ export class ProfileService {
       payload.dateOfBirth = new Date(rest.dateOfBirth);
     }
     if (typeof rest.name === "string") {
-      payload.name = rest.name.trim();
+      payload.name = formatPersonName(rest.name, "");
     }
     if (privacy) {
       const existing = await Profile.findOne({ userId }).lean();

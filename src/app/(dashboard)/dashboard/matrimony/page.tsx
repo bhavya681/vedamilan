@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Stars } from "lucide-react";
+import { ArrowRight, ListChecks, Stars } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
-import { MatchCard } from "@/components/ui/premium-cards";
+import { GlassCard, MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skeletons";
 import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { routes } from "@/lib/constants/routes";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 type Bundle = {
   userName: string;
@@ -28,6 +29,7 @@ type Bundle = {
     city: string | null;
     profession: string | null;
     compatibilityScore: number;
+    mindApprox?: number;
     headline: string | null;
     cardSummary?: string;
     reasons?: string[];
@@ -99,7 +101,7 @@ export default function MatrimonyHomePage() {
             : "Open Insights for a plain-language reading of your chart.";
 
         setBundle({
-          userName: me.user?.name || profileData?.user?.name || "friend",
+          userName: formatPersonName(me.user?.name || profileData?.user?.name, "Friend"),
           moonSign: chartRes.data?.horoscope?.moonSign || null,
           currentMaha: chartRes.data?.dasha?.currentMaha || null,
           matches: matchItems.slice(0, 3),
@@ -172,13 +174,34 @@ export default function MatrimonyHomePage() {
               </div>
             </section>
 
+            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
+                  <ListChecks className="h-3.5 w-3.5" />
+                  Optional
+                </p>
+                <h2 className="font-display text-xl sm:text-2xl">Situational alignment quiz</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Answer everyday situation preferences (conflict, family, money, support).
+                  Complements kundli matching — not required. Then filter Matches to people who also
+                  completed it.
+                </p>
+              </div>
+              <Button asChild className="w-full shrink-0 sm:w-auto">
+                <Link href={routes.situationalAlignment}>
+                  Take the quiz
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </GlassCard>
+
             <section className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="font-display text-2xl">Recommended for you</h2>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    Preferences and activity first — astrology enhances ranking, it does not replace
-                    it.
+                    Best kundli matches first — approx core fit from your chart. Open Compatibility
+                    for deep analysis.
                   </p>
                 </div>
                 <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
@@ -204,6 +227,7 @@ export default function MatrimonyHomePage() {
                           city={m.city || "—"}
                           profession={m.profession || "—"}
                           score={m.compatibilityScore}
+                          mindApprox={m.mindApprox}
                           headline={
                             m.reasons?.[0] ||
                             m.cardSummary ||

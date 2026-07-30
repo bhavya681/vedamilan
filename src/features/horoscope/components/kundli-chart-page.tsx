@@ -33,7 +33,7 @@ export function KundliChartPage({
 
   let body: ReactNode = null;
   if (pick === "chartNorth" && isNorthChart(chart)) {
-    body = <NorthIndianKundli chart={chart} />;
+    body = <NorthIndianKundli chart={chart} planetVoice />;
   } else if (pick === "chartSouth" && isSouthChart(chart)) {
     body = <SouthIndianKundli chart={chart} />;
   } else if (pick === "chartEast" && isEastChart(chart)) {
@@ -88,6 +88,14 @@ export function KundliChartPage({
                   <li>Numbers are rashis (1=Aries … 12=Pisces) — Asc Gemini shows 3 in house 1.</li>
                   <li>Same-sign planets share one house (whole-sign from Lagna).</li>
                   <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
+                  <li>
+                    Switch Labels / Symbols above the chart — names or visual graha icons in each
+                    house.
+                  </li>
+                  <li>
+                    Use the planet buttons under the D1 chart — each graha tells a short story about
+                    its condition.
+                  </li>
                 </>
               ) : pick === "chartSouth" ? (
                 <>

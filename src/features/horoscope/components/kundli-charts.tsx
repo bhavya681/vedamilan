@@ -1,3 +1,16 @@
+"use client";
+
+import { useState } from "react";
+
+import { planetVoiceForGlyph, type PlanetVoiceMessage } from "@/application/horoscope/planet-voice";
+import { PlanetStoryHover } from "@/features/horoscope/components/planet-voice-panel";
+import {
+  ChartViewToggle,
+  PlanetSymbolSvg,
+  PLANET_GLYPH,
+  SymbolsKey,
+  type ChartPlanetView,
+} from "@/features/horoscope/components/planet-symbols";
 import { cn } from "@/lib/utils/cn";
 
 const SIGN_ABBR = ["Ar", "Ta", "Ge", "Cn", "Le", "Vi", "Li", "Sc", "Sg", "Cp", "Aq", "Pi"] as const;
@@ -97,7 +110,7 @@ const SOUTH_GRID: Array<number | null> = [
 
 function DiamondFrame() {
   return (
-    <g>
+    <g style={{ pointerEvents: "none" }} aria-hidden>
       <rect
         x="4"
         y="4"
@@ -203,60 +216,110 @@ function HousePlanets({
   y,
   glyphs,
   highlight,
+  activePlanet,
+  view = "labels",
 }: {
   x: number;
   y: number;
   glyphs: ChartPlanetGlyph[];
   highlight?: boolean;
+  activePlanet?: string | null;
+  view?: ChartPlanetView;
 }) {
   if (!glyphs.length) return null;
-  const lineH = glyphs.some((g) => g.degree) ? 5.2 : 3.6;
+  const symbols = view === "symbols";
+  const showDegree = !symbols && glyphs.some((g) => g.degree);
+  const lineH = symbols ? 5.6 : showDegree ? 5.2 : 3.6;
   const startY = y - ((glyphs.length - 1) * lineH) / 2;
+
   return (
-    <g>
-      {glyphs.map((g, index) => (
-        <g key={`${g.planet}-${index}`}>
-          <text
-            x={x}
-            y={startY + index * lineH}
-            textAnchor="middle"
-            className={cn(
-              "text-[3.1px] font-bold",
-              highlight || g.mark === "↑"
-                ? "fill-primary"
-                : g.mark === "↓"
-                  ? "fill-destructive"
-                  : "fill-foreground",
+    <g style={{ pointerEvents: "none" }}>
+      {glyphs.map((g, index) => {
+        const cy = startY + index * lineH;
+        const active = activePlanet === g.planet;
+        const toneClass =
+          highlight || g.mark === "↑" || active
+            ? "text-primary fill-primary"
+            : g.mark === "↓"
+              ? "text-destructive fill-destructive"
+              : "text-foreground fill-foreground";
+
+        return (
+          <g key={`${g.planet}-${index}`}>
+            {symbols ? (
+              <>
+                <PlanetSymbolSvg
+                  planet={g.planet}
+                  cx={x}
+                  cy={cy - (g.mark || g.isRetrograde ? 0.35 : 0)}
+                  className={toneClass}
+                />
+                {(g.mark || g.isRetrograde) && (
+                  <text
+                    x={x + 2.6}
+                    y={cy + 0.9}
+                    textAnchor="start"
+                    className={cn("text-[1.7px] font-bold", toneClass)}
+                  >
+                    {`${g.mark || ""}${g.isRetrograde ? "℞" : ""}`}
+                  </text>
+                )}
+              </>
+            ) : (
+              <>
+                <text
+                  x={x}
+                  y={cy}
+                  textAnchor="middle"
+                  className={cn("text-[3.1px] font-bold", toneClass, active && "underline")}
+                >
+                  {g.label}
+                </text>
+                {showDegree && g.degree ? (
+                  <text
+                    x={x}
+                    y={cy + 2.15}
+                    textAnchor="middle"
+                    className="fill-muted-foreground text-[1.85px]"
+                  >
+                    {g.degree}
+                  </text>
+                ) : null}
+              </>
             )}
-          >
-            {g.label}
-          </text>
-          {g.degree ? (
-            <text
-              x={x}
-              y={startY + index * lineH + 2.15}
-              textAnchor="middle"
-              className="fill-muted-foreground text-[1.85px]"
-            >
-              {g.degree}
-            </text>
-          ) : null}
-        </g>
-      ))}
+          </g>
+        );
+      })}
     </g>
   );
 }
 
-function ChartLegend({ className }: { className?: string }) {
+function ChartLegend({
+  className,
+  planetVoice,
+  view = "labels",
+}: {
+  className?: string;
+  planetVoice?: boolean;
+  view?: ChartPlanetView;
+}) {
   return (
-    <p
-      className={cn(
-        "text-muted-foreground mt-3 max-w-sm text-center text-[10px] leading-relaxed sm:text-[11px]",
-        className,
-      )}
-    >
-      Whole-sign houses from Asc · Su Mo Ma Me Ju Ve Sa Ra Ke · ↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro
-    </p>
+    <div className={cn("mt-3 flex w-full flex-col items-center", className)}>
+      <p className="text-muted-foreground max-w-sm text-center text-[10px] leading-relaxed sm:text-[11px]">
+        {view === "symbols"
+          ? "Symbols view · visual grahas in whole-sign houses · ↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro"
+          : "Whole-sign houses from Asc · Su Mo Ma Me Ju Ve Sa Ra Ke · ↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro"}
+        {planetVoice ? (
+          <>
+            <br />
+            <span className="text-foreground/70">
+              Use the planet buttons below the chart to read each graha&apos;s story (D1).
+            </span>
+          </>
+        ) : null}
+      </p>
+      {view === "symbols" ? <SymbolsKey /> : null}
+    </div>
   );
 }
 
@@ -267,25 +330,54 @@ export function rashiNumberForHouse(house: number, lagnaSignId: number) {
   return ((lagna + h - 1) % 12) + 1;
 }
 
+function collectChartPlanets(chart: NorthChartData): ChartPlanetGlyph[] {
+  const list: ChartPlanetGlyph[] = [];
+  for (let house = 1; house <= 12; house += 1) {
+    for (const g of normalizeGlyphs(chart.houses[String(house)])) {
+      list.push({ ...g, house: g.house ?? house });
+    }
+  }
+  return list;
+}
+
 export function NorthIndianKundli({
   chart,
   className,
+  planetVoice = false,
 }: {
   chart: NorthChartData;
   className?: string;
+  /** D1 only — select a planet to read its condition story below the chart */
+  planetVoice?: boolean;
 }) {
+  const [story, setStory] = useState<PlanetVoiceMessage | null>(null);
+  const [view, setView] = useState<ChartPlanetView>("labels");
+  const planets = collectChartPlanets(chart);
+
+  const selectPlanet = (glyph: ChartPlanetGlyph) => {
+    setStory(planetVoiceForGlyph(glyph));
+  };
+
   return (
-    <div className={cn("flex flex-col items-center", className)}>
+    <div className={cn("flex w-full flex-col items-center", className)}>
+      <ChartViewToggle value={view} onChange={setView} />
       <svg
         viewBox="0 0 100 100"
         className="kundli-chart-square"
         role="img"
-        aria-label="North Indian kundli chart"
+        aria-label={
+          view === "symbols"
+            ? "North Indian kundli chart — planet symbols"
+            : "North Indian kundli chart — planet labels"
+        }
       >
         <DiamondFrame />
         {Array.from({ length: 12 }, (_, i) => i + 1).map((house) => {
           const pos = NORTH_POS[house]!;
-          const glyphs = normalizeGlyphs(chart.houses[String(house)]);
+          const glyphs = normalizeGlyphs(chart.houses[String(house)]).map((g) => ({
+            ...g,
+            house: g.house ?? house,
+          }));
           const rashiNo = rashiNumberForHouse(house, chart.lagnaSignId);
           return (
             <g key={house}>
@@ -304,7 +396,7 @@ export function NorthIndianKundli({
               {house === 1 ? (
                 <text
                   x={pos.x}
-                  y={pos.y - (glyphs.length ? 6 : 1.5)}
+                  y={pos.y - (glyphs.length ? (view === "symbols" ? 7 : 6) : 1.5)}
                   textAnchor="middle"
                   className="fill-primary text-[2.5px] font-semibold"
                 >
@@ -316,12 +408,55 @@ export function NorthIndianKundli({
                 y={pos.y + (house === 1 ? 1.2 : 0)}
                 glyphs={glyphs}
                 highlight={house === 1}
+                activePlanet={story?.planet}
+                view={view}
               />
             </g>
           );
         })}
       </svg>
-      <ChartLegend />
+      <ChartLegend planetVoice={planetVoice} view={view} />
+
+      {planetVoice ? (
+        <div className="mt-4 w-full max-w-md space-y-3">
+          <p className="text-foreground text-center text-sm font-medium">
+            Tap a planet to read what it is saying
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {planets.length ? (
+              planets.map((g) => {
+                const active = story?.planet === g.planet;
+                return (
+                  <button
+                    key={`${g.planet}-${g.house}`}
+                    type="button"
+                    onClick={() => selectPlanet(g)}
+                    className={cn(
+                      "min-w-[2.75rem] rounded-lg border-2 px-2.5 py-2 text-sm font-semibold transition-colors",
+                      active
+                        ? "border-primary bg-primary/15 text-foreground"
+                        : "border-border bg-background text-foreground hover:border-primary/50 hover:bg-muted/40",
+                    )}
+                    aria-pressed={active}
+                    aria-label={`Read what ${g.planet} says`}
+                  >
+                    {g.abbr || g.label.replace(/[↑↓◉℞]/g, "").trim()}
+                  </button>
+                );
+              })
+            ) : (
+              <p className="text-muted-foreground text-xs">No planets on this chart yet.</p>
+            )}
+          </div>
+          {story ? (
+            <PlanetStoryHover message={story} />
+          ) : (
+            <div className="border-border bg-muted/30 text-muted-foreground rounded-xl border-2 border-dashed px-4 py-3 text-center text-xs leading-relaxed sm:text-sm">
+              Choose Su, Mo, Ma… above — the planet&apos;s story appears in this box.
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -333,15 +468,22 @@ export function SouthIndianKundli({
   chart: SouthChartData;
   className?: string;
 }) {
+  const [view, setView] = useState<ChartPlanetView>("labels");
   const lagna = ((chart.lagnaSignId % 12) + 12) % 12;
   const bySign = new Map(chart.signs.map((s) => [s.signId, s]));
+  const symbols = view === "symbols";
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
+      <ChartViewToggle value={view} onChange={setView} />
       <div
         className="border-gold bg-gold/25 kundli-chart-square grid grid-cols-4 grid-rows-4 gap-px overflow-hidden rounded-xl border-2"
         role="img"
-        aria-label="South Indian kundli chart"
+        aria-label={
+          symbols
+            ? "South Indian kundli chart — planet symbols"
+            : "South Indian kundli chart — planet labels"
+        }
       >
         {SOUTH_GRID.map((signId, index) => {
           if (signId === null) return <div key={index} className="bg-muted/40" />;
@@ -371,10 +513,12 @@ export function SouthIndianKundli({
               <div className="mt-2 flex flex-col gap-0.5">
                 {glyphs.length ? (
                   glyphs.map((g) => (
-                    <div key={g.planet} className="leading-none">
+                    <div key={g.planet} className="leading-none" title={g.planet}>
                       <span
                         className={cn(
-                          "text-[9px] font-bold sm:text-[10px]",
+                          symbols
+                            ? "text-[13px] leading-none sm:text-[15px]"
+                            : "text-[9px] font-bold sm:text-[10px]",
                           g.mark === "↑"
                             ? "text-primary"
                             : g.mark === "↓"
@@ -382,9 +526,11 @@ export function SouthIndianKundli({
                               : "text-foreground",
                         )}
                       >
-                        {g.label}
+                        {symbols
+                          ? `${PLANET_GLYPH[g.planet] || g.abbr}${g.mark || ""}${g.isRetrograde ? "℞" : ""}`
+                          : g.label}
                       </span>
-                      {g.degree ? (
+                      {!symbols && g.degree ? (
                         <span className="text-muted-foreground block text-[7px] sm:text-[8px]">
                           {g.degree}
                         </span>
@@ -399,7 +545,7 @@ export function SouthIndianKundli({
           );
         })}
       </div>
-      <ChartLegend />
+      <ChartLegend view={view} />
     </div>
   );
 }
@@ -412,6 +558,8 @@ export function EastIndianKundli({
   chart: SouthChartData | NorthChartData;
   className?: string;
 }) {
+  const [view, setView] = useState<ChartPlanetView>("labels");
+
   // Prefer sign-based East data; if only north houses exist (legacy), fall back
   if (isSouthChart(chart)) {
     const lagna = ((chart.lagnaSignId % 12) + 12) % 12;
@@ -419,11 +567,16 @@ export function EastIndianKundli({
 
     return (
       <div className={cn("flex flex-col items-center", className)}>
+        <ChartViewToggle value={view} onChange={setView} />
         <svg
           viewBox="0 0 100 100"
           className="kundli-chart-square"
           role="img"
-          aria-label="East Indian kundli chart"
+          aria-label={
+            view === "symbols"
+              ? "East Indian kundli chart — planet symbols"
+              : "East Indian kundli chart — planet labels"
+          }
         >
           <DiamondFrame />
           {Array.from({ length: 12 }, (_, signId) => {
@@ -451,7 +604,7 @@ export function EastIndianKundli({
                 {isLagna ? (
                   <text
                     x={pos.x}
-                    y={pos.y - (glyphs.length ? 6 : 1.5)}
+                    y={pos.y - (glyphs.length ? (view === "symbols" ? 7 : 6) : 1.5)}
                     textAnchor="middle"
                     className="fill-primary text-[2.5px] font-semibold"
                   >
@@ -463,12 +616,13 @@ export function EastIndianKundli({
                   y={pos.y + (isLagna ? 1.2 : 0)}
                   glyphs={glyphs}
                   highlight={isLagna}
+                  view={view}
                 />
               </g>
             );
           })}
         </svg>
-        <ChartLegend />
+        <ChartLegend view={view} />
       </div>
     );
   }

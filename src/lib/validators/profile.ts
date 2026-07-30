@@ -66,6 +66,7 @@ export const partnerPreferencesSchema = z.object({
   manglikPreference: z.enum(["ANY", "NON_MANGLIK", "MANGLIK", "PARTIAL_OK"]).optional(),
   minCompatibilityScore: z.number().min(0).max(36).optional(),
   maxDistanceKm: z.number().min(1).max(20000).optional().nullable(),
+  requireSituationalAlignment: z.boolean().optional(),
   notes: z.string().max(2000).optional(),
 });
 

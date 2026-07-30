@@ -11,10 +11,12 @@ import {
   Horoscope,
   PartnerPreferences,
   Profile,
+  SituationalProfile,
 } from "@/infrastructure/database/models";
 import { INTERNATIONAL_DEMO_MEMBERS } from "@/lib/mock/international-demo-profiles";
 import { allDemoPhotoUrls } from "@/lib/mock/demo-extra-photos";
 import type { DemoMember } from "@/lib/mock/demo-profiles";
+import { getDemoSituationalAnswers } from "@/lib/mock/celeb-situational-answers";
 import { getAuth } from "@/lib/auth";
 import { horoscopeService } from "@/application/horoscope/horoscope.service";
 import { logger } from "@/lib/utils/logger";
@@ -144,6 +146,23 @@ async function upsertOne(userId: string, member: DemoMember) {
   await Horoscope.deleteMany({ userId });
   await Dasha.deleteMany({ userId });
   await horoscopeService.generateForUser(userId);
+
+  const answers = getDemoSituationalAnswers(member.id);
+  if (answers) {
+    await SituationalProfile.findOneAndUpdate(
+      { userId },
+      {
+        $set: {
+          userId,
+          answers,
+          completedAt: new Date(),
+          deletedAt: null,
+          status: "ACTIVE",
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+  }
 }
 
 async function main() {

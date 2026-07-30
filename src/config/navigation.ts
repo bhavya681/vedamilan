@@ -96,6 +96,18 @@ export const dashboardNav: NavItem[] = [
   { title: "Shortlist", href: routes.shortlisted, group: "Connect", modes: ["matrimony"] },
 
   { title: "Compatibility", href: routes.compatibility, group: "Discover", modes: ["matrimony"] },
+  {
+    title: "Situational quiz",
+    href: routes.situationalAlignment,
+    group: "Discover",
+    modes: ["matrimony"],
+  },
+  {
+    title: "Partner preferences",
+    href: routes.preferences,
+    group: "Discover",
+    modes: ["matrimony"],
+  },
   { title: "AI Guru", href: routes.aiInsights, group: "Shared", modes: ["matrimony"] },
 
   { title: "Ask the Sages", href: routes.askTheSages, group: "Wisdom", modes: ["wisdom"] },

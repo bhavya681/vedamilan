@@ -12,11 +12,13 @@ import {
   Home,
   Hourglass,
   Link2,
+  ListChecks,
   MessageCircle,
   MoonStar,
   Orbit,
   Search,
   Settings,
+  SlidersHorizontal,
   Sparkles,
   Stars,
   SunMedium,
@@ -41,6 +43,8 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.dasha]: Hourglass,
   [routes.search]: Search,
   [routes.compatibility]: Compass,
+  [routes.situationalAlignment]: ListChecks,
+  [routes.preferences]: SlidersHorizontal,
   [routes.horoscope]: SunMedium,
   [routes.gochar]: Orbit,
   [routes.predictions]: Sparkles,
@@ -111,6 +115,14 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.premium) return matchesPath(pathname, routes.premium);
   if (href === routes.askTheSages) return matchesPath(pathname, routes.askTheSages);
   if (href === routes.wisdomJournal) return matchesPath(pathname, routes.wisdomJournal);
+
+  // Partner preferences vs Situational quiz share a path prefix — keep tabs exclusive.
+  if (href === routes.preferences) {
+    return pathname === routes.preferences;
+  }
+  if (href === routes.situationalAlignment) {
+    return matchesPath(pathname, routes.situationalAlignment);
+  }
 
   // Default: require a path segment boundary so /kundli does not match /kundli/dasha via bare prefix.
   return pathname.startsWith(`${href}/`);

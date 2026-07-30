@@ -6,6 +6,7 @@ import { publishChatEvent } from "@/infrastructure/realtime/pusher";
 import { relationshipService } from "@/application/relationship/relationship.service";
 import { notificationService } from "@/application/notifications/notification.service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 import { normalizePagination, toPaginatedResult } from "@/repositories/pagination";
 
 function pairKey(a: string, b: string) {
@@ -34,8 +35,8 @@ async function resolveAuthNames(userIds: string[]) {
 
   for (const u of users) {
     const id = String((u as { id?: string }).id || u._id);
-    const name = (u as { name?: string }).name;
-    if (name) map.set(id, String(name));
+    const name = formatPersonName((u as { name?: string }).name, "");
+    if (name) map.set(id, name);
   }
   return map;
 }
@@ -76,8 +77,10 @@ export class ChatService {
     return chats.map((chat) => {
       const otherId = chat.participantIds.find((id) => id !== userId) || "";
       const profile = profileBy.get(otherId);
-      const name =
-        (profile?.name && String(profile.name).trim()) || authNames.get(otherId) || "Member";
+      const name = formatPersonName(
+        (profile?.name && String(profile.name).trim()) || authNames.get(otherId),
+        "Member",
+      );
       const photos = profile?.photos || [];
       const primary = photos.find((ph) => ph.isPrimary) || photos[0] || null;
       return {
@@ -235,7 +238,7 @@ export class ChatService {
       const sender = await db.collection("user").findOne({
         $or: [{ id: input.senderId }, { _id: input.senderId as never }],
       });
-      const senderName = String(sender?.name || "Someone");
+      const senderName = formatPersonName(sender?.name as string | undefined, "Someone");
       void notificationService
         .create({
           userId: recipientId,

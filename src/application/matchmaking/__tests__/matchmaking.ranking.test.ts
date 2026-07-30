@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { scoreAshtaKoota } from "@/application/rules/ashta-koota";
+import { scoreMatchBlend } from "@/application/rules/match-blend";
 import { normalizeGender, oppositeGender } from "@/application/matchmaking/matchmaking.service";
 
 describe("Module 6 — matchmaking ranking", () => {
@@ -60,5 +61,40 @@ describe("Module 6 — matchmaking ranking", () => {
     ];
     const filtered = candidates.filter((c) => c.compatibilityScore >= 50);
     expect(filtered.map((c) => c.id)).toEqual(["2"]);
+  });
+
+  it("core blend exposes approx match % and mind approx for discovery", () => {
+    const blended = scoreMatchBlend({
+      moonSignA: "Cancer",
+      moonSignB: "Taurus",
+      nakshatraA: "Pushya",
+      nakshatraB: "Rohini",
+      manglikA: "NON_MANGLIK",
+      manglikB: "NON_MANGLIK",
+    });
+    expect(blended.compatibilityScore).toBeGreaterThan(0);
+    expect(blended.compatibilityScore).toBeLessThanOrEqual(100);
+    expect(blended.mindApprox).toBeGreaterThan(0);
+    expect(blended.mindApprox).toBeLessThanOrEqual(100);
+    expect(blended.totalGuna).toBeGreaterThan(0);
+  });
+
+  it("never lets preference boost outrank a higher match score", () => {
+    const ranked = [
+      { id: "pref-fit-low", compatibilityScore: 67, totalGuna: 22, preferenceBoost: 5 },
+      { id: "high-score", compatibilityScore: 84, totalGuna: 28, preferenceBoost: 0 },
+      { id: "mid", compatibilityScore: 72, totalGuna: 25, preferenceBoost: 3 },
+    ].sort((a, b) => {
+      if (b.compatibilityScore !== a.compatibilityScore) {
+        return b.compatibilityScore - a.compatibilityScore;
+      }
+      if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
+      if (b.preferenceBoost !== a.preferenceBoost) {
+        return b.preferenceBoost - a.preferenceBoost;
+      }
+      return 0;
+    });
+
+    expect(ranked.map((r) => r.id)).toEqual(["high-score", "mid", "pref-fit-low"]);
   });
 });

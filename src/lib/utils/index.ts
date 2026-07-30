@@ -28,3 +28,4 @@ export {
 export { parseOrThrow, parseSafe } from "@/lib/utils/validation";
 export { getClientEnv, getServerEnv, requireEnvValue } from "@/lib/utils/env";
 export { logger, createLogger } from "@/lib/utils/logger";
+export { formatPersonName, formatPersonFirstName } from "@/lib/utils/person-name";

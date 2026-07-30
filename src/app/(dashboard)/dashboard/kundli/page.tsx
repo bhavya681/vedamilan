@@ -280,7 +280,7 @@ export default function KundliPage() {
             </div>
             <div className="flex justify-center py-2">
               {style === "north" && isNorthChart(north) ? (
-                <NorthIndianKundli chart={north} />
+                <NorthIndianKundli chart={north} planetVoice />
               ) : null}
               {style === "south" && isSouthChart(south) ? (
                 <SouthIndianKundli chart={south} />

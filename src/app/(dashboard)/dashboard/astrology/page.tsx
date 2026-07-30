@@ -12,6 +12,7 @@ import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { routes } from "@/lib/constants/routes";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 type AstrologyBundle = {
   userName: string;
@@ -106,7 +107,7 @@ export default function AstrologyHomePage() {
             : null;
 
         setBundle({
-          userName: me.user?.name || profileData?.user?.name || "friend",
+          userName: formatPersonName(me.user?.name || profileData?.user?.name, "Friend"),
           ascendant: horoscope?.lagnaSign || horoscope?.ascendant || horoscope?.lagna || null,
           moonSign: horoscope?.moonSign || null,
           sunSign: horoscope?.sunSign || null,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession, getUserRoles, isAdmin } from "@/lib/auth/session";
 import { handleRouteError } from "@/lib/utils/error-handler";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export async function GET() {
       authenticated: true,
       user: {
         id: user.id,
-        name: user.name,
+        name: formatPersonName(user.name, "Member"),
         email: user.email,
         image: user.image ?? null,
         emailVerified: user.emailVerified,

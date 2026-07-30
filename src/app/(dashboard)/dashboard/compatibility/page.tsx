@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -18,6 +18,7 @@ import {
   kootaEmoji,
   moodFromScore,
 } from "@/features/compatibility/compatibility-visuals";
+import { RecentCompatibilityReports } from "@/features/compatibility/recent-compatibility-reports";
 import {
   MarriageWindowsStrip,
   TimingPredictionPanel,
@@ -28,6 +29,7 @@ import { WisdomCompatibilityBridge } from "@/features/wisdom/components/wisdom-c
 import { CompatibilitySkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
+import { formatPersonName } from "@/lib/utils/person-name";
 
 type GunaItem = {
   koota: string;
@@ -71,6 +73,7 @@ type Report = {
   maxGuna?: number;
   overallScore?: number;
   deepOverallScore?: number;
+  displayScore?: number;
   decisionSummary?: string;
   decisionReason?: string;
   manglikCompatibility?: string;
@@ -80,6 +83,10 @@ type Report = {
   userAId?: string;
   userBId?: string;
   calculatedAt?: string;
+  pair?: {
+    you: { userId: string; name: string; photo: string | null };
+    them: { userId: string; name: string; photo: string | null; city?: string | null };
+  };
   shukraMilan?: {
     averageScore?: number;
     percent?: number;
@@ -107,6 +114,13 @@ type Report = {
   advancedMarriageDynamics?:
     | import("@/features/compatibility/advanced-marriage-dynamics-panel").AdvancedMarriageDynamicsView
     | null;
+  situationalAlignment?: {
+    score?: number | null;
+    youComplete?: boolean;
+    themComplete?: boolean;
+    highlights?: string[];
+    discuss?: string[];
+  } | null;
 };
 
 type RecMatch = {
@@ -145,6 +159,7 @@ export default function CompatibilityPage() {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState("why");
   const [showAdvancedId, setShowAdvancedId] = useState(false);
+  const autoRanCandidate = useRef<string | null>(null);
 
   async function loadReports() {
     const res = await fetch("/api/compatibility");
@@ -176,44 +191,13 @@ export default function CompatibilityPage() {
       fromList?.photo ||
       null;
     setPair({
-      youName: me?.user?.name || "You",
+      youName: formatPersonName(me?.user?.name, "You"),
       youPhoto: primary,
-      themName: them?.name || fromList?.name || "Partner",
+      themName: formatPersonName(them?.name || fromList?.name, "Partner"),
       themPhoto,
       themId,
     });
   }
-
-  useEffect(() => {
-    const candidate = new URLSearchParams(window.location.search).get("candidate");
-    if (candidate) setCandidateUserId(candidate);
-    void loadReports().catch(() => setError("Failed to load compatibility"));
-    // Full opposite-gender roster (celebs + members) for personalized compatibility picks
-    void fetch("/api/matches?limit=80&applyPreferences=false&minCompatibility=0")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success) {
-          const rows = (json.data?.data || []) as RecMatch[];
-          setCandidates(rows);
-        }
-      })
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    if (!active) {
-      setPair(null);
-      return;
-    }
-    const themId =
-      candidateUserId ||
-      (selfUserId && active.userAId === selfUserId ? active.userBId : active.userAId) ||
-      active.userBId ||
-      active.userAId ||
-      "";
-    if (themId) void loadPair(themId).catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active?._id, candidateUserId, selfUserId]);
 
   async function runCompare(id?: string) {
     const target = (id || candidateUserId).trim();
@@ -240,6 +224,44 @@ export default function CompatibilityPage() {
     await loadReports();
   }
 
+  useEffect(() => {
+    const candidate = new URLSearchParams(window.location.search).get("candidate")?.trim() || "";
+    void loadReports().catch(() => setError("Failed to load compatibility"));
+    // Full opposite-gender roster (celebs + members) for personalized compatibility picks
+    void fetch("/api/matches?limit=80&applyPreferences=false&minCompatibility=0")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          const rows = (json.data?.data || []) as RecMatch[];
+          setCandidates(rows);
+        }
+      })
+      .catch(() => undefined);
+
+    // Coming from Matches / profile with a specific partner — run deep compare immediately
+    if (candidate && autoRanCandidate.current !== candidate) {
+      autoRanCandidate.current = candidate;
+      setCandidateUserId(candidate);
+      void runCompare(candidate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      setPair(null);
+      return;
+    }
+    const themId =
+      candidateUserId ||
+      (selfUserId && active.userAId === selfUserId ? active.userBId : active.userAId) ||
+      active.userBId ||
+      active.userAId ||
+      "";
+    if (themId) void loadPair(themId).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active?._id, candidateUserId, selfUserId]);
+
   const categoryEntries = active?.categoryScores
     ? Object.entries(active.categoryScores).filter(([k]) =>
         [
@@ -257,7 +279,8 @@ export default function CompatibilityPage() {
       )
     : [];
 
-  const overall = active?.deepOverallScore ?? active?.overallScore ?? 0;
+  // overallScore may soft-blend optional situational Q&A; deepOverallScore stays Vedic-pure
+  const overall = active?.overallScore ?? active?.deepOverallScore ?? 0;
   const partnerId = pair?.themId || candidateUserId;
   const whyPoints = [
     ...(active?.strengths || []).slice(0, 3),
@@ -282,12 +305,13 @@ export default function CompatibilityPage() {
         }
       />
 
-      {!active ? (
+      {!active && !loading ? (
         <div className="border-border/70 bg-card shadow-soft space-y-5 rounded-2xl border p-4 sm:p-6">
           <div>
             <h2 className="font-display text-xl sm:text-2xl">Who would you like to understand?</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Opposite-gender connections with Vedic charts — including new international profiles.
+              Opposite-gender connections with Vedic charts — tap someone to run deep compatibility
+              right away.
             </p>
           </div>
           {candidates.length ? (
@@ -296,11 +320,13 @@ export default function CompatibilityPage() {
                 <button
                   key={c.userId}
                   type="button"
+                  disabled={loading}
                   className={cn(
                     "border-border/60 hover:bg-muted/40 flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm",
                     candidateUserId === c.userId && "border-primary/40 bg-primary/5",
+                    loading && "opacity-60",
                   )}
-                  onClick={() => setCandidateUserId(c.userId)}
+                  onClick={() => void runCompare(c.userId)}
                 >
                   {c.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -336,14 +362,9 @@ export default function CompatibilityPage() {
             />
           )}
 
-          <Button
-            type="button"
-            disabled={loading || !candidateUserId}
-            onClick={() => void runCompare()}
-            className="w-full sm:w-auto"
-          >
-            {loading ? "Preparing your compatibility insight…" : "Understand this connection"}
-          </Button>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            Tap a person above to run deep compatibility immediately — no extra confirmation.
+          </p>
 
           <button
             type="button"
@@ -420,6 +441,45 @@ export default function CompatibilityPage() {
                   </li>
                 ))}
               </ul>
+            </section>
+          ) : null}
+
+          {active.situationalAlignment?.score != null ? (
+            <section className="border-border/70 bg-card shadow-soft space-y-2 rounded-2xl border p-4 sm:p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-display text-xl sm:text-2xl">Situational alignment</h2>
+                <p className="font-display text-2xl tabular-nums">
+                  ~{active.situationalAlignment.score}%
+                </p>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Optional everyday-preference Q&A soft-blended with Vedic analysis (85% chart · 15%
+                situations).
+              </p>
+              {(active.situationalAlignment.highlights || []).length ? (
+                <ul className="text-muted-foreground mt-2 space-y-1 text-sm">
+                  {active.situationalAlignment.highlights!.map((h) => (
+                    <li key={h}>· {h}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : active.situationalAlignment &&
+            (!active.situationalAlignment.youComplete ||
+              !active.situationalAlignment.themComplete) ? (
+            <section className="border-border/60 bg-muted/20 space-y-2 rounded-2xl border px-4 py-3.5">
+              <p className="text-sm font-medium">Situational alignment not fully available</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                {!active.situationalAlignment.youComplete
+                  ? "You have not completed the optional situational Q&A yet."
+                  : "Your partner has not completed the optional situational Q&A."}{" "}
+                <Link
+                  href={routes.situationalAlignment}
+                  className="text-foreground underline-offset-2 hover:underline"
+                >
+                  Open situational alignment
+                </Link>
+              </p>
             </section>
           ) : null}
 
@@ -747,53 +807,50 @@ export default function CompatibilityPage() {
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="font-display text-xl sm:text-2xl">Recent reports</h2>
-        <div className="border-border/70 bg-card divide-border/60 shadow-soft divide-y overflow-hidden rounded-2xl border">
-          {reports.length === 0 ? (
-            <div className="px-4 py-10">
-              <EmptyState
-                title="No reports yet"
-                description="Pick someone from your matches to run your first compatibility check."
-                action={
-                  <Button asChild className="w-full sm:w-auto">
-                    <Link href={routes.matches}>Explore Matches</Link>
-                  </Button>
-                }
-              />
-            </div>
-          ) : (
-            reports.map((r) => (
-              <button
-                key={String(r._id)}
-                type="button"
-                className={cn(
-                  "hover:bg-muted/30 flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm",
-                  active?._id === r._id && "bg-primary/5",
-                )}
-                onClick={() => {
-                  setActive(r);
-                  setView("why");
-                  const them =
-                    selfUserId && r.userAId === selfUserId ? r.userBId : r.userAId || r.userBId;
-                  if (them) setCandidateUserId(them);
-                }}
-              >
-                <span className="min-w-0 flex-1 truncate">
-                  {r.decisionSummary || "Compatibility report"}
-                  {r.calculatedAt ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      · {new Date(r.calculatedAt).toLocaleDateString()}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="font-display shrink-0 text-lg">
-                  {r.deepOverallScore ?? r.overallScore}%
-                </span>
-              </button>
-            ))
-          )}
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-display text-xl sm:text-2xl">Recent reports</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              You and your match — score mood, strengths, and what to discuss at a glance.
+            </p>
+          </div>
+          {reports.length ? (
+            <p className="text-muted-foreground text-xs">{reports.length} saved</p>
+          ) : null}
         </div>
+
+        {reports.length === 0 ? (
+          <div className="border-border/70 bg-card shadow-soft overflow-hidden rounded-2xl border px-4 py-10">
+            <EmptyState
+              title="No reports yet"
+              description="Pick someone from your matches to run your first compatibility check — both photos and a clear score will appear here."
+              action={
+                <Button asChild className="w-full sm:w-auto">
+                  <Link href={routes.matches}>Explore Matches</Link>
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <RecentCompatibilityReports
+            reports={reports}
+            activeId={active?._id ? String(active._id) : null}
+            onSelect={(r) => {
+              const full = reports.find((x) => String(x._id) === String(r._id)) || (r as Report);
+              setActive(full);
+              setView("why");
+              const themId =
+                full.pair?.them.userId ||
+                (selfUserId && full.userAId === selfUserId
+                  ? full.userBId
+                  : full.userAId || full.userBId);
+              if (themId) {
+                setCandidateUserId(themId);
+                void loadPair(themId);
+              }
+            }}
+          />
+        )}
       </section>
     </div>
   );

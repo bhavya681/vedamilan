@@ -25,6 +25,7 @@ export const routes = {
   profile: "/dashboard/profile",
   editProfile: "/dashboard/profile/edit",
   preferences: "/dashboard/preferences",
+  situationalAlignment: "/dashboard/preferences/situational",
   birthDetails: "/dashboard/birth-details",
 
   kundli: "/dashboard/kundli",
