@@ -186,16 +186,6 @@ export const CELEB_SITUATIONAL_ANSWERS: Record<string, SituationalAnswers> = {
     career_travel: "protect_home",
     morning_tone: "active",
   }),
-  c_nayanthara: sit({
-    after_disagreement: "space_then_talk",
-    free_weekend: "quiet_home",
-    family_gathering: "decide_together",
-    money_surprise: "plan_budget",
-    stress_support: "alone_then",
-    social_energy: "prefer_quiet",
-    career_travel: "discuss_balance",
-    morning_tone: "ritual",
-  }),
   c_allu: sit({
     after_disagreement: "talk_now",
     free_weekend: "social",
@@ -204,16 +194,6 @@ export const CELEB_SITUATIONAL_ANSWERS: Record<string, SituationalAnswers> = {
     stress_support: "encourage",
     social_energy: "go_gladly",
     career_travel: "seize_growth",
-    morning_tone: "active",
-  }),
-  c_samantha: sit({
-    after_disagreement: "write_first",
-    free_weekend: "nature",
-    family_gathering: "split_fair",
-    money_surprise: "discuss_split",
-    stress_support: "listen",
-    social_energy: "partner_sync",
-    career_travel: "shared_plan",
     morning_tone: "active",
   }),
   c_shahid: sit({

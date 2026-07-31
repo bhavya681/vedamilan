@@ -16,7 +16,7 @@ describe("life events calendar + gochar", () => {
     expect(note).toMatch(/Gochar support/i);
   });
 
-  it("surfaces past job window around mid-2025 Venus–Ketu with historical gochar", () => {
+  it("surfaces past major job chapter around mid-2025 Venus–Ketu with historical gochar", () => {
     const now = new Date("2026-07-29T00:00:00.000Z");
     const birth = new Date("2003-07-01T00:00:00.000Z");
     const antarStart = "2025-03-01T00:00:00.000Z";
@@ -62,8 +62,6 @@ describe("life events calendar + gochar", () => {
 
     expect(report.context.placeNote).not.toMatch(/India, India/);
     expect(report.pastHighlights.length).toBeGreaterThan(0);
-    expect(report.presentHighlights).toBeDefined();
-    expect(report.futureHighlights).toBeDefined();
 
     const juneJob = report.pastHighlights.find(
       (e) =>
@@ -73,11 +71,13 @@ describe("life events calendar + gochar", () => {
         new Date(e.endDate) >= new Date("2025-06-15"),
     );
     expect(juneJob).toBeTruthy();
+    expect(juneJob!.significance).toBe("major");
     expect(juneJob!.score).toBeGreaterThanOrEqual(70);
+    expect(juneJob!.spanMonths).toBeGreaterThanOrEqual(3);
     expect(juneJob!.gocharNote || "").toMatch(/Sky then|Gochar/i);
   });
 
-  it("surfaces travel and spiritual windows (not empty filters)", () => {
+  it("keeps one primary theme per Antardasha and filters mild noise", () => {
     const now = new Date("2026-07-29T00:00:00.000Z");
     const birth = new Date("2003-07-01T00:00:00.000Z");
 
@@ -89,6 +89,8 @@ describe("life events calendar + gochar", () => {
         { planet: "Jupiter", houseFromNatalLagna: 9 },
         { planet: "Rahu", houseFromNatalLagna: 3 },
         { planet: "Ketu", houseFromNatalLagna: 12 },
+        { planet: "Sun", houseFromNatalLagna: 10 },
+        { planet: "Mercury", houseFromNatalLagna: 10 },
       ],
       periods: [
         {
@@ -115,11 +117,20 @@ describe("life events calendar + gochar", () => {
       ],
     });
 
-    const travel = report.events.filter((e) => e.category === "travel");
-    const spiritual = report.events.filter((e) => e.category === "spiritual");
-    expect(travel.length).toBeGreaterThan(0);
-    expect(spiritual.length).toBeGreaterThan(0);
-    expect(travel.some((e) => e.phase === "present" || e.phase === "future")).toBe(true);
-    expect(spiritual.some((e) => e.phase === "present" || e.phase === "future")).toBe(true);
+    expect(report.events.length).toBeGreaterThan(0);
+    expect(report.events.every((e) => e.significance === "major")).toBe(true);
+    expect(report.events.every((e) => e.score >= 70)).toBe(true);
+
+    // At most one event per Antardasha start
+    const keys = report.events.map((e) => `${e.startDate}|${e.dashaLabel}`);
+    expect(new Set(keys).size).toBe(keys.length);
+
+    // Soft themes may appear only when they win as the primary major chapter
+    const soft = report.events.filter(
+      (e) => e.category === "travel" || e.category === "spiritual" || e.category === "health",
+    );
+    for (const e of soft) {
+      expect(e.score).toBeGreaterThanOrEqual(74);
+    }
   });
 });

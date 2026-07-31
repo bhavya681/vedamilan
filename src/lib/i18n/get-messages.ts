@@ -179,6 +179,9 @@ const loaders: Record<MessageNamespace, Record<string, () => Promise<{ default: 
 
     sa: () => import("@/locales/sa/vedic.json"),
   },
+  grahaKatha: {
+    en: () => import("@/locales/en/grahaKatha.json"),
+  },
   pages: {
     en: () => import("@/locales/en/pages.json"),
     hi: () => import("@/locales/hi/pages.json"),

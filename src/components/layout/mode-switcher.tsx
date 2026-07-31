@@ -267,7 +267,7 @@ export function ModeSwitcher({
                 if (!active) setMode(key, { navigate: true });
               }}
               className={cn(
-                "group relative isolate flex min-h-[4.25rem] flex-col items-center justify-center gap-1 overflow-hidden rounded-xl px-0.5 py-2 text-center transition-colors duration-200 outline-none sm:min-h-[4.85rem] sm:gap-1.5 sm:px-1 sm:py-2.5",
+                "group relative isolate flex min-h-[3.85rem] flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-0.5 py-1.5 text-center transition-colors duration-200 outline-none sm:min-h-[4.5rem] sm:gap-1 sm:px-1 sm:py-2",
                 "focus-visible:ring-gold/40 focus-visible:ring-2 focus-visible:ring-offset-1",
                 active ? "text-foreground" : "text-muted-foreground hover:text-foreground/88",
               )}

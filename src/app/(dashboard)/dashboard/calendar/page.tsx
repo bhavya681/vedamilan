@@ -71,22 +71,22 @@ const TAB_ORDER: TimeTab[] = ["all", "present", "past", "future"];
 const TAB_META: Record<TimeTab, { label: string; blurb: string; Icon: typeof History }> = {
   all: {
     label: "All",
-    blurb: "Past, current, and future windows together — sorted by likelihood.",
+    blurb: "Major life chapters across past, current, and future — one theme per Antardasha.",
     Icon: LayoutList,
   },
   present: {
     label: "Current",
-    blurb: "Active Antardasha with live gochar confluence.",
+    blurb: "The primary theme of your active Antardasha, confirmed by live gochar where possible.",
     Icon: CircleDot,
   },
   past: {
     label: "Past",
-    blurb: "Closed windows scored with dasha + sky at that period.",
+    blurb: "Closed major chapters — scored with dasha and the sky at that period.",
     Icon: History,
   },
   future: {
     label: "Future",
-    blurb: "Upcoming windows; likelihood rises when gochar later aligns.",
+    blurb: "Upcoming multi-month chapters worth planning around — not everyday noise.",
     Icon: Sparkle,
   },
 };
@@ -95,31 +95,38 @@ const LIKELIHOOD_GUIDE = [
   {
     range: "80–100%",
     tone: "border-gold/40 bg-gold/12 text-foreground",
-    title: "Strong likelihood",
-    detail: "Dasha lords and gochar both favour this theme.",
+    title: "Strong major period",
+    detail: "Dasha lords and gochar both favour this life chapter.",
   },
   {
-    range: "65–79%",
+    range: "70–79%",
     tone: "border-primary/35 bg-primary/10 text-foreground",
-    title: "Good likelihood",
-    detail: "Dasha is supportive; transit adds partial confirmation.",
-  },
-  {
-    range: "50–64%",
-    tone: "border-border/60 bg-muted/40 text-muted-foreground",
-    title: "Mild likelihood",
-    detail: "Background support — confirm with effort and timing.",
+    title: "Clear major period",
+    detail: "Strong Antardasha theme; transit adds partial confirmation.",
   },
 ] as const;
 
+/** Category chips — milestones first; soft themes only appear when they clear the major bar */
+const CATEGORY_CHIP_ORDER: Array<LifeEventCategory | "all"> = [
+  "all",
+  "marriage",
+  "career",
+  "job",
+  "education",
+  "wealth",
+  "property",
+  "travel",
+  "health",
+  "spiritual",
+];
+
 function likelihoodPct(score: number) {
-  return Math.max(50, Math.min(98, Math.round(score)));
+  return Math.max(70, Math.min(98, Math.round(score)));
 }
 
 function likelihoodTone(pct: number) {
   if (pct >= 80) return "border-gold/45 bg-gold/15 text-foreground";
-  if (pct >= 65) return "border-primary/35 bg-primary/10 text-foreground";
-  return "border-border/60 bg-muted/45 text-muted-foreground";
+  return "border-primary/35 bg-primary/10 text-foreground";
 }
 
 function LikelihoodBadge({ score }: { score: number }) {
@@ -176,12 +183,22 @@ function EventCard({ e, showPhase }: { e: LifeEventItem; showPhase?: boolean }) 
             <div
               className={cn(
                 "h-full rounded-full transition-[width]",
-                pct >= 80 ? "bg-gold/80" : pct >= 65 ? "bg-primary/70" : "bg-muted-foreground/45",
+                pct >= 80 ? "bg-gold/80" : "bg-primary/70",
               )}
               style={{ width: `${pct}%` }}
             />
           </div>
 
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className="text-[10px]">
+              Major period
+            </Badge>
+            {typeof e.spanMonths === "number" ? (
+              <Badge variant="outline" className="text-[10px]">
+                {e.spanMonths >= 12 ? `~${Math.round(e.spanMonths / 12)} yr` : `${e.spanMonths} mo`}
+              </Badge>
+            ) : null}
+          </div>
           <p className="text-[13px] leading-snug font-medium sm:text-sm">
             <span className="break-words">{e.window}</span>
             {e.ageHint ? (
@@ -225,7 +242,7 @@ function EventScrollPanel({ total, children }: { total: number; children: ReactN
     <div className="border-border/50 bg-card/30 relative min-w-0 overflow-hidden rounded-2xl border">
       <div className="border-border/40 bg-background/80 flex items-center justify-between gap-2 border-b px-3 py-2 sm:px-4">
         <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
-          {total} window{total === 1 ? "" : "s"}
+          {total} major chapter{total === 1 ? "" : "s"}
         </p>
         {total > 4 ? (
           <p className="text-muted-foreground text-[10px] sm:text-[11px]">Scroll inside panel</p>
@@ -350,15 +367,6 @@ export default function CalendarPage() {
     return sortByLikelihood(filterCat(data.byPhase[tab]));
   }, [data, tab, filterCat]);
 
-  const strongEvents = useMemo(
-    () => tabEvents.filter((e) => likelihoodPct(e.score) >= 65),
-    [tabEvents],
-  );
-  const mildEvents = useMemo(
-    () => tabEvents.filter((e) => likelihoodPct(e.score) < 65),
-    [tabEvents],
-  );
-
   const needsOnboarding = Boolean(error) && !data;
 
   return (
@@ -367,7 +375,7 @@ export default function CalendarPage() {
         className="mb-4 sm:mb-6 md:mb-8"
         eyebrow="VedaMilan AI · Life calendar"
         title="Calendar"
-        description="All, Current, Past, and Future event windows — each with a likelihood % from dasha + gochar under Desh–Kaal–Patra."
+        description="Major life chapters only — the most relevant multi-month Antardasha periods, not everyday noise. Likelihood % from dasha + gochar under Desh–Kaal–Patra."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap">
             <Button
@@ -514,26 +522,25 @@ export default function CalendarPage() {
             )}
           </section>
 
-          {/* Likelihood % guide — 1 col phone, 3 col tablet+ */}
           <section className="border-border/50 bg-card/40 min-w-0 rounded-2xl border px-3 py-3 sm:px-4 sm:py-4">
             <div className="mb-2.5 flex flex-col gap-1 sm:mb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-2">
               <div>
                 <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                  Likelihood
+                  Major periods
                 </p>
-                <p className="font-display text-base sm:text-lg">How to read the %</p>
+                <p className="font-display text-base sm:text-lg">How to read this calendar</p>
               </div>
               <p className="text-muted-foreground max-w-md text-[11px] leading-relaxed sm:text-right sm:text-xs">
-                Directional only — effort, choice, and timing still matter.
+                Mild windows are hidden. Each card is one primary theme for a whole Antardasha
+                chapter.
               </p>
             </div>
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-2.5">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
               {LIKELIHOOD_GUIDE.map((row) => (
                 <li
                   key={row.range}
                   className={cn(
-                    "min-w-0 rounded-xl border px-3 py-2 sm:py-2.5",
-                    "flex items-start gap-3 sm:block",
+                    "flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2 sm:block sm:py-2.5",
                     row.tone,
                   )}
                 >
@@ -580,23 +587,21 @@ export default function CalendarPage() {
 
                   <div className="mt-2.5 sm:mt-3">
                     <ChipScroller>
-                      {(Object.keys(CATEGORY_LABELS) as Array<LifeEventCategory | "all">).map(
-                        (key) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setCategory(key)}
-                            className={cn(
-                              "shrink-0 rounded-full border px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:py-1 sm:text-xs",
-                              category === key
-                                ? "border-primary/40 bg-primary/10 text-foreground"
-                                : "border-border/50 text-muted-foreground hover:text-foreground",
-                            )}
-                          >
-                            {CATEGORY_LABELS[key]}
-                          </button>
-                        ),
-                      )}
+                      {CATEGORY_CHIP_ORDER.map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setCategory(key)}
+                          className={cn(
+                            "shrink-0 rounded-full border px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:py-1 sm:text-xs",
+                            category === key
+                              ? "border-primary/40 bg-primary/10 text-foreground"
+                              : "border-border/50 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {CATEGORY_LABELS[key]}
+                        </button>
+                      ))}
                     </ChipScroller>
                   </div>
                 </div>
@@ -604,66 +609,41 @@ export default function CalendarPage() {
                 {TAB_ORDER.map((key) => {
                   const meta = TAB_META[key];
                   const list = key === tab ? tabEvents : [];
-                  const strong = key === tab ? strongEvents : [];
-                  const mild = key === tab ? mildEvents : [];
                   return (
                     <TabsContent key={key} value={key} className="mt-3 space-y-3 sm:mt-4">
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
                         <div className="min-w-0">
                           <h2 className="font-display text-base sm:text-lg md:text-xl">
-                            {meta.label} windows
+                            {meta.label} · major chapters
                           </h2>
                           <p className="text-muted-foreground text-[11px] leading-relaxed sm:text-sm">
                             {meta.blurb}
                           </p>
                         </div>
                         <Badge variant="outline" className="w-fit text-[10px] sm:text-xs">
-                          {strong.length} at 65%+
+                          {list.length} major
                         </Badge>
                       </div>
 
                       {list.length === 0 ? (
                         <GlassCard className="p-3.5 sm:p-5">
                           <p className="text-muted-foreground text-sm">
-                            No {meta.label.toLowerCase()} windows for this category. Try All themes
-                            or another time tab.
+                            No major {meta.label.toLowerCase()} chapters for this filter. Try All
+                            themes or another time tab.
                           </p>
                         </GlassCard>
                       ) : (
                         <EventScrollPanel total={list.length}>
-                          {strong.length > 0 ? (
-                            <div className="space-y-2">
-                              <p className="text-muted-foreground bg-card/95 sticky top-0 z-[1] px-0.5 py-1 text-[10px] font-semibold tracking-[0.12em] uppercase backdrop-blur-sm">
-                                65%+ likelihood
-                              </p>
-                              <ul className="space-y-2 sm:space-y-2.5">
-                                {strong.map((e) => (
-                                  <EventCard
-                                    key={`${key}-s-${e.id}`}
-                                    e={e}
-                                    showPhase={key === "all"}
-                                  />
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-
-                          {mild.length > 0 ? (
-                            <div className="space-y-2">
-                              <p className="text-muted-foreground bg-card/95 sticky top-0 z-[1] px-0.5 py-1 text-[10px] font-semibold tracking-[0.12em] uppercase backdrop-blur-sm">
-                                Under 65% · milder support
-                              </p>
-                              <ul className="space-y-2 sm:space-y-2.5">
-                                {mild.map((e) => (
-                                  <EventCard
-                                    key={`${key}-m-${e.id}`}
-                                    e={e}
-                                    showPhase={key === "all"}
-                                  />
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
+                          <div className="space-y-2">
+                            <p className="text-muted-foreground bg-card/95 sticky top-0 z-[1] px-0.5 py-1 text-[10px] font-semibold tracking-[0.12em] uppercase backdrop-blur-sm">
+                              Primary Antardasha themes
+                            </p>
+                            <ul className="space-y-2 sm:space-y-2.5">
+                              {list.map((e) => (
+                                <EventCard key={`${key}-${e.id}`} e={e} showPhase={key === "all"} />
+                              ))}
+                            </ul>
+                          </div>
                         </EventScrollPanel>
                       )}
                     </TabsContent>
@@ -708,9 +688,9 @@ export default function CalendarPage() {
               <GlassCard className="min-w-0 space-y-3 p-3.5 sm:p-5 lg:p-6">
                 <h2 className="font-display text-base sm:text-lg">How to read</h2>
                 <ul className="text-muted-foreground space-y-2 text-[11px] leading-relaxed sm:text-xs">
-                  <li>· Tabs: All, Current, Past, Future.</li>
-                  <li>· % is directional likelihood from dasha + gochar — not a fixed outcome.</li>
-                  <li>· Desh–Kaal–Patra already filters place, time, and capacity.</li>
+                  <li>· Only major multi-month chapters — mild windows are hidden.</li>
+                  <li>· One primary life theme per Antardasha period.</li>
+                  <li>· % is directional (dasha + gochar), not a guarantee.</li>
                 </ul>
                 <div className="flex flex-col gap-2">
                   <Button asChild size="sm" variant="ai" className="w-full">

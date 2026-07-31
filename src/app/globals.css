@@ -187,6 +187,11 @@
   --animate-float-soft: float-soft 7s ease-in-out infinite;
   --animate-shimmer: shimmer 2.4s linear infinite;
   --animate-aurora: aurora-shift 14s ease-in-out infinite;
+  --animate-katha-char-bob: katha-char-bob 4.5s ease-in-out infinite;
+  --animate-katha-char-sway: katha-char-sway 5s ease-in-out infinite;
+  --animate-katha-char-pulse: katha-char-pulse 3.5s ease-in-out infinite;
+  --animate-katha-char-spin: katha-char-spin 28s linear infinite;
+  --animate-katha-char-twinkle: katha-char-twinkle 2.8s ease-in-out infinite;
 }
 
 @keyframes mandala-spin {
@@ -565,6 +570,11 @@
     display: none;
   }
 
+  /* Fixed page actions sit above the mobile bottom nav, not on top of it */
+  .sticky-above-bottom-nav {
+    bottom: var(--dashboard-bottom-nav-h);
+  }
+
   /* Full-height dashboard panes (chat, AI, sage discourse) */
   .dashboard-fill-h {
     height: calc(100dvh - var(--dashboard-chrome));
@@ -584,6 +594,354 @@
     height: auto;
     aspect-ratio: 1 / 1;
     max-width: 100%;
+  }
+
+  /* Graha Katha — digital museum atmosphere + subtle theme motion */
+  .katha-theme {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .katha-theme a,
+  .katha-theme button {
+    transition:
+      color var(--duration-fast) ease,
+      background-color var(--duration-base) var(--ease-out-expo),
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-base) var(--ease-out-expo),
+      transform var(--duration-base) var(--ease-out-expo),
+      opacity var(--duration-fast) ease;
+  }
+
+  .katha-atmosphere {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  .katha-atmosphere-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 80% 55% at 50% -5%,
+        color-mix(in srgb, var(--gold) 18%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        ellipse 45% 40% at 92% 18%,
+        color-mix(in srgb, var(--saffron) 10%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 40% 35% at 8% 40%,
+        color-mix(in srgb, var(--cosmic) 8%, transparent),
+        transparent 50%
+      );
+    animation: katha-glow-breathe 10s ease-in-out infinite;
+  }
+
+  .katha-atmosphere-mandala {
+    position: absolute;
+    top: -2rem;
+    right: 0;
+    width: min(22rem, 58vw);
+    height: min(22rem, 58vw);
+    opacity: 0.2;
+    background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='80' cy='80' r='70' stroke='%23D4AF37' stroke-opacity='0.35'/%3E%3Ccircle cx='80' cy='80' r='52' stroke='%23C47A1A' stroke-opacity='0.22'/%3E%3Ccircle cx='80' cy='80' r='34' stroke='%23D4AF37' stroke-opacity='0.2'/%3E%3Cpath d='M80 10 L90 80 L80 150 L70 80 Z' stroke='%23D4AF37' stroke-opacity='0.22'/%3E%3Cpath d='M10 80 L80 90 L150 80 L80 70 Z' stroke='%23C47A1A' stroke-opacity='0.18'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+
+  .katha-card {
+    transition:
+      transform var(--duration-base) var(--ease-out-expo),
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-base) var(--ease-out-expo);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .katha-card:hover {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--gold) 42%, var(--border));
+      box-shadow: var(--shadow-elevated), var(--shadow-gold);
+    }
+  }
+
+  .katha-card:active {
+    transform: none;
+  }
+
+  .katha-card .katha-card-media {
+    overflow: hidden;
+  }
+
+  .katha-card .katha-card-media > * {
+    transition: transform 700ms var(--ease-out-expo);
+  }
+
+  .katha-card .katha-card-arrow {
+    transition:
+      transform var(--duration-base) var(--ease-out-expo),
+      color var(--duration-fast) ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .katha-card:hover .katha-card-media > * {
+      transform: scale(1.03);
+    }
+
+    .katha-card:hover .katha-card-arrow {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  .katha-panel {
+    transition:
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) var(--ease-out-expo),
+      background-color var(--duration-base) ease;
+  }
+
+  .katha-panel:hover {
+    border-color: color-mix(in srgb, var(--gold) 28%, var(--border));
+    box-shadow: var(--shadow-soft);
+  }
+
+  .katha-chip {
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      transform var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .katha-chip:hover {
+    transform: translateY(-1px);
+  }
+
+  .katha-house-tab {
+    transition:
+      background-color var(--duration-base) var(--ease-out-expo),
+      border-color var(--duration-fast) ease,
+      color var(--duration-fast) ease,
+      box-shadow var(--duration-base) var(--ease-out-expo),
+      transform var(--duration-base) var(--ease-out-expo);
+  }
+
+  .katha-house-tab[aria-selected="true"] {
+    transform: none;
+  }
+
+  .katha-progress-fill {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .katha-progress-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      color-mix(in srgb, white 35%, transparent) 50%,
+      transparent 65%
+    );
+    background-size: 220% 100%;
+    animation: katha-sheen 3.8s ease-in-out infinite;
+  }
+
+  .katha-hero {
+    transition: box-shadow var(--duration-slow) var(--ease-out-expo);
+  }
+
+  .katha-hero:hover {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .katha-fade-up {
+    animation: katha-fade-up 0.55s var(--ease-out-expo) both;
+  }
+
+  .katha-fade-up-delay {
+    animation: katha-fade-up 0.65s var(--ease-out-expo) both;
+    animation-delay: 0.08s;
+  }
+
+  .katha-stagger > * {
+    animation: content-fade 0.45s var(--ease-out-expo) both;
+  }
+
+  .katha-stagger > *:nth-child(1) {
+    animation-delay: 0.02s;
+  }
+  .katha-stagger > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .katha-stagger > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .katha-stagger > *:nth-child(4) {
+    animation-delay: 0.14s;
+  }
+  .katha-stagger > *:nth-child(5) {
+    animation-delay: 0.18s;
+  }
+  .katha-stagger > *:nth-child(6) {
+    animation-delay: 0.22s;
+  }
+  .katha-stagger > *:nth-child(7) {
+    animation-delay: 0.26s;
+  }
+  .katha-stagger > *:nth-child(8) {
+    animation-delay: 0.3s;
+  }
+  .katha-stagger > *:nth-child(9) {
+    animation-delay: 0.34s;
+  }
+
+  .katha-section-rule {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--gold) 45%, transparent),
+      transparent
+    );
+    transform-origin: center;
+    animation: katha-rule-draw 0.9s var(--ease-out-expo) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .katha-atmosphere-glow,
+    .katha-progress-fill::after,
+    .katha-fade-up,
+    .katha-fade-up-delay,
+    .katha-stagger > *,
+    .katha-section-rule {
+      animation: none;
+    }
+
+    .katha-card,
+    .katha-card:hover,
+    .katha-card:active,
+    .katha-card .katha-card-media > *,
+    .katha-card:hover .katha-card-media > *,
+    .katha-card .katha-card-arrow,
+    .katha-card:hover .katha-card-arrow,
+    .katha-house-tab,
+    .katha-house-tab[aria-selected="true"],
+    .katha-chip:hover,
+    .katha-theme a,
+    .katha-theme button {
+      transition: none;
+      transform: none;
+    }
+  }
+}
+
+@keyframes katha-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes katha-sheen {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+
+@keyframes katha-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes katha-rule-draw {
+  from {
+    opacity: 0;
+    transform: scaleX(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Graha Katha character micro-motions */
+@keyframes katha-char-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes katha-char-sway {
+  0%,
+  100% {
+    transform: rotate(-2.5deg);
+  }
+  50% {
+    transform: rotate(2.5deg);
+  }
+}
+
+@keyframes katha-char-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes katha-char-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes katha-char-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-katha-char-bob,
+  .animate-katha-char-sway,
+  .animate-katha-char-pulse,
+  .animate-katha-char-spin,
+  .animate-katha-char-twinkle {
+    animation: none !important;
   }
 }
 

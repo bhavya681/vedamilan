@@ -26,6 +26,7 @@ import {
   Users,
   Bookmark,
   BookOpen,
+  ScrollText,
 } from "lucide-react";
 
 import { routes } from "@/lib/constants/routes";
@@ -40,6 +41,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.yourConnection]: HeartHandshake,
   [routes.chat]: MessageCircle,
   [routes.kundli]: Stars,
+  [routes.grahaKatha]: ScrollText,
   [routes.dasha]: Hourglass,
   [routes.search]: Search,
   [routes.compatibility]: Compass,
@@ -70,6 +72,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
 
 /** Kundli sub-routes that have their own sidebar entries — parent “My Kundli” stays inactive on these. */
 const KUNDLI_NAV_CHILDREN = [
+  routes.grahaKatha,
   routes.dasha,
   routes.divisionalCharts,
   routes.ashtakavarga,
@@ -122,6 +125,9 @@ export function isDashboardNavActive(pathname: string, href: string) {
   }
   if (href === routes.situationalAlignment) {
     return matchesPath(pathname, routes.situationalAlignment);
+  }
+  if (href === routes.grahaKatha) {
+    return matchesPath(pathname, routes.grahaKatha);
   }
 
   // Default: require a path segment boundary so /kundli does not match /kundli/dasha via bare prefix.

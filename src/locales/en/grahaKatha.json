@@ -1,0 +1,82 @@
+{
+  "title": "Graha Katha",
+  "subtitle": "Stories of the Grahas",
+  "eyebrow": "Vedic Learning",
+  "libraryDescription": "Meet each Graha as a living archetype — animated figures, stories, and traditional meaning — then see how it appears in your Kundli.",
+  "visualGuide": "Each figure is a teaching symbol: Sun radiates, Moon softens, Mars advances, Saturn waits. Open a card to learn through story.",
+  "searchPlaceholder": "Search Saturn, Shani, marriage, career…",
+  "explored": "{count} of {total} Grahas explored",
+  "continue": "Continue",
+  "bookmark": "Bookmark",
+  "bookmarked": "Bookmarked",
+  "beginStory": "Begin the Story",
+  "exploreChart": "Explore in My Chart",
+  "myChart": "See in My Kundli",
+  "story": "The Story",
+  "understand": "Understand the Graha",
+  "houses": "The Planet in the 12 Houses",
+  "housesHint": "Select a house to explore traditional interpretations.",
+  "remedies": "Traditional Remedies",
+  "reflections": "Reflection",
+  "compare": "How do these Grahas interact?",
+  "askAbout": "Ask about this Graha",
+  "askAi": "Ask AI Guru",
+  "labels": {
+    "traditional": "Traditional Vedic Interpretation",
+    "story": "Story & Symbolism",
+    "interpretive": "Interpretive Insight",
+    "remedy": "Traditional Remedy",
+    "reflection": "Reflection",
+    "chart": "Explore Your Chart"
+  },
+  "nature": {
+    "core": "Core Nature",
+    "represents": "Represents",
+    "lesson": "Inner Lesson",
+    "strong": "When Strong",
+    "challenged": "When Challenged",
+    "domains": "Life Domains"
+  },
+  "house": {
+    "traditional": "Traditional Interpretation",
+    "expression": "Life Expression",
+    "lesson": "Possible Lesson",
+    "reflection": "Reflection"
+  },
+  "chapter": {
+    "theStory": "The Story",
+    "symbolizes": "What this symbolizes",
+    "astro": "The Astrological Connection",
+    "teaching": "Key Teaching"
+  },
+  "chart": {
+    "title": "Want to see how this Graha appears in your chart?",
+    "cta": "Explore My {planet}",
+    "engineNote": "Chart data calculated by VedaMilan's astrology engine.",
+    "interpNote": "Interpretation generated from traditional Vedic frameworks.",
+    "placement": "Your {planet}",
+    "house": "House {house}",
+    "sign": "Sign: {sign}",
+    "nakshatra": "Nakshatra: {nakshatra}",
+    "whatMeans": "What This Placement Means",
+    "traditional": "Traditional Interpretation",
+    "mayHighlight": "What This May Highlight",
+    "noChart": "Generate your Kundli to explore this Graha in your chart.",
+    "openKundli": "Open Kundli"
+  },
+  "progress": {
+    "title": "My Vedic Library",
+    "empty": "Begin with any Graha to start your learning journey."
+  },
+  "domains": {
+    "career": "Career",
+    "relationships": "Relationships",
+    "family": "Family",
+    "mind": "Mind",
+    "health": "Health",
+    "spirituality": "Spirituality",
+    "wealth": "Wealth"
+  },
+  "backToLibrary": "All Grahas",
+  "stickyChart": "My Chart"
+}

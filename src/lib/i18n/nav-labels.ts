@@ -7,6 +7,7 @@ export const NAV_HREF_KEYS: Record<string, string> = {
   [routes.matrimony]: "navigation.matrimonyHome",
   [routes.vedicWisdom]: "navigation.rishiSageHome",
   [routes.kundli]: "navigation.myKundli",
+  [routes.grahaKatha]: "navigation.grahaKatha",
   [routes.dasha]: "navigation.dashas",
   [routes.divisionalCharts]: "navigation.charts",
   [routes.ashtakavarga]: "navigation.ashtakavarga",

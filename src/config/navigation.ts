@@ -63,6 +63,12 @@ export const dashboardNav: NavItem[] = [
     modes: ["wisdom"],
   },
   { title: "My Kundli", href: routes.kundli, group: "Astrology", modes: ["astrology"] },
+  {
+    title: "Graha Katha",
+    href: routes.grahaKatha,
+    group: "Astrology",
+    modes: ["astrology"],
+  },
   { title: "Dashas", href: routes.dasha, group: "Astrology", modes: ["astrology"] },
   { title: "Charts", href: routes.divisionalCharts, group: "Astrology", modes: ["astrology"] },
   { title: "Ashtakavarga", href: routes.ashtakavarga, group: "Astrology", modes: ["astrology"] },

@@ -187,6 +187,7 @@ export const MESSAGE_NAMESPACES = [
   "ai",
   "billing",
   "vedic",
+  "grahaKatha",
   "pages",
   "enums",
   "notifications",

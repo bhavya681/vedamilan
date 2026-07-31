@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   formatPlanetStory,
   planetVoiceToneClasses,
   type PlanetVoiceMessage,
 } from "@/application/horoscope/planet-voice";
+import { grahaIdFromEngineName } from "@/domain/graha-katha/engine-map";
+import { grahaKathaPlanet } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 /** Story card below the D1 chart — high contrast, always readable. */
@@ -17,6 +21,7 @@ export function PlanetStoryHover({
 }) {
   const tone = planetVoiceToneClasses(message.condition);
   const story = formatPlanetStory(message);
+  const grahaId = grahaIdFromEngineName(message.planet);
 
   return (
     <div
@@ -46,6 +51,16 @@ export function PlanetStoryHover({
       <p className="text-foreground mt-2.5 text-sm leading-relaxed sm:text-[15px]">
         &ldquo;{story}&rdquo;
       </p>
+      {grahaId ? (
+        <p className="mt-3">
+          <Link
+            href={grahaKathaPlanet(grahaId)}
+            className="text-saffron text-xs font-semibold tracking-wide underline-offset-2 hover:underline"
+          >
+            Learn {message.planet}&apos;s story in Graha Katha
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

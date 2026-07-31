@@ -144,20 +144,23 @@ export class LifeCalendarService {
         })),
         historicalSamples: Object.keys(historicalGocharByAntarStart).length,
       },
-      marriageWindows: marriageTiming.bestMarriageWindows.slice(0, 5).map((w) => ({
-        label: w.label,
-        window: w.window,
-        score: w.score,
-        reason: w.reason,
-        phase:
-          w.endDate && new Date(w.endDate) < new Date()
-            ? ("past" as const)
-            : w.startDate && new Date(w.startDate) <= new Date()
-              ? ("present" as const)
-              : ("future" as const),
-      })),
+      marriageWindows: marriageTiming.bestMarriageWindows
+        .filter((w) => w.score >= 70)
+        .slice(0, 3)
+        .map((w) => ({
+          label: w.label,
+          window: w.window,
+          score: w.score,
+          reason: w.reason,
+          phase:
+            w.endDate && new Date(w.endDate) < new Date()
+              ? ("past" as const)
+              : w.startDate && new Date(w.startDate) <= new Date()
+                ? ("present" as const)
+                : ("future" as const),
+        })),
       methodology:
-        "Past, now, and upcoming windows combine Vimshottari Antardasha with gochar (live for now/upcoming; sky at period midpoint for past). High probability means dasha and transit agree. Directional guidance only — not a fixed prediction.",
+        "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Mild or short windows are filtered out. Directional guidance — not a fixed prediction.",
     };
   }
 }

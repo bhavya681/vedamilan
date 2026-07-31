@@ -10,6 +10,10 @@ describe("isDashboardNavActive", () => {
   });
 
   it("does not keep My Kundli selected on other astrology tabs", () => {
+    expect(isDashboardNavActive(routes.grahaKatha, routes.kundli)).toBe(false);
+    expect(isDashboardNavActive(routes.grahaKatha, routes.grahaKatha)).toBe(true);
+    expect(isDashboardNavActive(`${routes.grahaKatha}/shani`, routes.grahaKatha)).toBe(true);
+
     expect(isDashboardNavActive(routes.dasha, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.dasha, routes.dasha)).toBe(true);
 

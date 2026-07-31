@@ -21,6 +21,7 @@ export {
   WhatIfResult,
 } from "./relationship-journey";
 export { SituationalProfile } from "./situational-alignment";
+export { GrahaLearningProgress } from "./graha-learning-progress";
 export { Chat, Message } from "./chat";
 export { Notification, Plan, Subscription, Payment } from "./billing-notifications";
 export {

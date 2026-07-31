@@ -1,6 +1,7 @@
 /**
  * Lifetime event calendar from Vimshottari dasha + Gochar + Desh–Kaal–Patra.
- * High-probability windows are those where dasha lords and live transits agree.
+ * Surfaces major life chapters only (one primary theme per Antardasha).
+ * Mild / background windows are filtered out so the calendar stays readable.
  * Deterministic; explain-only. Never invents planet positions.
  */
 
@@ -42,6 +43,10 @@ export type LifeEventItem = {
   gocharNote?: string;
   /** Plain-language timing explanation */
   explain: string;
+  /** Always major for shipped events — mild windows are not returned */
+  significance: "major";
+  /** Antardasha span in whole months — helps users see “big period” scale */
+  spanMonths: number;
 };
 
 export type DeshKaalPatraContext = {
@@ -356,11 +361,48 @@ function titleFor(
   probability: EventProbability,
 ) {
   const base = CATEGORY_META[category].title;
-  if (probability === "high") return `High-probability ${base.toLowerCase()}`;
-  if (houseHit) return `${base} · house-lord activation`;
-  if (score >= 88) return `Prime ${base.toLowerCase()}`;
-  if (score >= 78) return `Favorable ${base.toLowerCase()}`;
-  return `Supportive ${base.toLowerCase()}`;
+  if (probability === "high") return `Major · ${base}`;
+  if (houseHit && score >= 80) return `Major · ${base}`;
+  if (score >= 88) return `Major · ${base}`;
+  return `Key chapter · ${base}`;
+}
+
+function spanMonthsBetween(start: Date, end: Date) {
+  const ms = Math.max(0, end.getTime() - start.getTime());
+  return Math.max(1, Math.round(ms / (30.44 * 24 * 60 * 60 * 1000)));
+}
+
+function isSoftTheme(category: LifeEventCategory) {
+  return category === "travel" || category === "spiritual" || category === "health";
+}
+
+/** Keep only windows strong enough to present as a major life chapter. */
+function meetsMajorBar(
+  category: LifeEventCategory,
+  phase: LifeEventPhase,
+  score: number,
+  probability: EventProbability,
+  spanMonths: number,
+): boolean {
+  // Short blips confuse users — keep brief windows only if currently active & strong
+  if (spanMonths < 3 && !(phase === "present" && score >= 78)) return false;
+
+  if (isSoftTheme(category)) {
+    // Soft themes only when clearly major (not background support)
+    if (probability !== "high" && score < 82) return false;
+    if (phase === "past" && score < 80) return false;
+    if (phase === "future" && score < 78) return false;
+    if (phase === "present" && score < 74) return false;
+    return true;
+  }
+
+  // Milestone themes (marriage, career, job, education, wealth, property)
+  if (phase === "past" && score < 76) return false;
+  if (phase === "future" && score < 74) return false;
+  if (phase === "present" && score < 70) return false;
+  // Drop moderate-only noise unless score is clearly decisive
+  if (probability === "moderate" && score < 80) return false;
+  return true;
 }
 
 function cleanPlace(city?: string | null, country?: string | null) {
@@ -399,7 +441,7 @@ export function buildDeshKaalPatra(input: {
         ? `Kaala — you are about ${ageYears} years old; windows favour age-appropriate themes and near-term dasha + gochar confluence.`
         : "Kaala — add birth details so age-aware (Kaala) filtering can refine suggestions.",
     vesselNote:
-      "Patra — suggestions respect capacity and stage of life; high-probability means dasha + transit agreement, not a guarantee.",
+      "Patra — only major Antardasha chapters are shown; mild windows are hidden so the calendar stays clear. Agreement is directional, not a guarantee.",
   };
 }
 
@@ -534,17 +576,6 @@ export function computeLifeEventsCalendar(input: {
       }
       score = clamp(score);
 
-      // Soft themes (travel / spiritual / health) use a gentler bar than career milestones
-      const softTheme = category === "travel" || category === "spiritual" || category === "health";
-      const pastMilestone = phase === "past" && MILESTONE_CATEGORIES.has(category);
-      if (phase === "past" && pastMilestone && score < 70) continue;
-      if (phase === "past" && softTheme && score < 66) continue;
-      if (phase === "past" && !pastMilestone && !softTheme && score < 74) continue;
-      if (phase === "future" && softTheme && score < 64) continue;
-      if (phase === "future" && !softTheme && score < 70) continue;
-      if (phase === "present" && softTheme && score < 58) continue;
-      if (phase === "present" && !softTheme && score < 64) continue;
-
       const houseHit =
         (category === "marriage" &&
           (mahaLord === houseLords.seventh || antarLord === houseLords.seventh)) ||
@@ -559,6 +590,9 @@ export function computeLifeEventsCalendar(input: {
             antarLord === houseLords.twelfth));
 
       const { probability, probabilityLabel } = probabilityFrom(score, gochar.boost, phase);
+      const spanMonths = spanMonthsBetween(start, end);
+      if (!meetsMajorBar(category, phase, score, probability, spanMonths)) continue;
+
       const dashaLabel = `${mahaLord}–${antarLord}`;
       const range = fmtRange(start, end);
       const gocharParts = [gochar.note, gochar.caution].filter(Boolean);
@@ -567,32 +601,37 @@ export function computeLifeEventsCalendar(input: {
           ? `${phase === "past" ? "Sky then · " : ""}${gocharParts.join(" ")}`
           : undefined;
 
+      const spanLabel =
+        spanMonths >= 12
+          ? `${Math.round(spanMonths / 12)}-year chapter`
+          : `${spanMonths}-month chapter`;
+
       const explain =
         phase === "present"
-          ? `Active now (${range}). ${dashaLabel} Antardasha is running${
+          ? `Active major period (${range}, ${spanLabel}). ${dashaLabel} Antardasha is the primary theme now${
               gochar.boost >= 6
-                ? ", and current gochar agrees — high probability for this theme"
+                ? ", and current gochar agrees"
                 : gochar.boost > 0
-                  ? "; gochar adds mild support"
-                  : "; watch gochar month-to-month for confirmation"
+                  ? "; gochar adds confirming support"
+                  : ""
             }.`
           : phase === "future"
-            ? `Upcoming window ${range}. Probability rises when dasha lords stay favourable and gochar activates houses ${meta.gocharHouses.join("/")}.`
-            : `Past window ${range} under ${dashaLabel}. Scored with dasha${
-                hist ? " + gochar at the period midpoint" : ""
+            ? `Upcoming major period ${range} (${spanLabel}). Watch when gochar activates houses ${meta.gocharHouses.join("/")}.`
+            : `Past major period ${range} (${spanLabel}) under ${dashaLabel}${
+                hist ? " — scored with dasha + sky at the midpoint" : ""
               }.`;
 
       events.push({
         id: `${category}-${start.toISOString()}-${antarLord}`,
         category,
         title: titleFor(category, score, Boolean(houseHit), probability),
-        window: range,
+        window: `${range} · ${spanLabel}`,
         startDate: start.toISOString(),
         endDate: end.toISOString(),
         score,
         phase,
         dashaLabel,
-        reason: `${meta.title} in ${dashaLabel} Antardasha (${range}). Score ${score}/100 from dasha lords${
+        reason: `Primary theme of ${dashaLabel} Antardasha (${range}). Score ${score}/100 from dasha lords${
           gochar.boost ? ` + gochar (+${gochar.boost})` : ""
         }.`,
         ageHint: ageAtWindow != null ? `Approx. age ${ageAtWindow}` : undefined,
@@ -601,11 +640,34 @@ export function computeLifeEventsCalendar(input: {
         probabilityLabel,
         gocharNote,
         explain,
+        significance: "major",
+        spanMonths,
       });
     }
   }
 
-  const sorted = events.sort((a, b) => {
+  // One primary life theme per Antardasha — avoid flooding the user with every category
+  const bestByAntar = new Map<string, LifeEventItem>();
+  for (const e of events) {
+    const key = `${e.startDate}|${e.dashaLabel}`;
+    const prev = bestByAntar.get(key);
+    if (!prev) {
+      bestByAntar.set(key, e);
+      continue;
+    }
+    const prevMilestone = MILESTONE_CATEGORIES.has(prev.category) || prev.category === "property";
+    const nextMilestone = MILESTONE_CATEGORIES.has(e.category) || e.category === "property";
+    // Prefer milestone themes when scores are close; otherwise take the higher score
+    if (e.score > prev.score + 2) {
+      bestByAntar.set(key, e);
+    } else if (Math.abs(e.score - prev.score) <= 2 && nextMilestone && !prevMilestone) {
+      bestByAntar.set(key, e);
+    } else if (e.score > prev.score) {
+      bestByAntar.set(key, e);
+    }
+  }
+
+  const sorted = [...bestByAntar.values()].sort((a, b) => {
     const phaseRank = { present: 0, future: 1, past: 2 } as const;
     const probRank = { high: 0, elevated: 1, moderate: 2 } as const;
     if (a.phase !== b.phase) return phaseRank[a.phase] - phaseRank[b.phase];
@@ -615,41 +677,31 @@ export function computeLifeEventsCalendar(input: {
     return (
       probRank[a.probability] - probRank[b.probability] ||
       b.score - a.score ||
+      b.spanMonths - a.spanMonths ||
       a.startDate.localeCompare(b.startDate)
     );
   });
 
-  const seen = new Set<string>();
-  const unique: LifeEventItem[] = [];
-  for (const e of sorted) {
-    const year = e.startDate.slice(0, 4);
-    const key = `${e.category}-${e.phase}-${year}-${e.dashaLabel}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(e);
-  }
-
+  // Tight caps — major chapters only
   const byPhase: Record<LifeEventPhase, LifeEventItem[]> = {
-    past: unique.filter((e) => e.phase === "past").slice(0, 16),
-    present: unique.filter((e) => e.phase === "present").slice(0, 12),
-    future: unique.filter((e) => e.phase === "future").slice(0, 20),
+    past: sorted.filter((e) => e.phase === "past").slice(0, 6),
+    present: sorted.filter((e) => e.phase === "present").slice(0, 4),
+    future: sorted.filter((e) => e.phase === "future").slice(0, 8),
   };
 
-  const presentHighlights = byPhase.present
-    .filter((e) => e.probability === "high" || e.probability === "elevated")
-    .slice(0, 8);
+  const presentHighlights = byPhase.present.slice(0, 4);
   const futureHighlights = byPhase.future
-    .filter((e) => e.probability === "high" || e.probability === "elevated")
-    .slice(0, 10);
+    .filter((e) => e.probability === "high" || e.probability === "elevated" || e.score >= 78)
+    .slice(0, 6);
   const pastHighlights = byPhase.past
     .filter(
       (e) =>
-        MILESTONE_CATEGORIES.has(e.category) &&
-        (e.probability === "high" || e.probability === "elevated" || e.score >= 74),
+        (MILESTONE_CATEGORIES.has(e.category) || e.category === "property") &&
+        (e.probability === "high" || e.probability === "elevated" || e.score >= 78),
     )
-    .slice(0, 10);
+    .slice(0, 6);
 
-  const highProbability = [...presentHighlights, ...futureHighlights].slice(0, 14);
+  const highProbability = [...presentHighlights, ...futureHighlights].slice(0, 8);
 
   return {
     context,

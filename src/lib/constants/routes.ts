@@ -33,6 +33,7 @@ export const routes = {
   chartSouth: "/dashboard/kundli/south",
   chartEast: "/dashboard/kundli/east",
   planets: "/dashboard/kundli/planets",
+  grahaKatha: "/dashboard/kundli/graha-katha",
   nakshatra: "/dashboard/kundli/nakshatra",
   dasha: "/dashboard/kundli/dasha",
   transit: "/dashboard/kundli/transit",
@@ -109,6 +110,11 @@ export const routes = {
 } as const;
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
+
+/** Graha Katha detail path */
+export function grahaKathaPlanet(grahaId: string) {
+  return `${routes.grahaKatha}/${grahaId}`;
+}
 
 /** Consultation virtual-astrologer deep links */
 export const consultationPaths = {

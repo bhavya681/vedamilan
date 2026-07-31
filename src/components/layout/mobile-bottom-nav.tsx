@@ -58,7 +58,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="border-border/40 bg-background/92 dark:bg-background/88 fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shadow-[0_-10px_36px_rgba(20,17,14,0.08)] backdrop-blur-2xl md:hidden dark:shadow-[0_-10px_36px_rgba(0,0,0,0.4)]"
+        className="border-border/40 bg-background/92 dark:bg-background/88 fixed inset-x-0 bottom-0 z-40 border-t px-1.5 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shadow-[0_-10px_36px_rgba(20,17,14,0.08)] backdrop-blur-2xl sm:px-2 md:hidden dark:shadow-[0_-10px_36px_rgba(0,0,0,0.4)]"
         aria-label={t("navigation.workspaceMode")}
         data-mode={mode}
       >
@@ -71,7 +71,7 @@ export function MobileBottomNav() {
                 <LocaleLink
                   href={item.href}
                   className={cn(
-                    "relative flex flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
+                    "relative flex max-w-full flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[10px] leading-tight font-medium transition-colors sm:px-2",
                     active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-current={active ? "page" : undefined}
@@ -84,7 +84,7 @@ export function MobileBottomNav() {
                   >
                     <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
                   </span>
-                  {t(item.labelKey)}
+                  <span className="max-w-full truncate px-0.5 text-center">{t(item.labelKey)}</span>
                   {active ? (
                     <span
                       className="bg-gold absolute bottom-0.5 h-1 w-1 rounded-full"

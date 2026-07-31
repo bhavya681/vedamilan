@@ -34,6 +34,11 @@ function greetingForHour(hour: number) {
 }
 
 const LIFE_AREAS = [
+  {
+    title: "Graha Katha",
+    href: routes.grahaKatha,
+    hint: "Stories, symbolism & 12-house wisdom of the Grahas",
+  },
   { title: "Dashas", href: routes.dasha, hint: "Mahadasha and Antardasha timeline" },
   { title: "Career", href: routes.rajaYogas, hint: "Raja Yogas and recognition themes" },
   { title: "Charts", href: routes.divisionalCharts, hint: "Moon, Sun, D9, D10, D30 & more Vargas" },
@@ -134,13 +139,13 @@ export default function AstrologyHomePage() {
   }
 
   return (
-    <div className="space-y-8 sm:space-y-10">
-      <ContentReveal className="space-y-8 sm:space-y-10">
+    <div className="min-w-0 space-y-7 sm:space-y-10">
+      <ContentReveal className="min-w-0 space-y-7 sm:space-y-10">
         <PageHeader
           title={`${greeting}, ${firstName}`}
           description="Your Vedic profile — what is active in your chart right now."
           actions={
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row">
               <Button asChild className="w-full sm:w-auto">
                 <Link href={routes.kundli}>
                   Open Kundli
@@ -158,52 +163,58 @@ export default function AstrologyHomePage() {
 
         {bundle ? (
           <>
-            <section className="border-border/60 grid gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
-              <div>
+            <section className="border-border/60 grid min-w-0 gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
+              <div className="min-w-0">
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  <Stars className="h-3.5 w-3.5" /> Current Dasha
+                  <Stars className="h-3.5 w-3.5 shrink-0" /> Current Dasha
                 </p>
-                <p className="font-display mt-2 text-2xl sm:text-3xl">
+                <p className="font-display mt-2 text-2xl break-words sm:text-3xl">
                   {bundle.currentMaha || "—"}
                 </p>
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-muted-foreground mt-1 text-sm break-words">
                   Antardasha: {bundle.currentAntar || "—"}
                 </p>
                 <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
                   <Link href={routes.dasha}>Open full Dashas</Link>
                 </Button>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-muted-foreground text-xs tracking-wide uppercase">
                   Your Vedic profile
                 </p>
                 <dl className="mt-2 space-y-1.5 text-sm">
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Lagna</dt>
-                    <dd className="font-medium">{bundle.ascendant || "—"}</dd>
+                    <dt className="text-muted-foreground shrink-0">Lagna</dt>
+                    <dd className="text-right font-medium break-words">
+                      {bundle.ascendant || "—"}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Moon</dt>
-                    <dd className="font-medium">{bundle.moonSign || "—"}</dd>
+                    <dt className="text-muted-foreground shrink-0">Moon</dt>
+                    <dd className="text-right font-medium break-words">{bundle.moonSign || "—"}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Sun</dt>
-                    <dd className="font-medium">{bundle.sunSign || "—"}</dd>
+                    <dt className="text-muted-foreground shrink-0">Sun</dt>
+                    <dd className="text-right font-medium break-words">{bundle.sunSign || "—"}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">Nakshatra</dt>
-                    <dd className="font-medium">{bundle.nakshatra || "—"}</dd>
+                    <dt className="text-muted-foreground shrink-0">Nakshatra</dt>
+                    <dd className="text-right font-medium break-words">
+                      {bundle.nakshatra || "—"}
+                    </dd>
                   </div>
                 </dl>
               </div>
-              <div>
+              <div className="min-w-0 sm:col-span-2 md:col-span-1">
                 <p className="text-muted-foreground text-xs tracking-wide uppercase">
                   Current transits
                 </p>
                 {bundle.gocharHighlights.length ? (
                   <ul className="mt-2 space-y-1.5 text-sm">
                     {bundle.gocharHighlights.slice(0, 3).map((h) => (
-                      <li key={h}>· {h}</li>
+                      <li key={h} className="break-words">
+                        · {h}
+                      </li>
                     ))}
                   </ul>
                 ) : (
@@ -287,11 +298,13 @@ export default function AstrologyHomePage() {
                   <Link
                     key={area.title}
                     href={area.href}
-                    className="group hover:bg-muted/40 flex items-center justify-between gap-4 py-3.5 transition-colors sm:px-1"
+                    className="group hover:bg-muted/40 flex min-w-0 items-center justify-between gap-3 py-3.5 transition-colors sm:gap-4 sm:px-1"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-medium">{area.title}</p>
-                      <p className="text-muted-foreground mt-0.5 text-sm">{area.hint}</p>
+                      <p className="text-muted-foreground mt-0.5 text-sm leading-snug">
+                        {area.hint}
+                      </p>
                     </div>
                     <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                   </Link>
