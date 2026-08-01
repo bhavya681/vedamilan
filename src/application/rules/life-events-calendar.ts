@@ -23,6 +23,9 @@ export type LifeEventPhase = "past" | "present" | "future";
 
 export type EventProbability = "high" | "elevated" | "moderate";
 
+/** Travel specificity — classical 3rd / 9th / 12th house framing */
+export type TravelKind = "foreign" | "long_distance" | "local" | "relocation" | "pilgrimage";
+
 export type LifeEventItem = {
   id: string;
   category: LifeEventCategory;
@@ -47,6 +50,10 @@ export type LifeEventItem = {
   significance: "major";
   /** Antardasha span in whole months — helps users see “big period” scale */
   spanMonths: number;
+  /** For travel events — foreign / local / relocation etc. */
+  travelKind?: TravelKind;
+  /** Short human label for chips (e.g. “Foreign travel”) */
+  detailLabel?: string;
 };
 
 export type DeshKaalPatraContext = {
@@ -145,13 +152,13 @@ const CATEGORY_META: Record<
     gocharPlanets: new Set(["Mars", "Moon", "Venus", "Saturn"]),
   },
   travel: {
-    title: "Travel / relocation",
+    title: "Travel",
     // 9th/12th/Rahu themes — Venus & Ketu often mark foreign / long-distance shifts
     lords: new Set(["Rahu", "Moon", "Mercury", "Jupiter", "Venus", "Ketu", "Sun"]),
     ageMin: 16,
     ageMax: 70,
     suggestion:
-      "Good for purposeful travel or relocation planning; Rahu periods may bring unconventional paths.",
+      "Plan purposeful movement in this Antardasha; confirm visas, leave, and muhurta when the type is foreign or long-distance.",
     gocharHouses: [3, 7, 9, 12],
     gocharPlanets: new Set(["Rahu", "Moon", "Mercury", "Jupiter", "Venus", "Ketu", "Sun"]),
   },
@@ -359,12 +366,145 @@ function titleFor(
   score: number,
   houseHit: boolean,
   probability: EventProbability,
+  detailTitle?: string,
 ) {
-  const base = CATEGORY_META[category].title;
+  const base = detailTitle || CATEGORY_META[category].title;
   if (probability === "high") return `Major · ${base}`;
   if (houseHit && score >= 80) return `Major · ${base}`;
   if (score >= 88) return `Major · ${base}`;
   return `Key chapter · ${base}`;
+}
+
+/**
+ * Classify travel flavour from dasha lords + house lords + gochar.
+ * Classical: 3rd = short/local, 9th = long/far, 12th = foreign/abroad, Ketu/Jupiter = pilgrimage.
+ */
+export function classifyTravelKind(input: {
+  mahaLord: string;
+  antarLord: string;
+  ninthLord?: string | null;
+  twelfthLord?: string | null;
+  thirdLord?: string | null;
+  fourthLord?: string | null;
+  gochar?: GocharLite[] | null;
+  spanMonths: number;
+}): { kind: TravelKind; label: string; title: string; suggestion: string } {
+  const { mahaLord, antarLord, spanMonths } = input;
+  const lords = new Set([mahaLord, antarLord]);
+  const hit = (lord?: string | null) => Boolean(lord && lords.has(lord));
+
+  const gochar = input.gochar || [];
+  const gHouse = (h: number) => gochar.some((g) => g.houseFromNatalLagna === h);
+  const gPlanetHouse = (planet: string, houses: number[]) =>
+    gochar.some((g) => g.planet === planet && houses.includes(g.houseFromNatalLagna));
+
+  let foreignPts = 0;
+  let longPts = 0;
+  let localPts = 0;
+  let relocatePts = 0;
+  let pilgrimPts = 0;
+
+  // Dasha lord affinities
+  if (lords.has("Rahu")) {
+    foreignPts += 3;
+    longPts += 1;
+  }
+  if (lords.has("Ketu")) {
+    pilgrimPts += 2;
+    foreignPts += 1;
+  }
+  if (lords.has("Venus")) {
+    foreignPts += 1;
+    longPts += 1;
+  }
+  if (lords.has("Jupiter")) {
+    longPts += 2;
+    pilgrimPts += 2;
+  }
+  if (lords.has("Mercury") || lords.has("Moon")) {
+    localPts += 2;
+    longPts += 1;
+  }
+  if (lords.has("Mars") || lords.has("Saturn")) {
+    relocatePts += 2;
+  }
+  if (lords.has("Sun")) longPts += 1;
+
+  // House-lord activation
+  if (hit(input.twelfthLord)) foreignPts += 4;
+  if (hit(input.ninthLord)) {
+    longPts += 3;
+    pilgrimPts += 1;
+  }
+  if (hit(input.thirdLord)) localPts += 4;
+  if (hit(input.fourthLord)) relocatePts += 3;
+
+  // Gochar confirmation
+  if (gHouse(12) || gPlanetHouse("Rahu", [9, 12]) || gPlanetHouse("Venus", [12])) foreignPts += 3;
+  if (gHouse(9) || gPlanetHouse("Jupiter", [3, 9])) longPts += 2;
+  if (gHouse(3) || gPlanetHouse("Moon", [3]) || gPlanetHouse("Mercury", [3])) localPts += 3;
+  if (gHouse(4) || gPlanetHouse("Mars", [4, 12]) || gPlanetHouse("Saturn", [4])) relocatePts += 2;
+  if (gPlanetHouse("Ketu", [9, 12]) || gPlanetHouse("Jupiter", [12])) pilgrimPts += 2;
+
+  // Longer Antardasha leans relocation vs short trips
+  if (spanMonths >= 14) relocatePts += 2;
+  if (spanMonths <= 6) localPts += 1;
+
+  const ranked: Array<{ kind: TravelKind; pts: number }> = [
+    { kind: "foreign", pts: foreignPts },
+    { kind: "pilgrimage", pts: pilgrimPts },
+    { kind: "relocation", pts: relocatePts },
+    { kind: "long_distance", pts: longPts },
+    { kind: "local", pts: localPts },
+  ];
+  ranked.sort((a, b) => b.pts - a.pts);
+
+  const top = ranked[0]!;
+  // Tie-break: if foreign and long are close, prefer foreign when 12th/Rahu present
+  let kind = top.kind;
+  if (
+    top.kind === "long_distance" &&
+    foreignPts >= longPts - 1 &&
+    (hit(input.twelfthLord) || lords.has("Rahu"))
+  ) {
+    kind = "foreign";
+  }
+  if (top.pts <= 0) kind = "long_distance";
+
+  const COPY: Record<TravelKind, { label: string; title: string; suggestion: string }> = {
+    foreign: {
+      label: "Foreign travel",
+      title: "Foreign travel / abroad",
+      suggestion:
+        "Favour passport, visa, and overseas plans in this window; confirm muhurta before long stays abroad.",
+    },
+    long_distance: {
+      label: "Long-distance travel",
+      title: "Long-distance / interstate travel",
+      suggestion:
+        "Strong for far domestic journeys, transfers, or multi-city work trips — book with buffer days.",
+    },
+    local: {
+      label: "Local travel",
+      title: "Local / short travel",
+      suggestion:
+        "Good for nearby trips, commuting changes, and short stays within your region — keep plans flexible.",
+    },
+    relocation: {
+      label: "Relocation",
+      title: "Relocation / change of place",
+      suggestion:
+        "Points to shifting base or settling elsewhere; align housing, paperwork, and family timing first.",
+    },
+    pilgrimage: {
+      label: "Pilgrimage travel",
+      title: "Pilgrimage / sacred travel",
+      suggestion:
+        "Favour tirtha, temple journeys, or retreat travel; pair with quiet practice rather than rushed tourism.",
+    },
+  };
+
+  return { kind, ...COPY[kind] };
 }
 
 function spanMonthsBetween(start: Date, end: Date) {
@@ -497,6 +637,7 @@ export function computeLifeEventsCalendar(input: {
     tenth: lordOfHouse(lagna, 10),
     fourth: lordOfHouse(lagna, 4),
     second: lordOfHouse(lagna, 2),
+    third: lordOfHouse(lagna, 3),
     ninth: lordOfHouse(lagna, 9),
     twelfth: lordOfHouse(lagna, 12),
   };
@@ -606,6 +747,20 @@ export function computeLifeEventsCalendar(input: {
           ? `${Math.round(spanMonths / 12)}-year chapter`
           : `${spanMonths}-month chapter`;
 
+      const travel =
+        category === "travel"
+          ? classifyTravelKind({
+              mahaLord,
+              antarLord,
+              ninthLord: houseLords.ninth,
+              twelfthLord: houseLords.twelfth,
+              thirdLord: houseLords.third,
+              fourthLord: houseLords.fourth,
+              gochar: gocharPlanetsForScore,
+              spanMonths,
+            })
+          : null;
+
       const explain =
         phase === "present"
           ? `Active major period (${range}, ${spanLabel}). ${dashaLabel} Antardasha is the primary theme now${
@@ -614,34 +769,38 @@ export function computeLifeEventsCalendar(input: {
                 : gochar.boost > 0
                   ? "; gochar adds confirming support"
                   : ""
-            }.`
+            }${travel ? ` — read as ${travel.label.toLowerCase()}` : ""}.`
           : phase === "future"
-            ? `Upcoming major period ${range} (${spanLabel}). Watch when gochar activates houses ${meta.gocharHouses.join("/")}.`
+            ? `Upcoming major period ${range} (${spanLabel})${
+                travel ? ` for ${travel.label.toLowerCase()}` : ""
+              }. Watch when gochar activates houses ${meta.gocharHouses.join("/")}.`
             : `Past major period ${range} (${spanLabel}) under ${dashaLabel}${
-                hist ? " — scored with dasha + sky at the midpoint" : ""
-              }.`;
+                travel ? ` · ${travel.label}` : ""
+              }${hist ? " — scored with dasha + sky at the midpoint" : ""}.`;
 
       events.push({
         id: `${category}-${start.toISOString()}-${antarLord}`,
         category,
-        title: titleFor(category, score, Boolean(houseHit), probability),
+        title: titleFor(category, score, Boolean(houseHit), probability, travel?.title),
         window: `${range} · ${spanLabel}`,
         startDate: start.toISOString(),
         endDate: end.toISOString(),
         score,
         phase,
         dashaLabel,
-        reason: `Primary theme of ${dashaLabel} Antardasha (${range}). Score ${score}/100 from dasha lords${
-          gochar.boost ? ` + gochar (+${gochar.boost})` : ""
-        }.`,
+        reason: `Primary theme of ${dashaLabel} Antardasha (${range})${
+          travel ? ` · ${travel.label}` : ""
+        }. Score ${score}/100 from dasha lords${gochar.boost ? ` + gochar (+${gochar.boost})` : ""}.`,
         ageHint: ageAtWindow != null ? `Approx. age ${ageAtWindow}` : undefined,
-        suggestion: meta.suggestion,
+        suggestion: travel?.suggestion ?? meta.suggestion,
         probability,
         probabilityLabel,
         gocharNote,
         explain,
         significance: "major",
         spanMonths,
+        travelKind: travel?.kind,
+        detailLabel: travel?.label,
       });
     }
   }

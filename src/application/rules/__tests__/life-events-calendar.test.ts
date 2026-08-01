@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   computeLifeEventsCalendar,
+  classifyTravelKind,
   scoreGocharForCategory,
 } from "@/application/rules/life-events-calendar";
 
@@ -14,6 +15,43 @@ describe("life events calendar + gochar", () => {
     ]);
     expect(boost).toBeGreaterThanOrEqual(8);
     expect(note).toMatch(/Gochar support/i);
+  });
+
+  it("classifies foreign vs local travel from dasha and houses", () => {
+    const foreign = classifyTravelKind({
+      mahaLord: "Venus",
+      antarLord: "Rahu",
+      twelfthLord: "Rahu",
+      ninthLord: "Jupiter",
+      thirdLord: "Mars",
+      gochar: [{ planet: "Rahu", houseFromNatalLagna: 12 }],
+      spanMonths: 18,
+    });
+    expect(foreign.kind).toBe("foreign");
+    expect(foreign.label).toMatch(/Foreign/i);
+
+    const local = classifyTravelKind({
+      mahaLord: "Moon",
+      antarLord: "Mercury",
+      thirdLord: "Mercury",
+      ninthLord: "Jupiter",
+      twelfthLord: "Saturn",
+      gochar: [{ planet: "Moon", houseFromNatalLagna: 3 }],
+      spanMonths: 5,
+    });
+    expect(local.kind).toBe("local");
+    expect(local.label).toMatch(/Local/i);
+
+    const pilgrim = classifyTravelKind({
+      mahaLord: "Jupiter",
+      antarLord: "Ketu",
+      ninthLord: "Jupiter",
+      twelfthLord: "Saturn",
+      thirdLord: "Mars",
+      gochar: [{ planet: "Ketu", houseFromNatalLagna: 9 }],
+      spanMonths: 10,
+    });
+    expect(pilgrim.kind).toBe("pilgrimage");
   });
 
   it("surfaces past major job chapter around mid-2025 Venus–Ketu with historical gochar", () => {

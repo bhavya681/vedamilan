@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { GlassCard, MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skeletons";
 import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
+import { SpouseTendencyPanel } from "@/features/compatibility/spouse-tendency-panel";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
@@ -37,6 +38,14 @@ type Bundle = {
   }>;
   insight: string | null;
   unread: number;
+  spouseTendencies?: {
+    marriagePathLabel?: string;
+    marriagePathNote?: string;
+    spouseOriginLabel?: string;
+    spouseOriginNote?: string;
+    reasons?: string[];
+    methodology?: string;
+  } | null;
 };
 
 function greetingForHour(hour: number) {
@@ -66,13 +75,16 @@ export default function MatrimonyHomePage() {
   useEffect(() => {
     async function load() {
       try {
-        const [me, profile, matches, ai, notes, chartRes] = await Promise.all([
+        const [me, profile, matches, ai, notes, chartRes, marriageRes] = await Promise.all([
           fetch("/api/auth/me").then((r) => r.json()),
           fetch("/api/profile").then((r) => r.json()),
           fetch("/api/recommendations").then((r) => r.json()),
           fetch("/api/ai/insights").then((r) => r.json()),
           fetch("/api/notifications").then((r) => r.json()),
           fetch("/api/horoscope").then((r) => r.json()),
+          fetch("/api/marriage-timing")
+            .then((r) => r.json())
+            .catch(() => null),
         ]);
 
         const profileData = profile.success ? profile.data : null;
@@ -107,6 +119,9 @@ export default function MatrimonyHomePage() {
           matches: matchItems.slice(0, 3),
           insight: insight ? String(insight).slice(0, 320) : null,
           unread: notes.success ? notes.data.unread || 0 : 0,
+          spouseTendencies: marriageRes?.success
+            ? marriageRes.data?.spouseTendencies || null
+            : null,
         });
       } catch {
         setError("Failed to load matrimony home");
@@ -173,6 +188,10 @@ export default function MatrimonyHomePage() {
                 </Button>
               </div>
             </section>
+
+            {bundle.spouseTendencies ? (
+              <SpouseTendencyPanel tendencies={bundle.spouseTendencies} />
+            ) : null}
 
             <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="min-w-0 space-y-1">

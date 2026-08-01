@@ -8,6 +8,7 @@ import { pairKey, scoreAshtaKoota } from "./ashta-koota";
 import { scoreAdvancedMarriageDynamics, type AmdChartInput } from "./advanced-marriage-dynamics";
 import { scoreDeepCompatibility, type DeepChartInput } from "./deep-compatibility";
 import { seventhLord, type ChartPlanetLite } from "./shukra-milan";
+import { predictSpouseTendencies } from "./spouse-prediction";
 import {
   computeMarriageWindows,
   predictPairTiming,
@@ -389,6 +390,11 @@ export class CompatibilityService {
 
     const gochar = await safeGochar(userId);
     const seventh = seventhLord(chart.lagnaSign || "Aries");
+    const deep = toDeepChart(chart);
+    const spouseTendencies = predictSpouseTendencies({
+      lagnaSign: chart.lagnaSign,
+      planets: deep.planets,
+    });
     const timingPrediction = predictSelfTiming({
       periods: periodsFrom(dasha),
       gocharPlanets: gochar?.planets,
@@ -413,6 +419,7 @@ export class CompatibilityService {
       currentMaha: dasha.currentMaha,
       currentAntar: dasha.currentAntar,
       seventhLord: seventh,
+      spouseTendencies,
       timingPrediction,
       gochar: gochar
         ? {

@@ -4,9 +4,14 @@ import { computeGocharAtDate, computeGocharForUser } from "@/application/horosco
 import {
   computeLifeEventsCalendar,
   type GocharLite,
+  type LifeEventItem,
 } from "@/application/rules/life-events-calendar";
 import { predictSelfTiming, ensureAntardashaCoverage } from "@/application/rules/timing-prediction";
 import { seventhLord } from "@/application/rules/shukra-milan";
+import {
+  marriageDetailFromTendencies,
+  predictSpouseTendencies,
+} from "@/application/rules/spouse-prediction";
 import { NotFoundError } from "@/lib/utils/error-handler";
 
 type PeriodRow = {
@@ -94,6 +99,19 @@ export class LifeCalendarService {
     }
 
     const seventh = seventhLord(chart.lagnaSign || "Aries");
+    const planets = Array.isArray(chart.planets)
+      ? (chart.planets as Array<{ planet?: string; sign?: string; house?: number }>).map((p) => ({
+          planet: String(p.planet || ""),
+          sign: String(p.sign || "Aries"),
+          house: Number(p.house || 1),
+        }))
+      : [];
+    const spouseTendencies = predictSpouseTendencies({
+      lagnaSign: chart.lagnaSign,
+      planets,
+    });
+    const marriageDetail = marriageDetailFromTendencies(spouseTendencies);
+
     const marriageTiming = predictSelfTiming({
       periods,
       gocharPlanets: gochar?.planets,
@@ -118,16 +136,38 @@ export class LifeCalendarService {
       now,
     });
 
+    const enrichMarriage = (e: LifeEventItem): LifeEventItem => {
+      if (e.category !== "marriage") return e;
+      return {
+        ...e,
+        title:
+          e.probability === "high" || e.score >= 80
+            ? `Major · ${marriageDetail.title}`
+            : `Key chapter · ${marriageDetail.title}`,
+        detailLabel: marriageDetail.detailLabel,
+        suggestion: marriageDetail.suggestion,
+        explain: `${e.explain} Chart leaning: ${spouseTendencies.marriagePathLabel}; ${spouseTendencies.spouseOriginLabel}.`,
+      };
+    };
+
+    const byPhase = {
+      past: life.byPhase.past.map(enrichMarriage),
+      present: life.byPhase.present.map(enrichMarriage),
+      future: life.byPhase.future.map(enrichMarriage),
+    };
+    const events = [...byPhase.present, ...byPhase.future, ...byPhase.past];
+
     return {
       context: life.context,
-      events: life.events,
-      byPhase: life.byPhase,
-      highProbability: life.highProbability,
-      pastHighlights: life.pastHighlights,
-      presentHighlights: life.presentHighlights,
-      futureHighlights: life.futureHighlights,
+      events,
+      byPhase,
+      highProbability: life.highProbability.map(enrichMarriage),
+      pastHighlights: life.pastHighlights.map(enrichMarriage),
+      presentHighlights: life.presentHighlights.map(enrichMarriage),
+      futureHighlights: life.futureHighlights.map(enrichMarriage),
       categories: life.categories,
       gocharSummary: life.gocharSummary,
+      spouseTendencies,
       snapshot: {
         lagnaSign: chart.lagnaSign,
         moonSign: chart.moonSign,
@@ -151,7 +191,7 @@ export class LifeCalendarService {
           label: w.label,
           window: w.window,
           score: w.score,
-          reason: w.reason,
+          reason: `${w.reason} · ${marriageDetail.detailLabel}; ${spouseTendencies.spouseOriginLabel}.`,
           phase:
             w.endDate && new Date(w.endDate) < new Date()
               ? ("past" as const)
@@ -160,7 +200,7 @@ export class LifeCalendarService {
                 : ("future" as const),
         })),
       methodology:
-        "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Mild or short windows are filtered out. Directional guidance — not a fixed prediction.",
+        "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Marriage cards include love/arranged and spouse-origin leanings from D1. Mild windows are filtered out. Directional guidance — not a fixed prediction.",
     };
   }
 }

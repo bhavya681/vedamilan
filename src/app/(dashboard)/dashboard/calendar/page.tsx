@@ -36,6 +36,10 @@ import type {
   LifeEventPhase,
   DeshKaalPatraContext,
 } from "@/application/rules/life-events-calendar";
+import {
+  SpouseTendencyPanel,
+  type SpouseTendenciesView,
+} from "@/features/compatibility/spouse-tendency-panel";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -193,6 +197,11 @@ function EventCard({ e, showPhase }: { e: LifeEventItem; showPhase?: boolean }) 
             <Badge variant="secondary" className="text-[10px]">
               Major period
             </Badge>
+            {e.detailLabel ? (
+              <Badge variant="outline" className="text-[10px]">
+                {e.detailLabel}
+              </Badge>
+            ) : null}
             {typeof e.spanMonths === "number" ? (
               <Badge variant="outline" className="text-[10px]">
                 {e.spanMonths >= 12 ? `~${Math.round(e.spanMonths / 12)} yr` : `${e.spanMonths} mo`}
@@ -215,7 +224,7 @@ function EventCard({ e, showPhase }: { e: LifeEventItem; showPhase?: boolean }) 
             </p>
           ) : null}
           <p className="text-muted-foreground text-[10px] leading-relaxed break-words sm:text-[11px] md:text-xs">
-            {e.dashaLabel} · {CATEGORY_LABELS[e.category]} · ~{pct}% likelihood
+            {e.dashaLabel} · {e.detailLabel || CATEGORY_LABELS[e.category]} · ~{pct}% likelihood
           </p>
           <p className="text-muted-foreground hidden text-[11px] leading-relaxed break-words sm:block sm:text-xs">
             {e.suggestion}
@@ -301,6 +310,7 @@ type CalendarPayload = {
     reason: string;
     phase: LifeEventPhase;
   }>;
+  spouseTendencies?: SpouseTendenciesView | null;
   methodology: string;
 };
 
@@ -654,6 +664,8 @@ export default function CalendarPage() {
 
             {/* Side panels stay visible beside the scroll panel on desktop */}
             <aside className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 lg:sticky lg:top-4 lg:grid-cols-1 lg:self-start">
+              <SpouseTendencyPanel tendencies={data.spouseTendencies} compact />
+
               <GlassCard className="min-w-0 space-y-3 p-3.5 sm:p-5 lg:p-6">
                 <h2 className="font-display text-base sm:text-lg">Marriage focus</h2>
                 <ul className="space-y-2.5 text-sm">
@@ -689,7 +701,8 @@ export default function CalendarPage() {
                 <h2 className="font-display text-base sm:text-lg">How to read</h2>
                 <ul className="text-muted-foreground space-y-2 text-[11px] leading-relaxed sm:text-xs">
                   <li>· Only major multi-month chapters — mild windows are hidden.</li>
-                  <li>· One primary life theme per Antardasha period.</li>
+                  <li>· Travel cards specify foreign / local / relocation when possible.</li>
+                  <li>· Marriage cards include love vs arranged and spouse-origin leanings.</li>
                   <li>· % is directional (dasha + gochar), not a guarantee.</li>
                 </ul>
                 <div className="flex flex-col gap-2">
