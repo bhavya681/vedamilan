@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
-import { GlassCard } from "@/components/ui/premium-cards";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
@@ -46,7 +46,7 @@ import {
 } from "@/features/compatibility/spouse-tendency-panel";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const CATEGORY_COLORS: Record<
   LifeEventCategory,
@@ -201,7 +201,7 @@ function likelihoodTone(pct: number) {
   return "border-primary/35 bg-primary/10 text-foreground";
 }
 
-function LikelihoodBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" }) {
+function LikelihoodBadge({ score, size: _size = "md" }: { score: number; size?: "sm" | "md" }) {
   const pct = likelihoodPct(score);
   return (
     <span
@@ -219,13 +219,7 @@ function LikelihoodBadge({ score, size = "md" }: { score: number; size?: "sm" | 
   );
 }
 
-function ChipScroller({
-  children,
-  activeCategory,
-}: {
-  children: ReactNode;
-  activeCategory: string;
-}) {
+function ChipScroller({ children }: { children: ReactNode }) {
   return (
     <div className="scrollbar-hidden -mx-0.5 flex gap-1.5 overflow-x-auto px-0.5 pb-0.5 [-webkit-overflow-scrolling:touch] sm:gap-2">
       {children}
@@ -233,18 +227,9 @@ function ChipScroller({
   );
 }
 
-function EventCard({
-  e,
-  showPhase,
-  index,
-}: {
-  e: LifeEventItem;
-  showPhase?: boolean;
-  index?: number;
-}) {
+function EventCard({ e, showPhase }: { e: LifeEventItem; showPhase?: boolean }) {
   const Icon = CATEGORY_ICONS[e.category];
   const pct = likelihoodPct(e.score);
-  const colors = CATEGORY_COLORS[e.category];
   const isMarriage = e.category === "marriage";
   const isHigh = pct >= 80;
 
@@ -400,15 +385,7 @@ function sortByLikelihood(list: LifeEventItem[]) {
 }
 
 /** Scrollable event panel — keeps page height stable on desktop when All is dense */
-function EventScrollPanel({
-  total,
-  children,
-  phase,
-}: {
-  total: number;
-  children: ReactNode;
-  phase?: TimeTab;
-}) {
+function EventScrollPanel({ total, children }: { total: number; children: ReactNode }) {
   return (
     <div className="border-border/50 bg-card/30 relative min-w-0 overflow-hidden rounded-2xl border">
       <div className="border-border/40 bg-background/80 flex items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-4">
@@ -998,7 +975,7 @@ export default function CalendarPage() {
                   </TabsList>
 
                   <div className="mt-3 sm:mt-4">
-                    <ChipScroller activeCategory={category}>
+                    <ChipScroller>
                       {CATEGORY_CHIP_ORDER.map((key) => {
                         const isActive = category === key;
                         const colors = key === "all" ? null : CATEGORY_COLORS[key];
@@ -1074,19 +1051,14 @@ export default function CalendarPage() {
                           </p>
                         </motion.div>
                       ) : (
-                        <EventScrollPanel total={list.length} phase={tab}>
+                        <EventScrollPanel total={list.length}>
                           <div className="space-y-2">
                             <p className="text-muted-foreground bg-card/95 sticky top-0 z-[1] px-0.5 py-1 text-[10px] font-semibold tracking-[0.12em] uppercase backdrop-blur-sm">
                               Primary Antardasha themes
                             </p>
                             <ul className="space-y-2 sm:space-y-2.5">
-                              {list.map((e, idx) => (
-                                <EventCard
-                                  key={`${key}-${e.id}`}
-                                  e={e}
-                                  showPhase={key === "all"}
-                                  index={idx}
-                                />
+                              {list.map((e) => (
+                                <EventCard key={`${key}-${e.id}`} e={e} showPhase={key === "all"} />
                               ))}
                             </ul>
                           </div>
