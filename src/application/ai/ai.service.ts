@@ -14,6 +14,7 @@ import { compatibilityService } from "@/application/rules/compatibility.service"
 import { matchmakingService } from "@/application/matchmaking/matchmaking.service";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { vedaAgents, type VedaAgentKey } from "@/mastra/agents/veda-agents";
+import { type YogaItem } from "@/features/ai/components/guru-chart-panels";
 
 function hasLlmCredentials(): boolean {
   return Boolean(
@@ -230,10 +231,29 @@ async function deterministicExplain(
           .join(" "),
       );
     }
-    case "MARRIAGE_TIMING": {
+    case "MARRIAGE_TIMING":
+    case "MARRIAGE_GURU": {
       try {
         const timing = await compatibilityService.marriageTimingForUser(userId);
         const top = timing.windows?.[0];
+        const spouse = timing.spouseTendencies;
+        if (agent === "MARRIAGE_GURU") {
+          const lines = [
+            `**Your question:** ${message.trim().slice(0, 220)}`,
+            "",
+            top
+              ? `Stronger marriage window: **${top.label}** (${top.window}, score ${top.score}/100).`
+              : "Generate kundli and dasha for marriage windows.",
+            timing.currentMaha
+              ? `Current Mahadasha **${timing.currentMaha}**${timing.currentAntar ? ` · Antardasha **${timing.currentAntar}**` : ""}.`
+              : null,
+            spouse
+              ? `Chart leaning: **${spouse.marriagePathLabel}**; **${spouse.spouseOriginLabel}**.`
+              : null,
+            "Exact wedding day still needs classical panchang muhurta — this is directional guidance.",
+          ].filter(Boolean);
+          return withVedicDisclaimer(lines.join("\n"));
+        }
         return withVedicDisclaimer(
           top
             ? `Based on dasha windows from the rule engine, a stronger traditional window is ${top.label} (${top.window}, score ${top.score}). Current Mahadasha: ${timing.currentMaha}. Review multiple windows before major decisions.`
@@ -535,6 +555,153 @@ export class AiService {
         "What should I watch this month?",
         "Explain my Lagna in simple words.",
       ],
+      disclaimer: VEDIC_AI_DISCLAIMER,
+    };
+  }
+
+  async marriageGuruBundle(userId: string) {
+    await connectMongo();
+    let timing: Awaited<ReturnType<typeof compatibilityService.marriageTimingForUser>> | null =
+      null;
+    try {
+      timing = await compatibilityService.marriageTimingForUser(userId);
+    } catch {
+      timing = null;
+    }
+
+    const spouse = timing?.spouseTendencies;
+    const topWindow = timing?.windows?.[0];
+    const tp = timing?.timingPrediction;
+
+    const [chart, dasha] = await Promise.all([
+      Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
+      Dasha.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
+    ]);
+
+    let gochar: Awaited<ReturnType<typeof computeGocharForUser>> | null = null;
+    try {
+      gochar = await computeGocharForUser(userId);
+    } catch {
+      // gochar is optional for marriage guru
+    }
+
+    const yogas = chart?.yogas || [];
+    const rajaYogas = yogas.filter((y: YogaItem) =>
+      /raja|gajakesari|dharma.?karma|budhaditya|ruchaka/i.test(`${y.code} ${y.name}`),
+    );
+
+    const chartSummary = chart
+      ? {
+          lagnaSign: chart.lagnaSign,
+          moonSign: chart.moonSign,
+          sunSign: chart.sunSign,
+          manglikStatus: chart.manglikStatus,
+          planets: (chart.planets || [])
+            .filter((p) =>
+              [
+                "Sun",
+                "Moon",
+                "Mars",
+                "Mercury",
+                "Jupiter",
+                "Venus",
+                "Saturn",
+                "Rahu",
+                "Ketu",
+              ].includes(p.planet),
+            )
+            .map((p) => ({
+              planet: p.planet,
+              sign: p.sign,
+              house: p.house,
+              nakshatra: p.nakshatra,
+              dignity: p.dignity,
+              isRetrograde: p.isRetrograde,
+            })),
+        }
+      : null;
+
+    const openingParts = [
+      "Namaste. I am **Marriage AI Guru** — your matrimony specialist for vivaha timing, spouse themes, and alliance readiness.",
+    ];
+    if (topWindow) {
+      openingParts.push(
+        `A stronger marriage window on your chart: **${topWindow.label}** (${topWindow.window}).`,
+      );
+    }
+    if (spouse) {
+      openingParts.push(
+        `Chart leaning: **${spouse.marriagePathLabel}** · **${spouse.spouseOriginLabel}**.`,
+      );
+    }
+    if (tp) {
+      openingParts.push(`Marry-now read: **${tp.marryNowTitle}** (${tp.marryNowScore}/100).`);
+    }
+    openingParts.push(
+      "Ask about marriage timing, love vs arranged cues, manglik, or when to progress with a match — I stay focused on marriage only.",
+    );
+
+    return {
+      hasChart: Boolean(chart),
+      chartSummary,
+      openingMessage: withVedicDisclaimer(openingParts.join(" ")),
+      suggestedPrompts: [
+        "When is my best marriage window?",
+        "Love or arranged — what does my chart suggest?",
+        "Is now a good time to seek a partner?",
+        "What should I look for in a spouse?",
+        "How does manglik affect my marriage timing?",
+        "Will my current dasha support marriage this year?",
+        "What does my 7th house say about partnership?",
+        "When should I progress with a match?",
+      ],
+      marriageWindows: (timing?.windows || []).slice(0, 5),
+      spouseTendencies: spouse || null,
+      marryNow: tp
+        ? {
+            score: tp.marryNowScore,
+            title: tp.marryNowTitle,
+            reason: tp.marryNowReason,
+            verdict: tp.marryNowVerdict,
+          }
+        : null,
+      currentMaha: timing?.currentMaha || dasha?.currentMaha || null,
+      currentAntar: timing?.currentAntar || dasha?.currentAntar || null,
+      rajaYogas,
+      yogas,
+      doshas: chart?.doshas || [],
+      dasha: dasha
+        ? {
+            currentMaha: dasha.currentMaha,
+            currentAntar: dasha.currentAntar,
+            periods: (dasha.periods || [])
+              .filter((p) => p.level === "MAHA" || p.level === "ANTAR")
+              .slice(0, 12)
+              .map((p) => ({
+                lord: p.lord,
+                level: p.level,
+                parentLord: p.parentLord,
+                startDate: p.startDate,
+                endDate: p.endDate,
+              })),
+          }
+        : null,
+      gochar: gochar
+        ? {
+            asOf: gochar.asOf,
+            transitAscendant: gochar.natalLagna,
+            natalLagna: gochar.natalLagna,
+            highlights: gochar.highlights,
+            planets: (gochar.planets || []).map((p) => ({
+              planet: p.planet,
+              sign: p.sign,
+              houseFromNatalLagna: p.houseFromNatalLagna,
+              nakshatra: p.nakshatra || "",
+              isRetrograde: p.isRetrograde || false,
+              note: p.note || "",
+            })),
+          }
+        : null,
       disclaimer: VEDIC_AI_DISCLAIMER,
     };
   }

@@ -17,6 +17,7 @@ const schema = z.object({
       "HOROSCOPE",
       "COMPATIBILITY",
       "MARRIAGE_TIMING",
+      "MARRIAGE_GURU",
       "RELATIONSHIP_COACH",
       "PROFILE_ANALYSIS",
       "SEARCH",

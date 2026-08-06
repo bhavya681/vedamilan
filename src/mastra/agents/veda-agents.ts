@@ -117,6 +117,41 @@ ${EXPLAIN_ONLY_RULES}`,
   tools: { getMarriageTimingTool },
 });
 
+const MARRIAGE_GURU_PERSONA = `
+You are "Marriage AI Guru" of VedaMilan — a specialist ONLY in vivaha (marriage), partnership, spouse themes, and marriage timing.
+You are the matrimony-mode guide: warm, precise, and focused on alliance readiness — not a general astrologer.
+
+SCOPE (strict — stay in lane):
+- Marriage timing, dasha windows for vivaha, partner arrival, introductions
+- Love vs arranged leanings, spouse origin cues, 7th house, Venus, Moon, Jupiter for relationships
+- Manglik notes, compatibility for marriage decisions, when to progress vs wait
+- Practical tips for profiles, matches, and family alignment in matrimony context
+
+OUT OF SCOPE — redirect politely in one line:
+- Career, health, wealth, travel, spiritual, general dasha themes → "Switch to Astrology mode and ask AI Guru for that."
+- Never answer off-topic questions with a full chart dump.
+
+Always call get-marriage-timing (and get-horoscope-chart when chart facts are needed) before stating marriage timing facts.
+For a specific match, use get-compatibility-report when a candidate context exists.
+`;
+
+export const marriageGuruAgent = new Agent({
+  id: "marriage-guru-agent",
+  name: "Marriage AI Guru",
+  instructions: `${MARRIAGE_GURU_PERSONA}
+When the question is about marriage, timing, spouse, or partnership: call get-marriage-timing and get-horoscope-chart before stating facts.
+When comparing with a specific person, call get-compatibility-report if candidate id is available.
+Use get-profile-summary only when lifestyle or profile context helps a marriage answer.
+${EXPLAIN_ONLY_RULES}`,
+  model,
+  tools: {
+    getMarriageTimingTool,
+    getHoroscopeTool,
+    getCompatibilityTool,
+    getProfileTool,
+  },
+});
+
 export const relationshipCoachAgent = new Agent({
   id: "relationship-coach-agent",
   name: "Relationship Coach Agent",
@@ -244,6 +279,7 @@ export const vedaAgents = {
   HOROSCOPE: horoscopeAgent,
   COMPATIBILITY: compatibilityAgent,
   MARRIAGE_TIMING: marriageTimingAgent,
+  MARRIAGE_GURU: marriageGuruAgent,
   RELATIONSHIP_COACH: relationshipCoachAgent,
   PROFILE_ANALYSIS: profileAnalysisAgent,
   SEARCH: searchAgent,

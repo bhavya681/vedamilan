@@ -80,12 +80,7 @@ export const dashboardNav: NavItem[] = [
   { title: "Gochar", href: routes.gochar, group: "Astrology", modes: ["astrology"] },
   { title: "Horoscope", href: routes.horoscope, group: "Astrology", modes: ["astrology"] },
   { title: "Calendar", href: routes.calendar, group: "Astrology", modes: ["astrology"] },
-  {
-    title: "AI Guru",
-    href: routes.aiInsights,
-    group: "Astrology",
-    modes: ["astrology"],
-  },
+  { title: "AI Guru", href: routes.aiInsights, group: "Astrology", modes: ["astrology"] },
   {
     title: "Consultation",
     href: routes.consultation,
@@ -114,7 +109,12 @@ export const dashboardNav: NavItem[] = [
     group: "Discover",
     modes: ["matrimony"],
   },
-  { title: "AI Guru", href: routes.aiInsights, group: "Shared", modes: ["matrimony"] },
+  {
+    title: "Marriage AI Guru",
+    href: routes.marriageGuru,
+    group: "Discover",
+    modes: ["matrimony"],
+  },
 
   { title: "Ask the Sages", href: routes.askTheSages, group: "Wisdom", modes: ["wisdom"] },
   { title: "Wisdom Journal", href: routes.wisdomJournal, group: "Wisdom", modes: ["wisdom"] },

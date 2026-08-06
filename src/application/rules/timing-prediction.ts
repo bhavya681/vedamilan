@@ -98,6 +98,13 @@ function approxDurationNote(start: Date, end: Date) {
   return `Approx. ${years} year window`;
 }
 
+function ageAt(date: Date, birth: Date) {
+  let age = date.getFullYear() - birth.getFullYear();
+  const m = date.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && date.getDate() < birth.getDate())) age -= 1;
+  return age;
+}
+
 /**
  * Ensure Antardasha rows exist for each Mahadasha (older dasha docs often only
  * stored ANTAR under the first MAHA). Pure Vimshottari proportions — no AI.
@@ -380,6 +387,7 @@ export function computeTimedWindows(
     kind?: TimingWindow["kind"];
     now?: Date;
     limit?: number;
+    birthDate?: Date | string | null;
   } = {},
 ): TimingWindow[] {
   const now = opts.now || new Date();
@@ -389,6 +397,12 @@ export function computeTimedWindows(
   const antar = full.filter((p) => p.level === "ANTAR");
   const maha = full.filter((p) => p.level === "MAHA");
   const windows: TimingWindow[] = [];
+
+  let birth: Date | null = null;
+  if (opts.birthDate) {
+    const b = new Date(opts.birthDate);
+    if (!Number.isNaN(b.getTime())) birth = b;
+  }
 
   for (const period of antar) {
     const start = new Date(period.startDate);
@@ -407,6 +421,15 @@ export function computeTimedWindows(
 
     if (kind === "MARRIAGE" && score < 62 && !marriageFavorable) continue;
     if (kind === "PARTNER_ARRIVAL" && score < 58 && !marriageFavorable) continue;
+
+    if (birth && kind === "MARRIAGE") {
+      const ageAtEnd = ageAt(end, birth);
+      if (ageAtEnd > 46) continue;
+      if (ageAtEnd > 42) {
+        const adjusted = Math.max(0, score - 12);
+        if (adjusted < 65 && !marriageFavorable) continue;
+      }
+    }
 
     const dashaLabel = `${mahaLord}–${period.lord}`;
     windows.push({
@@ -474,6 +497,7 @@ export function predictSelfTiming(input: {
   seventhLord?: string | null;
   currentMaha?: string | null;
   currentAntar?: string | null;
+  birthDate?: Date | string | null;
 }): TimingPrediction {
   const asOf = new Date().toISOString();
   const dasha = scoreDashaMarriageReadiness(input.periods, {
@@ -521,12 +545,14 @@ export function predictSelfTiming(input: {
     seventhLord: input.seventhLord,
     kind: "PARTNER_ARRIVAL",
     limit: 4,
+    birthDate: input.birthDate,
   });
   const bestMarriageWindows = computeTimedWindows(input.periods, {
     manglikStatus: input.manglikStatus,
     seventhLord: input.seventhLord,
     kind: "MARRIAGE",
     limit: 5,
+    birthDate: input.birthDate,
   });
 
   return {

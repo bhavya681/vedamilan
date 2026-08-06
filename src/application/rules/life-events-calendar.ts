@@ -39,6 +39,8 @@ export type LifeEventItem = {
   reason: string;
   ageHint?: string;
   suggestion: string;
+  /** One-line actionable guidance for this window */
+  acceptLine: string;
   /** Likelihood band from dasha + gochar confluence */
   probability: EventProbability;
   probabilityLabel: string;
@@ -87,6 +89,8 @@ const CATEGORY_META: Record<
     ageMin: number;
     ageMax: number;
     suggestion: string;
+    /** One-line actionable guidance for this window */
+    acceptLine: string;
     gocharHouses: number[];
     gocharPlanets: Set<string>;
   }
@@ -95,9 +99,11 @@ const CATEGORY_META: Record<
     title: "Marriage / partnership",
     lords: new Set(["Venus", "Jupiter", "Moon"]),
     ageMin: 18,
-    ageMax: 52,
+    ageMax: 45,
     suggestion:
       "Confirm vivaha muhurta with panchang; keep introductions sincere in supportive windows.",
+    acceptLine:
+      "Accept sincere proposals, family meetings, and alliance steps aligned with your values.",
     gocharHouses: [1, 5, 7, 9, 11],
     gocharPlanets: new Set(["Venus", "Jupiter", "Moon"]),
   },
@@ -108,17 +114,19 @@ const CATEGORY_META: Record<
     ageMax: 70,
     suggestion:
       "Use this window for skill proof, interviews, and leadership visibility — not shortcuts.",
+    acceptLine:
+      "Accept leadership offers, interviews, and skill-building opportunities when aligned.",
     gocharHouses: [2, 6, 10, 11],
     gocharPlanets: new Set(["Sun", "Saturn", "Mercury", "Jupiter", "Mars", "Venus"]),
   },
   job: {
     title: "Job change / new role",
-    // Ketu/Rahu/Mercury/Venus antars often mark role / livelihood shifts
     lords: new Set(["Sun", "Saturn", "Mercury", "Rahu", "Mars", "Venus", "Ketu", "Jupiter"]),
     ageMin: 20,
     ageMax: 65,
     suggestion:
       "Prefer role changes when Antardasha supports 10th-house themes; keep documents ready.",
+    acceptLine: "Accept role changes when documents, timing, and growth align.",
     gocharHouses: [3, 6, 10, 11],
     gocharPlanets: new Set(["Sun", "Saturn", "Mercury", "Rahu", "Mars", "Venus", "Jupiter"]),
   },
@@ -129,6 +137,7 @@ const CATEGORY_META: Record<
     ageMax: 35,
     suggestion:
       "Strong for exams, certifications, and mentorship — pair study discipline with Mercury/Jupiter periods.",
+    acceptLine: "Accept exams, certifications, and mentorships aligned with your goals.",
     gocharHouses: [4, 5, 9],
     gocharPlanets: new Set(["Mercury", "Jupiter", "Moon"]),
   },
@@ -139,6 +148,7 @@ const CATEGORY_META: Record<
     ageMax: 70,
     suggestion:
       "Favour steady income plans and honest partnerships; avoid speculative leaps on weak Moon days.",
+    acceptLine: "Accept steady income plans and honest partnerships; avoid speculative leaps.",
     gocharHouses: [2, 11],
     gocharPlanets: new Set(["Jupiter", "Venus", "Mercury"]),
   },
@@ -148,17 +158,18 @@ const CATEGORY_META: Record<
     ageMin: 24,
     ageMax: 70,
     suggestion: "Property steps suit Mars–Moon–4th themes; verify legal paperwork independently.",
+    acceptLine: "Accept property steps when legal paperwork, location, and budget align.",
     gocharHouses: [4, 11],
     gocharPlanets: new Set(["Mars", "Moon", "Venus", "Saturn"]),
   },
   travel: {
     title: "Travel",
-    // 9th/12th/Rahu themes — Venus & Ketu often mark foreign / long-distance shifts
     lords: new Set(["Rahu", "Moon", "Mercury", "Jupiter", "Venus", "Ketu", "Sun"]),
     ageMin: 16,
     ageMax: 70,
     suggestion:
       "Plan purposeful movement in this Antardasha; confirm visas, leave, and muhurta when the type is foreign or long-distance.",
+    acceptLine: "Accept travel when visas, leave, and purpose align.",
     gocharHouses: [3, 7, 9, 12],
     gocharPlanets: new Set(["Rahu", "Moon", "Mercury", "Jupiter", "Venus", "Ketu", "Sun"]),
   },
@@ -169,6 +180,7 @@ const CATEGORY_META: Record<
     ageMax: 100,
     suggestion:
       "Classical caution window — rest, routine, and medical check-ups if needed (not a diagnosis).",
+    acceptLine: "Accept rest, routine, and medical check-ups when needed.",
     gocharHouses: [1, 6, 8, 12],
     gocharPlanets: new Set(["Saturn", "Mars", "Rahu", "Sun"]),
   },
@@ -179,6 +191,7 @@ const CATEGORY_META: Record<
     ageMax: 100,
     suggestion:
       "Favour mantra, seva, and quiet study; deepen practice without withdrawing from duties.",
+    acceptLine: "Accept spiritual practices that deepen without withdrawing from duties.",
     gocharHouses: [1, 5, 8, 9, 12],
     gocharPlanets: new Set(["Jupiter", "Ketu", "Saturn", "Moon", "Sun"]),
   },
@@ -388,7 +401,7 @@ export function classifyTravelKind(input: {
   fourthLord?: string | null;
   gochar?: GocharLite[] | null;
   spanMonths: number;
-}): { kind: TravelKind; label: string; title: string; suggestion: string } {
+}): { kind: TravelKind; label: string; title: string; suggestion: string; acceptLine: string } {
   const { mahaLord, antarLord, spanMonths } = input;
   const lords = new Set([mahaLord, antarLord]);
   const hit = (lord?: string | null) => Boolean(lord && lords.has(lord));
@@ -471,36 +484,44 @@ export function classifyTravelKind(input: {
   }
   if (top.pts <= 0) kind = "long_distance";
 
-  const COPY: Record<TravelKind, { label: string; title: string; suggestion: string }> = {
+  const COPY: Record<
+    TravelKind,
+    { label: string; title: string; suggestion: string; acceptLine: string }
+  > = {
     foreign: {
       label: "Foreign travel",
       title: "Foreign travel / abroad",
       suggestion:
         "Favour passport, visa, and overseas plans in this window; confirm muhurta before long stays abroad.",
+      acceptLine: "Accept passport, visa, and overseas plans when aligned.",
     },
     long_distance: {
       label: "Long-distance travel",
       title: "Long-distance / interstate travel",
       suggestion:
         "Strong for far domestic journeys, transfers, or multi-city work trips — book with buffer days.",
+      acceptLine: "Accept far journeys, transfers, and multi-city trips with buffer days.",
     },
     local: {
       label: "Local travel",
       title: "Local / short travel",
       suggestion:
         "Good for nearby trips, commuting changes, and short stays within your region — keep plans flexible.",
+      acceptLine: "Accept nearby trips and commuting changes when flexible.",
     },
     relocation: {
       label: "Relocation",
       title: "Relocation / change of place",
       suggestion:
         "Points to shifting base or settling elsewhere; align housing, paperwork, and family timing first.",
+      acceptLine: "Accept relocation when housing, paperwork, and family timing align.",
     },
     pilgrimage: {
       label: "Pilgrimage travel",
       title: "Pilgrimage / sacred travel",
       suggestion:
         "Favour tirtha, temple journeys, or retreat travel; pair with quiet practice rather than rushed tourism.",
+      acceptLine: "Accept sacred journeys paired with quiet practice.",
     },
   };
 
@@ -793,6 +814,7 @@ export function computeLifeEventsCalendar(input: {
         }. Score ${score}/100 from dasha lords${gochar.boost ? ` + gochar (+${gochar.boost})` : ""}.`,
         ageHint: ageAtWindow != null ? `Approx. age ${ageAtWindow}` : undefined,
         suggestion: travel?.suggestion ?? meta.suggestion,
+        acceptLine: travel?.acceptLine ?? meta.acceptLine,
         probability,
         probabilityLabel,
         gocharNote,

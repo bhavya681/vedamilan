@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils/cn";
 /** Canonical name for every AI chat persona in the product. */
 export const AI_GURU_NAME = "AI Guru";
 
+/** Matrimony-mode specialist — marriage timing & partnership only. */
+export const MARRIAGE_GURU_NAME = "Marriage AI Guru";
+
+export const MARRIAGE_GURU_TAGLINE = "Marriage timing · spouse themes · alliance guidance";
+
 export const AI_GURU_TAGLINE = "Sacred Vedic guidance · grounded in your chart";
 
 export function AiGuruAvatar({

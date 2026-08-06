@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ListChecks, Stars } from "lucide-react";
+import { ArrowRight, Heart, ListChecks, Stars } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
@@ -192,6 +192,27 @@ export default function MatrimonyHomePage() {
             {bundle.spouseTendencies ? (
               <SpouseTendencyPanel tendencies={bundle.spouseTendencies} />
             ) : null}
+
+            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
+                  <Heart className="text-rose h-3.5 w-3.5" />
+                  Matrimony AI · Marriage specialist
+                </p>
+                <h2 className="font-display text-xl sm:text-2xl">Marriage AI Guru</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Your vivaha-only specialist — marriage timing, spouse themes, love vs arranged
+                  cues, manglik, and when to progress with a match. Available only in Matrimony
+                  mode.
+                </p>
+              </div>
+              <Button asChild className="w-full shrink-0 sm:w-auto" variant="ai">
+                <Link href={routes.marriageGuru}>
+                  Ask Marriage AI Guru
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </GlassCard>
 
             <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="min-w-0 space-y-1">

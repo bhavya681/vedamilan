@@ -1,4 +1,10 @@
-import { CompatibilityReport, Dasha, Horoscope, Profile } from "@/infrastructure/database/models";
+import {
+  BirthDetails,
+  CompatibilityReport,
+  Dasha,
+  Horoscope,
+  Profile,
+} from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
@@ -384,6 +390,7 @@ export class CompatibilityService {
     await connectMongo();
     const chart = await Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean();
     const dasha = await Dasha.findOne({ userId }).sort({ calculatedAt: -1 }).lean();
+    const birth = await BirthDetails.findOne({ userId }).sort({ updatedAt: -1 }).lean();
     if (!chart || !dasha) {
       throw new NotFoundError("Generate kundli and dasha before marriage timing");
     }
@@ -403,6 +410,7 @@ export class CompatibilityService {
       seventhLord: seventh,
       currentMaha: dasha.currentMaha || null,
       currentAntar: dasha.currentAntar || null,
+      birthDate: birth?.birthDate || null,
     });
 
     const windows = computeMarriageWindows(periodsFrom(dasha), chart.manglikStatus || "UNKNOWN");
@@ -421,6 +429,11 @@ export class CompatibilityService {
       seventhLord: seventh,
       spouseTendencies,
       timingPrediction,
+      chartSummary: {
+        lagnaSign: chart.lagnaSign,
+        moonSign: chart.moonSign,
+        sunSign: chart.sunSign,
+      },
       gochar: gochar
         ? {
             asOf: gochar.asOf,

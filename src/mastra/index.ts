@@ -8,6 +8,7 @@ export const mastra = new Mastra({
     horoscopeAgent: vedaAgents.HOROSCOPE,
     compatibilityAgent: vedaAgents.COMPATIBILITY,
     marriageTimingAgent: vedaAgents.MARRIAGE_TIMING,
+    marriageGuruAgent: vedaAgents.MARRIAGE_GURU,
     relationshipCoachAgent: vedaAgents.RELATIONSHIP_COACH,
     profileAnalysisAgent: vedaAgents.PROFILE_ANALYSIS,
     searchAgent: vedaAgents.SEARCH,

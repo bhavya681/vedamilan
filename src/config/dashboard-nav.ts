@@ -57,6 +57,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.divisionalCharts]: Grid3X3,
   [routes.ashtakavarga]: CalendarClock,
   [routes.calendar]: CalendarRange,
+  [routes.marriageGuru]: Heart,
   [routes.aiInsights]: MessageCircle,
   [routes.vedicWisdom]: BookOpen,
   [routes.askTheSages]: Users,

@@ -89,6 +89,7 @@ export const routes = {
   bookConsultation: "/dashboard/consultation/book",
   astrologer: "/dashboard/consultation/astrologer",
   calendar: "/dashboard/calendar",
+  marriageGuru: "/dashboard/matrimony/marriage-guru",
 
   settings: "/dashboard/settings",
   security: "/dashboard/settings/security",
