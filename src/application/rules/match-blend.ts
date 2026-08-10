@@ -59,6 +59,8 @@ export type MatchBlendResult = {
   strengthCodes: string[];
   challengeCodes: string[];
   factors: Array<{ name: string; score: number; weight: number }>;
+  /** Optional numerology compatibility score (0-100) when birth dates are available. */
+  numerologyScore?: number;
 };
 
 function kootaPercent(items: GunaItem[], name: string, fallback = 70) {

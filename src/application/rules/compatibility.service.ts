@@ -8,6 +8,13 @@ import {
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { ENGINE_VERSION } from "@/application/horoscope/vedic-constants";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
+import {
+  calculateBhagyank,
+  calculateMulank,
+  dateToNumerologyInput,
+  type NumberId,
+} from "@/domain/numerology";
+import { scoreNumerologyCompatibility } from "./numerology-compatibility";
 import { NotFoundError, ValidationError } from "@/lib/utils/error-handler";
 import { formatPersonName } from "@/lib/utils/person-name";
 import { pairKey, scoreAshtaKoota } from "./ashta-koota";
@@ -259,7 +266,58 @@ export class CompatibilityService {
       decisionReason += ` Situational alignment ~${sitPair.comparison.score}% (optional Q&A).`;
     }
 
-    const key = pairKey(userAId, userBId);
+    // Numerology alignment: complementary signal computed from birth dates.
+    // Vedic deep compatibility remains the primary score; numerology adds a
+    // separate categoryScore entry and stored alignment detail.
+    const [birthA, birthB] = await Promise.all([
+      BirthDetails.findOne({ userId: userAId }).lean(),
+      BirthDetails.findOne({ userId: userBId }).lean(),
+    ]);
+
+    let numerologyAlignment: {
+      mulankA?: number;
+      bhagyankA?: number;
+      mulankB?: number;
+      bhagyankB?: number;
+      score?: number;
+      insight?: string;
+      isHarmonious?: boolean;
+    } | null = null;
+
+    if (birthA?.birthDate && birthB?.birthDate) {
+      const inputA = dateToNumerologyInput(new Date(birthA.birthDate));
+      const inputB = dateToNumerologyInput(new Date(birthB.birthDate));
+      const mulankA = calculateMulank(inputA.day) as NumberId;
+      const bhagyankA = calculateBhagyank(inputA.day, inputA.month, inputA.year) as NumberId;
+      const mulankB = calculateMulank(inputB.day) as NumberId;
+      const bhagyankB = calculateBhagyank(inputB.day, inputB.month, inputB.year) as NumberId;
+
+      const numerology = scoreNumerologyCompatibility({
+        mulankA,
+        bhagyankA,
+        mulankB,
+        bhagyankB,
+      });
+
+      numerologyAlignment = {
+        mulankA,
+        bhagyankA,
+        mulankB,
+        bhagyankB,
+        score: numerology.score,
+        insight: numerology.insight,
+        isHarmonious: numerology.isHarmonious,
+      };
+
+      decisionReason += ` Numerology harmony ~${numerology.score}% (${numerology.isHarmonious ? "supportive" : "bridging needed"}).`;
+    }
+
+    const categoryScores = {
+      ...deep.categoryScores,
+      ...(sitPair.comparison ? { situational: sitPair.comparison.score } : {}),
+      ...(numerologyAlignment ? { numerology: numerologyAlignment.score } : {}),
+    };
+
     const mergedStrengths = [
       ...new Set([
         ...(sitPair.comparison?.highlights || []),
@@ -275,10 +333,7 @@ export class CompatibilityService {
       ]),
     ].slice(0, 12);
 
-    const categoryScores = {
-      ...deep.categoryScores,
-      ...(sitPair.comparison ? { situational: sitPair.comparison.score } : {}),
-    };
+    const key = pairKey(userAId, userBId);
 
     const doc = await CompatibilityReport.findOneAndUpdate(
       { pairKey: key },
@@ -308,6 +363,7 @@ export class CompatibilityService {
           },
           categoryScores,
           situationalAlignment,
+          numerologyAlignment,
           strengths: mergedStrengths,
           challenges: mergedChallenges,
           marriageWindows: windows,
@@ -328,6 +384,7 @@ export class CompatibilityService {
         a: { userId: userAId, city: profileA?.city, profession: profileA?.profession },
         b: { userId: userBId, city: profileB?.city, profession: profileB?.profession },
       },
+      numerologyAlignment,
       timingPrediction,
     };
   }

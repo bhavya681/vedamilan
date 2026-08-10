@@ -6,6 +6,7 @@
  */
 export type {
   CombinationInterpretation,
+  GrahaName,
   InterpretationBlock,
   KnowledgeLabel,
   LearningModule,
@@ -14,6 +15,7 @@ export type {
   NumberId,
   NumberProfile,
   NumberTheme,
+  NumerologyCompatibilityResult,
   NumerologyDateInput,
   NumerologyResult,
   PersonalizedGuidance,

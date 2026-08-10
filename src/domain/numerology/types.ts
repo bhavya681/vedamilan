@@ -119,3 +119,35 @@ export type LearningModule = {
   descriptionKey: string;
   order: number;
 };
+
+/**
+ * Numerology-based compatibility between two people.
+ * Complements the Vedic astrological compatibility system; never replaces it.
+ */
+export type NumerologyCompatibilityResult = {
+  /** Two people's numbers: Person A = viewer, Person B = candidate. */
+  personA: {
+    mulank: NumberId;
+    bhagyank: NumberId;
+    mulankPlanet: GrahaName;
+    bhagyankPlanet: GrahaName;
+  };
+  personB: {
+    mulank: NumberId;
+    bhagyank: NumberId;
+    mulankPlanet: GrahaName;
+    bhagyankPlanet: GrahaName;
+  };
+  /** 0-100 harmony score derived from number resonance + planet harmony + combination quality. */
+  score: number;
+  /** Human-readable summary of the numerological dynamic. */
+  insight: string;
+  /** Whether the harmony is generally supportive (true) or requires conscious bridging (false). */
+  isHarmonious: boolean;
+  /** Specific resonant/non-resonant number pair explanations. */
+  pairNotes: Array<{
+    pair: string;
+    score: number;
+    description: string;
+  }>;
+};

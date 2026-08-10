@@ -2,6 +2,7 @@
   "pageTitle": "Numerology",
   "pageDescription": "Discover the numbers derived from your birth date and explore their traditional planetary associations.",
   "yourNumbers": "Your Numbers",
+  "heroSubtitle": "Enter your birth date to uncover your Mulank and Bhagyank, and explore their planetary meanings.",
   "exploreMyNumbers": "Explore My Numbers",
   "learnNumerology": "Learn Numerology",
   "labels": {
@@ -30,6 +31,9 @@
     "nameFull": "Mulank / Birth Root Number",
     "computedFrom": "Calculated from the day of birth.",
     "subtitle": "Your core identity number",
+    "yourNumber": "Your Mulank",
+    "fullProfile": "Full Mulank profile",
+    "derivedFrom": "From your birth day",
     "interpretation": {
       "coreTendencies": "Core tendencies",
       "strengths": "Strengths",
@@ -46,6 +50,9 @@
     "nameFull": "Bhagyank / Destiny Number",
     "computedFrom": "Calculated from the full date of birth.",
     "subtitle": "Your life-path number",
+    "yourNumber": "Your Bhagyank",
+    "fullProfile": "Full Bhagyank profile",
+    "derivedFrom": "From your full birth date",
     "interpretation": {
       "lifePath": "Life-path interpretation",
       "strengths": "Strengths",

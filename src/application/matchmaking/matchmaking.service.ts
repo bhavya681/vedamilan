@@ -9,6 +9,13 @@ import {
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
+import { scoreNumerologyCompatibility } from "@/application/rules/numerology-compatibility";
+import {
+  calculateBhagyank,
+  calculateMulank,
+  dateToNumerologyInput,
+  type NumberId,
+} from "@/domain/numerology";
 import { relationshipService } from "@/application/relationship/relationship.service";
 import { SituationalProfile } from "@/infrastructure/database/models/situational-alignment";
 import {
@@ -97,6 +104,8 @@ export type RankedMatch = {
   hasSituationalAlignment?: boolean;
   /** Approx situational alignment % when both completed (optional). */
   situationalScore?: number | null;
+  /** Numerology compatibility score (0-100) when birth dates are available. */
+  numerologyScore?: number | null;
 };
 
 export type MatchSearchResult = PaginatedResult<RankedMatch> & {
@@ -376,6 +385,17 @@ export class MatchmakingService {
     );
 
     const selfMoon = selfChart ? moonMeta(selfChart) : null;
+
+    // Numerology: compute self Mulank/Bhagyank from profile dateOfBirth
+    let selfNumerology: { mulank: NumberId; bhagyank: NumberId } | null = null;
+    if (selfProfile?.dateOfBirth) {
+      const input = dateToNumerologyInput(new Date(selfProfile.dateOfBirth));
+      selfNumerology = {
+        mulank: calculateMulank(input.day) as NumberId,
+        bhagyank: calculateBhagyank(input.day, input.month, input.year) as NumberId,
+      };
+    }
+
     const candidateIds = candidates.map((c) => c.userId);
     const [charts, names, selfSitDoc, sitDocs] = await Promise.all([
       Horoscope.find({ userId: { $in: candidateIds } })
@@ -458,6 +478,28 @@ export class MatchmakingService {
         reasons = ["Complete both kundlis for Vedic ranking"];
       }
 
+      // Numerology compatibility: computed from birth dates (available on Profile)
+      let numerologyScore: number | null = null;
+      if (selfNumerology && profile.dateOfBirth) {
+        const theirInput = dateToNumerologyInput(new Date(profile.dateOfBirth));
+        const theirMulank = calculateMulank(theirInput.day) as NumberId;
+        const theirBhagyank = calculateBhagyank(
+          theirInput.day,
+          theirInput.month,
+          theirInput.year,
+        ) as NumberId;
+        const result = scoreNumerologyCompatibility({
+          mulankA: selfNumerology.mulank,
+          bhagyankA: selfNumerology.bhagyank,
+          mulankB: theirMulank,
+          bhagyankB: theirBhagyank,
+        });
+        numerologyScore = result.score;
+        if (result.score >= 70) {
+          reasons = [`Numerology sync ~${result.score}%`, ...reasons].slice(0, 3);
+        }
+      }
+
       const photo =
         profile.photos?.find((p) => p.isPrimary)?.secureUrl ||
         profile.photos?.[0]?.secureUrl ||
@@ -499,6 +541,7 @@ export class MatchmakingService {
         gunaBreakdown,
         hasSituationalAlignment,
         situationalScore,
+        numerologyScore,
       };
     });
 
@@ -551,6 +594,7 @@ export class MatchmakingService {
               candidateUserId: item.userId,
               rank: item.rank,
               compatibilityScore: item.compatibilityScore,
+              numerologyScore: item.numerologyScore ?? null,
               reasons: item.reasons,
               matchStatus: "ACTIVE",
               generatedAt: new Date(),

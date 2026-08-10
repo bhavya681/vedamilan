@@ -41,6 +41,8 @@ const compatibilityReportSchema = new Schema(
     advancedMarriageDynamics: { type: Schema.Types.Mixed, default: null },
     /** Optional situational Q&A alignment (null if either partner skipped). */
     situationalAlignment: { type: Schema.Types.Mixed, default: null },
+    /** Numerology-based compatibility alignment (Mulank + Bhagyank resonance). */
+    numerologyAlignment: { type: Schema.Types.Mixed, default: null },
     engineVersion: { type: String, required: true },
     calculatedAt: { type: Date, default: Date.now },
   },
@@ -68,6 +70,7 @@ const matchSchema = new Schema(
     candidateUserId: { type: String, required: true, index: true },
     rank: { type: Number, default: 0 },
     compatibilityScore: { type: Number, default: 0 },
+    numerologyScore: { type: Number, default: null },
     aiScore: { type: Number, default: null },
     distanceKm: { type: Number, default: null },
     reasons: { type: [String], default: [] },

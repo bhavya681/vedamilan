@@ -33,6 +33,7 @@ type MatchItem = {
   rank?: number;
   hasSituationalAlignment?: boolean;
   situationalScore?: number | null;
+  numerologyScore?: number | null;
 };
 
 type InterestPerson = {
@@ -245,6 +246,9 @@ export default function MatchesPage() {
                 <span>Situations ~{match.situationalScore}%</span>
               ) : match.hasSituationalAlignment ? (
                 <span>Situations answered</span>
+              ) : null}
+              {typeof match.numerologyScore === "number" ? (
+                <span>Numerology ~{match.numerologyScore}%</span>
               ) : null}
               <span>
                 Guna {match.totalGuna}/{match.maxGuna || 36}

@@ -121,6 +121,15 @@ type Report = {
     highlights?: string[];
     discuss?: string[];
   } | null;
+  numerologyAlignment?: {
+    mulankA?: number;
+    bhagyankA?: number;
+    mulankB?: number;
+    bhagyankB?: number;
+    score?: number;
+    insight?: string;
+    isHarmonious?: boolean;
+  } | null;
 };
 
 type RecMatch = {
@@ -146,6 +155,7 @@ const SIMPLE_BREAKDOWN: Array<{ key: string; label: string }> = [
   { key: "family", label: "Shared values" },
   { key: "physical", label: "Lifestyle" },
   { key: "longevity", label: "Long-term" },
+  { key: "numerology", label: "Numerology" },
 ];
 
 export default function CompatibilityPage() {
@@ -275,6 +285,7 @@ export default function CompatibilityPage() {
           "longevity",
           "spiritual",
           "trust",
+          "numerology",
         ].includes(k),
       )
     : [];
@@ -480,6 +491,34 @@ export default function CompatibilityPage() {
                   Open situational alignment
                 </Link>
               </p>
+            </section>
+          ) : null}
+
+          {active.numerologyAlignment?.score != null ? (
+            <section className="border-border/70 bg-card shadow-soft space-y-3 rounded-2xl border p-4 sm:p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-display text-xl sm:text-2xl">Numerology alignment</h2>
+                <p className="font-display text-2xl tabular-nums">
+                  ~{active.numerologyAlignment.score}%
+                </p>
+              </div>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Birth-number resonance (Mulank &amp; Bhagyank) complementing the Vedic chart
+                analysis.
+              </p>
+              {active.numerologyAlignment.insight ? (
+                <p className="text-sm leading-relaxed">{active.numerologyAlignment.insight}</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="border-border/50 bg-muted/20 rounded-full border px-3 py-1">
+                  Mulank: {active.numerologyAlignment.mulankA} ↔{" "}
+                  {active.numerologyAlignment.mulankB}
+                </span>
+                <span className="border-border/50 bg-muted/20 rounded-full border px-3 py-1">
+                  Bhagyank: {active.numerologyAlignment.bhagyankA} ↔{" "}
+                  {active.numerologyAlignment.bhagyankB}
+                </span>
+              </div>
             </section>
           ) : null}
 
