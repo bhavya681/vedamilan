@@ -65,6 +65,7 @@ export function inferModeFromPath(pathname: string): WorkspaceMode | null {
     "/dashboard/ai-insights",
     "/dashboard/predictions",
     "/dashboard/remedies",
+    "/dashboard/astrology/numerology",
   ];
   if (astrologyPrefixes.some((p) => bare === p || bare.startsWith(`${p}/`))) {
     return "astrology";

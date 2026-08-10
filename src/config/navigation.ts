@@ -79,6 +79,12 @@ export const dashboardNav: NavItem[] = [
   { title: "Predictions", href: routes.predictions, group: "Astrology", modes: ["astrology"] },
   { title: "Gochar", href: routes.gochar, group: "Astrology", modes: ["astrology"] },
   { title: "Horoscope", href: routes.horoscope, group: "Astrology", modes: ["astrology"] },
+  {
+    title: "Numerology",
+    href: routes.numerology,
+    group: "Astrology",
+    modes: ["astrology"],
+  },
   { title: "Calendar", href: routes.calendar, group: "Astrology", modes: ["astrology"] },
   { title: "AI Guru", href: routes.aiInsights, group: "Astrology", modes: ["astrology"] },
   {

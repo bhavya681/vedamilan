@@ -1,0 +1,154 @@
+{
+  "pageTitle": "Numerology",
+  "pageDescription": "Discover the numbers derived from your birth date and explore their traditional planetary associations.",
+  "yourNumbers": "Your Numbers",
+  "exploreMyNumbers": "Explore My Numbers",
+  "learnNumerology": "Learn Numerology",
+  "labels": {
+    "traditional": "Traditional Association",
+    "contemporary": "Contemporary Interpretation",
+    "personalized": "Personalized Interpretation"
+  },
+  "calculator": {
+    "title": "Numerology Calculator",
+    "subtitle": "Enter a birth date to see the calculation steps.",
+    "useMyBirthDetails": "Use my birth details",
+    "tryAnotherDate": "Try another date",
+    "day": "Day",
+    "month": "Month",
+    "year": "Year",
+    "calculate": "Calculate",
+    "invalidDate": "Please enter a valid date.",
+    "steps": "Calculation steps"
+  },
+  "dobSection": {
+    "title": "Date of Birth",
+    "label": "DOB"
+  },
+  "mulank": {
+    "name": "Mulank",
+    "nameFull": "Mulank / Birth Root Number",
+    "computedFrom": "Calculated from the day of birth.",
+    "subtitle": "Your core identity number",
+    "interpretation": {
+      "coreTendencies": "Core tendencies",
+      "strengths": "Strengths",
+      "growthAreas": "Growth areas",
+      "career": "Career tendencies",
+      "relationships": "Relationship tendencies",
+      "communication": "Communication style",
+      "learning": "Learning style",
+      "remedies": "Balancing & remedies"
+    }
+  },
+  "bhagyank": {
+    "name": "Bhagyank",
+    "nameFull": "Bhagyank / Destiny Number",
+    "computedFrom": "Calculated from the full date of birth.",
+    "subtitle": "Your life-path number",
+    "interpretation": {
+      "lifePath": "Life-path interpretation",
+      "strengths": "Strengths",
+      "challenges": "Challenges",
+      "workStyle": "Work style",
+      "career": "Career tendencies",
+      "relationshipDirection": "Relationship & life direction",
+      "growthLesson": "Growth lesson",
+      "practicalGuidance": "Practical guidance"
+    }
+  },
+  "howCalculated": {
+    "title": "How was this calculated?",
+    "mulankLine": "{steps}",
+    "bhagyankLine": "{steps}",
+    "note": "Numerology calculation is deterministic — the same birth date always yields the same numbers."
+  },
+  "numberCards": {
+    "title": "Explore Numbers",
+    "subtitle": "Tap any number to open its full profile.",
+    "ariaLabel": "Number {number} — {planet}. {keyword}."
+  },
+  "combination": {
+    "title": "Your Number Pair",
+    "subtitle": "How your Mulank and Bhagyank energies interact.",
+    "interaction": "How they interact",
+    "complement": "Where they complement",
+    "tension": "Possible tension",
+    "strengths": "Combined strengths",
+    "advice": "Practical growth advice",
+    "undefined": "Detailed combination interpretation is not defined by the current knowledge source."
+  },
+  "kundliConnection": {
+    "title": "Numerology × Your Kundli",
+    "subtitle": "Your number is interpreted together with the corresponding planetary influence in your Kundli.",
+    "mulankPlanet": "Mulank planet",
+    "bhagyankPlanet": "Bhagyank planet",
+    "planetInChart": "{planet} in your chart",
+    "sign": "Sign",
+    "house": "House",
+    "nakshatra": "Nakshatra",
+    "dignity": "Strength",
+    "retrograde": "Retrograde",
+    "noChart": "Generate your Kundli first to see planetary placements alongside your numbers.",
+    "openKundli": "Open Kundli",
+    "disclaimer": "Numerology does not calculate planetary positions. Your Kundli (calculated by the astrology engine) remains the single source of truth for planetary placement."
+  },
+  "activate": {
+    "title": "Activate Your Number",
+    "subtitle": "How to work with this energy",
+    "mulankGuidance": "Working with your Mulank ({number})",
+    "bhagyankGuidance": "Working with your Bhagyank ({number})"
+  },
+  "masterNumbers": {
+    "title": "Master Numbers",
+    "subtitle": "An advanced numerology interpretation available in some traditions.",
+    "note11": "Master Number 11 — intuition amplified.",
+    "note22": "Master Number 22 — manifestation amplified.",
+    "note": "These master numbers reduce to 2 and 4 respectively in the core calculation. The current VedaMilan system can provide additional interpretation only where its knowledge base supports it."
+  },
+  "learningPath": {
+    "title": "Learn Numerology",
+    "subtitle": "A progressive path from basics to personalised insight.",
+    "modules": {
+      "what": "1. What is Numerology?",
+      "mulank": "2. Mulank (Root Number)",
+      "bhagyank": "3. Bhagyank (Life Path)",
+      "numbers": "4. Numbers 1–9",
+      "planets": "5. Number → Planet Associations",
+      "astrology": "6. Numerology × Astrology",
+      "combinations": "7. Number Combinations",
+      "masters": "8. Master Numbers",
+      "practical": "9. Practical Application"
+    },
+    "next": "Next",
+    "back": "Back",
+    "start": "Start learning",
+    "complete": "Completed",
+    "markComplete": "Mark as complete"
+  },
+  "aiGuide": {
+    "title": "Numerology Guide",
+    "subtitle": "Ask questions about your numbers and their planetary meanings.",
+    "placeholder": "Ask about your Mulank, Bhagyank, or number meanings…",
+    "suggestedPrompts": {
+      "mulank": "What does my Mulank mean?",
+      "bhagyank": "Explain my Bhagyank.",
+      "interaction": "How do my Mulank and Bhagyank interact?",
+      "planet": "What does my number's planet represent?",
+      "kundli": "How does my numerology connect with my Kundli?",
+      "teach": "Teach me numerology from the beginning."
+    },
+    "disclaimer": "This guide explains numerology calculations and interpretations from the VedaMilan knowledge base. It distinguishes between calculation rules, astrological context, and AI interpretation. It does not invent rules."
+  },
+  "knowledgeNotice": {
+    "title": "About these interpretations",
+    "body": "The planetary and number associations are traditional to this numerology system. The life-reading content is a contemporary interpretation. Where your Kundli context is shown, it is drawn from the existing astrology engine — numerology never calculates planetary positions itself."
+  },
+  "status": {
+    "loading": "Loading your numbers…",
+    "error": "Couldn't load numerology data.",
+    "noDob": "Save your birth date in Birth Details to see your numbers automatically.",
+    "noDobShort": "No birth date on record.",
+    "retry": "Retry"
+  }
+}

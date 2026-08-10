@@ -7,6 +7,7 @@ import {
   Compass,
   Crown,
   Grid3X3,
+  Hash,
   Heart,
   HeartHandshake,
   Home,
@@ -16,11 +17,11 @@ import {
   MessageCircle,
   MoonStar,
   Orbit,
+  PieChart,
   Search,
   Settings,
   SlidersHorizontal,
   Sparkles,
-  Stars,
   SunMedium,
   UserRound,
   Users,
@@ -34,13 +35,13 @@ import { routes } from "@/lib/constants/routes";
 /** Icons for dashboard navigation — keyed by href for sidebar / sheets. */
 export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.dashboard]: Home,
-  [routes.astrology]: Stars,
+  [routes.astrology]: Home,
   [routes.matrimony]: Heart,
   [routes.matches]: Heart,
   [routes.connections]: Link2,
   [routes.yourConnection]: HeartHandshake,
   [routes.chat]: MessageCircle,
-  [routes.kundli]: Stars,
+  [routes.kundli]: PieChart,
   [routes.grahaKatha]: ScrollText,
   [routes.dasha]: Hourglass,
   [routes.search]: Search,
@@ -48,6 +49,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.situationalAlignment]: ListChecks,
   [routes.preferences]: SlidersHorizontal,
   [routes.horoscope]: SunMedium,
+  [routes.numerology]: Hash,
   [routes.gochar]: Orbit,
   [routes.predictions]: Sparkles,
   [routes.lalKitab]: BookOpen,
@@ -119,6 +121,7 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.premium) return matchesPath(pathname, routes.premium);
   if (href === routes.askTheSages) return matchesPath(pathname, routes.askTheSages);
   if (href === routes.wisdomJournal) return matchesPath(pathname, routes.wisdomJournal);
+  if (href === routes.numerology) return matchesPath(pathname, routes.numerology);
 
   // Partner preferences vs Situational quiz share a path prefix — keep tabs exclusive.
   if (href === routes.preferences) {

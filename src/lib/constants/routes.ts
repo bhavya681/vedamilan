@@ -49,6 +49,7 @@ export const routes = {
   predictions: "/dashboard/predictions",
   marriageTiming: "/dashboard/kundli/marriage-timing",
   horoscope: "/dashboard/horoscope",
+  numerology: "/dashboard/astrology/numerology",
 
   compatibility: "/dashboard/compatibility",
   compatibilityReport: "/dashboard/compatibility/report",

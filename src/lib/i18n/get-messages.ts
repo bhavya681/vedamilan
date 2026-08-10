@@ -182,6 +182,9 @@ const loaders: Record<MessageNamespace, Record<string, () => Promise<{ default: 
   grahaKatha: {
     en: () => import("@/locales/en/grahaKatha.json"),
   },
+  numerology: {
+    en: () => import("@/locales/en/numerology.json"),
+  },
   pages: {
     en: () => import("@/locales/en/pages.json"),
     hi: () => import("@/locales/hi/pages.json"),
