@@ -6,7 +6,11 @@ import {
   type GocharLite,
   type LifeEventItem,
 } from "@/application/rules/life-events-calendar";
-import { predictSelfTiming, ensureAntardashaCoverage } from "@/application/rules/timing-prediction";
+import {
+  predictSelfTiming,
+  ensureAntardashaCoverage,
+  type TimingWindow,
+} from "@/application/rules/timing-prediction";
 import { seventhLord } from "@/application/rules/shukra-milan";
 import {
   marriageDetailFromTendencies,
@@ -120,7 +124,19 @@ export class LifeCalendarService {
       seventhLord: seventh,
       currentMaha: dasha.currentMaha || null,
       currentAntar: dasha.currentAntar || null,
+      birthDate: birthDate,
     });
+
+    const marriageWindows = marriageTiming.bestMarriageWindows;
+    const marriageWindowsAll =
+      marriageWindows.length > 0
+        ? marriageWindows
+        : generateMarriageFallback({
+            periods,
+            marriageTiming,
+            birthDate,
+            seventhLord: seventh,
+          });
 
     const life = computeLifeEventsCalendar({
       periods,
@@ -184,25 +200,135 @@ export class LifeCalendarService {
         })),
         historicalSamples: Object.keys(historicalGocharByAntarStart).length,
       },
-      marriageWindows: marriageTiming.bestMarriageWindows
-        .filter((w) => w.score >= 70)
-        .slice(0, 3)
-        .map((w) => ({
-          label: w.label,
-          window: w.window,
-          score: w.score,
-          reason: `${w.reason} · ${marriageDetail.detailLabel}; ${spouseTendencies.spouseOriginLabel}.`,
-          phase:
-            w.endDate && new Date(w.endDate) < new Date()
-              ? ("past" as const)
-              : w.startDate && new Date(w.startDate) <= new Date()
-                ? ("present" as const)
-                : ("future" as const),
-        })),
+      marriageWindows: marriageWindowsAll.map((w) => ({
+        label: w.label,
+        window: w.window,
+        score: w.score,
+        reason: `${w.reason} · ${marriageDetail.detailLabel}; ${spouseTendencies.spouseOriginLabel}.`,
+        dashaLabel: w.dashaLabel || null,
+        startDate: w.startDate || null,
+        endDate: w.endDate || null,
+        kind: w.kind || "MARRIAGE",
+        approxNote: w.approxNote || null,
+        phase:
+          w.endDate && new Date(w.endDate) < new Date()
+            ? ("past" as const)
+            : w.startDate && new Date(w.startDate) <= new Date()
+              ? ("present" as const)
+              : ("future" as const),
+      })),
+      timingFactors: marriageTiming.factors || [],
+      gocharHighlights: marriageTiming.gocharHighlights || [],
+      timingMethodology: marriageTiming.methodology || null,
+      pastMarriageWindows: (marriageTiming.pastMarriageWindows || []).map((w) => ({
+        label: w.label,
+        window: w.window,
+        score: w.score,
+        reason: w.reason,
+        dashaLabel: w.dashaLabel || null,
+        startDate: w.startDate || null,
+        endDate: w.endDate || null,
+        kind: w.kind || "MARRIAGE",
+        approxNote: w.approxNote || null,
+        phase: "past" as const,
+      })),
       methodology:
         "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Marriage cards include love/arranged and spouse-origin leanings from D1. Mild windows are filtered out. Directional guidance — not a fixed prediction.",
     };
   }
+}
+
+function fmtRange(start: Date, end: Date) {
+  const opts: Intl.DateTimeFormatOptions = { month: "short", year: "numeric" };
+  return `${start.toLocaleDateString("en-IN", opts)} - ${end.toLocaleDateString("en-IN", opts)}`;
+}
+
+function ageAt(date: Date, birth: Date) {
+  let age = date.getFullYear() - birth.getFullYear();
+  const m = date.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && date.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function lordBaseScore(lord: string, seventhLord?: string | null): number {
+  let base =
+    lord === "Venus"
+      ? 92
+      : lord === "Jupiter"
+        ? 90
+        : lord === "Moon"
+          ? 86
+          : lord === "Mercury"
+            ? 80
+            : lord === "Sun"
+              ? 72
+              : lord === "Saturn"
+                ? 68
+                : lord === "Mars"
+                  ? 64
+                  : 58;
+  if (seventhLord && lord === seventhLord) base = Math.min(99, base + 6);
+  return base;
+}
+
+type FallbackInput = {
+  periods: PeriodRow[];
+  marriageTiming: Awaited<ReturnType<typeof predictSelfTiming>>;
+  birthDate: Date | string | null;
+  seventhLord: string | null;
+};
+
+function generateMarriageFallback(input: FallbackInput): TimingWindow[] {
+  const seventhLord: string | null = input.seventhLord;
+  const { periods, marriageTiming, birthDate } = input;
+  const now = new Date();
+  const full = ensureAntardashaCoverage(periods);
+  const mahas = full.filter((p) => p.level === "MAHA");
+
+  const currentMaha = mahas.find((p) => new Date(p.startDate) <= now && new Date(p.endDate) >= now);
+
+  let target: PeriodRow | null = currentMaha || null;
+  if (!target) {
+    target =
+      mahas.find((p) => new Date(p.startDate) > now) ||
+      mahas
+        .filter((p) => new Date(p.endDate) <= now)
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0] ||
+      null;
+  }
+
+  if (!target) {
+    return [];
+  }
+
+  const start = new Date(Math.max(new Date(target.startDate).getTime(), now.getTime()));
+  const end = new Date(target.endDate);
+  if (end < now) return [];
+
+  const lord = target.lord;
+  const dashaScore = lordBaseScore(lord, seventhLord) - 8;
+  const gocharBoost = marriageTiming.factors.find((f) => f.id === "gochar")?.score || 0;
+  const rawScore = dashaScore + Math.round(gocharBoost * 0.5);
+  const score = Math.max(58, Math.min(74, Math.round(rawScore)));
+
+  const birth = birthDate ? new Date(birthDate) : null;
+  const ageNote =
+    birth && !Number.isNaN(birth.getTime()) ? ` (~age ${ageAt(end, birth)} at peak)` : "";
+
+  const phase = end < now ? "past" : start <= now ? "present" : "future";
+
+  return [
+    {
+      label: "Watch window — dasha corridor",
+      window: `${fmtRange(start, end)}`,
+      score,
+      kind: "MARRIAGE",
+      dashaLabel: `${lord} Mahadasha`,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      reason: `${lord} Mahadasha${phase === "present" ? " (current)" : phase === "future" ? " (upcoming)" : " (recent)"} forms a relationship corridor${ageNote}. Dasha read ${dashaScore}/100; gochar adds partial support. Exact timing needs classical muhurta within this period.`,
+    },
+  ];
 }
 
 export const lifeCalendarService = new LifeCalendarService();

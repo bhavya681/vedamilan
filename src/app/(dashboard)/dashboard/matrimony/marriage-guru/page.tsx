@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowUp, Heart, Loader2, MessageCircle, Telescope } from "lucide-react";
+import { ArrowUp, Heart, Loader2, MessageCircle, Sparkles, Telescope } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { GuruChartPanels, type ChartPanelsData } from "@/features/ai/components/guru-chart-panels";
+import { MarriageWindowsPanel } from "@/features/marriage-guru/components/marriage-windows-panel";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 
 type ChatMessage = {
@@ -33,12 +34,28 @@ type MarriageWindow = {
   window: string;
   score: number;
   reason?: string;
+  kind?: "PARTNER_ARRIVAL" | "MARRIAGE" | "INTRODUCTION";
+  dashaLabel?: string;
+  startDate?: string;
+  endDate?: string;
+  approxNote?: string;
+};
+
+type TimingFactor = {
+  id: string;
+  name: string;
+  score: number;
+  weight: number;
+  note: string;
 };
 
 type MarriageBundle = {
   openingMessage: string;
   suggestedPrompts: string[];
   marriageWindows: MarriageWindow[];
+  pastMarriageWindows: MarriageWindow[];
+  timingFactors: TimingFactor[];
+  timingMethodology: string | null;
   spouseTendencies?: {
     marriagePathLabel?: string;
     spouseOriginLabel?: string;
@@ -429,12 +446,29 @@ export default function MarriageGuruPage() {
               <Telescope className="h-3.5 w-3.5" />
               Chart
             </TabsTrigger>
+            <TabsTrigger value="timing" className="gap-1.5 rounded-full text-xs sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              Timing
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="chat" className="mt-0">
             {chatPanel}
           </TabsContent>
           <TabsContent value="chart" className="mt-0">
             <GuruChartPanels data={bundle as ChartPanelsData | null} />
+            {bundle?.disclaimer ? (
+              <p className="text-muted-foreground mt-4 text-[11px] leading-relaxed">
+                {bundle.disclaimer}
+              </p>
+            ) : null}
+          </TabsContent>
+          <TabsContent value="timing" className="mt-0">
+            <MarriageWindowsPanel
+              marriageWindows={bundle?.marriageWindows}
+              pastMarriageWindows={bundle?.pastMarriageWindows}
+              timingFactors={bundle?.timingFactors}
+              timingMethodology={bundle?.timingMethodology}
+            />
             {bundle?.disclaimer ? (
               <p className="text-muted-foreground mt-4 text-[11px] leading-relaxed">
                 {bundle.disclaimer}
@@ -448,6 +482,12 @@ export default function MarriageGuruPage() {
         {chatPanel}
         <aside className="scrollbar-premium dashboard-fill-h space-y-4 overflow-y-auto pr-1 lg:max-h-[min(760px,calc(100dvh-var(--dashboard-chrome)))]">
           <GuruChartPanels data={bundle as ChartPanelsData | null} />
+          <MarriageWindowsPanel
+            marriageWindows={bundle?.marriageWindows}
+            pastMarriageWindows={bundle?.pastMarriageWindows}
+            timingFactors={bundle?.timingFactors}
+            timingMethodology={bundle?.timingMethodology}
+          />
           {bundle?.disclaimer ? (
             <p className="text-muted-foreground px-1 text-[11px] leading-relaxed">
               {bundle.disclaimer}

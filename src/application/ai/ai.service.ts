@@ -572,6 +572,7 @@ export class AiService {
     const spouse = timing?.spouseTendencies;
     const topWindow = timing?.windows?.[0];
     const tp = timing?.timingPrediction;
+    const timingFactors = tp?.factors || [];
 
     const [chart, dasha] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
@@ -655,7 +656,34 @@ export class AiService {
         "What does my 7th house say about partnership?",
         "When should I progress with a match?",
       ],
-      marriageWindows: (timing?.windows || []).slice(0, 5),
+      marriageWindows:
+        tp?.bestMarriageWindows ||
+        ([] as Array<{
+          label: string;
+          window: string;
+          score: number;
+          reason?: string;
+          kind?: string;
+          dashaLabel?: string;
+          startDate?: string;
+          endDate?: string;
+          approxNote?: string;
+        }>),
+      pastMarriageWindows: tp?.pastMarriageWindows
+        ? tp.pastMarriageWindows.map((w) => ({
+            label: w.label,
+            window: w.window,
+            score: w.score,
+            reason: w.reason,
+            dashaLabel: w.dashaLabel,
+            startDate: w.startDate,
+            endDate: w.endDate,
+            kind: w.kind,
+            approxNote: w.approxNote,
+          }))
+        : [],
+      timingFactors: timingFactors,
+      timingMethodology: tp?.methodology || null,
       spouseTendencies: spouse || null,
       marryNow: tp
         ? {

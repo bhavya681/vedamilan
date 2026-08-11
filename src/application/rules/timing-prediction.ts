@@ -58,6 +58,7 @@ export type TimingPrediction = {
   marryNowReason: string;
   partnerArrivalWindows: TimingWindow[];
   bestMarriageWindows: TimingWindow[];
+  pastMarriageWindows: TimingWindow[];
   gocharHighlights: string[];
   dashaSnapshot: {
     you: DashaSnapshot;
@@ -388,11 +389,17 @@ export function computeTimedWindows(
     now?: Date;
     limit?: number;
     birthDate?: Date | string | null;
+    includePast?: boolean;
+    pastCutoffYears?: number;
   } = {},
 ): TimingWindow[] {
   const now = opts.now || new Date();
   const kind = opts.kind || "MARRIAGE";
   const limit = opts.limit ?? 5;
+  const includePast = opts.includePast ?? false;
+  const pastCutoffYears = opts.pastCutoffYears ?? 12;
+  const pastCutoff = new Date(now);
+  pastCutoff.setFullYear(pastCutoff.getFullYear() - pastCutoffYears);
   const full = ensureAntardashaCoverage(periods);
   const antar = full.filter((p) => p.level === "ANTAR");
   const maha = full.filter((p) => p.level === "MAHA");
@@ -407,11 +414,15 @@ export function computeTimedWindows(
   for (const period of antar) {
     const start = new Date(period.startDate);
     const end = new Date(period.endDate);
-    if (end < now) continue;
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+    if (end < now) {
+      if (!includePast || end < pastCutoff) continue;
+    }
 
     const mahaLord = period.parentLord || "—";
     const score = scoreAntarWindow(mahaLord, period.lord, opts);
-    const effectiveStart = start < now ? now : start;
+    const isPast = end < now;
+    const effectiveStart = isPast ? start : start < now ? now : start;
     const seventhHit = opts.seventhLord === mahaLord || opts.seventhLord === period.lord;
     const marriageFavorable =
       MARRIAGE_LORDS.has(mahaLord) ||
@@ -419,8 +430,9 @@ export function computeTimedWindows(
       BENEFIC_MARRIAGE.has(period.lord) ||
       seventhHit;
 
-    if (kind === "MARRIAGE" && score < 62 && !marriageFavorable) continue;
-    if (kind === "PARTNER_ARRIVAL" && score < 58 && !marriageFavorable) continue;
+    if (!includePast && score < 62 && !marriageFavorable) continue;
+    if (kind === "MARRIAGE" && score < 55 && !marriageFavorable) continue;
+    if (kind === "PARTNER_ARRIVAL" && score < 52 && !marriageFavorable) continue;
 
     if (birth && kind === "MARRIAGE") {
       const ageAtEnd = ageAt(end, birth);
@@ -432,16 +444,17 @@ export function computeTimedWindows(
     }
 
     const dashaLabel = `${mahaLord}–${period.lord}`;
+    const windowLabel = seventhHit
+      ? "7th-lord activation"
+      : score >= 88
+        ? "Prime marriage window"
+        : score >= 78
+          ? "Favorable marriage window"
+          : score >= 68
+            ? "Supportive window"
+            : "Secondary window";
     windows.push({
-      label: seventhHit
-        ? "7th-lord activation"
-        : score >= 88
-          ? "Prime marriage window"
-          : score >= 78
-            ? "Favorable marriage window"
-            : score >= 68
-              ? "Supportive window"
-              : "Secondary window",
+      label: isPast ? `${windowLabel} · past` : windowLabel,
       window: fmtRange(effectiveStart, end),
       dashaLabel,
       startDate: effectiveStart.toISOString(),
@@ -450,7 +463,7 @@ export function computeTimedWindows(
       reason:
         kind === "PARTNER_ARRIVAL"
           ? `Approx. ${fmtRange(effectiveStart, end)} during ${dashaLabel} Antardasha — classical period for introductions and serious matching.`
-          : `Approx. marriage timing ${fmtRange(effectiveStart, end)} in ${dashaLabel} (Mahadasha–Antardasha). Venus/Jupiter/Moon or 7th-lord periods are classically preferred for vivaha; confirm exact day with panchang muhurta.`,
+          : `Approx. marriage timing ${fmtRange(effectiveStart, end)} in ${dashaLabel} (Mahadasha–Antardasha). Venus/Jupiter/Moon or 7th-lord periods are classically preferred for vivaha; confirm exact day with panchang muhurta.${isPast ? " Window has passed." : ""}`,
       score,
       kind: kind === "PARTNER_ARRIVAL" && !marriageFavorable ? "INTRODUCTION" : kind,
     });
@@ -460,14 +473,16 @@ export function computeTimedWindows(
     for (const period of maha) {
       const start = new Date(period.startDate);
       const end = new Date(period.endDate);
-      if (end < now) continue;
-      const effectiveStart = start < now ? now : start;
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+      if (end < now && (!includePast || end < pastCutoff)) continue;
+      const isPast = end < now;
+      const effectiveStart = isPast ? start : start < now ? now : start;
       const score = clamp(
         lordBaseScore(period.lord, opts.seventhLord) +
           (opts.manglikStatus === "MANGLIK" && period.lord === "Mars" ? -8 : 0),
       );
       windows.push({
-        label: "Mahadasha corridor",
+        label: isPast ? "Mahadasha corridor · past" : "Mahadasha corridor",
         window: fmtRange(effectiveStart, end),
         dashaLabel: `${period.lord} Mahadasha`,
         startDate: effectiveStart.toISOString(),
@@ -554,6 +569,15 @@ export function predictSelfTiming(input: {
     limit: 5,
     birthDate: input.birthDate,
   });
+  const pastMarriageWindows = computeTimedWindows(input.periods, {
+    manglikStatus: input.manglikStatus,
+    seventhLord: input.seventhLord,
+    kind: "MARRIAGE",
+    limit: 3,
+    birthDate: input.birthDate,
+    includePast: true,
+    pastCutoffYears: 25,
+  });
 
   return {
     asOf,
@@ -563,6 +587,7 @@ export function predictSelfTiming(input: {
     marryNowReason: `Weighted read of running dasha (${dasha.score}) and current gochar (${gochar.score}) yields ${overallTimingScore}/100. ${dasha.note} ${gochar.note}`,
     partnerArrivalWindows,
     bestMarriageWindows,
+    pastMarriageWindows,
     gocharHighlights: [...(input.gocharHighlights || []), ...gochar.highlights]
       .filter((v, i, a) => a.indexOf(v) === i)
       .slice(0, 6),
@@ -717,6 +742,7 @@ export function predictPairTiming(input: {
     marryNowReason: `This marry-now read blends overall compatibility (${bond}%), your dasha (${dashaYou.score}), partner dasha (${dashaThem.score}), and your gochar (${gochar.score}) → ${overallTimingScore}/100. ${marryNowVerdict === "FAVORABLE" || marryNowVerdict === "SUPPORTIVE" ? "Charts support progressing commitment with a proper muhurta." : "Charts suggest patience or deeper agreement before formalizing."}`,
     partnerArrivalWindows,
     bestMarriageWindows,
+    pastMarriageWindows: [],
     gocharHighlights: [...(input.gocharHighlightsYou || []), ...gochar.highlights]
       .filter((v, i, a) => a.indexOf(v) === i)
       .slice(0, 6),

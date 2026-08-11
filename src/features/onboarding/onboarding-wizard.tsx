@@ -102,9 +102,13 @@ export function OnboardingWizard() {
       religion: p?.religion || "",
       community: p?.community || "",
       about: p?.about || "",
-      birthDate: birth?.birthDate ? new Date(birth.birthDate).toISOString().slice(0, 10) : "",
+      birthDate: birth?.birthDate
+        ? new Date(birth.birthDate).toISOString().slice(0, 10)
+        : p?.dateOfBirth
+          ? new Date(p.dateOfBirth).toISOString().slice(0, 10)
+          : "",
       birthTime: (birth?.birthTime || "12:00:00").slice(0, 5),
-      placeName: birth?.placeName || "",
+      placeName: birth?.placeName || p?.city || "",
       latitude: birth?.latitude != null ? String(birth.latitude) : f.latitude,
       longitude: birth?.longitude != null ? String(birth.longitude) : f.longitude,
       timezone: birth?.timezone || "Asia/Kolkata",
@@ -242,6 +246,21 @@ export function OnboardingWizard() {
       if (!birthJson.success)
         throw new Error(birthJson.error?.message || "Could not save birth details");
 
+      if (!form.dateOfBirth && form.birthDate) {
+        await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dateOfBirth: form.birthDate }),
+        });
+      }
+      if (!form.city && form.placeName) {
+        await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ city: form.placeName }),
+        });
+      }
+
       setStep(2);
       setGenPhase(0);
       const phases = [1, 2, 3, 4, 5];
@@ -333,7 +352,7 @@ export function OnboardingWizard() {
           {step === 0
             ? "A few essentials so we can introduce you thoughtfully."
             : step === 1
-              ? "Birth details unlock deeper Vedic compatibility."
+              ? "Your date of birth and city are pre-filled from your profile. Add your exact birth time — the rest fine-tunes your Vedic chart."
               : step === 2
                 ? "We're preparing your Ascendant, Moon, and relationship patterns."
                 : step === 3
@@ -496,13 +515,21 @@ export function OnboardingWizard() {
                 Your birth details help us understand compatibility.
               </h2>
               <p className="text-muted-foreground text-sm">
-                We use your birth date, exact birth time, and birth location to calculate your Vedic
-                birth chart.
+                Your date of birth and city were saved in the previous step. Here we collect your
+                exact birth time and confirm the birth location for your Vedic birth chart.
               </p>
               <p className="text-muted-foreground text-sm">
                 Your exact birth time helps us calculate your Ascendant, houses, planetary
                 positions, and relationship indicators more accurately.
               </p>
+              {form.dateOfBirth && form.birthDate === form.dateOfBirth ? (
+                <p className="text-gold/80 text-xs">Date of birth pre-filled from your profile.</p>
+              ) : null}
+              {form.city && form.placeName === form.city ? (
+                <p className="text-gold/80 text-xs">
+                  Birth location pre-filled from your city. Edit if different.
+                </p>
+              ) : null}
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">

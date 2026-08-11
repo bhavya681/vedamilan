@@ -1,6 +1,8 @@
 /**
  * Shared readiness checks for compulsory onboarding.
  * Members must finish basics + birth + kundli before using the dashboard.
+ *
+ * Note: Date of birth (dob) is not part of basics, as it is handled in the astrology/birth details section.
  */
 
 export type OnboardingReadiness = {
@@ -19,7 +21,7 @@ export function evaluateOnboardingReadiness(input: {
   city?: string | null;
   profession?: string | null;
   education?: string | null;
-  dateOfBirth?: string | Date | null;
+  // dateOfBirth removed from basics, as DOB is gathered via birth details, not here
   photos?: unknown[] | null;
   completionScore?: number | null;
   hasBirthDetails?: boolean;
@@ -28,19 +30,19 @@ export function evaluateOnboardingReadiness(input: {
   const gender = String(input.gender || "").toUpperCase();
   const hasGender = gender === "MALE" || gender === "FEMALE";
   const hasPhoto = Array.isArray(input.photos) && input.photos.length > 0;
-  const hasBasics = Boolean(
-    input.city && input.profession && input.education && input.dateOfBirth && hasGender,
-  );
+  // 'hasBasics' no longer includes dateOfBirth
+  const hasBasics = Boolean(input.city && input.profession && input.education && hasGender);
   const hasBirth = Boolean(input.hasBirthDetails);
   const hasChart = Boolean(input.hasChart);
   const completion = Number(input.completionScore ?? 0);
+
   const missing: string[] = [];
   if (!hasGender) missing.push("gender");
   if (!hasPhoto) missing.push("photo");
   if (!input.city) missing.push("city");
   if (!input.profession) missing.push("profession");
   if (!input.education) missing.push("education");
-  if (!input.dateOfBirth) missing.push("dateOfBirth");
+  // Do not require dateOfBirth here; it's part of birthDetails only
   if (!hasBirth) missing.push("birthDetails");
   if (!hasChart) missing.push("kundli");
 

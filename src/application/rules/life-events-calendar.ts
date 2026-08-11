@@ -558,6 +558,8 @@ function meetsMajorBar(
   }
 
   // Milestone themes (marriage, career, job, education, wealth, property)
+  // Past marriage events get a lower bar — known milestones should surface
+  if (phase === "past" && category === "marriage" && score < 70) return false;
   if (phase === "past" && score < 76) return false;
   if (phase === "future" && score < 74) return false;
   if (phase === "present" && score < 70) return false;
@@ -668,7 +670,7 @@ export function computeLifeEventsCalendar(input: {
   const events: LifeEventItem[] = [];
   const categories = Object.keys(CATEGORY_META) as LifeEventCategory[];
   const pastCutoff = new Date(now);
-  pastCutoff.setFullYear(pastCutoff.getFullYear() - 12);
+  pastCutoff.setFullYear(pastCutoff.getFullYear() - 25);
 
   const gocharSummary = input.gocharHighlights?.length
     ? `Live gochar: ${input.gocharHighlights.slice(0, 3).join(" · ")}`

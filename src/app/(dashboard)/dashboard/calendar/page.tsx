@@ -164,16 +164,23 @@ const TAB_META: Record<
 
 const LIKELIHOOD_GUIDE = [
   {
-    range: "80–100%",
+    range: "80-100%",
     tone: "border-gold/40 bg-gold/12 text-foreground",
     title: "Strong major period",
     detail: "Dasha lords and gochar both favour this life chapter.",
   },
   {
-    range: "70–79%",
+    range: "70-79%",
     tone: "border-primary/35 bg-primary/10 text-foreground",
     title: "Clear major period",
     detail: "Strong Antardasha theme; transit adds partial confirmation.",
+  },
+  {
+    range: "Below 70%",
+    tone: "border-border/30 bg-muted/20 text-muted-foreground",
+    title: "Background / cautious",
+    detail:
+      "Supporting factors present but not dominant — watch for stronger dasha or gochar confluence.",
   },
 ] as const;
 
@@ -420,10 +427,12 @@ function MarriageWindowBanner({
   windows,
   chapters,
   marryNow,
+  pastWindows,
 }: {
   windows: CalendarPayload["marriageWindows"];
   chapters?: LifeEventItem[];
   marryNow?: CalendarPayload["marryNow"];
+  pastWindows?: CalendarPayload["pastMarriageWindows"];
 }) {
   const active = (windows || []).filter((w) => w.phase === "present" || w.phase === "future");
   const future = (windows || []).filter((w) => w.phase === "future");
@@ -432,7 +441,8 @@ function MarriageWindowBanner({
     (e) => e.phase === "present" || e.phase === "future",
   );
   const allWindows = [...active, ...future.slice(0, 2), ...past.slice(0, 1)];
-  if (!allWindows.length && !chapterActive.length) return null;
+  const hasPastWindows = (pastWindows || []).length > 0;
+  if (!allWindows.length && !chapterActive.length && !hasPastWindows) return null;
 
   const top = allWindows[0] || null;
   const topChapter = chapterActive[0] || null;
@@ -465,16 +475,21 @@ function MarriageWindowBanner({
         <div className="border-gold/30 bg-background/60 mb-3 rounded-xl border px-3.5 py-3 sm:mb-4 sm:px-4 sm:py-3.5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
-              <p className="text-[13px] font-medium sm:text-sm">{top.window}</p>
+              <div className="flex flex-wrap items-baseline gap-2">
+                <p className="text-[13px] font-medium sm:text-sm">{top.window}</p>
+                {top.dashaLabel ? (
+                  <span className="text-gold/80 text-[10px] font-medium">— {top.dashaLabel}</span>
+                ) : null}
+              </div>
               <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed sm:text-xs">
                 {top.reason}
               </p>
             </div>
-            {top.score >= 75 && (
+            {top.score >= 75 ? (
               <Badge className="bg-gold/15 text-gold border-gold/30 shrink-0 text-[10px]">
                 Prime
               </Badge>
-            )}
+            ) : null}
           </div>
           <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-2 sm:px-3">
             <Target className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
@@ -514,14 +529,12 @@ function MarriageWindowBanner({
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="font-medium">{w.label}</p>
-                <Badge
-                  variant={w.phase === "present" ? "default" : "outline"}
-                  className="text-[9px] uppercase"
-                >
-                  {w.phase}
-                </Badge>
+                <LikelihoodBadge score={w.score} size="sm" />
               </div>
-              <p className="text-muted-foreground mt-1">{w.window}</p>
+              <p className="text-muted-foreground mt-1 text-[11px]">{w.window}</p>
+              {w.dashaLabel ? (
+                <p className="text-gold/70 mt-0.5 text-[10px]">{w.dashaLabel}</p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -540,6 +553,33 @@ function MarriageWindowBanner({
                   <span className="font-medium">{ch.title}</span>
                   <span className="text-muted-foreground"> · {ch.window}</span>
                 </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {pastWindows?.length ? (
+        <div className="border-border/40 mt-3 border-t pt-3 sm:mt-4 sm:pt-4">
+          <p className="text-gold/80 mb-2 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase">
+            <History className="h-3 w-3" />
+            Recent marriage activations
+          </p>
+          <ul className="space-y-2">
+            {pastWindows.map((w, i) => (
+              <li
+                key={`past-${w.label}-${i}`}
+                className="border-gold/10 bg-background/40 min-w-0 rounded-xl border px-2.5 py-2 text-[11px] sm:text-xs"
+              >
+                <div className="flex justify-between">
+                  <span className="font-medium">{w.label}</span>
+                  <LikelihoodBadge score={w.score} size="sm" />
+                </div>
+                <p className="text-muted-foreground mt-0.5">{w.window}</p>
+                {w.dashaLabel ? (
+                  <p className="text-gold/70 mt-0.5 text-[10px]">{w.dashaLabel}</p>
+                ) : null}
+                <p className="text-muted-foreground mt-1 leading-relaxed break-words">{w.reason}</p>
               </li>
             ))}
           </ul>
@@ -580,6 +620,31 @@ type CalendarPayload = {
     score: number;
     reason: string;
     phase: LifeEventPhase;
+    dashaLabel?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    kind?: "PARTNER_ARRIVAL" | "MARRIAGE" | "INTRODUCTION";
+    approxNote?: string | null;
+  }>;
+  timingFactors?: Array<{
+    id: string;
+    name: string;
+    score: number;
+    weight: number;
+    note: string;
+  }>;
+  gocharHighlights?: string[];
+  timingMethodology?: string | null;
+  pastMarriageWindows?: Array<{
+    label: string;
+    window: string;
+    score: number;
+    reason: string;
+    dashaLabel?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    kind?: "PARTNER_ARRIVAL" | "MARRIAGE" | "INTRODUCTION";
+    approxNote?: string | null;
   }>;
   marriageChapters?: LifeEventItem[];
   marryNow?: {
@@ -893,6 +958,7 @@ export default function CalendarPage() {
             windows={data.marriageWindows}
             chapters={data.marriageChapters}
             marryNow={data.marryNow}
+            pastWindows={data.pastMarriageWindows}
           />
 
           <section className="border-border/50 bg-card/40 min-w-0 rounded-2xl border px-3 py-3 sm:px-4 sm:py-4">
@@ -1043,12 +1109,39 @@ export default function CalendarPage() {
                           <div className="bg-muted/30 mb-3 flex h-12 w-12 items-center justify-center rounded-full">
                             <CalendarRange className="text-muted-foreground/50 h-5 w-5" />
                           </div>
-                          <p className="text-muted-foreground text-sm">
-                            No major {meta.label.toLowerCase()} chapters for this filter.
-                          </p>
-                          <p className="text-muted-foreground/80 mt-1 text-xs">
-                            Try All themes or another time tab.
-                          </p>
+                          {category === "marriage" ? (
+                            <>
+                              {data.pastMarriageWindows?.length ? (
+                                <>
+                                  <p className="text-muted-foreground text-sm">
+                                    No future marriage chapters — your timing is settled for now.
+                                  </p>
+                                  <p className="text-muted-foreground/80 mt-1 text-xs">
+                                    Recent activations are shown in the Marriage Focus panel.
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="text-muted-foreground text-sm">
+                                    No major marriage chapters flagged for this filter.
+                                  </p>
+                                  <p className="text-muted-foreground/80 mt-1 text-xs">
+                                    Your current Dasha does not strongly activate marriage themes.
+                                    Recent activations may appear in the Marriage Focus panel above.
+                                  </p>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-muted-foreground text-sm">
+                                No major {meta.label.toLowerCase()} chapters for this filter.
+                              </p>
+                              <p className="text-muted-foreground/80 mt-1 text-xs">
+                                Try All themes or another time tab.
+                              </p>
+                            </>
+                          )}
                         </motion.div>
                       ) : (
                         <EventScrollPanel total={list.length}>
@@ -1079,19 +1172,34 @@ export default function CalendarPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="border-gold/30 from-gold/5 min-w-0 overflow-hidden rounded-2xl border bg-gradient-to-br to-transparent p-3.5 sm:p-5 lg:p-6"
               >
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="bg-gold/10 border-gold/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-                    <Heart className="text-gold h-4 w-4" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-base sm:text-lg">Marriage focus</h2>
-                    <p className="text-muted-foreground text-[10px]">
-                      Vivaha windows from your chart
-                    </p>
-                  </div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-display text-base sm:text-lg">Marriage focus</h2>
+                  <Link href={routes.marriageTiming} className="text-[10px] underline">
+                    Full timing
+                  </Link>
                 </div>
+                {data.timingFactors?.length ? (
+                  <ul className="mb-3 space-y-2 text-[11px]">
+                    {data.timingFactors.slice(0, 3).map((f) => {
+                      const weighted = Math.round((f.score * f.weight) / 100);
+                      return (
+                        <li key={f.id} className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="font-medium">{f.name}</span>
+                            <span className="text-muted-foreground">
+                              {f.score}% x {f.weight}%w = {weighted}
+                            </span>
+                          </div>
+                          <p className="text-muted-foreground leading-relaxed break-words">
+                            {f.note}
+                          </p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
                 <ul className="space-y-2.5 text-sm">
-                  {(data.marriageWindows || []).slice(0, 4).map((w, i) => (
+                  {(data.marriageWindows || []).map((w, i) => (
                     <motion.li
                       key={`${w.label}-${i}`}
                       initial={{ opacity: 0, x: -8 }}
@@ -1106,6 +1214,9 @@ export default function CalendarPage() {
                       <p className="text-muted-foreground mt-1 text-[11px] sm:text-xs">
                         {w.window}
                       </p>
+                      {w.dashaLabel ? (
+                        <p className="text-gold/80 mt-1 text-[10px] font-medium">{w.dashaLabel}</p>
+                      ) : null}
                       <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed break-words">
                         {w.reason}
                       </p>
