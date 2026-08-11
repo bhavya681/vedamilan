@@ -35,7 +35,6 @@ export default function DashboardPage() {
             city: profile?.city,
             profession: profile?.profession,
             education: profile?.education,
-            dateOfBirth: profile?.dateOfBirth,
             photos: profile?.photos,
             completionScore: profile?.completion?.score,
             hasBirthDetails: Boolean(profileRes.data?.birthDetails?.birthDate),

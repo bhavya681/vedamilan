@@ -94,7 +94,6 @@ export default function MatrimonyHomePage() {
           city: profileDoc?.city,
           profession: profileDoc?.profession,
           education: profileDoc?.education,
-          dateOfBirth: profileDoc?.dateOfBirth,
           photos: profileDoc?.photos,
           completionScore: profileDoc?.completion?.score ?? 0,
           hasBirthDetails: Boolean(profileData?.birthDetails?.birthDate),

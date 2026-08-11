@@ -68,7 +68,9 @@ type SwephModule = {
 };
 
 /** Resolve from package root so Turbopack/webpack bundling does not break native require. */
-const requireSweph = createRequire(path.join(process.cwd(), "package.json"));
+const requireSweph = createRequire(
+  path.join(/* turbopackIgnore: true */ process.cwd(), "package.json"),
+);
 
 let swephCached: SwephModule | null = null;
 let swephLoadError: AppError | null = null;

@@ -128,7 +128,6 @@ export function OnboardingWizard() {
       city: p?.city,
       profession: p?.profession,
       education: p?.education,
-      dateOfBirth: p?.dateOfBirth,
       photos: p?.photos,
       completionScore: p?.completion?.score,
       hasBirthDetails: Boolean(birth?.birthDate),
