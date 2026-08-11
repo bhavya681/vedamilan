@@ -22,9 +22,7 @@ import {
   CircleDot,
   Sparkle,
   LayoutList,
-  ChevronRight,
   TrendingUp,
-  Target,
   BookOpen,
 } from "lucide-react";
 
@@ -161,28 +159,6 @@ const TAB_META: Record<
     accent: "text-sky-500",
   },
 };
-
-const LIKELIHOOD_GUIDE = [
-  {
-    range: "80-100%",
-    tone: "border-gold/40 bg-gold/12 text-foreground",
-    title: "Strong major period",
-    detail: "Dasha lords and gochar both favour this life chapter.",
-  },
-  {
-    range: "70-79%",
-    tone: "border-primary/35 bg-primary/10 text-foreground",
-    title: "Clear major period",
-    detail: "Strong Antardasha theme; transit adds partial confirmation.",
-  },
-  {
-    range: "Below 70%",
-    tone: "border-border/30 bg-muted/20 text-muted-foreground",
-    title: "Background / cautious",
-    detail:
-      "Supporting factors present but not dominant — watch for stronger dasha or gochar confluence.",
-  },
-] as const;
 
 /** Category chips — milestones first; soft themes only appear when they clear the major bar */
 const CATEGORY_CHIP_ORDER: Array<LifeEventCategory | "all"> = [
@@ -423,172 +399,6 @@ function EventScrollPanel({ total, children }: { total: number; children: ReactN
   );
 }
 
-function MarriageWindowBanner({
-  windows,
-  chapters,
-  marryNow,
-  pastWindows,
-}: {
-  windows: CalendarPayload["marriageWindows"];
-  chapters?: LifeEventItem[];
-  marryNow?: CalendarPayload["marryNow"];
-  pastWindows?: CalendarPayload["pastMarriageWindows"];
-}) {
-  const active = (windows || []).filter((w) => w.phase === "present" || w.phase === "future");
-  const future = (windows || []).filter((w) => w.phase === "future");
-  const past = (windows || []).filter((w) => w.phase === "past");
-  const chapterActive = (chapters || []).filter(
-    (e) => e.phase === "present" || e.phase === "future",
-  );
-  const allWindows = [...active, ...future.slice(0, 2), ...past.slice(0, 1)];
-  const hasPastWindows = (pastWindows || []).length > 0;
-  if (!allWindows.length && !chapterActive.length && !hasPastWindows) return null;
-
-  const top = allWindows[0] || null;
-  const topChapter = chapterActive[0] || null;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border-gold/40 from-gold/10 min-w-0 overflow-hidden rounded-3xl border bg-gradient-to-br to-transparent p-4 shadow-[0_0_40px_-12px_rgba(234,179,8,0.2)] sm:p-5 lg:p-6"
-    >
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1.5">
-          <p className="text-gold/90 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase sm:text-[11px] sm:tracking-[0.16em]">
-            <Heart className="h-3.5 w-3.5 shrink-0" />
-            {top || topChapter ? "Major marriage window" : "Marriage timing"}
-          </p>
-          <p className="font-display text-lg leading-snug sm:text-xl lg:text-2xl">
-            {marryNow?.title ||
-              top?.label ||
-              topChapter?.title ||
-              "Marriage predictions on your chart"}
-          </p>
-        </div>
-        {top || topChapter ? (
-          <LikelihoodBadge score={top?.score ?? topChapter?.score ?? 70} />
-        ) : null}
-      </div>
-
-      {top ? (
-        <div className="border-gold/30 bg-background/60 mb-3 rounded-xl border px-3.5 py-3 sm:mb-4 sm:px-4 sm:py-3.5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-baseline gap-2">
-                <p className="text-[13px] font-medium sm:text-sm">{top.window}</p>
-                {top.dashaLabel ? (
-                  <span className="text-gold/80 text-[10px] font-medium">— {top.dashaLabel}</span>
-                ) : null}
-              </div>
-              <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed sm:text-xs">
-                {top.reason}
-              </p>
-            </div>
-            {top.score >= 75 ? (
-              <Badge className="bg-gold/15 text-gold border-gold/30 shrink-0 text-[10px]">
-                Prime
-              </Badge>
-            ) : null}
-          </div>
-          <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-2 sm:px-3">
-            <Target className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-            <p className="text-[11px] font-medium text-emerald-700 sm:text-xs dark:text-emerald-300">
-              Accept: sincere proposals, family meetings, and alliance steps in this window.
-            </p>
-          </div>
-        </div>
-      ) : topChapter ? (
-        <div className="border-gold/30 bg-background/60 mb-3 rounded-xl border px-3.5 py-3 sm:mb-4 sm:px-4 sm:py-3.5">
-          <p className="text-[13px] font-medium sm:text-sm">{topChapter.window}</p>
-          <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed sm:text-xs">
-            {topChapter.explain}
-          </p>
-          <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-2 sm:px-3">
-            <Target className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-            <p className="text-[11px] font-medium text-emerald-700 sm:text-xs dark:text-emerald-300">
-              Accept: {topChapter.acceptLine}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
-      {allWindows.length > 1 ? (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {allWindows.slice(1, 6).map((w, i) => (
-            <div
-              key={`${w.label}-${i}`}
-              className={cn(
-                "rounded-xl border px-3 py-2.5 text-[11px] transition-colors sm:text-xs",
-                w.phase === "present"
-                  ? "border-gold/40 bg-gold/5"
-                  : w.phase === "future"
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border/40 bg-background/40",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-medium">{w.label}</p>
-                <LikelihoodBadge score={w.score} size="sm" />
-              </div>
-              <p className="text-muted-foreground mt-1 text-[11px]">{w.window}</p>
-              {w.dashaLabel ? (
-                <p className="text-gold/70 mt-0.5 text-[10px]">{w.dashaLabel}</p>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      {chapterActive.length > 0 ? (
-        <div className="border-gold/20 mt-3 border-t pt-3 sm:mt-4 sm:pt-4">
-          <p className="text-gold/80 mb-2 text-[10px] font-semibold tracking-[0.12em] uppercase">
-            Marriage chapters in your timeline
-          </p>
-          <ul className="space-y-2">
-            {chapterActive.slice(0, 3).map((ch, i) => (
-              <li key={`ch-${i}`} className="flex items-start gap-2 text-[11px] sm:text-xs">
-                <ChevronRight className="text-gold/60 mt-0.5 h-3 w-3 shrink-0" />
-                <div className="min-w-0">
-                  <span className="font-medium">{ch.title}</span>
-                  <span className="text-muted-foreground"> · {ch.window}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {pastWindows?.length ? (
-        <div className="border-border/40 mt-3 border-t pt-3 sm:mt-4 sm:pt-4">
-          <p className="text-gold/80 mb-2 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.12em] uppercase">
-            <History className="h-3 w-3" />
-            Recent marriage activations
-          </p>
-          <ul className="space-y-2">
-            {pastWindows.map((w, i) => (
-              <li
-                key={`past-${w.label}-${i}`}
-                className="border-gold/10 bg-background/40 min-w-0 rounded-xl border px-2.5 py-2 text-[11px] sm:text-xs"
-              >
-                <div className="flex justify-between">
-                  <span className="font-medium">{w.label}</span>
-                  <LikelihoodBadge score={w.score} size="sm" />
-                </div>
-                <p className="text-muted-foreground mt-0.5">{w.window}</p>
-                {w.dashaLabel ? (
-                  <p className="text-gold/70 mt-0.5 text-[10px]">{w.dashaLabel}</p>
-                ) : null}
-                <p className="text-muted-foreground mt-1 leading-relaxed break-words">{w.reason}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </motion.section>
-  );
-}
-
 type CalendarPayload = {
   context: DeshKaalPatraContext;
   events: LifeEventItem[];
@@ -728,7 +538,7 @@ export default function CalendarPage() {
         className="mb-5 sm:mb-6 md:mb-8"
         eyebrow="VedaMilan AI · Life calendar"
         title="Calendar"
-        description="Major life chapters with marriage windows flagged — Desh–Kaal–Patra filtered by your place, age, and chart capacity."
+        description="Major life chapters filtered by your place, age, and chart capacity."
         actions={
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap">
             <Button
@@ -827,12 +637,6 @@ export default function CalendarPage() {
                     value: data.byPhase.past.length,
                     icon: History,
                     color: "text-muted-foreground",
-                  },
-                  {
-                    label: "Marriage",
-                    value: data.marriageWindows?.length || 0,
-                    icon: Heart,
-                    color: "text-rose",
                   },
                   {
                     label: "High prob.",
@@ -954,51 +758,6 @@ export default function CalendarPage() {
             )}
           </section>
 
-          <MarriageWindowBanner
-            windows={data.marriageWindows}
-            chapters={data.marriageChapters}
-            marryNow={data.marryNow}
-            pastWindows={data.pastMarriageWindows}
-          />
-
-          <section className="border-border/50 bg-card/40 min-w-0 rounded-2xl border px-3 py-3 sm:px-4 sm:py-4">
-            <div className="mb-2.5 flex flex-col gap-1 sm:mb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-2">
-              <div className="min-w-0">
-                <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                  Reading guide
-                </p>
-                <p className="font-display text-base sm:text-lg">How to read this calendar</p>
-              </div>
-              <p className="text-muted-foreground max-w-md text-[11px] leading-relaxed sm:text-right sm:text-xs">
-                Mild windows are hidden. Each card is one primary theme for a whole Antardasha
-                chapter.
-              </p>
-            </div>
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
-              {LIKELIHOOD_GUIDE.map((row) => (
-                <li
-                  key={row.range}
-                  className={cn(
-                    "flex min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
-                    row.tone,
-                  )}
-                >
-                  <div className="bg-background/50 border-border/30 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-                    <span className="font-display text-xs font-semibold">
-                      {row.range.split("–")[0]}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium">{row.title}</p>
-                    <p className="text-muted-foreground mt-0.5 text-[11px] leading-relaxed">
-                      {row.detail}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           <div className="grid min-w-0 items-start gap-4 md:gap-5 lg:grid-cols-3 xl:gap-6">
             <div className="min-w-0 lg:col-span-2">
               <Tabs value={tab} onValueChange={(v) => setTab(v as TimeTab)} className="min-w-0">
@@ -1111,26 +870,13 @@ export default function CalendarPage() {
                           </div>
                           {category === "marriage" ? (
                             <>
-                              {data.pastMarriageWindows?.length ? (
-                                <>
-                                  <p className="text-muted-foreground text-sm">
-                                    No future marriage chapters — your timing is settled for now.
-                                  </p>
-                                  <p className="text-muted-foreground/80 mt-1 text-xs">
-                                    Recent activations are shown in the Marriage Focus panel.
-                                  </p>
-                                </>
-                              ) : (
-                                <>
-                                  <p className="text-muted-foreground text-sm">
-                                    No major marriage chapters flagged for this filter.
-                                  </p>
-                                  <p className="text-muted-foreground/80 mt-1 text-xs">
-                                    Your current Dasha does not strongly activate marriage themes.
-                                    Recent activations may appear in the Marriage Focus panel above.
-                                  </p>
-                                </>
-                              )}
+                              <p className="text-muted-foreground text-sm">
+                                No marriage chapters in this tab.
+                              </p>
+                              <p className="text-muted-foreground/80 mt-1 text-xs">
+                                Marriage events appear in your main timeline when the dasha engine
+                                flags them.
+                              </p>
                             </>
                           ) : (
                             <>
@@ -1166,72 +912,6 @@ export default function CalendarPage() {
             {/* Side panels stay visible beside the scroll panel on desktop */}
             <aside className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 lg:sticky lg:top-4 lg:grid-cols-1 lg:self-start">
               <SpouseTendencyPanel tendencies={data.spouseTendencies} compact />
-
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="border-gold/30 from-gold/5 min-w-0 overflow-hidden rounded-2xl border bg-gradient-to-br to-transparent p-3.5 sm:p-5 lg:p-6"
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-display text-base sm:text-lg">Marriage focus</h2>
-                  <Link href={routes.marriageTiming} className="text-[10px] underline">
-                    Full timing
-                  </Link>
-                </div>
-                {data.timingFactors?.length ? (
-                  <ul className="mb-3 space-y-2 text-[11px]">
-                    {data.timingFactors.slice(0, 3).map((f) => {
-                      const weighted = Math.round((f.score * f.weight) / 100);
-                      return (
-                        <li key={f.id} className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="font-medium">{f.name}</span>
-                            <span className="text-muted-foreground">
-                              {f.score}% x {f.weight}%w = {weighted}
-                            </span>
-                          </div>
-                          <p className="text-muted-foreground leading-relaxed break-words">
-                            {f.note}
-                          </p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-                <ul className="space-y-2.5 text-sm">
-                  {(data.marriageWindows || []).map((w, i) => (
-                    <motion.li
-                      key={`${w.label}-${i}`}
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="border-gold/20 bg-background/60 min-w-0 rounded-xl border px-2.5 py-2.5 sm:px-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-[13px] font-medium break-words sm:text-sm">{w.label}</p>
-                        <LikelihoodBadge score={w.score} size="sm" />
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-[11px] sm:text-xs">
-                        {w.window}
-                      </p>
-                      {w.dashaLabel ? (
-                        <p className="text-gold/80 mt-1 text-[10px] font-medium">{w.dashaLabel}</p>
-                      ) : null}
-                      <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed break-words">
-                        {w.reason}
-                      </p>
-                    </motion.li>
-                  ))}
-                  {!data.marriageWindows?.length ? (
-                    <p className="text-muted-foreground text-xs">
-                      Open marriage timing for a full vivaha reading.
-                    </p>
-                  ) : null}
-                </ul>
-                <Button asChild size="sm" variant="outline" className="mt-3 w-full">
-                  <Link href={routes.marriageTiming}>Full marriage timing</Link>
-                </Button>
-              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 8 }}

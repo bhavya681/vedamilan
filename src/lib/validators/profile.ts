@@ -13,7 +13,9 @@ export const profileUpdateSchema = z
       .optional()
       .nullable(),
     heightCm: z.number().min(100).max(250).optional().nullable(),
-    maritalStatus: z.enum(["NEVER_MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"]).optional(),
+    maritalStatus: z
+      .enum(["NEVER_MARRIED", "MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"])
+      .optional(),
     religion: z.string().max(80).optional().nullable(),
     community: z.string().max(80).optional().nullable(),
     motherTongue: z.string().max(80).optional().nullable(),

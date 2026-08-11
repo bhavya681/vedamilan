@@ -1,9 +1,16 @@
-import { BirthDetails, Dasha, Horoscope, Profile } from "@/infrastructure/database/models";
+import {
+  BirthDetails,
+  CoupleMilestone,
+  Dasha,
+  Horoscope,
+  Profile,
+} from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { computeGocharAtDate, computeGocharForUser } from "@/application/horoscope/gochar.service";
 import {
   computeLifeEventsCalendar,
   type GocharLite,
+  type LifeEventCategory,
   type LifeEventItem,
 } from "@/application/rules/life-events-calendar";
 import {
@@ -149,6 +156,7 @@ export class LifeCalendarService {
       gocharPlanets: gochar?.planets || null,
       gocharHighlights: gochar?.highlights || null,
       historicalGocharByAntarStart,
+      maritalStatus: profile?.maritalStatus || null,
       now,
     });
 
@@ -172,6 +180,58 @@ export class LifeCalendarService {
       future: life.byPhase.future.map(enrichMarriage),
     };
     const events = [...byPhase.present, ...byPhase.future, ...byPhase.past];
+
+    const marriageChapters = byPhase.past.filter((e) => e.category === "marriage").slice(0, 6);
+
+    const marryNow = marriageTiming.marryNowVerdict
+      ? {
+          score: marriageTiming.marryNowScore,
+          title: marriageTiming.marryNowTitle,
+          reason: marriageTiming.marryNowReason,
+          verdict: marriageTiming.marryNowVerdict,
+        }
+      : null;
+
+    let userMilestones: LifeEventItem[] = [];
+    try {
+      const milestones = await CoupleMilestone.find({
+        notedByUserId: userId,
+        status: "ACTIVE",
+        deletedAt: null,
+        milestoneType: "MARRIAGE",
+        occurredOn: { $exists: true, $ne: null },
+      }).lean();
+      userMilestones = milestones
+        .filter((m) => m.occurredOn)
+        .map((m) => ({
+          id: `milestone-${String(m._id)}`,
+          category: "marriage" as LifeEventCategory,
+          title: m.label || "Marriage milestone",
+          window: fmtRange(new Date(m.occurredOn!), new Date(m.occurredOn!)),
+          startDate: new Date(m.occurredOn!).toISOString(),
+          endDate: new Date(m.occurredOn!).toISOString(),
+          score: 95,
+          phase: "past" as const,
+          dashaLabel: "User-asserted milestone",
+          reason: `You marked this as a marriage milestone on ${new Date(m.occurredOn!).toLocaleDateString("en-IN", { dateStyle: "long" })}.`,
+          suggestion: "Confirmed by your journey record.",
+          acceptLine: "Confirmed milestone.",
+          probability: "high" as const,
+          probabilityLabel: "Confirmed",
+          explain: `User-asserted milestone: ${m.label}.`,
+          significance: "major" as const,
+          spanMonths: 0,
+        }));
+    } catch {
+      userMilestones = [];
+    }
+
+    const allPastMarriage = [
+      ...marriageChapters,
+      ...userMilestones,
+      ...byPhase.past.filter((e) => e.category === "marriage"),
+    ];
+    const dedupedPastMarriage = dedupeByDate(allPastMarriage);
 
     return {
       context: life.context,
@@ -232,10 +292,24 @@ export class LifeCalendarService {
         approxNote: w.approxNote || null,
         phase: "past" as const,
       })),
+      marriageChapters: dedupedPastMarriage,
+      marryNow,
       methodology:
         "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Marriage cards include love/arranged and spouse-origin leanings from D1. Mild windows are filtered out. Directional guidance — not a fixed prediction.",
     };
   }
+}
+
+function dedupeByDate(items: LifeEventItem[]): LifeEventItem[] {
+  const map = new Map<string, LifeEventItem>();
+  for (const item of items) {
+    const key = item.startDate.slice(0, 10);
+    const existing = map.get(key);
+    if (!existing || item.score > existing.score) {
+      map.set(key, item);
+    }
+  }
+  return [...map.values()].sort((a, b) => b.startDate.localeCompare(a.startDate));
 }
 
 function fmtRange(start: Date, end: Date) {

@@ -544,6 +544,7 @@ function meetsMajorBar(
   score: number,
   probability: EventProbability,
   spanMonths: number,
+  maritalStatus?: string | null,
 ): boolean {
   // Short blips confuse users — keep brief windows only if currently active & strong
   if (spanMonths < 3 && !(phase === "present" && score >= 78)) return false;
@@ -559,7 +560,13 @@ function meetsMajorBar(
 
   // Milestone themes (marriage, career, job, education, wealth, property)
   // Past marriage events get a lower bar — known milestones should surface
-  if (phase === "past" && category === "marriage" && score < 70) return false;
+  const pastMarriageMin =
+    phase === "past" &&
+    category === "marriage" &&
+    (maritalStatus === "MARRIED" || maritalStatus === "DIVORCED" || maritalStatus === "WIDOWED")
+      ? 55
+      : 70;
+  if (phase === "past" && category === "marriage" && score < pastMarriageMin) return false;
   if (phase === "past" && score < 76) return false;
   if (phase === "future" && score < 74) return false;
   if (phase === "present" && score < 70) return false;
@@ -632,6 +639,8 @@ export function computeLifeEventsCalendar(input: {
   gocharHighlights?: string[] | null;
   /** Historical gochar keyed by Antardasha start ISO — sky at period midpoint */
   historicalGocharByAntarStart?: Record<string, GocharLite[]> | null;
+  /** User marital status — used to lower thresholds for known past marriages */
+  maritalStatus?: string | null;
   now?: Date;
 }): {
   context: DeshKaalPatraContext;
@@ -755,7 +764,8 @@ export function computeLifeEventsCalendar(input: {
 
       const { probability, probabilityLabel } = probabilityFrom(score, gochar.boost, phase);
       const spanMonths = spanMonthsBetween(start, end);
-      if (!meetsMajorBar(category, phase, score, probability, spanMonths)) continue;
+      if (!meetsMajorBar(category, phase, score, probability, spanMonths, input.maritalStatus))
+        continue;
 
       const dashaLabel = `${mahaLord}–${antarLord}`;
       const range = fmtRange(start, end);
@@ -871,6 +881,22 @@ export function computeLifeEventsCalendar(input: {
     present: sorted.filter((e) => e.phase === "present").slice(0, 4),
     future: sorted.filter((e) => e.phase === "future").slice(0, 8),
   };
+
+  const hasPastMarriage = byPhase.past.some((e) => e.category === "marriage");
+  if (
+    !hasPastMarriage &&
+    input.maritalStatus &&
+    ["MARRIED", "DIVORCED", "WIDOWED"].includes(input.maritalStatus)
+  ) {
+    const bestPastMarriage = events
+      .filter((e) => e.category === "marriage" && e.phase === "past")
+      .sort((a, b) => b.score - a.score || a.startDate.localeCompare(b.startDate));
+    if (bestPastMarriage.length > 0) {
+      byPhase.past.push(bestPastMarriage[0]!);
+      byPhase.past.sort((a, b) => b.endDate.localeCompare(a.endDate) || b.score - a.score);
+      if (byPhase.past.length > 6) byPhase.past.length = 6;
+    }
+  }
 
   const presentHighlights = byPhase.present.slice(0, 4);
   const futureHighlights = byPhase.future

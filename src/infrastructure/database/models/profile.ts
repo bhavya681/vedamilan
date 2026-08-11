@@ -36,7 +36,7 @@ const profileSchema = new Schema(
     heightCm: { type: Number, default: null, min: 100, max: 250 },
     maritalStatus: {
       type: String,
-      enum: ["NEVER_MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"],
+      enum: ["NEVER_MARRIED", "MARRIED", "DIVORCED", "WIDOWED", "AWAITING_DIVORCE"],
       default: "NEVER_MARRIED",
     },
     religion: { type: String, default: null, index: true },
