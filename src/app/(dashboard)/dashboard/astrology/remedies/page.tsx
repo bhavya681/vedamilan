@@ -45,7 +45,7 @@ export default function AstrologyRemediesPage() {
   }, []);
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Personalized guidance"
         title="Remedies & Sadhana"

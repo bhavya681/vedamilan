@@ -56,7 +56,7 @@ export default function AstrologyPlanetStrengthPage() {
   }, []);
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Planetary power analysis"
         title="Planet Strength Lab"

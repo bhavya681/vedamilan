@@ -96,7 +96,7 @@ export default function AstrologyMuhurtaPage() {
   const avoid = windows.filter((w) => w.rating === "avoid");
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Electional astrology"
         title="Muhurta Finder"

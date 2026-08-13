@@ -314,7 +314,7 @@ export default function AstrologyNakshatraPage() {
                 <p className="text-muted-foreground text-xs tracking-wide uppercase">
                   Janma Nakshatra
                 </p>
-                <h2 className="font-display mt-2 text-3xl">{moon?.nakshatra}</h2>
+                <h2 className="font-display mt-2 text-2xl sm:text-3xl">{moon?.nakshatra}</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
                   {moon?.sign} · Pada {moon?.nakshatraPada ?? "—"}
                 </p>
@@ -352,12 +352,14 @@ export default function AstrologyNakshatraPage() {
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             {planets.map((p) => (
-              <GlassCard key={p.planet} className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium">{p.planet}</p>
-                  <p className="text-muted-foreground text-xs">{p.nakshatra}</p>
+              <GlassCard key={p.planet} className="flex min-w-0 items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium break-words">{p.planet}</p>
+                  <p className="text-muted-foreground text-xs break-words">{p.nakshatra}</p>
                 </div>
-                <Badge variant="outline">P{p.nakshatraPada ?? "—"}</Badge>
+                <Badge variant="outline" className="shrink-0">
+                  P{p.nakshatraPada ?? "—"}
+                </Badge>
               </GlassCard>
             ))}
           </div>

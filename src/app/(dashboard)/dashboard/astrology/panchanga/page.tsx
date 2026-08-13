@@ -64,7 +64,7 @@ export default function AstrologyPanchangaPage() {
   }, [fetchPanchanga]);
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Daily Vedic calendar"
         title="Panchanga"
