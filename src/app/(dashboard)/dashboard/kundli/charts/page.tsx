@@ -124,7 +124,7 @@ export default function DivisionalChartsPage() {
               <Link href={routes.kundli}>Kundli hub</Link>
             </Button>
             <Button asChild variant="outline" className="w-full sm:w-auto">
-              <Link href={routes.ashtakavarga}>Ashtakavarga</Link>
+              <Link href={routes.astrologyAshtakavarga}>Ashtakavarga</Link>
             </Button>
           </div>
         }

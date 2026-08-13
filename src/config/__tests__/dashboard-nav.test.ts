@@ -23,7 +23,7 @@ describe("isDashboardNavActive", () => {
     expect(isDashboardNavActive(routes.divisionalCharts, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.divisionalCharts, routes.divisionalCharts)).toBe(true);
 
-    expect(isDashboardNavActive(routes.ashtakavarga, routes.kundli)).toBe(false);
+    expect(isDashboardNavActive(routes.astrologyAshtakavarga, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.natalProfile, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.astrologyNakshatra, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.gochar, routes.kundli)).toBe(false);

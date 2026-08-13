@@ -46,7 +46,6 @@ const LIFE_AREAS = [
     href: routes.astrologyDivisionalCharts,
     hint: "Moon, Sun, D9, D10, D7, D12 & more Vargas",
   },
-  { title: "Ashtakavarga", href: routes.ashtakavarga, hint: "House bindu strength" },
   { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
   {
     title: "Yogas & Doshas",
@@ -62,6 +61,11 @@ const ADVANCED_AREAS = [
     title: "Planet Strength",
     href: routes.astrologyPlanetStrength,
     hint: "Dignity, house, and retrograde analysis",
+  },
+  {
+    title: "Shadbala",
+    href: routes.astrologyShadbala,
+    hint: "Six-fold planetary strength analysis",
   },
   {
     title: "Panchanga",

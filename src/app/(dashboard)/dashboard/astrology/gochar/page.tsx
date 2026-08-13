@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useCallback, useState } from "react";
-import { CalendarIcon, Orbit } from "lucide-react";
+import { CalendarIcon, Clock, Orbit } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -12,6 +12,11 @@ import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { routes } from "@/lib/constants/routes";
+import {
+  isNorthChart,
+  NorthIndianKundli,
+  type NorthChartData,
+} from "@/features/horoscope/components/kundli-charts";
 
 type GocharPlanet = {
   planet: string;
@@ -30,7 +35,7 @@ type GocharData = {
   natalMoon: string | null;
   highlights: string[];
   planets: GocharPlanet[];
-  chartNorth: unknown;
+  chartNorth: NorthChartData | null;
   chartSouth: unknown;
   chartEast: unknown;
 };
@@ -47,6 +52,7 @@ export default function AstrologyGocharPage() {
   const [data, setData] = useState<GocharData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const fetchGochar = useCallback(async () => {
     setLoading(true);
@@ -59,7 +65,10 @@ export default function AstrologyGocharPage() {
         setError(json.error?.message || "Failed to load gochar");
         setData(null);
       } else {
-        setData(json.data);
+        setData({
+          ...json.data,
+          chartNorth: isNorthChart(json.data.chartNorth) ? json.data.chartNorth : null,
+        });
       }
     } catch {
       setError("Failed to load gochar");
@@ -72,6 +81,8 @@ export default function AstrologyGocharPage() {
   useEffect(() => {
     void fetchGochar();
   }, [fetchGochar]);
+
+  const isToday = date.toDateString() === new Date().toDateString();
 
   const conjunctions: Conjunction[] = [];
   if (data?.planets) {
@@ -110,23 +121,107 @@ export default function AstrologyGocharPage() {
       />
 
       <GlassCard className="space-y-4 p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-          <div className="space-y-2">
-            <Label>Select date</Label>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+          <div className="space-y-3">
+            <Label className="text-xs font-medium">Transit Date</Label>
             <div className="flex items-center gap-2">
               <CalendarIcon className="text-muted-foreground h-4 w-4" />
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(d) => d && setDate(d)}
-                className="rounded-md border"
-              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="justify-between font-normal"
+              >
+                {date.toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                <CalendarIcon className="ml-2 h-4 w-4" />
+              </Button>
             </div>
+            {showCalendar && (
+              <div className="bg-background rounded-md border p-2 shadow-sm">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => {
+                    if (d) setDate(d);
+                    setShowCalendar(false);
+                  }}
+                  className="rounded-md"
+                />
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="flex-1 text-xs"
+                    onClick={() => {
+                      setDate(new Date());
+                      setShowCalendar(false);
+                    }}
+                  >
+                    <Clock className="mr-1 h-3 w-3" />
+                    Today
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setShowCalendar(false);
+                      void fetchGochar();
+                    }}
+                    disabled={loading}
+                    className="flex-1 text-xs"
+                  >
+                    {loading ? "Loading..." : "Update"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {!showCalendar && (
+              <Button onClick={fetchGochar} disabled={loading} className="w-full sm:w-auto">
+                {loading ? "Loading..." : "Update Gochar"}
+              </Button>
+            )}
           </div>
-          <div className="flex items-end">
-            <Button onClick={fetchGochar} disabled={loading} className="w-full sm:w-auto">
-              {loading ? "Loading..." : "Update Gochar"}
-            </Button>
+
+          <div className="min-w-0 flex-1">
+            {data ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-display text-xl">Transit chart</h2>
+                  <Badge variant="outline">
+                    <Orbit className="mr-1 h-3 w-3" />
+                    {isToday
+                      ? "Today"
+                      : data.asOf
+                        ? new Date(data.asOf).toLocaleDateString()
+                        : date.toLocaleDateString()}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Current transit positions from natal Lagna perspective.
+                </p>
+                {data.chartNorth ? (
+                  <div className="border-border/60 bg-muted/20 flex justify-center overflow-hidden rounded-xl border p-4">
+                    <NorthIndianKundli chart={data.chartNorth} />
+                  </div>
+                ) : (
+                  <div className="border-border/60 bg-muted/10 flex items-center justify-center rounded-xl border border-dashed p-8">
+                    <p className="text-muted-foreground text-xs">
+                      Chart will appear here after gochar is calculated.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="border-border/60 bg-muted/10 flex items-center justify-center rounded-xl border border-dashed p-8">
+                <p className="text-muted-foreground text-xs">
+                  Select a date and update gochar to see the transit chart.
+                </p>
+              </div>
+            )}
           </div>
         </div>
         {data ? (
@@ -148,7 +243,11 @@ export default function AstrologyGocharPage() {
               <h2 className="font-display text-xl">Transit overview</h2>
               <Badge variant="outline">
                 <Orbit className="mr-1 h-3 w-3" />
-                {data.asOf ? new Date(data.asOf).toLocaleDateString() : date.toLocaleDateString()}
+                {isToday
+                  ? "Today"
+                  : data.asOf
+                    ? new Date(data.asOf).toLocaleDateString()
+                    : date.toLocaleDateString()}
               </Badge>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

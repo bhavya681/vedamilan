@@ -12,7 +12,6 @@ export const NAV_HREF_KEYS: Record<string, string> = {
   [routes.astrologyDasha]: "navigation.dashas",
   [routes.divisionalCharts]: "navigation.charts",
   [routes.astrologyDivisionalCharts]: "navigation.charts",
-  [routes.ashtakavarga]: "navigation.ashtakavarga",
   [routes.astrologyAshtakavarga]: "navigation.ashtakavarga",
   [routes.natalProfile]: "navigation.varnaGana",
   [routes.astrologyYogas]: "navigation.yogas",

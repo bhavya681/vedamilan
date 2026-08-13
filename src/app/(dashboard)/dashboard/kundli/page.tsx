@@ -130,7 +130,7 @@ export default function KundliPage() {
   const links = [
     { t: "Graha Katha — Stories of the Grahas", h: routes.grahaKatha },
     { t: "Charts (D1–D60 Vargas)", h: routes.divisionalCharts },
-    { t: "Ashtakavarga", h: routes.ashtakavarga },
+    { t: "Ashtakavarga", h: routes.astrologyAshtakavarga },
     { t: "Varna & Gana", h: routes.natalProfile },
     { t: "Yogas & Doshas", h: routes.astrologyYogas },
     { t: "Lal Kitab", h: routes.lalKitab },

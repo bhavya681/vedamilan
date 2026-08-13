@@ -35,6 +35,7 @@ import {
   ScrollText,
   Flame,
   Bookmark,
+  Activity,
 } from "lucide-react";
 
 import { routes } from "@/lib/constants/routes";
@@ -63,7 +64,6 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.lalKitab]: BookOpen,
   [routes.natalProfile]: UserRound,
   [routes.divisionalCharts]: Grid3X3,
-  [routes.ashtakavarga]: CalendarClock,
   [routes.astrologyAshtakavarga]: CalendarClock,
   [routes.calendar]: CalendarRange,
   [routes.marriageGuru]: Sparkles,
@@ -87,6 +87,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.astrologySpiritualJourney]: Flame,
   [routes.astrologyPanchanga]: Sun,
   [routes.astrologyPlanetStrength]: Gauge,
+  [routes.astrologyShadbala]: Activity,
   [routes.astrologyChartComparison]: GitCompare,
 };
 
@@ -95,7 +96,7 @@ const KUNDLI_NAV_CHILDREN = [
   routes.grahaKatha,
   routes.dasha,
   routes.divisionalCharts,
-  routes.ashtakavarga,
+  routes.astrologyAshtakavarga,
   routes.natalProfile,
   routes.gochar,
 ] as const;
