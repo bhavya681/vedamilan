@@ -40,7 +40,7 @@ const LIFE_AREAS = [
     hint: "Stories, symbolism & 12-house wisdom of the Grahas",
   },
   { title: "Dashas", href: routes.astrologyDasha, hint: "Mahadasha and Antardasha timeline" },
-  { title: "Career", href: routes.rajaYogas, hint: "Raja Yogas and recognition themes" },
+  { title: "Yogas", href: routes.astrologyYogas, hint: "Yogas, doshas, and karmic patterns" },
   {
     title: "Charts",
     href: routes.astrologyDivisionalCharts,

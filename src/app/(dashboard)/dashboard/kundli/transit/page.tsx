@@ -76,7 +76,7 @@ export default function YogasDoshasPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href={routes.rajaYogas}>Raja Yogas</Link>
+              <Link href={routes.astrologyYogas}>Yogas</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href={routes.lalKitab}>Lal Kitab</Link>

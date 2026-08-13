@@ -17,15 +17,15 @@ describe("isDashboardNavActive", () => {
     expect(isDashboardNavActive(routes.dasha, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.dasha, routes.dasha)).toBe(true);
 
-    expect(isDashboardNavActive(routes.rajaYogas, routes.kundli)).toBe(false);
-    expect(isDashboardNavActive(routes.rajaYogas, routes.rajaYogas)).toBe(true);
+    expect(isDashboardNavActive(routes.astrologyYogas, routes.kundli)).toBe(false);
+    expect(isDashboardNavActive(routes.astrologyYogas, routes.astrologyYogas)).toBe(true);
 
     expect(isDashboardNavActive(routes.divisionalCharts, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.divisionalCharts, routes.divisionalCharts)).toBe(true);
 
     expect(isDashboardNavActive(routes.ashtakavarga, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.natalProfile, routes.kundli)).toBe(false);
-    expect(isDashboardNavActive(routes.yogas, routes.kundli)).toBe(false);
+    expect(isDashboardNavActive(routes.astrologyNakshatra, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.gochar, routes.kundli)).toBe(false);
     expect(isDashboardNavActive(routes.gochar, routes.gochar)).toBe(true);
   });

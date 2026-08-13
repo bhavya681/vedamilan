@@ -2,10 +2,15 @@ import type { LucideIcon } from "lucide-react";
 import {
   Bell,
   Baby,
+  BookMarked,
+  BookOpen,
   CalendarClock,
   CalendarRange,
+  Clock,
   Compass,
   Crown,
+  Gauge,
+  GitCompare,
   Grid3X3,
   Hash,
   Heart,
@@ -22,16 +27,14 @@ import {
   Settings,
   SlidersHorizontal,
   Sparkles,
+  Sun,
   SunMedium,
+  Telescope,
   UserRound,
   Users,
-  Bookmark,
-  BookOpen,
   ScrollText,
-  Sun,
-  BarChart3,
-  GitCompare,
   Flame,
+  Bookmark,
 } from "lucide-react";
 
 import { routes } from "@/lib/constants/routes";
@@ -40,7 +43,7 @@ import { routes } from "@/lib/constants/routes";
 export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.dashboard]: Home,
   [routes.astrology]: Home,
-  [routes.matrimony]: Heart,
+  [routes.matrimony]: Home,
   [routes.matches]: Heart,
   [routes.connections]: Link2,
   [routes.yourConnection]: HeartHandshake,
@@ -55,15 +58,15 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.horoscope]: SunMedium,
   [routes.numerology]: Hash,
   [routes.gochar]: Orbit,
-  [routes.predictions]: Sparkles,
+  [routes.astrologyGochar]: Orbit,
+  [routes.predictions]: Telescope,
   [routes.lalKitab]: BookOpen,
-  [routes.yogas]: MoonStar,
-  [routes.rajaYogas]: Crown,
   [routes.natalProfile]: UserRound,
   [routes.divisionalCharts]: Grid3X3,
   [routes.ashtakavarga]: CalendarClock,
+  [routes.astrologyAshtakavarga]: CalendarClock,
   [routes.calendar]: CalendarRange,
-  [routes.marriageGuru]: Heart,
+  [routes.marriageGuru]: Sparkles,
   [routes.aiInsights]: MessageCircle,
   [routes.vedicWisdom]: BookOpen,
   [routes.askTheSages]: Users,
@@ -75,15 +78,15 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.consultation]: Users,
   [routes.notifications]: Bell,
   [routes.settings]: Settings,
-  [routes.astrologyYogas]: MoonStar,
+  [routes.astrologyYogas]: Sparkles,
   [routes.astrologyNakshatra]: MoonStar,
   [routes.astrologyDasha]: Hourglass,
   [routes.astrologyDivisionalCharts]: Grid3X3,
-  [routes.astrologyMuhurta]: CalendarClock,
-  [routes.astrologyRemedies]: BookOpen,
+  [routes.astrologyMuhurta]: Clock,
+  [routes.astrologyRemedies]: BookMarked,
   [routes.astrologySpiritualJourney]: Flame,
   [routes.astrologyPanchanga]: Sun,
-  [routes.astrologyPlanetStrength]: BarChart3,
+  [routes.astrologyPlanetStrength]: Gauge,
   [routes.astrologyChartComparison]: GitCompare,
 };
 
@@ -94,8 +97,6 @@ const KUNDLI_NAV_CHILDREN = [
   routes.divisionalCharts,
   routes.ashtakavarga,
   routes.natalProfile,
-  routes.rajaYogas,
-  routes.yogas,
   routes.gochar,
 ] as const;
 
@@ -150,6 +151,9 @@ export function isDashboardNavActive(pathname: string, href: string) {
     return matchesPath(pathname, routes.astrologyPlanetStrength);
   if (href === routes.astrologyChartComparison)
     return matchesPath(pathname, routes.astrologyChartComparison);
+  if (href === routes.astrologyAshtakavarga)
+    return matchesPath(pathname, routes.astrologyAshtakavarga);
+  if (href === routes.astrologyGochar) return matchesPath(pathname, routes.astrologyGochar);
 
   // Partner preferences vs Situational quiz share a path prefix — keep tabs exclusive.
   if (href === routes.preferences) {

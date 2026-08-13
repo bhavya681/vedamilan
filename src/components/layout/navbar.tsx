@@ -45,7 +45,7 @@ const MATRIMONY_QUICK = [
 const ASTROLOGY_QUICK = [
   { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
   { href: routes.dasha, labelKey: "navigation.dashas", icon: Hourglass },
-  { href: routes.rajaYogas, labelKey: "navigation.rajaYogas", icon: Crown },
+  { href: routes.astrologyYogas, labelKey: "navigation.yogas", icon: Crown },
 ] as const;
 
 const WISDOM_QUICK = [

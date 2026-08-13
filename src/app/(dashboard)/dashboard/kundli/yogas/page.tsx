@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { routes } from "@/lib/constants/routes";
 
-/** /dashboard/kundli/yogas → full yogas & doshas view */
+/** /dashboard/kundli/yogas → unified yogas view */
 export default function YogasIndexRedirectPage() {
-  redirect(routes.yogas);
+  redirect(routes.astrologyYogas);
 }

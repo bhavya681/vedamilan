@@ -18,30 +18,68 @@ type RemedyTheme = {
   durationPractice: string;
 };
 
+type KarmicTheme = {
+  planet: string;
+  pastLifeIndication: string;
+  doThis: string[];
+  avoidThis: string[];
+  traditionalSource: string;
+};
+
+type PastLifeDeeds = {
+  themes: KarmicTheme[];
+  overallGuidance: string;
+  disclaimer: string;
+};
+
 export default function AstrologyRemediesPage() {
-  const [data, setData] = useState<{ themes: RemedyTheme[]; disclaimer: string } | null>(null);
+  const [remedies, setRemedies] = useState<{ themes: RemedyTheme[]; disclaimer: string } | null>(
+    null,
+  );
+  const [karmic, setKarmic] = useState<PastLifeDeeds | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void fetch("/api/lal-kitab")
-      .then((r) => r.json())
-      .then((json) => {
-        if (!json.success) {
-          setError(json?.error?.message || "Generate your kundli to open remedies.");
-          return;
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      fetch("/api/lal-kitab").then((r) => r.json()),
+      fetch("/api/astrology/past-life-deeds").then((r) => r.json()),
+    ])
+      .then(([remediesJson, karmicJson]) => {
+        if (!mounted) return;
+        if (!remediesJson.success) {
+          setError(remediesJson?.error?.message || "Generate your kundli to open remedies.");
+        } else {
+          const d = remediesJson.data as {
+            remedies?: RemedyTheme[];
+            disclaimer?: string;
+          };
+          setRemedies({
+            themes: d.remedies || [],
+            disclaimer: d.disclaimer || "Traditional guidance — not medical or legal advice.",
+          });
         }
-        const d = json.data as {
-          remedies?: RemedyTheme[];
-          disclaimer?: string;
-        };
-        setData({
-          themes: d.remedies || [],
-          disclaimer: d.disclaimer || "Traditional guidance — not medical or legal advice.",
-        });
+        if (!karmicJson.success) {
+          // karmic is optional — don't block the whole page
+          setKarmic(null);
+        } else {
+          setKarmic(karmicJson.data);
+        }
       })
-      .catch(() => setError("Failed to load remedies"))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (mounted) setError("Failed to load remedies");
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -49,7 +87,7 @@ export default function AstrologyRemediesPage() {
       <PageHeader
         eyebrow="Personalized guidance"
         title="Remedies & Sadhana"
-        description="Traditional practices mapped from your chart — mantras, charity, discipline, and devotional themes. Never fear-based; always respectful."
+        description="Traditional practices mapped from your chart — mantras, charity, discipline, devotional themes, and karmic guidance. Never fear-based; always respectful."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
@@ -62,7 +100,7 @@ export default function AstrologyRemediesPage() {
         }
       />
 
-      {loading ? <PanelSkeleton lines={6} /> : null}
+      {loading ? <PanelSkeleton lines={8} /> : null}
       {error ? (
         <EmptyState
           title="Chart required"
@@ -75,7 +113,7 @@ export default function AstrologyRemediesPage() {
         />
       ) : null}
 
-      {data ? (
+      {remedies ? (
         <>
           <section className="border-border/50 from-muted/35 relative overflow-hidden rounded-3xl border bg-gradient-to-br to-transparent p-5 sm:p-6">
             <p className="text-gold/85 flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
@@ -91,14 +129,14 @@ export default function AstrologyRemediesPage() {
             </p>
           </section>
 
-          {data.themes.length === 0 ? (
+          {remedies.themes.length === 0 ? (
             <EmptyState
               title="No priority upayas"
               description="No challenging placements required priority remedy cards. Review yogas for supportive practices."
             />
           ) : (
             <div className="space-y-3">
-              {data.themes.map((theme) => (
+              {remedies.themes.map((theme) => (
                 <GlassCard key={theme.planetaryFactor} className="space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{theme.planetaryFactor}</Badge>
@@ -126,7 +164,70 @@ export default function AstrologyRemediesPage() {
               ))}
             </div>
           )}
-          <p className="text-muted-foreground text-xs leading-relaxed">{data.disclaimer}</p>
+
+          {karmic && karmic.themes.length > 0 ? (
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-xl sm:text-2xl">Past Life Deeds</h2>
+                <Badge variant="outline">Traditional interpretation</Badge>
+              </div>
+              <p className="text-muted-foreground max-w-3xl text-sm leading-relaxed">
+                {karmic.overallGuidance}
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {karmic.themes.map((theme) => (
+                  <GlassCard key={theme.planet} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <p className="font-display text-base sm:text-lg">{theme.planet}</p>
+                      <Badge variant="secondary" className="text-[10px]">
+                        Karmic
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        Past-life indication
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed break-words">
+                        {theme.pastLifeIndication}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        Do this
+                      </p>
+                      <ul className="mt-1 space-y-1">
+                        {theme.doThis.map((item) => (
+                          <li key={item} className="text-xs leading-relaxed">
+                            · {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        Avoid this
+                      </p>
+                      <ul className="mt-1 space-y-1">
+                        {theme.avoidThis.map((item) => (
+                          <li key={item} className="text-destructive/80 text-xs leading-relaxed">
+                            · {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <p className="text-muted-foreground text-[10px] leading-relaxed break-words">
+                      Source: {theme.traditionalSource}
+                    </p>
+                  </GlassCard>
+                ))}
+              </div>
+
+              <p className="text-muted-foreground text-xs leading-relaxed">{karmic.disclaimer}</p>
+            </section>
+          ) : null}
+
+          <p className="text-muted-foreground text-xs leading-relaxed">{remedies.disclaimer}</p>
         </>
       ) : null}
     </div>

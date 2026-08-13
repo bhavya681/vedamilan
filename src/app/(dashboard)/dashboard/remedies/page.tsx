@@ -89,7 +89,7 @@ export default function RemediesPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href={routes.yogas}>Yogas & doshas</Link>
+              <Link href={routes.astrologyYogas}>Yogas</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href={routes.kundli}>My Kundli</Link>

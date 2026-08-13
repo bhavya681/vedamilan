@@ -20,6 +20,7 @@ const NAKSHATRA_DETAILS: Record<
     element: string;
     motivation: string;
     qualities: string[];
+    effect: string;
   }
 > = {
   Ashwini: {
@@ -30,6 +31,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Dharma",
     qualities: ["Swift", "Healing", "Pioneering"],
+    effect:
+      "Grants speed, healing ability, and initiative. Favors new beginnings and compassionate action.",
   },
   Bharani: {
     deity: "Yama",
@@ -39,6 +42,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Nurturing", "Disciplined", "Transformative"],
+    effect:
+      "Carries the weight of restraint and creative nurture. Can manifest as intense responsibility or artistic purification.",
   },
   Krittika: {
     deity: "Agni",
@@ -48,6 +53,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Fire",
     motivation: "Kama",
     qualities: ["Fiery", "Critical", "Purifying"],
+    effect:
+      "Agni burns away impurity. Sharp intellect, but may incline toward criticism or inner friction.",
   },
   Rohini: {
     deity: "Brahma",
@@ -57,6 +64,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Creative", "Grounded", "Fertile"],
+    effect:
+      "Most fertile nakshatra. Supports growth, beauty, material prosperity, and creative expression.",
   },
   Mrigashira: {
     deity: "Soma",
@@ -66,6 +75,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Curious", "Gentle", "Seeking"],
+    effect:
+      "Seeks, researches, and wanders. Favors discovery, communication, and subtle intuition.",
   },
   Ardra: {
     deity: "Rudra",
@@ -75,6 +86,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Intense", "Transformative", "Stormy"],
+    effect: "Storms clear the sky. Can bring upheaval followed by profound clarity and reform.",
   },
   Punarvasu: {
     deity: "Aditi",
@@ -84,6 +96,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Moksha",
     qualities: ["Renewing", "Nurturing", "Adaptable"],
+    effect:
+      "Returns and restores. Favors return of lost things, renewed energy, and adaptable wisdom.",
   },
   Pushya: {
     deity: "Brihaspati",
@@ -93,6 +107,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Nourishing", "Protective", "Wise"],
+    effect:
+      "Most auspicious for nourishment, learning, and spiritual nourishment. Strengthens dharma.",
   },
   Ashlesha: {
     deity: "Nagas",
@@ -102,6 +118,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Mysterious", "Clinging", "Wise"],
+    effect:
+      "Kundalini-like intensity. Can bring wisdom through mystery, but also warns against poison or entanglement.",
   },
   Magha: {
     deity: "Pitris",
@@ -111,6 +129,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Dignified", "Lineage", "Ambitious"],
+    effect: "Honors ancestors and authority. Favors leadership, legacy, and dignified power.",
   },
   "Purva Phalguni": {
     deity: "Aryaman",
@@ -120,6 +139,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Warm", "Social", "Creative"],
+    effect:
+      "Supports marriage, creativity, and social bonds. Favors enjoyment and artistic expression.",
   },
   "Uttara Phalguni": {
     deity: "Bhaga",
@@ -129,6 +150,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Stable", "Loyal", "Supportive"],
+    effect:
+      "Firm in friendship and partnership. Favors steady growth, loyalty, and lasting unions.",
   },
   Hasta: {
     deity: "Savitar",
@@ -138,6 +161,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Skillful", "Clever", "Serviceful"],
+    effect:
+      "Skill of the hands and mind. Favors craftsmanship, healing touch, and practical magic.",
   },
   Chitra: {
     deity: "Tvastar",
@@ -147,6 +172,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Kama",
     qualities: ["Artistic", "Charming", "Vain"],
+    effect: "Architect of beauty. Favors art, design, and charisma, but warns against vanity.",
   },
   Swati: {
     deity: "Vayu",
@@ -156,6 +182,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Dharma",
     qualities: ["Independent", "Flexible", "Diplomatic"],
+    effect: "Wind of change. Favors independence, adaptability, and diplomatic skill.",
   },
   Vishakha: {
     deity: "Indra-Agni",
@@ -165,6 +192,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Artha",
     qualities: ["Determined", "Goal-oriented", "Intense"],
+    effect:
+      "Triumphant but tested. Strong drive for achievement; may face obstacles before success.",
   },
   Anuradha: {
     deity: "Mitra",
@@ -174,6 +203,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Devoted", "Loyal", "Balanced"],
+    effect:
+      "Friendship and devotion. Favors loyalty, balanced relationships, and following one's path.",
   },
   Jyeshtha: {
     deity: "Indra",
@@ -183,6 +214,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Kama",
     qualities: ["Senior", "Protective", "Responsible"],
+    effect: "Senior, protective, and responsible. May carry burdens of leadership or elder duty.",
   },
   Mula: {
     deity: "Nirriti",
@@ -192,6 +224,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Moksha",
     qualities: ["Rooted", "Investigative", "Destructive"],
+    effect:
+      "Destroys to rebuild at the root. Favors deep research, occult knowledge, and radical transformation.",
   },
   "Purva Ashadha": {
     deity: "Aja Ekapada",
@@ -201,6 +235,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Initiating", "Bold", "Energetic"],
+    effect:
+      "Invincible beginning. Favors early vigor, purification through effort, and invincible resolve.",
   },
   "Uttara Ashadha": {
     deity: "Ahir Budhnya",
@@ -210,6 +246,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Patient", "Loyal", "Organized"],
+    effect: "Slow but permanent victory. Favors patience, integrity, and lasting achievement.",
   },
   Shravana: {
     deity: "Vishnu",
@@ -219,6 +256,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Moksha",
     qualities: ["Learning", "Listening", "Travel"],
+    effect: "Sacred hearing and learning. Favors teaching, travel for wisdom, and dharma.",
   },
   Dhanishta: {
     deity: "Vasus",
@@ -228,6 +266,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Musical", "Generous", "Rhythmic"],
+    effect: "Rhythm of prosperity. Favors music, wealth, and rhythmical skill.",
   },
   Shatabhisha: {
     deity: "Varuna",
@@ -237,6 +276,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Air",
     motivation: "Moksha",
     qualities: ["Healing", "Mystical", "Independent"],
+    effect:
+      "Cosmic healing and secrecy. Favors medicine, mysticism, and independent healing paths.",
   },
   "Purva Bhadrapada": {
     deity: "Aja Ekapada",
@@ -246,6 +287,8 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Fierce", "Passionate", "Courageous"],
+    effect:
+      "Fiery sacrifice. Favors intense spirituality, transformation through fire, and courage.",
   },
   "Uttara Bhadrapada": {
     deity: "Ahir Budhnya",
@@ -255,6 +298,7 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Artha",
     qualities: ["Compassionate", "Wise", "Serviceful"],
+    effect: "Deep compassion and wisdom. Favors moksha, service, and secret spiritual knowledge.",
   },
   Revati: {
     deity: "Pushan",
@@ -264,30 +308,31 @@ const NAKSHATRA_DETAILS: Record<
     element: "Earth",
     motivation: "Moksha",
     qualities: ["Nurturing", "Protective", "Abundant"],
+    effect:
+      "Guides the journey home. Favors safe travels, nourishment, and abundance at life's transitions.",
   },
 };
 
 function getNakshatraDetails(name: string | undefined) {
   const clean = name?.trim() || "Ashwini";
-  if (clean in NAKSHATRA_DETAILS) return NAKSHATRA_DETAILS[clean];
+  if (clean in NAKSHATRA_DETAILS)
+    return NAKSHATRA_DETAILS[clean as keyof typeof NAKSHATRA_DETAILS]!;
   const first = clean.split(" ")[0] || clean;
-  if (first in NAKSHATRA_DETAILS) return NAKSHATRA_DETAILS[first];
+  if (first in NAKSHATRA_DETAILS)
+    return NAKSHATRA_DETAILS[first as keyof typeof NAKSHATRA_DETAILS]!;
   return NAKSHATRA_DETAILS["Ashwini"];
 }
 
 export default function AstrologyNakshatraPage() {
   const { data, error, loading } = useHoroscope();
   const planets = data?.horoscope?.planets || [];
-  const moon = planets.find((p) => p.planet === "Moon");
-
-  const details = moon ? getNakshatraDetails(moon.nakshatra) : null;
 
   return (
-    <div className="relative space-y-6">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Vedic birth star intelligence"
         title="Nakshatra"
-        description="Your Janma Nakshatra, its symbolism, and how it shapes emotional tendencies, learning, relationships, and spiritual themes."
+        description="Every planet sits in a nakshatra. See each placement, its pada, and its traditional effect."
         actions={
           <Button asChild variant="secondary">
             <Link href={routes.kundli}>Back to kundli</Link>
@@ -295,76 +340,81 @@ export default function AstrologyNakshatraPage() {
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <PanelSkeleton lines={5} /> : null}
-      {!loading && !moon ? (
+      {loading ? <PanelSkeleton lines={6} /> : null}
+
+      {!loading && planets.length === 0 ? (
         <EmptyState
           title="No nakshatra data"
-          description="Generate kundli to see Moon and planet nakshatras."
+          description="Generate kundli to see planet-wise nakshatras and padas."
           action={
             <Button asChild>
               <Link href={routes.kundli}>Generate</Link>
             </Button>
           }
         />
-      ) : (
-        <>
-          {details ? (
-            <GlassCard className="space-y-4">
-              <div>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  Janma Nakshatra
-                </p>
-                <h2 className="font-display mt-2 text-2xl sm:text-3xl">{moon?.nakshatra}</h2>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {moon?.sign} · Pada {moon?.nakshatraPada ?? "—"}
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Lord", value: details.deity },
-                  { label: "Symbol", value: details.symbol },
-                  { label: "Gana", value: details.gana },
-                  { label: "Yoni", value: details.yoni },
-                  { label: "Element", value: details.element },
-                  { label: "Motivation", value: details.motivation },
-                ].map((item) => (
-                  <div key={item.label} className="border-border/50 rounded-xl border p-3">
-                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                      {item.label}
+      ) : null}
+
+      {!loading && planets.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {planets.map((p) => {
+            const details = getNakshatraDetails(p.nakshatra)!;
+            return (
+              <GlassCard key={p.planet} className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-display text-base sm:text-lg">{p.planet}</p>
+                    <p className="text-muted-foreground text-xs break-words">
+                      {p.sign} · {p.nakshatra}
                     </p>
-                    <p className="mt-1 text-sm font-medium">{item.value}</p>
                   </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                  Traditional qualities
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {details.qualities.map((q: string) => (
-                    <Badge key={q} variant="secondary">
+                  <Badge variant="outline" className="shrink-0">
+                    Pada {p.nakshatraPada ?? "—"}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                      Lord
+                    </p>
+                    <p className="mt-0.5 font-medium break-words">{details.deity}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                      Gana
+                    </p>
+                    <p className="mt-0.5 font-medium">{details.gana}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                      Yoni
+                    </p>
+                    <p className="mt-0.5 font-medium break-words">{details.yoni}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                      Element
+                    </p>
+                    <p className="mt-0.5 font-medium">{details.element}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                    Traditional effect
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed break-words">{details.effect}</p>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {details.qualities.map((q) => (
+                    <Badge key={q} variant="secondary" className="text-[10px]">
                       {q}
                     </Badge>
                   ))}
                 </div>
-              </div>
-            </GlassCard>
-          ) : null}
-          <div className="grid gap-3 sm:grid-cols-2">
-            {planets.map((p) => (
-              <GlassCard key={p.planet} className="flex min-w-0 items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium break-words">{p.planet}</p>
-                  <p className="text-muted-foreground text-xs break-words">{p.nakshatra}</p>
-                </div>
-                <Badge variant="outline" className="shrink-0">
-                  P{p.nakshatraPada ?? "—"}
-                </Badge>
               </GlassCard>
-            ))}
-          </div>
-        </>
-      )}
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }

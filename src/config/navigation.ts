@@ -78,7 +78,6 @@ export const dashboardNav: NavItem[] = [
   },
   { title: "Ashtakavarga", href: routes.ashtakavarga, group: "Astrology", modes: ["astrology"] },
   { title: "Varna & Gana", href: routes.natalProfile, group: "Astrology", modes: ["astrology"] },
-  { title: "Raja Yogas", href: routes.rajaYogas, group: "Astrology", modes: ["astrology"] },
   { title: "Yogas", href: routes.astrologyYogas, group: "Astrology", modes: ["astrology"] },
   { title: "Nakshatra", href: routes.astrologyNakshatra, group: "Astrology", modes: ["astrology"] },
   {
@@ -89,7 +88,7 @@ export const dashboardNav: NavItem[] = [
   },
   { title: "Lal Kitab", href: routes.lalKitab, group: "Astrology", modes: ["astrology"] },
   { title: "Predictions", href: routes.predictions, group: "Astrology", modes: ["astrology"] },
-  { title: "Gochar", href: routes.gochar, group: "Astrology", modes: ["astrology"] },
+  { title: "Gochar", href: routes.astrologyGochar, group: "Astrology", modes: ["astrology"] },
   { title: "Horoscope", href: routes.horoscope, group: "Astrology", modes: ["astrology"] },
   {
     title: "Numerology",
@@ -98,6 +97,12 @@ export const dashboardNav: NavItem[] = [
     modes: ["astrology"],
   },
   { title: "Calendar", href: routes.calendar, group: "Astrology", modes: ["astrology"] },
+  {
+    title: "Ashtakavarga",
+    href: routes.astrologyAshtakavarga,
+    group: "Astrology",
+    modes: ["astrology"],
+  },
   { title: "Panchanga", href: routes.astrologyPanchanga, group: "Astrology", modes: ["astrology"] },
   { title: "Muhurta", href: routes.astrologyMuhurta, group: "Astrology", modes: ["astrology"] },
   { title: "AI Guru", href: routes.aiInsights, group: "Astrology", modes: ["astrology"] },
