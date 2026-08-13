@@ -28,6 +28,10 @@ import {
   Bookmark,
   BookOpen,
   ScrollText,
+  Sun,
+  BarChart3,
+  GitCompare,
+  Flame,
 } from "lucide-react";
 
 import { routes } from "@/lib/constants/routes";
@@ -71,6 +75,16 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.consultation]: Users,
   [routes.notifications]: Bell,
   [routes.settings]: Settings,
+  [routes.astrologyYogas]: MoonStar,
+  [routes.astrologyNakshatra]: MoonStar,
+  [routes.astrologyDasha]: Hourglass,
+  [routes.astrologyDivisionalCharts]: Grid3X3,
+  [routes.astrologyMuhurta]: CalendarClock,
+  [routes.astrologyRemedies]: BookOpen,
+  [routes.astrologySpiritualJourney]: Flame,
+  [routes.astrologyPanchanga]: Sun,
+  [routes.astrologyPlanetStrength]: BarChart3,
+  [routes.astrologyChartComparison]: GitCompare,
 };
 
 /** Kundli sub-routes that have their own sidebar entries — parent “My Kundli” stays inactive on these. */
@@ -122,6 +136,20 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.askTheSages) return matchesPath(pathname, routes.askTheSages);
   if (href === routes.wisdomJournal) return matchesPath(pathname, routes.wisdomJournal);
   if (href === routes.numerology) return matchesPath(pathname, routes.numerology);
+  if (href === routes.astrologyYogas) return matchesPath(pathname, routes.astrologyYogas);
+  if (href === routes.astrologyNakshatra) return matchesPath(pathname, routes.astrologyNakshatra);
+  if (href === routes.astrologyDasha) return matchesPath(pathname, routes.astrologyDasha);
+  if (href === routes.astrologyDivisionalCharts)
+    return matchesPath(pathname, routes.astrologyDivisionalCharts);
+  if (href === routes.astrologyMuhurta) return matchesPath(pathname, routes.astrologyMuhurta);
+  if (href === routes.astrologyRemedies) return matchesPath(pathname, routes.astrologyRemedies);
+  if (href === routes.astrologySpiritualJourney)
+    return matchesPath(pathname, routes.astrologySpiritualJourney);
+  if (href === routes.astrologyPanchanga) return matchesPath(pathname, routes.astrologyPanchanga);
+  if (href === routes.astrologyPlanetStrength)
+    return matchesPath(pathname, routes.astrologyPlanetStrength);
+  if (href === routes.astrologyChartComparison)
+    return matchesPath(pathname, routes.astrologyChartComparison);
 
   // Partner preferences vs Situational quiz share a path prefix — keep tabs exclusive.
   if (href === routes.preferences) {

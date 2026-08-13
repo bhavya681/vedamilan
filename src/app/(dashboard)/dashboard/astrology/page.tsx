@@ -39,13 +39,50 @@ const LIFE_AREAS = [
     href: routes.grahaKatha,
     hint: "Stories, symbolism & 12-house wisdom of the Grahas",
   },
-  { title: "Dashas", href: routes.dasha, hint: "Mahadasha and Antardasha timeline" },
+  { title: "Dashas", href: routes.astrologyDasha, hint: "Mahadasha and Antardasha timeline" },
   { title: "Career", href: routes.rajaYogas, hint: "Raja Yogas and recognition themes" },
-  { title: "Charts", href: routes.divisionalCharts, hint: "Moon, Sun, D9, D10, D30 & more Vargas" },
+  {
+    title: "Charts",
+    href: routes.astrologyDivisionalCharts,
+    hint: "Moon, Sun, D9, D10, D7, D12 & more Vargas",
+  },
   { title: "Ashtakavarga", href: routes.ashtakavarga, hint: "House bindu strength" },
   { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
-  { title: "Doshas", href: routes.yogas, hint: "Manglik, Kaal Sarp and more" },
+  {
+    title: "Yogas & Doshas",
+    href: routes.astrologyYogas,
+    hint: "All yogas and doshas from your chart",
+  },
   { title: "Remedies", href: routes.lalKitab, hint: "Lal Kitab–inspired guidance" },
+] as const;
+
+const ADVANCED_AREAS = [
+  { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
+  {
+    title: "Planet Strength",
+    href: routes.astrologyPlanetStrength,
+    hint: "Dignity, house, and retrograde analysis",
+  },
+  {
+    title: "Panchanga",
+    href: routes.astrologyPanchanga,
+    hint: "Daily Tithi, Nakshatra, Yoga, Karana",
+  },
+  {
+    title: "Muhurta",
+    href: routes.astrologyMuhurta,
+    hint: "Auspicious windows for important activities",
+  },
+  {
+    title: "Spiritual Journey",
+    href: routes.astrologySpiritualJourney,
+    hint: "5th, 9th, 12th house themes",
+  },
+  {
+    title: "Chart Comparison",
+    href: routes.astrologyChartComparison,
+    hint: "Structural comparison with another chart",
+  },
 ] as const;
 
 const AI_PROMPTS = [
@@ -294,6 +331,32 @@ export default function AstrologyHomePage() {
               </div>
               <div className="divide-border/60 border-border/60 divide-y border-y">
                 {LIFE_AREAS.map((area) => (
+                  <Link
+                    key={area.title}
+                    href={area.href}
+                    className="group hover:bg-muted/40 flex min-w-0 items-center justify-between gap-3 py-3.5 transition-colors sm:gap-4 sm:px-1"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{area.title}</p>
+                      <p className="text-muted-foreground mt-0.5 text-sm leading-snug">
+                        {area.hint}
+                      </p>
+                    </div>
+                    <ArrowRight className="text-muted-foreground h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div>
+                <h2 className="font-display text-2xl">Vedic Intelligence Studio</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Deeper chart analysis, timing, and personalized guidance.
+                </p>
+              </div>
+              <div className="divide-border/60 border-border/60 divide-y border-y">
+                {ADVANCED_AREAS.map((area) => (
                   <Link
                     key={area.title}
                     href={area.href}
