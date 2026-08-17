@@ -8,27 +8,33 @@ import { useT } from "@/components/i18n/i18n-provider";
 import { PageHeader, EmptyState, ErrorState } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Surface } from "@/components/ui/premium-cards";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { PanelSkeleton, SkeletonScope } from "@/components/ui/page-skeletons";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routes } from "@/lib/constants/routes";
+import { cn } from "@/lib/utils/cn";
 import {
+  buildLoshuGrid,
   calculateBhagyank,
   calculateMulank,
+  calculatePersonalYear,
   calculationTrace,
+  compoundBhagyank,
   getCombinationOrGeneric,
   getNumberProfile,
+  isMasterNumber,
   listNumberProfiles,
+  luckyForNumber,
+  PERSONAL_YEAR_THEME,
+  planetForNumber,
   type NumberId,
   type NumberProfile,
 } from "@/domain/numerology";
 import { KnowledgeLabelBadge } from "@/features/numerology/components/knowledge-label-badge";
+import { LoshuGridView } from "@/features/numerology/components/loshu-grid";
+import { NumberDetailSheet } from "@/features/numerology/components/number-detail-sheet";
 import { NumberPlanetIcon } from "@/features/numerology/components/number-planet-icon";
 
 type KundliPlanetPlacement = {
@@ -46,14 +52,8 @@ type NumerologyApiData = {
   day?: number;
   month?: number;
   year?: number;
-  mulank?: number;
-  bhagyank?: number;
   mulankPlanet?: string;
   bhagyankPlanet?: string;
-  calculationTrace?: {
-    mulank: { result: number; steps: string };
-    bhagyank: { result: number; steps: string };
-  };
   kundli?: {
     hasChart: boolean;
     lagnaSign?: string | null;
@@ -62,370 +62,87 @@ type NumerologyApiData = {
     mulankPlanetPlacement?: KundliPlanetPlacement | null;
     bhagyankPlanetPlacement?: KundliPlanetPlacement | null;
   };
-  numberCards?: Array<{
+  nameNumber?: {
+    name: string;
+    compound: number;
     number: number;
     planet: string;
-    keyword: string;
-    coreEnergy: string;
-  }>;
-  combination?: {
-    mulank: number;
-    bhagyank: number;
-    defined: boolean;
-    interaction?: string;
-    complement?: string;
-    tension?: string;
-    strengths?: string;
-    practicalAdvice?: string;
-  };
+    steps: string;
+  } | null;
 };
 
-function NumberCard({ profile, onClick }: { profile: NumberProfile; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="border-border/50 bg-card hover:border-gold/30 hover:bg-muted/30 group focus:ring-gold/40 flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none sm:p-5"
-      aria-label={`Number ${profile.number} — ${profile.planet}. ${profile.keyword}.`}
-    >
-      <NumberPlanetIcon number={profile.number} planet={profile.planet} size="md" />
-      <div className="text-muted-foreground text-xs tracking-wide uppercase">{profile.planet}</div>
-      <div className="font-display text-xl">{profile.keyword}</div>
-      <p className="text-muted-foreground text-[11px] leading-relaxed">{profile.coreEnergy}</p>
-    </button>
-  );
-}
+type DateParts = { day: number; month: number; year: number };
 
-function NumberGrid({ onNumberClick }: { onNumberClick: (profile: NumberProfile) => void }) {
-  const profiles = listNumberProfiles();
+function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 md:gap-4">
-      {profiles.map((p) => (
-        <NumberCard key={p.number} profile={p} onClick={() => onNumberClick(p)} />
-      ))}
+    <div className="min-w-0">
+      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">{label}</p>
+      <p className="mt-0.5 text-sm font-medium break-words">{value}</p>
     </div>
   );
 }
 
-function InterpretationSection({
+function NumberHero({
   label,
-  blocks,
+  number,
+  compound,
+  profile,
 }: {
   label: string;
-  blocks: Array<{ label: string; body: string }>;
+  number: NumberId;
+  compound: number;
+  profile: NumberProfile;
 }) {
-  if (!blocks?.length) return null;
   return (
-    <div className="border-border/50 border-b py-4">
-      <p className="text-muted-foreground text-xs tracking-wide uppercase">{label}</p>
-      <ul className="mt-2 space-y-3">
-        {blocks.map((block, i) => (
-          <li key={`${label}-${i}`} className="flex flex-col gap-1.5">
-            <KnowledgeLabelBadge label={block.label as never} />
-            <p className="text-sm leading-relaxed">{block.body}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function NumberDetailView({ profile }: { profile: NumberProfile }) {
-  const t = useT();
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-3">
-        <NumberPlanetIcon number={profile.number} planet={profile.planet} size="lg" />
-        <div>
-          <h3 className="font-display text-2xl">
-            {profile.number} — {profile.planet}
-          </h3>
-          <p className="text-muted-foreground text-sm">{profile.keyword}</p>
-        </div>
-      </div>
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.coreTendencies")}
-        blocks={profile.coreTendencies}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.strengths")}
-        blocks={profile.strengths}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.growthAreas")}
-        blocks={profile.growthAreas}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.career")}
-        blocks={profile.career}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.relationships")}
-        blocks={profile.relationships}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.communication")}
-        blocks={profile.communication}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.learning")}
-        blocks={profile.learning}
-      />
-      <InterpretationSection
-        label={t("numerology.mulank.interpretation.remedies")}
-        blocks={profile.remedies}
-      />
-    </div>
-  );
-}
-
-function KundliContextCard({
-  planet,
-  placement,
-}: {
-  planet: string;
-  placement: KundliPlanetPlacement | null;
-}) {
-  const t = useT();
-  if (!placement) {
-    return (
-      <div className="border-border/50 rounded-xl border p-3 text-center">
-        <p className="text-muted-foreground text-sm">{planet} not found in chart</p>
-      </div>
-    );
-  }
-  return (
-    <div className="border-border/50 grid grid-cols-2 gap-2 rounded-xl border p-3 text-sm">
-      <div>
-        <dt className="text-muted-foreground text-[10px] uppercase">
-          {t("numerology.kundliConnection.sign")}
-        </dt>
-        <dd className="font-medium">{placement.sign}</dd>
+    <GlassCard className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <NumberPlanetIcon number={number} planet={profile.planet} size="xl" active />
+        <Badge variant="outline">{profile.planet}</Badge>
       </div>
       <div>
-        <dt className="text-muted-foreground text-[10px] uppercase">
-          {t("numerology.kundliConnection.house")}
-        </dt>
-        <dd className="font-medium">H{placement.house}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground text-[10px] uppercase">
-          {t("numerology.kundliConnection.nakshatra")}
-        </dt>
-        <dd className="font-medium">{placement.nakshatra}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground text-[10px] uppercase">
-          {t("numerology.kundliConnection.dignity")}
-        </dt>
-        <dd className="font-medium">{placement.dignity || "—"}</dd>
-      </div>
-      {placement.isRetrograde && (
-        <div className="col-span-2">
-          <Badge variant="outline" className="text-xs">
-            {t("numerology.kundliConnection.retrograde")} ℞
-          </Badge>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function NumerologyCalculator({
-  initialDob,
-  onCalculated,
-}: {
-  initialDob?: { day: number; month: number; year: number; display: string } | null;
-  onCalculated: (result: {
-    mulank: number;
-    bhagyank: number;
-    trace: ReturnType<typeof calculationTrace>;
-  }) => void;
-}) {
-  const t = useT();
-  const [day, setDay] = useState(initialDob?.day ?? new Date().getUTCDate());
-  const [month, setMonth] = useState(initialDob?.month ?? new Date().getUTCMonth() + 1);
-  const [year, setYear] = useState(initialDob?.year ?? new Date().getUTCFullYear());
-  const [error, setError] = useState<string | null>(null);
-
-  function calculate() {
-    try {
-      const trace = calculationTrace(day, month, year);
-      const mulank = calculateMulank(day);
-      const bhagyank = calculateBhagyank(day, month, year);
-      onCalculated({ mulank, bhagyank, trace });
-      setError(null);
-    } catch (e) {
-      setError(String((e as Error).message));
-    }
-  }
-
-  return (
-    <Surface className="space-y-4">
-      <div>
-        <p className="font-display text-xl">{t("numerology.calculator.title")}</p>
-        <p className="text-muted-foreground text-sm">{t("numerology.calculator.subtitle")}</p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label className="text-muted-foreground text-xs" htmlFor="num-day">
-            {t("numerology.calculator.day")}
-          </label>
-          <input
-            id="num-day"
-            type="number"
-            min={1}
-            max={31}
-            value={day}
-            onChange={(e) => setDay(Number(e.target.value))}
-            className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-muted-foreground text-xs" htmlFor="num-month">
-            {t("numerology.calculator.month")}
-          </label>
-          <input
-            id="num-month"
-            type="number"
-            min={1}
-            max={12}
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-muted-foreground text-xs" htmlFor="num-year">
-            {t("numerology.calculator.year")}
-          </label>
-          <input
-            id="num-year"
-            type="number"
-            min={1900}
-            max={2100}
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="border-input bg-background mt-1 w-full rounded-xl border px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      <Button onClick={calculate} size="sm">
-        {t("numerology.calculator.calculate")}
-      </Button>
-    </Surface>
-  );
-}
-
-function MasterNumbersSection() {
-  return (
-    <Surface className="space-y-3">
-      <h3 className="font-display text-xl">
-        <Star className="mr-2 mb-1 inline h-4 w-4" />
-        Master Numbers
-      </h3>
-      <div className="border-border/50 border-saffron/50 border-l-[3px] pl-4">
-        <p className="text-sm font-medium">Number 11</p>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          An advanced interpretation available in some traditions — intuition amplified, a bridge
-          between the material and spiritual.
+        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+          {label}
         </p>
+        <h2 className="font-display mt-1 text-3xl">{profile.keyword}</h2>
+        <p className="text-muted-foreground mt-1 text-sm">{profile.coreEnergy}</p>
       </div>
-      <div className="border-border/50 border-saffron/50 border-l-[3px] pl-4">
-        <p className="text-sm font-medium">Number 22</p>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          An advanced interpretation available in some traditions — the master builder, turning
-          visionary ideas into lasting form.
+      {compound !== number ? (
+        <p className="text-muted-foreground text-xs">
+          Compound {compound} → {number}
         </p>
-      </div>
-      <p className="text-muted-foreground text-xs leading-relaxed">
-        In this system, 11 reduces to Mulank 2 and 22 reduces to Mulank 4 (via digit sum). The
-        current VedaMilan system can provide additional interpretation only where its knowledge base
-        supports it.
-      </p>
-    </Surface>
+      ) : null}
+    </GlassCard>
   );
 }
 
-function AIGuideSection({ mulank, bhagyank }: { mulank?: number; bhagyank?: number }) {
+function ProfileAspects({ profile }: { profile: NumberProfile }) {
   const t = useT();
-  const prompts = [
-    t("numerology.aiGuide.suggestedPrompts.mulank"),
-    t("numerology.aiGuide.suggestedPrompts.bhagyank"),
-    t("numerology.aiGuide.suggestedPrompts.interaction"),
-    t("numerology.aiGuide.suggestedPrompts.planet"),
-    t("numerology.aiGuide.suggestedPrompts.kundli"),
-    t("numerology.aiGuide.suggestedPrompts.teach"),
+  const sections = [
+    { label: t("numerology.mulank.interpretation.coreTendencies"), blocks: profile.coreTendencies },
+    { label: t("numerology.mulank.interpretation.strengths"), blocks: profile.strengths },
+    { label: t("numerology.mulank.interpretation.growthAreas"), blocks: profile.growthAreas },
+    { label: t("numerology.mulank.interpretation.career"), blocks: profile.career },
+    { label: t("numerology.mulank.interpretation.relationships"), blocks: profile.relationships },
+    { label: t("numerology.mulank.interpretation.remedies"), blocks: profile.remedies },
   ];
-
   return (
-    <Surface className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="text-gold h-4 w-4" />
-        <h3 className="font-display text-xl">{t("numerology.aiGuide.title")}</h3>
-      </div>
-      <p className="text-muted-foreground text-sm leading-relaxed">
-        {t("numerology.aiGuide.subtitle")}
-      </p>
-      {mulank && bhagyank ? (
-        <div className="flex flex-wrap gap-2">
-          {prompts.map((p) => (
-            <Link
-              key={p}
-              href={`${routes.aiInsights}?q=${encodeURIComponent(p)}`}
-              className="border-border/60 hover:border-gold/40 hover:bg-gold/5 rounded-full border px-3 py-1.5 text-xs transition-colors"
-            >
-              {p}
-            </Link>
-          ))}
+    <div className="space-y-4">
+      {sections.map((section) => (
+        <div key={section.label} className="border-border/50 space-y-2 border-b pb-4 last:border-0">
+          <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+            {section.label}
+          </p>
+          <ul className="space-y-2">
+            {section.blocks.map((block, i) => (
+              <li key={`${section.label}-${i}`} className="space-y-1">
+                <KnowledgeLabelBadge label={block.label} />
+                <p className="text-sm leading-relaxed">{block.body}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          Save your birth date to get number-specific suggested questions.
-        </p>
-      )}
-      <p className="text-muted-foreground text-[11px] leading-relaxed">
-        {t("numerology.aiGuide.disclaimer")}
-      </p>
-    </Surface>
-  );
-}
-
-function LearningSection() {
-  const t = useT();
-  const modules = [
-    { id: "what", title: t("numerology.learningPath.modules.what"), order: 1 },
-    { id: "mulank", title: t("numerology.learningPath.modules.mulank"), order: 2 },
-    { id: "bhagyank", title: t("numerology.learningPath.modules.bhagyank"), order: 3 },
-    { id: "numbers", title: t("numerology.learningPath.modules.numbers"), order: 4 },
-    { id: "planets", title: t("numerology.learningPath.modules.planets"), order: 5 },
-    { id: "astrology", title: t("numerology.learningPath.modules.astrology"), order: 6 },
-    { id: "combinations", title: t("numerology.learningPath.modules.combinations"), order: 7 },
-    { id: "masters", title: t("numerology.learningPath.modules.masters"), order: 8 },
-    { id: "practical", title: t("numerology.learningPath.modules.practical"), order: 9 },
-  ];
-
-  return (
-    <Surface className="space-y-4">
-      <div>
-        <h3 className="font-display text-xl">{t("numerology.learningPath.title")}</h3>
-        <p className="text-muted-foreground text-sm">{t("numerology.learningPath.subtitle")}</p>
-      </div>
-      <ol className="border-border/50 space-y-3 border-l pl-5">
-        {modules.map((m) => (
-          <li key={m.id} className="relative">
-            <span className="border-gold/30 bg-gold/10 text-gold absolute -left-[1.4rem] mt-1 flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold">
-              {m.order}
-            </span>
-            <p className="text-sm font-medium">{m.title}</p>
-          </li>
-        ))}
-      </ol>
-      <Button asChild variant="secondary" size="sm">
-        <Link href="#learning">{t("numerology.learningPath.start")}</Link>
-      </Button>
-    </Surface>
+      ))}
+    </div>
   );
 }
 
@@ -434,11 +151,9 @@ export default function NumerologyPage() {
   const [apiData, setApiData] = useState<NumerologyApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [override, setOverride] = useState<DateParts | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<NumberProfile | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [calcResult, setCalcResult] = useState<
-    { mulank: number; bhagyank: number; trace: ReturnType<typeof calculationTrace> } | undefined
-  >();
+  const calendarYear = new Date().getFullYear();
 
   useEffect(() => {
     void fetch("/api/numerology")
@@ -454,34 +169,52 @@ export default function NumerologyPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  function openNumberDetail(profile: NumberProfile) {
-    setSelectedProfile(profile);
-    setDetailOpen(true);
-  }
-
-  function closeNumberDetail() {
-    setDetailOpen(false);
-    setSelectedProfile(null);
-  }
-
-  const initialDob = useMemo(() => {
+  const savedParts = useMemo<DateParts | null>(() => {
     if (!apiData?.hasDob || !apiData.day || !apiData.month || !apiData.year) return null;
-    return {
-      day: apiData.day,
-      month: apiData.month,
-      year: apiData.year,
-      display: apiData.dateDisplay || "",
-    };
+    return { day: apiData.day, month: apiData.month, year: apiData.year };
   }, [apiData]);
+  const parts = override ?? savedParts;
+  const viewingSaved = Boolean(
+    savedParts &&
+    parts &&
+    parts.day === savedParts.day &&
+    parts.month === savedParts.month &&
+    parts.year === savedParts.year,
+  );
+
+  const reading = useMemo(() => {
+    if (!parts) return null;
+    const mulank = calculateMulank(parts.day) as NumberId;
+    const bhagyank = calculateBhagyank(parts.day, parts.month, parts.year) as NumberId;
+    const mulankMaster = calculateMulank(parts.day, { preserveMasters: true });
+    const bhagyankMaster = calculateBhagyank(parts.day, parts.month, parts.year, {
+      preserveMasters: true,
+    });
+    const personalYear = calculatePersonalYear(parts.day, parts.month, calendarYear) as NumberId;
+    const trace = calculationTrace(parts.day, parts.month, parts.year);
+    return {
+      mulank,
+      bhagyank,
+      mulankMaster,
+      bhagyankMaster,
+      personalYear,
+      trace,
+      compoundMulank: parts.day,
+      compoundBhagyank: compoundBhagyank(parts.day, parts.month, parts.year),
+      loshu: buildLoshuGrid(parts.day, parts.month, parts.year),
+      combination: getCombinationOrGeneric(mulank, bhagyank),
+      mulankProfile: getNumberProfile(mulank),
+      bhagyankProfile: getNumberProfile(bhagyank),
+      lucky: luckyForNumber(mulank),
+    };
+  }, [parts, calendarYear]);
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="skeleton-shimmer h-10 w-48 rounded-full" />
         <SkeletonScope label="Loading numerology">
           <PanelSkeleton lines={3} />
-          <PanelSkeleton lines={4} className="mt-4" />
-          <PanelSkeleton lines={4} className="mt-4" />
+          <PanelSkeleton lines={6} className="mt-4" />
         </SkeletonScope>
       </div>
     );
@@ -491,7 +224,7 @@ export default function NumerologyPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Astrology"
+          eyebrow="Vedic numerology"
           title={t("numerology.pageTitle")}
           description={t("numerology.pageDescription")}
         />
@@ -505,19 +238,10 @@ export default function NumerologyPage() {
     );
   }
 
-  const hasDob = apiData?.hasDob ?? false;
-  const mulank = calcResult?.mulank ?? apiData?.mulank;
-  const bhagyank = calcResult?.bhagyank ?? apiData?.bhagyank;
-  const mulankProfile = mulank ? getNumberProfile(mulank as NumberId) : null;
-  const bhagyankProfile = bhagyank ? getNumberProfile(bhagyank as NumberId) : null;
-  const trace =
-    calcResult?.trace ??
-    (initialDob ? calculationTrace(initialDob.day, initialDob.month, initialDob.year) : undefined);
-
   return (
-    <div className="relative min-w-0 space-y-8 pb-8 sm:space-y-10 sm:pb-10">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
-        eyebrow="Astrology"
+        eyebrow="Mulank · Bhagyank · Lo Shu"
         title={t("numerology.pageTitle")}
         description={t("numerology.pageDescription")}
         actions={
@@ -525,14 +249,21 @@ export default function NumerologyPage() {
             <Button asChild variant="secondary" size="sm">
               <Link href={routes.birthDetails}>Birth details</Link>
             </Button>
-            <Button asChild variant="secondary" size="sm">
+            <Button asChild variant="outline" size="sm">
               <Link href={routes.kundli}>{t("numerology.kundliConnection.openKundli")}</Link>
             </Button>
           </div>
         }
       />
 
-      {!hasDob ? (
+      <CalculatorBar
+        initial={savedParts}
+        override={override}
+        onCalculate={setOverride}
+        onReset={() => setOverride(null)}
+      />
+
+      {!reading ? (
         <EmptyState
           title={t("numerology.status.noDobShort")}
           description={t("numerology.status.noDob")}
@@ -544,333 +275,552 @@ export default function NumerologyPage() {
         />
       ) : null}
 
-      {hasDob && mulank && bhagyank ? (
+      {reading && reading.mulankProfile && reading.bhagyankProfile ? (
         <>
-          {/* === Primary cards: Mulank + Bhagyank === */}
-          <section className="space-y-4">
-            <h2 className="font-display text-2xl">{t("numerology.yourNumbers")}</h2>
-            <div className="grid gap-5 md:grid-cols-2">
-              <Surface className="space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <NumberPlanetIcon
-                    number={mulank}
-                    planet={mulankProfile?.planet || ""}
-                    size="lg"
-                  />
-                  <Badge variant="secondary">{t("numerology.labels.traditional")}</Badge>
-                </div>
-                <h3 className="font-display text-2xl">
-                  {t("numerology.mulank.nameFull")} — {mulank}
-                </h3>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  {mulankProfile?.planet} · {mulankProfile?.keyword}
-                </p>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {mulankProfile?.coreTendencies.find((b) => b.label === "contemporary")?.body ||
-                    mulankProfile?.coreEnergy}
-                </p>
-                <a
-                  href="#mulank-detail"
-                  className="text-gold decoration-gold/40 text-sm font-medium underline underline-offset-2"
-                >
-                  {t("numerology.mulank.name")} — full profile
-                </a>
-              </Surface>
-
-              <Surface className="space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <NumberPlanetIcon
-                    number={bhagyank}
-                    planet={bhagyankProfile?.planet || ""}
-                    size="lg"
-                  />
-                  <Badge variant="secondary">{t("numerology.labels.traditional")}</Badge>
-                </div>
-                <h3 className="font-display text-2xl">
-                  {t("numerology.bhagyank.nameFull")} — {bhagyank}
-                </h3>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                  {bhagyankProfile?.planet} · {bhagyankProfile?.keyword}
-                </p>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {bhagyankProfile?.coreTendencies.find((b) => b.label === "contemporary")?.body ||
-                    bhagyankProfile?.coreEnergy}
-                </p>
-                <a
-                  href="#bhagyank-detail"
-                  className="text-gold decoration-gold/40 text-sm font-medium underline underline-offset-2"
-                >
-                  {t("numerology.bhagyank.name")} — full profile
-                </a>
-              </Surface>
-            </div>
-          </section>
-
-          {/* === DOB + Calculation explanation === */}
-          <section className="space-y-4">
-            <div className="space-y-2">
-              <h2 className="font-display text-xl">{t("numerology.dobSection.title")}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t("numerology.dobSection.label")}:{" "}
-                <span className="font-medium">
-                  {apiData?.dateDisplay || trace?.dateDisplay || "—"}
-                </span>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <NumberHero
+              label={t("numerology.driver")}
+              number={reading.mulank}
+              compound={reading.compoundMulank}
+              profile={reading.mulankProfile}
+            />
+            <NumberHero
+              label={t("numerology.conductor")}
+              number={reading.bhagyank}
+              compound={reading.compoundBhagyank}
+              profile={reading.bhagyankProfile}
+            />
+            <GlassCard className="space-y-2 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.personalYear.title")}
               </p>
-            </div>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="calculation" className="border-0">
-                <AccordionTrigger className="hover:no-underline">
-                  <span className="text-muted-foreground text-sm">
-                    {t("numerology.howCalculated.title")}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 text-sm leading-relaxed">
-                    <p>
-                      <span className="font-medium">{t("numerology.mulank.name")}:</span>{" "}
-                      {trace?.mulank.steps}
-                    </p>
-                    <p>
-                      <span className="font-medium">{t("numerology.bhagyank.name")}:</span>{" "}
-                      {trace?.bhagyank.steps}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {t("numerology.howCalculated.note")}
-                    </p>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </section>
-
-          {/* === Mulank full detail === */}
-          {mulankProfile ? (
-            <section id="mulank-detail" className="space-y-4">
-              <KnowledgeLabelBadge label="traditional" />
-              <Surface className="space-y-1">
-                <h2 className="font-display text-2xl">
-                  {t("numerology.mulank.nameFull")} — {mulank}
-                </h2>
-              </Surface>
-              <NumberDetailView profile={mulankProfile} />
-            </section>
-          ) : null}
-
-          {/* === Bhagyank full detail === */}
-          {bhagyankProfile ? (
-            <section id="bhagyank-detail" className="space-y-4">
-              <KnowledgeLabelBadge label="traditional" />
-              <Surface className="space-y-1">
-                <h2 className="font-display text-2xl">
-                  {t("numerology.bhagyank.nameFull")} — {bhagyank}
-                </h2>
-              </Surface>
-              <NumberDetailView profile={bhagyankProfile} />
-            </section>
-          ) : null}
-
-          {/* === Number pair / combination === */}
-          <section className="space-y-4">
-            <div>
-              <h2 className="font-display text-xl">
-                <Star className="text-gold mr-2 mb-1 h-4 w-4" />
-                {t("numerology.combination.title")}
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                {t("numerology.combination.subtitle")}
-              </p>
-            </div>
-            <Surface className="space-y-4">
-              <div className="flex items-center gap-4">
-                <NumberPlanetIcon number={mulank} planet={mulankProfile?.planet || ""} size="lg" />
-                <div className="text-2xl">+</div>
+              <div className="flex items-center gap-3">
                 <NumberPlanetIcon
-                  number={bhagyank}
-                  planet={bhagyankProfile?.planet || ""}
+                  number={reading.personalYear}
+                  planet={planetForNumber(reading.personalYear)}
                   size="lg"
                 />
+                <div>
+                  <p className="font-display text-2xl">{calendarYear}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {planetForNumber(reading.personalYear)} ·{" "}
+                    {PERSONAL_YEAR_THEME[reading.personalYear]}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-3">
-                <p className="text-sm leading-relaxed">
-                  {apiData?.combination?.interaction ||
-                    getCombinationOrGeneric(mulank as NumberId, bhagyank as NumberId)?.interaction}
-                </p>
-                {!apiData?.combination?.defined ? (
-                  <div className="border-border/50 rounded-xl border p-3">
-                    <p className="text-muted-foreground text-sm">
-                      {t("numerology.combination.undefined")}
+            </GlassCard>
+            <GlassCard className="space-y-2 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.dobSection.title")}
+              </p>
+              <p className="font-display text-2xl">{reading.trace.dateDisplay}</p>
+              {override ? (
+                <Badge variant="outline">Trying another date</Badge>
+              ) : (
+                <Badge variant="outline">Saved birth date</Badge>
+              )}
+              <p className="text-muted-foreground text-xs">
+                {reading.trace.mulank.steps} · {reading.trace.bhagyank.steps}
+              </p>
+            </GlassCard>
+          </div>
+
+          {isMasterNumber(reading.bhagyankMaster) ? (
+            <GlassCard className="border-gold/30 space-y-1">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.masterPath.title")}
+              </p>
+              <p className="text-sm leading-relaxed">
+                {t("numerology.masterPath.body", {
+                  master: reading.bhagyankMaster,
+                  reduced: reading.bhagyank,
+                })}
+              </p>
+            </GlassCard>
+          ) : null}
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <GlassCard className="space-y-1 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.lucky.color")}
+              </p>
+              <p className="font-medium">{reading.lucky.colors.join(" · ")}</p>
+            </GlassCard>
+            <GlassCard className="space-y-1 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.lucky.day")}
+              </p>
+              <p className="font-medium">{reading.lucky.day}</p>
+            </GlassCard>
+            <GlassCard className="space-y-1 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.lucky.gem")}
+              </p>
+              <p className="font-medium">{reading.lucky.gem}</p>
+            </GlassCard>
+            <GlassCard className="space-y-1 p-4">
+              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                {t("numerology.lucky.planet")}
+              </p>
+              <p className="font-medium">
+                {reading.lucky.planet} · {reading.lucky.metal}
+              </p>
+            </GlassCard>
+          </div>
+
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview">{t("numerology.tabs.overview")}</TabsTrigger>
+              <TabsTrigger value="numbers">{t("numerology.tabs.numbers")}</TabsTrigger>
+              <TabsTrigger value="grid">{t("numerology.tabs.grid")}</TabsTrigger>
+              <TabsTrigger value="kundli">{t("numerology.tabs.kundli")}</TabsTrigger>
+              <TabsTrigger value="explore">{t("numerology.tabs.explore")}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              <GlassCard className="space-y-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <NumberPlanetIcon
+                    number={reading.mulank}
+                    planet={reading.mulankProfile.planet}
+                    size="lg"
+                  />
+                  <span className="text-muted-foreground text-xl">+</span>
+                  <NumberPlanetIcon
+                    number={reading.bhagyank}
+                    planet={reading.bhagyankProfile.planet}
+                    size="lg"
+                  />
+                  <div>
+                    <h2 className="font-display text-xl">{t("numerology.combination.title")}</h2>
+                    <p className="text-muted-foreground text-xs">
+                      {t("numerology.combination.subtitle")}
                     </p>
                   </div>
-                ) : null}
-              </div>
-            </Surface>
-          </section>
-
-          {/* === Numerology × Kundli === */}
-          <section className="space-y-4">
-            <div>
-              <h2 className="font-display text-xl">{t("numerology.kundliConnection.title")}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t("numerology.kundliConnection.subtitle")}
-              </p>
-            </div>
-            <Surface className="space-y-4">
-              {apiData?.kundli?.hasChart ? (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                        {t("numerology.kundliConnection.mulankPlanet")}
+                </div>
+                <p className="text-sm leading-relaxed">{reading.combination.interaction}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {reading.combination.complement ? (
+                    <div className="rounded-xl border p-3">
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.combination.complement")}
                       </p>
-                      <p className="font-medium">
-                        {apiData.kundli.mulankPlanetPlacement?.planet ||
-                          apiData.mulankPlanet ||
-                          "—"}
-                      </p>
-                      {apiData.kundli.mulankPlanetPlacement ? (
-                        <KundliContextCard
-                          planet={apiData.kundli.mulankPlanetPlacement.planet}
-                          placement={apiData.kundli.mulankPlanetPlacement}
-                        />
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Planet not found in your chart
-                        </p>
-                      )}
+                      <p className="mt-1 text-sm">{reading.combination.complement}</p>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                        {t("numerology.kundliConnection.bhagyankPlanet")}
+                  ) : null}
+                  {reading.combination.tension ? (
+                    <div className="rounded-xl border p-3">
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.combination.tension")}
                       </p>
-                      <p className="font-medium">
-                        {apiData.kundli.bhagyankPlanetPlacement?.planet ||
-                          apiData.bhagyankPlanet ||
-                          "—"}
+                      <p className="mt-1 text-sm">{reading.combination.tension}</p>
+                    </div>
+                  ) : null}
+                  {reading.combination.strengths ? (
+                    <div className="rounded-xl border p-3">
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.combination.strengths")}
                       </p>
-                      {apiData.kundli.bhagyankPlanetPlacement ? (
-                        <KundliContextCard
-                          planet={apiData.kundli.bhagyankPlanetPlacement.planet}
-                          placement={apiData.kundli.bhagyankPlanetPlacement}
-                        />
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          Planet not found in your chart
-                        </p>
-                      )}
+                      <p className="mt-1 text-sm">{reading.combination.strengths}</p>
+                    </div>
+                  ) : null}
+                  {reading.combination.practicalAdvice ? (
+                    <div className="rounded-xl border p-3">
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.combination.advice")}
+                      </p>
+                      <p className="mt-1 text-sm">{reading.combination.practicalAdvice}</p>
+                    </div>
+                  ) : null}
+                </div>
+              </GlassCard>
+
+              <GlassCard className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <h3 className="font-display text-lg">{t("numerology.activate.title")}</h3>
+                  <p className="text-sm font-medium">
+                    {t("numerology.activate.mulankGuidance", { number: reading.mulank })}
+                  </p>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    {reading.mulankProfile.remedies.map((r, i) => (
+                      <li key={`m-${i}`}>· {r.body}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs">
+                    {t("numerology.activate.subtitle")}
+                  </p>
+                  <p className="text-sm font-medium">
+                    {t("numerology.activate.bhagyankGuidance", { number: reading.bhagyank })}
+                  </p>
+                  <ul className="text-muted-foreground space-y-1 text-sm">
+                    {reading.bhagyankProfile.strengths.map((s, i) => (
+                      <li key={`b-${i}`}>· {s.body}</li>
+                    ))}
+                  </ul>
+                </div>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="numbers">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <GlassCard className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <NumberPlanetIcon
+                      number={reading.mulank}
+                      planet={reading.mulankProfile.planet}
+                      size="md"
+                    />
+                    <div>
+                      <h2 className="font-display text-xl">
+                        {t("numerology.mulank.nameFull")} — {reading.mulank}
+                      </h2>
+                      <p className="text-muted-foreground text-xs">
+                        {reading.mulankProfile.planet} · {t("numerology.mulank.computedFrom")}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    {t("numerology.kundliConnection.disclaimer")}
-                  </p>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-muted-foreground text-sm">
-                    {t("numerology.kundliConnection.noChart")}
-                  </p>
-                  <Button asChild>
-                    <Link href={routes.kundli}>Open kundli</Link>
-                  </Button>
+                  <ProfileAspects profile={reading.mulankProfile} />
+                </GlassCard>
+                <GlassCard className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <NumberPlanetIcon
+                      number={reading.bhagyank}
+                      planet={reading.bhagyankProfile.planet}
+                      size="md"
+                    />
+                    <div>
+                      <h2 className="font-display text-xl">
+                        {t("numerology.bhagyank.nameFull")} — {reading.bhagyank}
+                      </h2>
+                      <p className="text-muted-foreground text-xs">
+                        {reading.bhagyankProfile.planet} · {t("numerology.bhagyank.computedFrom")}
+                      </p>
+                    </div>
+                  </div>
+                  <ProfileAspects profile={reading.bhagyankProfile} />
+                </GlassCard>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="grid" className="space-y-4">
+              <GlassCard className="space-y-4">
+                <div>
+                  <h2 className="font-display text-xl">{t("numerology.grid.title")}</h2>
+                  <p className="text-muted-foreground text-xs">{t("numerology.grid.subtitle")}</p>
                 </div>
-              )}
-            </Surface>
-          </section>
+                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                  <LoshuGridView grid={reading.loshu} />
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.grid.missing")}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {reading.loshu.missing.length === 0 ? (
+                          <Badge variant="outline">None</Badge>
+                        ) : (
+                          reading.loshu.missing.map((n) => (
+                            <Badge key={n} variant="outline">
+                              {n} · {planetForNumber(n)}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                        {t("numerology.grid.repeated")}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {reading.loshu.repeated.length === 0 ? (
+                          <Badge variant="outline">None</Badge>
+                        ) : (
+                          reading.loshu.repeated.map((n) => (
+                            <Badge key={n} className="border-emerald-500/40 bg-emerald-500/10">
+                              {n} × {reading.loshu.counts[n]} · {planetForNumber(n)}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    {apiData?.nameNumber ? (
+                      <div className="rounded-xl border p-3">
+                        <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                          {t("numerology.nameNumber.title")} · {t("numerology.nameNumber.method")}
+                        </p>
+                        <p className="font-display mt-1 text-xl">
+                          {apiData.nameNumber.number} · {apiData.nameNumber.planet}
+                        </p>
+                        <p className="text-muted-foreground text-xs">{apiData.nameNumber.name}</p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {apiData.nameNumber.steps}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-xs">
+                        {t("numerology.nameNumber.missing")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </GlassCard>
+            </TabsContent>
 
-          {/* === Activate Your Number === */}
-          <section className="space-y-4">
-            <div>
-              <h2 className="font-display text-xl">{t("numerology.activate.title")}</h2>
-              <p className="text-muted-foreground text-sm">{t("numerology.activate.subtitle")}</p>
-            </div>
-            <Surface className="grid gap-5 md:grid-cols-2">
-              <div className="space-y-2">
-                <KnowledgeLabelBadge label="contemporary" />
-                <p className="text-sm font-medium">
-                  {t("numerology.activate.mulankGuidance", { number: mulank })}
+            <TabsContent value="kundli">
+              <GlassCard className="space-y-4">
+                <div>
+                  <h2 className="font-display text-xl">{t("numerology.kundliConnection.title")}</h2>
+                  <p className="text-muted-foreground text-xs">
+                    {t("numerology.kundliConnection.subtitle")}
+                  </p>
+                </div>
+                {!viewingSaved ? (
+                  <p className="text-muted-foreground text-sm">
+                    Kundli placements stay tied to your saved birth chart. Reset the calculator to
+                    see them beside these numbers.
+                  </p>
+                ) : apiData?.kundli?.hasChart ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <KundliSlot
+                      title={t("numerology.kundliConnection.mulankPlanet")}
+                      planet={apiData.mulankPlanet || reading.mulankProfile.planet}
+                      placement={apiData.kundli.mulankPlanetPlacement || null}
+                    />
+                    <KundliSlot
+                      title={t("numerology.kundliConnection.bhagyankPlanet")}
+                      planet={apiData.bhagyankPlanet || reading.bhagyankProfile.planet}
+                      placement={apiData.kundli.bhagyankPlanetPlacement || null}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-muted-foreground text-sm">
+                      {t("numerology.kundliConnection.noChart")}
+                    </p>
+                    <Button asChild>
+                      <Link href={routes.kundli}>Open kundli</Link>
+                    </Button>
+                  </div>
+                )}
+                <p className="text-muted-foreground text-xs">
+                  {t("numerology.kundliConnection.disclaimer")}
                 </p>
-                {mulankProfile ? (
-                  <ul className="text-muted-foreground space-y-1 text-sm">
-                    {mulankProfile.remedies.map((r, i) => (
-                      <li key={`mulank-remedy-${i}`}>· {r.body}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <KnowledgeLabelBadge label="contemporary" />
-                <p className="text-sm font-medium">
-                  {t("numerology.activate.bhagyankGuidance", { number: bhagyank })}
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="explore" className="space-y-4">
+              <div>
+                <h2 className="font-display text-xl">{t("numerology.numberCards.title")}</h2>
+                <p className="text-muted-foreground text-xs">
+                  {t("numerology.numberCards.subtitle")}
                 </p>
-                {bhagyankProfile ? (
-                  <ul className="text-muted-foreground space-y-1 text-sm">
-                    {bhagyankProfile.strengths.map((s, i) => (
-                      <li key={`bhagyank-strength-${i}`}>· {s.body}</li>
-                    ))}
-                  </ul>
-                ) : null}
               </div>
-            </Surface>
-          </section>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-9">
+                {listNumberProfiles().map((p) => (
+                  <button
+                    key={p.number}
+                    type="button"
+                    onClick={() => setSelectedProfile(p)}
+                    className={cn(
+                      "hover:border-gold/40 rounded-xl border p-3 text-center transition-colors",
+                      (p.number === reading.mulank || p.number === reading.bhagyank) &&
+                        "border-gold/50 bg-gold/10",
+                    )}
+                  >
+                    <NumberPlanetIcon
+                      number={p.number}
+                      planet={p.planet}
+                      size="md"
+                      className="mx-auto"
+                    />
+                    <p className="mt-2 text-xs font-medium">{p.planet}</p>
+                    <p className="text-muted-foreground text-[10px]">{p.keyword}</p>
+                  </button>
+                ))}
+              </div>
 
-          {/* === Explore Numbers === */}
-          <section className="space-y-4">
-            <div>
-              <h2 className="font-display text-xl">{t("numerology.numberCards.title")}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t("numerology.numberCards.subtitle")}
-              </p>
-            </div>
-            <NumberGrid onNumberClick={openNumberDetail} />
-          </section>
+              <GlassCard className="space-y-3">
+                <h3 className="font-display text-xl">
+                  <Star className="mr-2 mb-1 inline h-4 w-4" />
+                  {t("numerology.masterNumbers.title")}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {t("numerology.masterNumbers.note")}
+                </p>
+              </GlassCard>
 
-          {/* === Number Detail Drawer === */}
-          <Sheet
-            open={detailOpen}
-            onOpenChange={(open) => {
-              if (!open) closeNumberDetail();
-            }}
-          >
-            <SheetContent
-              side="bottom"
-              className="border-border/50 flex h-[85vh] max-h-[85vh] flex-col overflow-hidden rounded-t-3xl p-0 md:m-6 md:ml-auto md:h-auto md:max-w-lg md:rounded-2xl"
-            >
-              {selectedProfile ? (
-                <NumberDetailView profile={selectedProfile} />
-              ) : (
-                <SheetHeader>
-                  <SheetTitle>{t("numerology.numberCards.title")}</SheetTitle>
-                </SheetHeader>
-              )}
-            </SheetContent>
-          </Sheet>
-
-          {/* === Master Numbers === */}
-          <MasterNumbersSection />
-
-          {/* === Number Calculator === */}
-          <section className="space-y-4">
-            <h2 className="font-display text-xl">{t("numerology.calculator.title")}</h2>
-            <NumerologyCalculator
-              initialDob={initialDob}
-              onCalculated={(result) => setCalcResult(result)}
-            />
-          </section>
+              <GlassCard className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="text-gold h-4 w-4" />
+                  <h3 className="font-display text-xl">{t("numerology.aiGuide.title")}</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    t("numerology.aiGuide.suggestedPrompts.mulank"),
+                    t("numerology.aiGuide.suggestedPrompts.bhagyank"),
+                    t("numerology.aiGuide.suggestedPrompts.interaction"),
+                    t("numerology.aiGuide.suggestedPrompts.planet"),
+                  ].map((p) => (
+                    <Link
+                      key={p}
+                      href={`${routes.aiInsights}?q=${encodeURIComponent(p)}`}
+                      className="hover:border-gold/40 rounded-full border px-3 py-1.5 text-xs"
+                    >
+                      {p}
+                    </Link>
+                  ))}
+                </div>
+                <p className="text-muted-foreground text-[11px]">
+                  {t("numerology.aiGuide.disclaimer")}
+                </p>
+              </GlassCard>
+            </TabsContent>
+          </Tabs>
         </>
       ) : null}
 
-      {/* === Learning Mode === */}
-      <LearningSection />
-
-      {/* === AI Numerology Guide === */}
-      <AIGuideSection mulank={mulank} bhagyank={bhagyank} />
-
-      {/* === Knowledge notice === */}
-      <Surface className="space-y-2">
+      <GlassCard className="space-y-2">
         <p className="font-display text-sm">{t("numerology.knowledgeNotice.title")}</p>
         <p className="text-muted-foreground text-xs leading-relaxed">
           {t("numerology.knowledgeNotice.body")}
         </p>
-      </Surface>
+      </GlassCard>
+
+      <NumberDetailSheet
+        profile={selectedProfile}
+        open={Boolean(selectedProfile)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProfile(null);
+        }}
+      />
     </div>
+  );
+}
+
+function KundliSlot({
+  title,
+  planet,
+  placement,
+}: {
+  title: string;
+  planet: string;
+  placement: KundliPlanetPlacement | null;
+}) {
+  const t = useT();
+  return (
+    <div className="space-y-2">
+      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">{title}</p>
+      <p className="font-medium">{planet}</p>
+      {placement ? (
+        <div className="grid grid-cols-2 gap-2 rounded-xl border p-3 text-sm">
+          <Meta label={t("numerology.kundliConnection.sign")} value={placement.sign} />
+          <Meta label={t("numerology.kundliConnection.house")} value={`H${placement.house}`} />
+          <Meta label={t("numerology.kundliConnection.nakshatra")} value={placement.nakshatra} />
+          <Meta label={t("numerology.kundliConnection.dignity")} value={placement.dignity || "—"} />
+          {placement.isRetrograde ? (
+            <Badge variant="outline" className="col-span-2 w-fit">
+              {t("numerology.kundliConnection.retrograde")} ℞
+            </Badge>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">Planet not found in your chart</p>
+      )}
+    </div>
+  );
+}
+
+function CalculatorBar({
+  initial,
+  override,
+  onCalculate,
+  onReset,
+}: {
+  initial: DateParts | null;
+  override: DateParts | null;
+  onCalculate: (parts: DateParts) => void;
+  onReset: () => void;
+}) {
+  const t = useT();
+  const [day, setDay] = useState(initial?.day ?? 1);
+  const [month, setMonth] = useState(initial?.month ?? 1);
+  const [year, setYear] = useState(initial?.year ?? 1990);
+  const [calcError, setCalcError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initial || override) return;
+    setDay(initial.day);
+    setMonth(initial.month);
+    setYear(initial.year);
+  }, [initial, override]);
+
+  return (
+    <GlassCard className="space-y-3 p-4 sm:p-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-display text-lg">{t("numerology.calculator.title")}</p>
+          <p className="text-muted-foreground text-xs">{t("numerology.calculator.subtitle")}</p>
+        </div>
+        {override ? (
+          <Button variant="outline" size="sm" onClick={onReset}>
+            {t("numerology.calculator.useMyBirthDetails")}
+          </Button>
+        ) : null}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-4">
+        <div className="space-y-1">
+          <Label htmlFor="num-day">{t("numerology.calculator.day")}</Label>
+          <Input
+            id="num-day"
+            type="number"
+            min={1}
+            max={31}
+            value={day}
+            onChange={(e) => setDay(Number(e.target.value))}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="num-month">{t("numerology.calculator.month")}</Label>
+          <Input
+            id="num-month"
+            type="number"
+            min={1}
+            max={12}
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="num-year">{t("numerology.calculator.year")}</Label>
+          <Input
+            id="num-year"
+            type="number"
+            min={1900}
+            max={2100}
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+          />
+        </div>
+        <div className="flex items-end">
+          <Button
+            className="w-full"
+            onClick={() => {
+              try {
+                calculationTrace(day, month, year);
+                onCalculate({ day, month, year });
+                setCalcError(null);
+              } catch (e) {
+                setCalcError(String((e as Error).message));
+              }
+            }}
+          >
+            {t("numerology.calculator.calculate")}
+          </Button>
+        </div>
+      </div>
+      {calcError ? <p className="text-destructive text-sm">{calcError}</p> : null}
+    </GlassCard>
   );
 }

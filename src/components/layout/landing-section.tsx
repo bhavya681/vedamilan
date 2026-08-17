@@ -29,7 +29,7 @@ export function LandingSection({
     <section id={id} className={cn("relative", toneClass, className)} {...props}>
       <div
         className={cn(
-          "mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 md:py-20 lg:px-8 lg:py-24",
+          "mx-auto w-full max-w-7xl px-[max(1rem,env(safe-area-inset-left,0px))] py-14 pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-6 sm:py-16 md:py-20 lg:px-8 lg:py-24",
           innerClassName,
         )}
       >
@@ -66,7 +66,7 @@ export function SectionIntro({
       ) : null}
       <h2
         className={cn(
-          "font-display mt-3 text-3xl tracking-tight text-balance sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15]",
+          "font-display mt-3 text-[1.65rem] tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-[2.65rem] lg:leading-[1.15]",
           light ? "text-ivory" : "text-foreground",
         )}
       >
@@ -99,7 +99,7 @@ export function MarketingPageShell({
     <main
       id="main-content"
       className={cn(
-        "relative mx-auto w-full max-w-7xl flex-1 px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20 lg:px-8 lg:pb-24",
+        "relative mx-auto w-full max-w-7xl flex-1 px-4 pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-16 sm:px-6 sm:pt-[calc(7rem+env(safe-area-inset-top,0px))] sm:pb-20 lg:px-8 lg:pb-24",
         className,
       )}
     >

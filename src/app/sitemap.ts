@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { siteConfig } from "@/config/site";
-import { APP_LOCALES } from "@/lib/i18n/locales";
+import { publicLocales } from "@/lib/i18n/locales";
 import { withLocalePrefix } from "@/lib/i18n/path";
 import { routes } from "@/lib/constants/routes";
 
@@ -26,10 +26,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of publicPaths) {
-    for (const locale of APP_LOCALES) {
+    for (const locale of publicLocales()) {
       const localized = withLocalePrefix(locale, path);
       const languages = Object.fromEntries(
-        APP_LOCALES.map((code) => [code, `${base}${withLocalePrefix(code, path)}`]),
+        publicLocales().map((code) => [code, `${base}${withLocalePrefix(code, path)}`]),
       ) as Record<string, string>;
       languages["x-default"] = `${base}${withLocalePrefix("en", path)}`;
 

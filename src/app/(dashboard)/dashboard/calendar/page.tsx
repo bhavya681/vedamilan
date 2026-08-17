@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Briefcase,
   CalendarRange,
+  ChevronDown,
   GraduationCap,
   Heart,
   Home,
@@ -25,11 +26,12 @@ import {
   TrendingUp,
   BookOpen,
 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { GlassCard } from "@/components/ui/premium-cards";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
@@ -44,60 +46,59 @@ import {
 } from "@/features/compatibility/spouse-tendency-panel";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
-import { motion } from "framer-motion";
 
 const CATEGORY_COLORS: Record<
   LifeEventCategory,
-  { bg: string; text: string; border: string; light: string }
+  { bg: string; text: string; border: string; bar: string }
 > = {
-  marriage: { bg: "bg-rose/10", text: "text-rose", border: "border-rose/30", light: "bg-rose/5" },
+  marriage: { bg: "bg-rose/10", text: "text-rose", border: "border-rose/30", bar: "bg-rose" },
   career: {
     bg: "bg-blue-500/10",
     text: "text-blue-500",
     border: "border-blue-500/30",
-    light: "bg-blue-500/5",
+    bar: "bg-blue-500",
   },
   job: {
     bg: "bg-cyan-500/10",
     text: "text-cyan-500",
     border: "border-cyan-500/30",
-    light: "bg-cyan-500/5",
+    bar: "bg-cyan-500",
   },
   education: {
     bg: "bg-amber-500/10",
     text: "text-amber-500",
     border: "border-amber-500/30",
-    light: "bg-amber-500/5",
+    bar: "bg-amber-500",
   },
   wealth: {
     bg: "bg-emerald-500/10",
     text: "text-emerald-500",
     border: "border-emerald-500/30",
-    light: "bg-emerald-500/5",
+    bar: "bg-emerald-500",
   },
   property: {
     bg: "bg-orange-500/10",
     text: "text-orange-500",
     border: "border-orange-500/30",
-    light: "bg-orange-500/5",
+    bar: "bg-orange-500",
   },
   travel: {
     bg: "bg-sky-500/10",
     text: "text-sky-500",
     border: "border-sky-500/30",
-    light: "bg-sky-500/5",
+    bar: "bg-sky-500",
   },
   health: {
     bg: "bg-red-500/10",
     text: "text-red-500",
     border: "border-red-500/30",
-    light: "bg-red-500/5",
+    bar: "bg-red-500",
   },
   spiritual: {
     bg: "bg-purple-500/10",
     text: "text-purple-500",
     border: "border-purple-500/30",
-    light: "bg-purple-500/5",
+    bar: "bg-purple-500",
   },
 };
 
@@ -128,7 +129,7 @@ const CATEGORY_LABELS: Record<LifeEventCategory | "all", string> = {
 
 type TimeTab = LifeEventPhase | "all";
 
-const TAB_ORDER: TimeTab[] = ["all", "present", "past", "future"];
+const TAB_ORDER: TimeTab[] = ["present", "future", "past", "all"];
 
 const TAB_META: Record<
   TimeTab,
@@ -136,7 +137,7 @@ const TAB_META: Record<
 > = {
   all: {
     label: "All",
-    blurb: "Major life chapters across past, current, and future — one theme per Antardasha.",
+    blurb: "Major chapters across past, current, and future — one theme per Antardasha.",
     Icon: LayoutList,
     accent: "text-muted-foreground",
   },
@@ -160,7 +161,6 @@ const TAB_META: Record<
   },
 };
 
-/** Category chips — milestones first; soft themes only appear when they clear the major bar */
 const CATEGORY_CHIP_ORDER: Array<LifeEventCategory | "all"> = [
   "all",
   "marriage",
@@ -178,183 +178,9 @@ function likelihoodPct(score: number) {
   return Math.max(70, Math.min(98, Math.round(score)));
 }
 
-function likelihoodTone(pct: number) {
-  if (pct >= 80)
-    return "border-gold/50 bg-gold/15 text-foreground shadow-[0_0_10px_-3px_rgba(234,179,8,0.3)]";
-  return "border-primary/35 bg-primary/10 text-foreground";
-}
-
-function LikelihoodBadge({ score, size: _size = "md" }: { score: number; size?: "sm" | "md" }) {
-  const pct = likelihoodPct(score);
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-baseline gap-0.5 rounded-full border px-2 py-1 tabular-nums transition-all duration-200 sm:px-2.5",
-        likelihoodTone(pct),
-      )}
-      title="Directional likelihood from dasha + gochar — not a guarantee"
-    >
-      <span className="font-display text-[13px] leading-none font-semibold sm:text-base">
-        {pct}
-      </span>
-      <span className="text-[10px] font-medium opacity-80">%</span>
-    </span>
-  );
-}
-
-function ChipScroller({ children }: { children: ReactNode }) {
-  return (
-    <div className="scrollbar-hidden -mx-0.5 flex gap-1.5 overflow-x-auto px-0.5 pb-0.5 [-webkit-overflow-scrolling:touch] sm:gap-2">
-      {children}
-    </div>
-  );
-}
-
-function EventCard({ e, showPhase }: { e: LifeEventItem; showPhase?: boolean }) {
-  const Icon = CATEGORY_ICONS[e.category];
-  const pct = likelihoodPct(e.score);
-  const isMarriage = e.category === "marriage";
-  const isHigh = pct >= 80;
-
-  return (
-    <li
-      className={cn(
-        "group from-background/80 to-muted/10 relative min-w-0 rounded-2xl border bg-gradient-to-br px-4 py-3.5 transition-all duration-200 sm:px-5 sm:py-4",
-        "hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5",
-        isMarriage
-          ? "border-gold/40 from-gold/5 to-background/80 bg-gradient-to-br shadow-[0_0_25px_-8px_rgba(234,179,8,0.15)] hover:shadow-[0_0_30px_-8px_rgba(234,179,8,0.25)]"
-          : "border-border/60 hover:border-border",
-      )}
-    >
-      <div className="flex items-start gap-3 sm:gap-4">
-        <div
-          className={cn(
-            "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-200 sm:h-11 sm:w-11",
-            "from-background to-muted/30 border-border/50 border bg-gradient-to-br",
-            isMarriage && "border-gold/30 from-gold/10 to-background bg-gradient-to-br",
-          )}
-        >
-          <Icon
-            className={cn(
-              "h-4 w-4 transition-colors sm:h-5 sm:w-5",
-              isMarriage ? "text-gold" : "text-foreground/80",
-            )}
-          />
-        </div>
-        <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
-          <div className="flex items-start justify-between gap-2 sm:gap-3">
-            <div className="min-w-0 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <p
-                  className={cn(
-                    "text-[13px] leading-snug font-medium break-words sm:text-sm md:text-[0.95rem]",
-                    isMarriage && "text-gold/90",
-                  )}
-                >
-                  {e.title}
-                </p>
-                {showPhase ? (
-                  <Badge variant="outline" className="text-[9px] tracking-wider uppercase">
-                    {e.phase === "present" ? "current" : e.phase}
-                  </Badge>
-                ) : null}
-              </div>
-              {isMarriage && (
-                <div className="flex items-center gap-1.5">
-                  <Heart className="text-rose/70 h-3 w-3" />
-                  <span className="text-rose/80 text-[10px] font-medium tracking-wider uppercase">
-                    Vivaha window
-                  </span>
-                </div>
-              )}
-            </div>
-            <LikelihoodBadge score={e.score} />
-          </div>
-
-          <div className="bg-muted/60 relative h-1.5 w-full overflow-hidden rounded-full sm:h-2">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-700 ease-out",
-                isHigh
-                  ? "from-gold/70 to-gold bg-gradient-to-r shadow-[0_0_8px_rgba(234,179,8,0.4)]"
-                  : "from-primary/60 to-primary/80 bg-gradient-to-r",
-              )}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <Badge variant="secondary" className="text-[10px] font-medium">
-              Major period
-            </Badge>
-            {e.detailLabel ? (
-              <Badge
-                variant="outline"
-                className={cn("text-[10px]", isMarriage && "border-gold/30 text-gold/80")}
-              >
-                {e.detailLabel}
-              </Badge>
-            ) : null}
-            {typeof e.spanMonths === "number" ? (
-              <Badge variant="outline" className="text-[10px]">
-                {e.spanMonths >= 12 ? `~${Math.round(e.spanMonths / 12)} yr` : `${e.spanMonths} mo`}
-              </Badge>
-            ) : null}
-            {isHigh && (
-              <Badge className="bg-gold/15 text-gold border-gold/30 text-[10px]">
-                High probability
-              </Badge>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <p
-              className={cn(
-                "text-[13px] leading-snug font-medium sm:text-sm",
-                isMarriage && "text-foreground/90",
-              )}
-            >
-              <span className="break-words">{e.window}</span>
-              {e.ageHint ? (
-                <span className="text-muted-foreground font-normal"> · {e.ageHint}</span>
-              ) : null}
-            </p>
-            <p className="text-foreground/85 text-[11px] leading-relaxed break-words sm:text-xs">
-              {e.explain}
-            </p>
-            {e.gocharNote ? (
-              <p className="text-primary/90 text-[11px] leading-relaxed break-words sm:text-xs">
-                <Orbit className="mr-1 inline h-3 w-3 shrink-0" />
-                {e.gocharNote}
-              </p>
-            ) : null}
-            <div
-              className={cn(
-                "rounded-lg border px-2.5 py-2 sm:px-3",
-                isMarriage ? "border-gold/20 bg-gold/5" : "border-muted/40 bg-muted/20",
-              )}
-            >
-              <p
-                className={cn(
-                  "text-[11px] leading-relaxed font-medium break-words sm:text-xs",
-                  isMarriage ? "text-gold/90" : "text-primary/90",
-                )}
-              >
-                Accept: {e.acceptLine}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-1">
-            <p className="text-muted-foreground text-[10px] leading-relaxed break-words sm:text-[11px] md:text-xs">
-              {e.dashaLabel} · {e.detailLabel || CATEGORY_LABELS[e.category]} · ~{pct}% likelihood
-            </p>
-          </div>
-          <p className="text-muted-foreground hidden text-[11px] leading-relaxed break-words sm:block sm:text-xs">
-            {e.suggestion}
-          </p>
-        </div>
-      </div>
-    </li>
-  );
+function formatSpan(months?: number) {
+  if (typeof months !== "number") return null;
+  return months >= 12 ? `~${Math.round(months / 12)} yr` : `${months} mo`;
 }
 
 function sortByLikelihood(list: LifeEventItem[]) {
@@ -367,46 +193,11 @@ function sortByLikelihood(list: LifeEventItem[]) {
   );
 }
 
-/** Scrollable event panel — keeps page height stable on desktop when All is dense */
-function EventScrollPanel({ total, children }: { total: number; children: ReactNode }) {
-  return (
-    <div className="border-border/50 bg-card/30 relative min-w-0 overflow-hidden rounded-2xl border">
-      <div className="border-border/40 bg-background/80 flex items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-4">
-        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase sm:text-[11px]">
-          {total} major chapter{total === 1 ? "" : "s"}
-        </p>
-        {total > 4 ? (
-          <p className="text-muted-foreground text-[10px] sm:text-[11px]">Scroll to explore</p>
-        ) : null}
-      </div>
-      <div
-        className={cn(
-          "scrollbar-premium overflow-y-auto overscroll-contain",
-          "max-h-[min(48dvh,20rem)] sm:max-h-[min(46dvh,24rem)] md:max-h-[min(48dvh,28rem)]",
-          "lg:max-h-[min(52dvh,32rem)] xl:max-h-[min(54dvh,36rem)]",
-          "space-y-2.5 p-2.5 pb-5 sm:space-y-3 sm:p-3.5 sm:pb-6",
-        )}
-      >
-        {children}
-      </div>
-      {total > 4 ? (
-        <div
-          aria-hidden
-          className="from-card/95 pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t to-transparent"
-        />
-      ) : null}
-    </div>
-  );
-}
-
 type CalendarPayload = {
   context: DeshKaalPatraContext;
   events: LifeEventItem[];
   byPhase: Record<LifeEventPhase, LifeEventItem[]>;
   highProbability?: LifeEventItem[];
-  pastHighlights?: LifeEventItem[];
-  presentHighlights?: LifeEventItem[];
-  futureHighlights?: LifeEventItem[];
   gocharSummary?: string;
   snapshot: {
     lagnaSign?: string;
@@ -414,7 +205,6 @@ type CalendarPayload = {
     sunSign?: string;
     currentMaha?: string | null;
     currentAntar?: string | null;
-    seventhLord?: string;
     gocharHighlights?: string[];
     gocharPlanets?: Array<{
       planet: string;
@@ -422,7 +212,6 @@ type CalendarPayload = {
       sign: string;
       retrograde: boolean;
     }>;
-    historicalSamples?: number;
   };
   marriageWindows: Array<{
     label: string;
@@ -430,33 +219,7 @@ type CalendarPayload = {
     score: number;
     reason: string;
     phase: LifeEventPhase;
-    dashaLabel?: string | null;
-    startDate?: string | null;
-    endDate?: string | null;
-    kind?: "PARTNER_ARRIVAL" | "MARRIAGE" | "INTRODUCTION";
-    approxNote?: string | null;
   }>;
-  timingFactors?: Array<{
-    id: string;
-    name: string;
-    score: number;
-    weight: number;
-    note: string;
-  }>;
-  gocharHighlights?: string[];
-  timingMethodology?: string | null;
-  pastMarriageWindows?: Array<{
-    label: string;
-    window: string;
-    score: number;
-    reason: string;
-    dashaLabel?: string | null;
-    startDate?: string | null;
-    endDate?: string | null;
-    kind?: "PARTNER_ARRIVAL" | "MARRIAGE" | "INTRODUCTION";
-    approxNote?: string | null;
-  }>;
-  marriageChapters?: LifeEventItem[];
   marryNow?: {
     score: number;
     title: string;
@@ -467,12 +230,274 @@ type CalendarPayload = {
   methodology: string;
 };
 
+function ChapterTimeline({
+  events,
+  activeId,
+  onSelect,
+}: {
+  events: LifeEventItem[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
+  const range = useMemo(() => {
+    if (events.length === 0 || !now) return null;
+    const starts = events.map((e) => new Date(e.startDate).getTime());
+    const ends = events.map((e) => new Date(e.endDate).getTime());
+    const min = Math.min(...starts, now);
+    const max = Math.max(...ends, now);
+    const pad = (max - min) * 0.04;
+    return { min: min - pad, max: max + pad, span: Math.max(1, max - min + pad * 2) };
+  }, [events, now]);
+
+  const years = useMemo(() => {
+    if (!range) return [];
+    const startY = new Date(range.min).getFullYear();
+    const endY = new Date(range.max).getFullYear();
+    const list: number[] = [];
+    for (let y = startY; y <= endY; y += 1) list.push(y);
+    return list;
+  }, [range]);
+
+  if (!range || events.length === 0 || !now) return null;
+
+  const nowLeft = ((now - range.min) / range.span) * 100;
+  const rows = [...events]
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .slice(0, 10);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 className="font-display text-lg sm:text-xl">Chapter timeline</h2>
+          <p className="text-muted-foreground text-xs">
+            Major Antardasha windows on a life scale. Tap a bar to open that chapter.
+          </p>
+        </div>
+        <Badge variant="outline" className="text-[10px]">
+          {rows.length} shown
+        </Badge>
+      </div>
+      <div className="scrollbar-hidden -mx-1 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch]">
+        <div className="relative min-w-[36rem] space-y-1.5">
+          <div className="text-muted-foreground relative h-6">
+            {years.map((year) => {
+              const ts = new Date(year, 0, 1).getTime();
+              const left = ((ts - range.min) / range.span) * 100;
+              if (left < 0 || left > 100) return null;
+              return (
+                <span
+                  key={year}
+                  className="absolute top-0 -translate-x-1/2 text-[10px] tabular-nums"
+                  style={{ left: `${left}%` }}
+                >
+                  {year}
+                </span>
+              );
+            })}
+          </div>
+          <div className="relative space-y-1.5">
+            <div
+              className="bg-gold/80 pointer-events-none absolute top-0 bottom-0 z-10 w-px"
+              style={{ left: `${Math.max(0, Math.min(100, nowLeft))}%` }}
+              title="Now"
+            />
+            {rows.map((e) => {
+              const start = new Date(e.startDate).getTime();
+              const end = new Date(e.endDate).getTime();
+              const left = ((start - range.min) / range.span) * 100;
+              const width = Math.max(2.2, ((end - start) / range.span) * 100);
+              const colors = CATEGORY_COLORS[e.category];
+              const active = activeId === e.id;
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => onSelect(e.id)}
+                  className={cn(
+                    "relative h-8 w-full rounded-md text-left transition-colors",
+                    "hover:bg-muted/40 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                  )}
+                  title={`${e.title} · ${e.window}`}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-1 bottom-1 flex items-center overflow-hidden rounded-full px-2 text-[10px] font-medium whitespace-nowrap",
+                      colors.bar,
+                      "text-white/95",
+                      active && "ring-gold ring-offset-background ring-2 ring-offset-1",
+                      e.phase === "present" && "shadow-[0_0_12px_-2px_rgba(234,179,8,0.45)]",
+                    )}
+                    style={{
+                      left: `${Math.max(0, left)}%`,
+                      width: `${Math.min(100 - Math.max(0, left), width)}%`,
+                    }}
+                  >
+                    {CATEGORY_LABELS[e.category]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-muted-foreground text-[10px]">
+            Gold line is today. Colours match life themes.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventCard({
+  e,
+  open,
+  onToggle,
+  showPhase,
+}: {
+  e: LifeEventItem;
+  open: boolean;
+  onToggle: () => void;
+  showPhase?: boolean;
+}) {
+  const Icon = CATEGORY_ICONS[e.category];
+  const colors = CATEGORY_COLORS[e.category];
+  const pct = likelihoodPct(e.score);
+  const isMarriage = e.category === "marriage";
+  const isHigh = pct >= 80;
+
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border transition-colors",
+        isMarriage ? "border-gold/35 bg-gold/5" : "border-border/60 bg-card",
+        open && "shadow-sm",
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-start gap-3 px-3.5 py-3 text-left sm:gap-4 sm:px-4 sm:py-3.5"
+        aria-expanded={open}
+      >
+        <span
+          className={cn(
+            "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border",
+            colors.bg,
+            colors.border,
+          )}
+        >
+          <Icon className={cn("h-4 w-4", colors.text)} />
+        </span>
+        <span className="min-w-0 flex-1 space-y-1.5">
+          <span className="flex items-start justify-between gap-2">
+            <span className="min-w-0">
+              <span className="flex flex-wrap items-center gap-1.5">
+                <span className="text-sm font-medium break-words sm:text-[0.95rem]">{e.title}</span>
+                {showPhase ? (
+                  <Badge variant="outline" className="text-[9px] tracking-wider uppercase">
+                    {e.phase === "present" ? "now" : e.phase}
+                  </Badge>
+                ) : null}
+              </span>
+              <span className="text-muted-foreground mt-0.5 block text-[11px] sm:text-xs">
+                {e.window}
+                {e.ageHint ? ` · ${e.ageHint}` : ""}
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1.5">
+              <span
+                className={cn(
+                  "inline-flex items-baseline gap-0.5 rounded-full border px-2 py-1 tabular-nums",
+                  isHigh ? "border-gold/50 bg-gold/15" : "border-primary/30 bg-primary/10",
+                )}
+              >
+                <span className="font-display text-sm leading-none">{pct}</span>
+                <span className="text-[10px] opacity-80">%</span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "text-muted-foreground h-4 w-4 transition-transform duration-200",
+                  open && "rotate-180",
+                )}
+              />
+            </span>
+          </span>
+          <span className="bg-muted/70 block h-1.5 overflow-hidden rounded-full">
+            <span
+              className={cn("block h-full rounded-full", isHigh ? "bg-gold" : "bg-primary/80")}
+              style={{ width: `${pct}%` }}
+            />
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            <Badge variant="secondary" className="text-[10px]">
+              {CATEGORY_LABELS[e.category]}
+            </Badge>
+            {e.detailLabel ? (
+              <Badge variant="outline" className="text-[10px]">
+                {e.detailLabel}
+              </Badge>
+            ) : null}
+            {formatSpan(e.spanMonths) ? (
+              <Badge variant="outline" className="text-[10px]">
+                {formatSpan(e.spanMonths)}
+              </Badge>
+            ) : null}
+          </span>
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2.5 border-t px-3.5 pt-3 pb-3.5 sm:px-4 sm:pb-4">
+              <p className="text-[12px] leading-relaxed sm:text-sm">{e.explain}</p>
+              {e.gocharNote ? (
+                <p className="text-primary/90 text-[12px] leading-relaxed sm:text-sm">
+                  <Orbit className="mr-1 inline h-3.5 w-3.5" />
+                  {e.gocharNote}
+                </p>
+              ) : null}
+              <div
+                className={cn(
+                  "rounded-xl border px-3 py-2",
+                  isMarriage ? "border-gold/25 bg-gold/5" : "border-border/60 bg-muted/30",
+                )}
+              >
+                <p className="text-[12px] leading-relaxed font-medium sm:text-sm">
+                  Accept: {e.acceptLine}
+                </p>
+              </div>
+              <p className="text-muted-foreground text-[11px] leading-relaxed sm:text-xs">
+                {e.suggestion}
+              </p>
+              <p className="text-muted-foreground text-[10px]">
+                {e.dashaLabel} · ~{pct}% directional likelihood
+              </p>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </article>
+  );
+}
+
 export default function CalendarPage() {
+  const reduceMotion = useReducedMotion();
   const [data, setData] = useState<CalendarPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TimeTab>("present");
   const [category, setCategory] = useState<LifeEventCategory | "all">("all");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -530,143 +555,167 @@ export default function CalendarPage() {
     return sortByLikelihood(filterCat(data.byPhase[tab]));
   }, [data, tab, filterCat]);
 
+  const timelineEvents = useMemo(() => {
+    if (!data) return [];
+    return filterCat([...data.byPhase.past, ...data.byPhase.present, ...data.byPhase.future]);
+  }, [data, filterCat]);
+
+  const categoryCounts = useMemo(() => {
+    if (!data) return {} as Record<string, number>;
+    const all = [...data.byPhase.past, ...data.byPhase.present, ...data.byPhase.future];
+    const map: Record<string, number> = { all: all.length };
+    for (const e of all) map[e.category] = (map[e.category] || 0) + 1;
+    return map;
+  }, [data]);
+
+  const visibleChips = useMemo(
+    () => CATEGORY_CHIP_ORDER.filter((key) => key === "all" || (categoryCounts[key] || 0) > 0),
+    [categoryCounts],
+  );
+
+  useEffect(() => {
+    setOpenId((current) => {
+      if (current && tabEvents.some((e) => e.id === current)) return current;
+      return tabEvents[0]?.id ?? null;
+    });
+  }, [tab, category, tabEvents]);
+
   const needsOnboarding = Boolean(error) && !data;
 
+  const selectChapter = (id: string) => {
+    const event = timelineEvents.find((e) => e.id === id);
+    if (event) {
+      setTab(event.phase);
+      setOpenId(id);
+      requestAnimationFrame(() => {
+        document.getElementById(`chapter-${id}`)?.scrollIntoView({
+          behavior: reduceMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      });
+    }
+  };
+
   return (
-    <div className="relative min-w-0 space-y-5 sm:space-y-6 lg:space-y-8">
+    <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
-        className="mb-5 sm:mb-6 md:mb-8"
-        eyebrow="VedaMilan AI · Life calendar"
+        eyebrow="Desh · Kaal · Patra"
         title="Calendar"
-        description="Major life chapters filtered by your place, age, and chart capacity."
+        description="Major life chapters from dasha and gochar — filtered by place, time, and chart capacity. Not a daily planner."
         actions={
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Button
               type="button"
               variant="outline"
               onClick={() => void load()}
               disabled={loading}
-              className="w-full sm:w-auto"
+              className="flex-1 sm:flex-none"
             >
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
               Refresh
             </Button>
-            <Button asChild variant="secondary" className="w-full sm:w-auto">
-              <Link href={routes.marriageTiming}>Marriage detail</Link>
+            <Button asChild variant="secondary" className="flex-1 sm:flex-none">
+              <Link href={routes.marriageTiming}>Marriage timing</Link>
             </Button>
           </div>
         }
       />
 
-      {loading && !data ? (
-        <PanelSkeleton lines={6} />
-      ) : needsOnboarding ? (
+      {loading && !data ? <PanelSkeleton lines={8} /> : null}
+
+      {needsOnboarding ? (
         <EmptyState
           title="Chart required"
-          description={error || "Add birth details and generate kundli."}
+          description={error || "Add birth details and generate kundli to open your life calendar."}
           action={
             <Button asChild>
               <Link href={routes.birthDetails}>Add birth details</Link>
             </Button>
           }
         />
-      ) : data ? (
+      ) : null}
+
+      {data ? (
         <>
-          {/* Hero Stats & Info */}
-          <section className="border-border/60 bg-card/40 min-w-0 overflow-hidden rounded-2xl border p-4 sm:rounded-3xl sm:p-5 lg:p-6">
-            <div className="mb-4 flex flex-col gap-4 sm:mb-5 md:flex-row md:items-start md:justify-between md:gap-6">
-              <div className="max-w-2xl min-w-0 space-y-2">
-                <p className="text-gold/85 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium tracking-[0.14em] uppercase sm:text-[11px] sm:tracking-[0.16em]">
-                  <CalendarRange className="h-3.5 w-3.5 shrink-0" />
-                  <span>Classical filter · Desh–Kaal–Patra</span>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {(
+              [
+                {
+                  key: "present" as TimeTab,
+                  label: "Current",
+                  value: data.byPhase.present.length,
+                  icon: CircleDot,
+                  color: "text-emerald-500",
+                },
+                {
+                  key: "future" as TimeTab,
+                  label: "Upcoming",
+                  value: data.byPhase.future.length,
+                  icon: Sparkle,
+                  color: "text-sky-500",
+                },
+                {
+                  key: "past" as TimeTab,
+                  label: "Past",
+                  value: data.byPhase.past.length,
+                  icon: History,
+                  color: "text-muted-foreground",
+                },
+                {
+                  key: "all" as TimeTab,
+                  label: "High likelihood",
+                  value: data.highProbability?.length || 0,
+                  icon: TrendingUp,
+                  color: "text-gold",
+                },
+              ] as const
+            ).map((stat) => (
+              <button
+                key={stat.label}
+                type="button"
+                onClick={() => setTab(stat.key)}
+                className={cn(
+                  "rounded-xl border p-3 text-left transition-colors sm:p-4",
+                  tab === stat.key
+                    ? "border-gold/40 bg-gold/5"
+                    : "border-border/60 bg-card hover:border-border",
+                )}
+              >
+                <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] tracking-wider uppercase">
+                  <stat.icon className={cn("h-3.5 w-3.5", stat.color)} />
+                  {stat.label}
                 </p>
-                <h1 className="font-display text-xl leading-snug text-balance sm:text-2xl lg:text-3xl">
-                  Place, time, and capacity shape which windows apply
-                </h1>
-                <p className="text-muted-foreground max-w-xl text-xs leading-relaxed sm:text-sm">
-                  Your life calendar shows only major multi-month chapters — the strongest
-                  Antardasha themes filtered by age, location, and current transits.
+                <p className="font-display mt-1 text-2xl leading-none">{stat.value}</p>
+              </button>
+            ))}
+          </div>
+
+          <GlassCard className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-gold/85 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Snapshot
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {data.snapshot.currentMaha
+                    ? `${data.snapshot.currentMaha}${data.snapshot.currentAntar ? ` / ${data.snapshot.currentAntar}` : ""} dasha`
+                    : "Vimshottari chapters"}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5 md:max-w-[16rem] md:justify-end lg:max-w-xs">
+              <div className="flex flex-wrap gap-1.5">
                 {data.snapshot.lagnaSign ? (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs">
-                    Lagna · {data.snapshot.lagnaSign}
-                  </Badge>
+                  <Badge variant="outline">Lagna · {data.snapshot.lagnaSign}</Badge>
                 ) : null}
                 {data.snapshot.moonSign ? (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs">
-                    Moon · {data.snapshot.moonSign}
-                  </Badge>
-                ) : null}
-                {data.snapshot.currentMaha ? (
-                  <Badge variant="secondary" className="max-w-full text-[10px] sm:text-xs">
-                    <span className="truncate">
-                      Dasha · {data.snapshot.currentMaha}
-                      {data.snapshot.currentAntar ? ` / ${data.snapshot.currentAntar}` : ""}
-                    </span>
-                  </Badge>
+                  <Badge variant="outline">Moon · {data.snapshot.moonSign}</Badge>
                 ) : null}
               </div>
             </div>
-
-            {/* Quick Stats */}
-            <div className="mb-4 grid grid-cols-3 gap-2 sm:mb-5 sm:gap-3 md:grid-cols-6">
+            <div className="grid gap-2.5 sm:grid-cols-3">
               {(
                 [
                   {
-                    label: "Total",
-                    value: (Object.values(data.byPhase).flat() as LifeEventItem[]).length,
-                    icon: LayoutList,
-                    color: "text-foreground",
-                  },
-                  {
-                    label: "Current",
-                    value: data.byPhase.present.length,
-                    icon: CircleDot,
-                    color: "text-emerald-500",
-                  },
-                  {
-                    label: "Future",
-                    value: data.byPhase.future.length,
-                    icon: Sparkle,
-                    color: "text-sky-500",
-                  },
-                  {
-                    label: "Past",
-                    value: data.byPhase.past.length,
-                    icon: History,
-                    color: "text-muted-foreground",
-                  },
-                  {
-                    label: "High prob.",
-                    value: data.highProbability?.length || 0,
-                    icon: TrendingUp,
-                    color: "text-gold",
-                  },
-                ] as const
-              ).map((stat) => (
-                <div
-                  key={stat.label}
-                  className="border-border/50 bg-background/50 rounded-xl border px-2.5 py-2 sm:px-3 sm:py-2.5"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <stat.icon className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", stat.color)} />
-                    <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-                      {stat.label}
-                    </span>
-                  </div>
-                  <p className="font-display mt-1 text-lg leading-none sm:text-xl">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile: stacked · Tablet+: 3 equal pillars */}
-            <div className="grid grid-cols-1 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-4">
-              {(
-                [
-                  {
-                    key: "desh",
                     sanskrit: "Desh",
                     english: "Place",
                     Icon: MapPin,
@@ -675,7 +724,6 @@ export default function CalendarPage() {
                     bg: "bg-amber-500/10",
                   },
                   {
-                    key: "kaal",
                     sanskrit: "Kaal",
                     english: "Time",
                     Icon: Hourglass,
@@ -684,7 +732,6 @@ export default function CalendarPage() {
                     bg: "bg-sky-500/10",
                   },
                   {
-                    key: "patra",
                     sanskrit: "Patra",
                     english: "Vessel",
                     Icon: UserRound,
@@ -693,150 +740,111 @@ export default function CalendarPage() {
                     bg: "bg-purple-500/10",
                   },
                 ] as const
-              ).map(({ key, sanskrit, english, Icon, body, accent, bg }) => (
-                <motion.div
-                  key={key}
-                  whileHover={{ y: -2 }}
-                  className="border-border/45 bg-background/50 hover:border-border min-w-0 rounded-xl border px-3 py-2.5 transition-colors hover:shadow-sm sm:rounded-2xl sm:px-4 sm:py-3.5"
-                >
-                  <div className="mb-1.5 flex items-center gap-2 sm:mb-2">
+              ).map((pillar) => (
+                <div key={pillar.sanskrit} className="rounded-xl border p-3">
+                  <div className="mb-1.5 flex items-center gap-2">
                     <span
                       className={cn(
-                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 sm:rounded-xl",
-                        bg,
+                        "flex h-8 w-8 items-center justify-center rounded-lg",
+                        pillar.bg,
                       )}
                     >
-                      <Icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", accent)} />
+                      <pillar.Icon className={cn("h-4 w-4", pillar.accent)} />
                     </span>
-                    <div className="min-w-0">
-                      <p className="font-display text-sm leading-none sm:text-base">{sanskrit}</p>
-                      <p className="text-muted-foreground text-[10px] tracking-wide uppercase">
-                        {english}
+                    <div>
+                      <p className="font-display text-sm leading-none">{pillar.sanskrit}</p>
+                      <p className="text-muted-foreground text-[10px] uppercase">
+                        {pillar.english}
                       </p>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-[11px] leading-relaxed break-words sm:text-xs">
-                    {body}
-                  </p>
-                </motion.div>
+                  <p className="text-muted-foreground text-xs leading-relaxed">{pillar.body}</p>
+                </div>
               ))}
             </div>
+            <ChapterTimeline events={timelineEvents} activeId={openId} onSelect={selectChapter} />
+          </GlassCard>
 
-            {(data.snapshot.gocharHighlights?.length || data.gocharSummary) && (
-              <div className="border-border/40 mt-3 border-t pt-3 sm:mt-4 sm:pt-4">
-                <p className="text-muted-foreground mb-2 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
-                  <Orbit className="h-3.5 w-3.5 shrink-0" />
-                  Live gochar · shapes Current %
-                </p>
-                {data.snapshot.gocharHighlights?.length ? (
-                  <ul className="grid gap-1 md:grid-cols-2">
-                    {data.snapshot.gocharHighlights.map((h) => (
-                      <li
-                        key={h}
-                        className="text-muted-foreground text-[11px] leading-relaxed break-words sm:text-xs"
-                      >
-                        · {h}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground text-[11px] break-words sm:text-xs">
-                    {data.gocharSummary}
-                  </p>
-                )}
-                {data.snapshot.gocharPlanets?.length ? (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {data.snapshot.gocharPlanets.map((p) => (
-                      <Badge key={p.planet} variant="outline" className="text-[10px]">
-                        {p.planet} · H{p.house}
-                        {p.retrograde ? " ℞" : ""}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </section>
+          {data.snapshot.gocharHighlights?.length || data.gocharSummary ? (
+            <GlassCard className="space-y-2 p-4">
+              <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                <Orbit className="h-3.5 w-3.5" />
+                Live gochar
+              </p>
+              {data.snapshot.gocharHighlights?.length ? (
+                <ul className="grid gap-1 sm:grid-cols-2">
+                  {data.snapshot.gocharHighlights.slice(0, 4).map((h) => (
+                    <li key={h} className="text-muted-foreground text-xs leading-relaxed">
+                      · {h}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground text-xs">{data.gocharSummary}</p>
+              )}
+              {data.snapshot.gocharPlanets?.length ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {data.snapshot.gocharPlanets.map((p) => (
+                    <Badge key={p.planet} variant="outline" className="text-[10px]">
+                      {p.planet} · H{p.house}
+                      {p.retrograde ? " ℞" : ""}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </GlassCard>
+          ) : null}
 
-          <div className="grid min-w-0 items-start gap-4 md:gap-5 lg:grid-cols-3 xl:gap-6">
+          <div className="grid min-w-0 items-start gap-5 lg:grid-cols-3">
             <div className="min-w-0 lg:col-span-2">
-              <Tabs value={tab} onValueChange={(v) => setTab(v as TimeTab)} className="min-w-0">
-                <div className="bg-background/92 sticky top-0 z-10 -mx-3 px-3 py-2.5 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
-                  <TabsList className="border-border/50 bg-card/80 sm:bg-card/60 grid h-auto w-full grid-cols-2 gap-1 rounded-2xl border p-1 md:grid-cols-4">
+              <Tabs value={tab} onValueChange={(v) => setTab(v as TimeTab)}>
+                <div className="bg-background/90 sticky top-0 z-10 -mx-3 space-y-3 px-3 py-2 backdrop-blur-md sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+                  <TabsList className="grid h-auto w-full grid-cols-4 rounded-2xl">
                     {TAB_ORDER.map((key) => {
                       const meta = TAB_META[key];
                       const Icon = meta.Icon;
-                      const isActive = tab === key;
                       return (
                         <TabsTrigger
                           key={key}
                           value={key}
-                          className={cn(
-                            "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-2 text-[11px] transition-all duration-200 sm:min-h-10 sm:px-2 sm:text-xs md:min-h-11 md:flex-row md:gap-1.5 md:text-sm",
-                            isActive && "bg-background shadow-sm",
-                          )}
+                          className="flex min-h-10 flex-col gap-0 rounded-xl px-1 py-1.5 text-[11px] sm:min-h-11 sm:flex-row sm:gap-1.5 sm:text-sm"
                         >
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1 transition-colors",
-                              isActive && meta.accent,
-                            )}
-                          >
-                            <Icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="inline-flex items-center gap-1">
+                            <Icon className="h-3.5 w-3.5" />
                             {meta.label}
                           </span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "h-5 min-w-5 justify-center px-1.5 text-[10px] font-normal transition-colors",
-                              isActive && "border-primary/30 bg-primary/5",
-                            )}
-                          >
-                            {counts[key]}
-                          </Badge>
+                          <span className="text-[10px] opacity-70">{counts[key]}</span>
                         </TabsTrigger>
                       );
                     })}
                   </TabsList>
-
-                  <div className="mt-3 sm:mt-4">
-                    <ChipScroller>
-                      {CATEGORY_CHIP_ORDER.map((key) => {
-                        const isActive = category === key;
-                        const colors = key === "all" ? null : CATEGORY_COLORS[key];
-                        const Icon = key === "all" ? LayoutList : CATEGORY_ICONS[key];
-                        const activeClasses = colors
-                          ? cn(colors.bg, colors.text, colors.border)
-                          : "border-primary/50 bg-primary/15 text-foreground shadow-sm";
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setCategory(key)}
-                            className={cn(
-                              "group relative shrink-0 rounded-full border px-2.5 py-1.5 text-[11px] font-medium transition-all duration-200 sm:px-3 sm:py-1.5 sm:text-xs",
-                              isActive
-                                ? activeClasses
-                                : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground",
-                            )}
-                          >
-                            <span className="relative z-10 flex items-center gap-1.5">
-                              {Icon ? (
-                                <Icon className={cn("h-3 w-3", isActive && colors?.text)} />
-                              ) : null}
-                              {CATEGORY_LABELS[key]}
-                            </span>
-                            {isActive && colors ? (
-                              <motion.div
-                                layoutId="activeCategory"
-                                className={cn("absolute inset-0 rounded-full", colors.bg)}
-                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                              />
-                            ) : null}
-                          </button>
-                        );
-                      })}
-                    </ChipScroller>
+                  <div className="scrollbar-hidden flex gap-1.5 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch]">
+                    {visibleChips.map((key) => {
+                      const isActive = category === key;
+                      const colors = key === "all" ? null : CATEGORY_COLORS[key];
+                      const Icon = key === "all" ? LayoutList : CATEGORY_ICONS[key];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setCategory(key)}
+                          className={cn(
+                            "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                            isActive
+                              ? colors
+                                ? cn(colors.bg, colors.text, colors.border)
+                                : "border-gold/40 bg-gold/10 text-foreground"
+                              : "border-border/60 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          <Icon className="h-3 w-3" />
+                          {CATEGORY_LABELS[key]}
+                          <span className="tabular-nums opacity-70">
+                            {categoryCounts[key] || 0}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -844,64 +852,45 @@ export default function CalendarPage() {
                   const meta = TAB_META[key];
                   const list = key === tab ? tabEvents : [];
                   return (
-                    <TabsContent key={key} value={key} className="mt-3 space-y-3 sm:mt-4">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-                        <div className="min-w-0">
-                          <h2 className="font-display text-base sm:text-lg md:text-xl">
-                            {meta.label} · major chapters
-                          </h2>
-                          <p className="text-muted-foreground text-[11px] leading-relaxed sm:text-sm">
-                            {meta.blurb}
-                          </p>
+                    <TabsContent key={key} value={key} className="mt-4 space-y-3">
+                      <div className="flex flex-wrap items-end justify-between gap-2">
+                        <div>
+                          <h2 className="font-display text-lg sm:text-xl">{meta.label} chapters</h2>
+                          <p className="text-muted-foreground text-xs sm:text-sm">{meta.blurb}</p>
                         </div>
-                        <Badge variant="outline" className="w-fit text-[10px] sm:text-xs">
-                          {list.length} major
-                        </Badge>
+                        <Badge variant="outline">{list.length}</Badge>
                       </div>
-
                       {list.length === 0 ? (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex flex-col items-center justify-center py-12 text-center"
-                        >
-                          <div className="bg-muted/30 mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-                            <CalendarRange className="text-muted-foreground/50 h-5 w-5" />
-                          </div>
-                          {category === "marriage" ? (
-                            <>
-                              <p className="text-muted-foreground text-sm">
-                                No marriage chapters in this tab.
-                              </p>
-                              <p className="text-muted-foreground/80 mt-1 text-xs">
-                                Marriage events appear in your main timeline when the dasha engine
-                                flags them.
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-muted-foreground text-sm">
-                                No major {meta.label.toLowerCase()} chapters for this filter.
-                              </p>
-                              <p className="text-muted-foreground/80 mt-1 text-xs">
-                                Try All themes or another time tab.
-                              </p>
-                            </>
-                          )}
-                        </motion.div>
+                        <div className="flex flex-col items-center py-10 text-center">
+                          <CalendarRange className="text-muted-foreground/40 mb-2 h-6 w-6" />
+                          <p className="text-muted-foreground text-sm">
+                            No {meta.label.toLowerCase()} chapters for this theme.
+                          </p>
+                          <button
+                            type="button"
+                            className="text-gold mt-2 text-xs underline underline-offset-2"
+                            onClick={() => setCategory("all")}
+                          >
+                            Show all themes
+                          </button>
+                        </div>
                       ) : (
-                        <EventScrollPanel total={list.length}>
-                          <div className="space-y-2">
-                            <p className="text-muted-foreground bg-card/95 sticky top-0 z-[1] px-0.5 py-1 text-[10px] font-semibold tracking-[0.12em] uppercase backdrop-blur-sm">
-                              Primary Antardasha themes
-                            </p>
-                            <ul className="space-y-2 sm:space-y-2.5">
-                              {list.map((e) => (
-                                <EventCard key={`${key}-${e.id}`} e={e} showPhase={key === "all"} />
-                              ))}
-                            </ul>
-                          </div>
-                        </EventScrollPanel>
+                        <ul className="space-y-2.5">
+                          {list.map((e) => (
+                            <li
+                              key={e.id}
+                              id={`chapter-${e.id}`}
+                              className="scroll-mt-28 sm:scroll-mt-4"
+                            >
+                              <EventCard
+                                e={e}
+                                open={openId === e.id}
+                                onToggle={() => setOpenId(openId === e.id ? null : e.id)}
+                                showPhase={key === "all"}
+                              />
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </TabsContent>
                   );
@@ -909,64 +898,83 @@ export default function CalendarPage() {
               </Tabs>
             </div>
 
-            {/* Side panels stay visible beside the scroll panel on desktop */}
-            <aside className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 lg:sticky lg:top-4 lg:grid-cols-1 lg:self-start">
+            <aside className="grid min-w-0 gap-4 sm:grid-cols-2 lg:sticky lg:top-4 lg:grid-cols-1 lg:self-start">
+              {data.marryNow ? (
+                <GlassCard className="border-gold/30 space-y-2 p-4">
+                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                    Marriage now
+                  </p>
+                  <p className="font-display text-lg">{data.marryNow.title}</p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    {data.marryNow.reason}
+                  </p>
+                  <Badge variant="outline">{data.marryNow.verdict}</Badge>
+                </GlassCard>
+              ) : null}
+
+              {data.marriageWindows?.length ? (
+                <GlassCard className="space-y-3 p-4">
+                  <h2 className="font-display text-base">Marriage windows</h2>
+                  <ul className="space-y-2">
+                    {data.marriageWindows.slice(0, 3).map((w) => (
+                      <li key={`${w.label}-${w.window}`} className="rounded-xl border p-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">{w.label}</p>
+                          <span className="text-muted-foreground text-[10px] tabular-nums">
+                            {likelihoodPct(w.score)}%
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">{w.window}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button asChild size="sm" variant="outline" className="w-full">
+                    <Link href={routes.marriageTiming}>Full timing</Link>
+                  </Button>
+                </GlassCard>
+              ) : null}
+
               <SpouseTendencyPanel tendencies={data.spouseTendencies} compact />
 
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="border-border/50 bg-card/40 min-w-0 rounded-2xl border p-3.5 sm:p-5 lg:p-6"
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="bg-background border-border/50 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border">
-                    <BookOpen className="text-foreground/70 h-4 w-4" />
-                  </div>
+              <GlassCard className="space-y-3 p-4 sm:p-5">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border">
+                    <BookOpen className="h-4 w-4" />
+                  </span>
                   <div>
-                    <h2 className="font-display text-base sm:text-lg">How to read</h2>
+                    <h2 className="font-display text-base">How to read</h2>
                     <p className="text-muted-foreground text-[10px]">Calendar guide</p>
                   </div>
                 </div>
-                <ul className="text-muted-foreground space-y-2.5 text-[11px] leading-relaxed sm:text-xs">
-                  <li className="flex items-start gap-2">
-                    <span className="bg-muted-foreground/50 mt-1 h-1 w-1 shrink-0 rounded-full" />
-                    Only major multi-month chapters — mild windows are hidden.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-muted-foreground/50 mt-1 h-1 w-1 shrink-0 rounded-full" />
-                    Travel cards specify foreign / local / relocation when possible.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-muted-foreground/50 mt-1 h-1 w-1 shrink-0 rounded-full" />
-                    Marriage cards include love vs arranged and spouse-origin leanings.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="bg-muted-foreground/50 mt-1 h-1 w-1 shrink-0 rounded-full" />%
-                    is directional (dasha + gochar), not a guarantee.
-                  </li>
+                <ul className="text-muted-foreground space-y-2 text-xs leading-relaxed">
+                  <li>Only major multi-month chapters are shown — mild windows stay hidden.</li>
+                  <li>Tap a chapter for gochar notes and what to accept in that period.</li>
+                  <li>Percentages are directional from dasha + gochar, not a guarantee.</li>
                 </ul>
-                <div className="mt-4 flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
                   <Button asChild size="sm" variant="ai" className="w-full">
                     <Link href={routes.aiInsights}>
                       <Sparkles className="h-3.5 w-3.5" />
                       Ask AI Guru
                     </Link>
                   </Button>
-                  <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-                    <Button asChild size="sm" variant="outline" className="w-full">
-                      <Link href={routes.gochar}>Open Gochar</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="ghost" className="w-full">
-                      <Link href={routes.dasha}>View Dashas</Link>
-                    </Button>
-                  </div>
+                  <Button asChild size="sm" variant="outline" className="w-full">
+                    <Link href={routes.gochar}>Gochar</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="ghost"
+                    className="col-span-2 w-full lg:col-span-1"
+                  >
+                    <Link href={routes.dasha}>Dashas</Link>
+                  </Button>
                 </div>
-              </motion.div>
+              </GlassCard>
             </aside>
           </div>
 
-          <p className="text-muted-foreground pb-2 text-[10px] leading-relaxed break-words sm:text-xs">
+          <p className="text-muted-foreground pb-2 text-[10px] leading-relaxed sm:text-xs">
             {data.methodology}
           </p>
         </>

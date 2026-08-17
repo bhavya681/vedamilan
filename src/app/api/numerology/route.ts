@@ -1,13 +1,17 @@
 import { requireSession } from "@/lib/auth/session";
 import { profileService } from "@/application/profile/profile.service";
 import { horoscopeService } from "@/application/horoscope/horoscope.service";
+import { Profile } from "@/infrastructure/database/models";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError } from "@/lib/utils/error-handler";
 import { enforceRateLimit } from "@/lib/security/rate-limit";
 import {
   calculateBhagyank,
+  calculateChaldeanNameNumber,
   calculateMulank,
+  calculatePersonalYear,
   calculationTrace,
+  compoundBhagyank,
   dateToNumerologyInput,
   NUMEROLOGY_NUMBERS,
   NUMBER_PROFILES,
@@ -80,6 +84,15 @@ export async function GET() {
 
     const mulankPlanet = NUMEROLOGY_NUMBERS[mulank as NumberId].planet;
     const bhagyankPlanet = NUMEROLOGY_NUMBERS[bhagyank as NumberId].planet;
+    const mulankMaster = calculateMulank(input.day, { preserveMasters: true });
+    const bhagyankMaster = calculateBhagyank(input.day, input.month, input.year, {
+      preserveMasters: true,
+    });
+    const calendarYear = new Date().getFullYear();
+    const personalYear = calculatePersonalYear(input.day, input.month, calendarYear);
+
+    const profile = await Profile.findOne({ userId: session.user.id }).lean();
+    const nameNumber = calculateChaldeanNameNumber(String(profile?.name || ""));
 
     // Try to enrich with Kundli context — the astrology engine is the
     // single source of truth for planetary positions; numerology never
@@ -108,6 +121,16 @@ export async function GET() {
       bhagyank,
       mulankPlanet,
       bhagyankPlanet,
+      compoundMulank: input.day,
+      compoundBhagyank: compoundBhagyank(input.day, input.month, input.year),
+      mulankMaster,
+      bhagyankMaster,
+      personalYear: {
+        number: personalYear,
+        year: calendarYear,
+        planet: NUMEROLOGY_NUMBERS[personalYear as NumberId].planet,
+      },
+      nameNumber,
       calculationTrace: {
         mulank: trace.mulank,
         bhagyank: trace.bhagyank,

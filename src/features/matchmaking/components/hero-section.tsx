@@ -53,7 +53,7 @@ export function HeroSection() {
 
       <motion.div
         style={reduceMotion ? undefined : { y: contentY, opacity }}
-        className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-end px-4 pt-28 pb-20 sm:px-6 sm:pb-24 lg:justify-center lg:px-8 lg:pb-28"
+        className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col justify-end px-4 pt-[calc(7rem+env(safe-area-inset-top,0px))] pb-20 sm:px-6 sm:pb-24 lg:justify-center lg:px-8 lg:pb-28"
       >
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 28 }}
@@ -68,12 +68,12 @@ export function HeroSection() {
               width={96}
               height={96}
               priority
-              className="drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+              className="h-16 w-16 drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)] sm:h-24 sm:w-24"
               aria-hidden
             />
-            <p className="font-display text-[2.75rem] leading-none tracking-wide sm:text-6xl md:text-7xl lg:text-[5rem]">
+            <p className="font-display text-[2.15rem] leading-none tracking-wide sm:text-6xl md:text-7xl lg:text-[5rem]">
               <span className="text-brand-gold">{brand.shortName}</span>
-              <span className="text-ivory/65 ml-2 align-middle text-[0.42em] font-semibold tracking-[0.18em]">
+              <span className="text-ivory/65 ml-1.5 align-middle text-[0.42em] font-semibold tracking-[0.18em] sm:ml-2">
                 AI
               </span>
             </p>
@@ -90,8 +90,8 @@ export function HeroSection() {
             Preferences, personality, and Vedic compatibility — in one calm, private workspace.
           </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button asChild size="lg" className="h-12 min-w-[11.5rem]">
+          <div className="mt-9 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:items-center">
+            <Button asChild size="lg" className="h-12 w-full min-w-[11.5rem] sm:w-auto">
               <Link href={routes.register}>
                 Begin
                 <ArrowRight className="h-4 w-4" />
@@ -101,7 +101,7 @@ export function HeroSection() {
               asChild
               size="lg"
               variant="outline"
-              className="border-ivory/25 bg-ivory/5 text-ivory hover:bg-ivory/12 h-12"
+              className="border-ivory/25 bg-ivory/5 text-ivory hover:bg-ivory/12 h-12 w-full sm:w-auto"
             >
               <Link href="/#how">See how it works</Link>
             </Button>

@@ -1,7 +1,49 @@
 {
   "pageTitle": "Numerology",
-  "pageDescription": "Discover the numbers derived from your birth date and explore their traditional planetary associations.",
+  "pageDescription": "Mulank, Bhagyank, Lo Shu grid, and planetary lucky associations from your birth date — the same core reading used by Indian numerology almanacs.",
   "yourNumbers": "Your Numbers",
+  "tabs": {
+    "overview": "Overview",
+    "numbers": "Number profiles",
+    "grid": "Birth grid",
+    "kundli": "Kundli link",
+    "explore": "Explore"
+  },
+  "driver": "Mulank · Driver",
+  "conductor": "Bhagyank · Destiny",
+  "compound": "Compound",
+  "reducesTo": "reduces to",
+  "personalYear": {
+    "title": "Personal year",
+    "subtitle": "Day + month + {year}, reduced to 1–9"
+  },
+  "lucky": {
+    "title": "Lucky associations",
+    "subtitle": "Traditional color, day, and gem for your Mulank planet.",
+    "color": "Colors",
+    "day": "Day",
+    "gem": "Gem",
+    "metal": "Metal",
+    "planet": "Planet"
+  },
+  "grid": {
+    "title": "Lo Shu · Birth grid",
+    "subtitle": "Digits of your date of birth placed on the Lo Shu square. Empty cells are missing numbers; repeats emphasise that planet.",
+    "missing": "Missing",
+    "repeated": "Repeated",
+    "present": "Present",
+    "empty": "No date yet"
+  },
+  "nameNumber": {
+    "title": "Name number",
+    "subtitle": "Chaldean values of the letters in your profile name.",
+    "missing": "Add your name on the profile to see the Chaldean name number.",
+    "method": "Chaldean"
+  },
+  "masterPath": {
+    "title": "Master path",
+    "body": "This date produces master number {master}, which this system also reduces to {reduced} for Mulank/Bhagyank cards."
+  },
   "heroSubtitle": "Enter your birth date to uncover your Mulank and Bhagyank, and explore their planetary meanings.",
   "exploreMyNumbers": "Explore My Numbers",
   "learnNumerology": "Learn Numerology",
@@ -68,7 +110,14 @@
     "title": "How was this calculated?",
     "mulankLine": "{steps}",
     "bhagyankLine": "{steps}",
-    "note": "Numerology calculation is deterministic — the same birth date always yields the same numbers."
+    "note": "Numerology calculation is deterministic — the same birth date always yields the same numbers.",
+    "tabs": {
+      "overview": "Overview",
+      "numbers": "Number profiles",
+      "grid": "Birth grid",
+      "kundli": "Kundli link",
+      "explore": "Explore"
+    }
   },
   "numberCards": {
     "title": "Explore Numbers",

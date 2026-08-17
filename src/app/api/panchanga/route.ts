@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth/session";
 import { computePanchanga } from "@/application/horoscope/panchanga";
+import { profileService } from "@/application/profile/profile.service";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
 import { z } from "zod";
@@ -16,7 +17,7 @@ const querySchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const _session = await requireSession().catch(() => {
+    const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
     });
 
@@ -33,20 +34,29 @@ export async function GET(request: Request) {
     }
 
     const { date, latitude, longitude, timezone } = parsed.data;
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = date ? new Date(`${date}T12:00:00`) : new Date();
 
     if (Number.isNaN(targetDate.getTime())) {
       throw new ValidationError("Invalid date");
     }
 
-    const panchanga = computePanchanga(
-      targetDate,
-      latitude ?? 0,
-      longitude ?? 0,
-      timezone || "Asia/Kolkata",
-    );
+    const birth = await profileService.getBirthDetails(session.user.id);
+    const lat = latitude ?? birth?.latitude ?? 28.6139;
+    const lon = longitude ?? birth?.longitude ?? 77.209;
+    const tz = timezone || birth?.timezone || "Asia/Kolkata";
 
-    return successResponse(panchanga);
+    const panchanga = computePanchanga(targetDate, lat, lon, tz);
+
+    return successResponse({
+      ...panchanga,
+      location: {
+        latitude: lat,
+        longitude: lon,
+        timezone: tz,
+        placeName: birth?.placeName || null,
+        source: latitude != null ? "query" : birth?.latitude != null ? "birth" : "default",
+      },
+    });
   } catch (error) {
     return handleRouteError(error);
   }

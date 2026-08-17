@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import { LanguageSelector } from "@/components/i18n/language-selector";
 import { persistLocaleChoice } from "@/components/i18n/locale-navigation";
 import { useI18n } from "@/components/i18n/i18n-provider";
 import { PageHeader } from "@/components/layout/page-shell";
@@ -24,6 +23,7 @@ import {
 import {
   APP_LOCALES,
   BILLING_CURRENCIES,
+  DEFAULT_LOCALE,
   LOCALE_META,
   type AppLocale,
   type BillingCurrency,
@@ -68,9 +68,9 @@ const TIMEZONE_OPTIONS = [
 ];
 
 export default function LanguageRegionSettingsPage() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [form, setForm] = useState<LocalizationState>({
-    language: locale,
+    language: DEFAULT_LOCALE,
     region: "IN",
     timezone: "Asia/Kolkata",
     dateFormat: "locale",
@@ -89,7 +89,7 @@ export default function LanguageRegionSettingsPage() {
         if (!json.success) return;
         const loc = json.data.localization;
         setForm({
-          language: loc.language || locale,
+          language: DEFAULT_LOCALE,
           region: loc.region || "IN",
           timezone: loc.timezone || "Asia/Kolkata",
           dateFormat: loc.dateFormat || "locale",
@@ -99,7 +99,7 @@ export default function LanguageRegionSettingsPage() {
         });
       })
       .catch(() => undefined);
-  }, [locale]);
+  }, []);
 
   const preview = useMemo(() => {
     const now = new Date();
@@ -126,13 +126,8 @@ export default function LanguageRegionSettingsPage() {
         setError(json.error?.message || t("errors.generic"));
         return;
       }
-      persistLocaleChoice(form.language);
+      persistLocaleChoice(DEFAULT_LOCALE);
       setMessage(t("settings.saved"));
-      if (form.language !== locale) {
-        window.setTimeout(() => {
-          window.location.assign(`/${form.language}/dashboard/settings/language`);
-        }, 400);
-      }
     } catch {
       setError(t("errors.network"));
     } finally {
@@ -150,12 +145,10 @@ export default function LanguageRegionSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.appLanguage")}</CardTitle>
-          <CardDescription>{t("settings.appLanguageHint")}</CardDescription>
+          <CardDescription>{t("settings.languageRegionDescription")}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <LanguageSelector
-            onChanged={(code) => setForm((prev) => ({ ...prev, language: code }))}
-          />
+        <CardContent className="space-y-2">
+          <p className="text-sm font-medium">English</p>
           <p className="text-muted-foreground text-sm">{t("settings.birthDataUnchanged")}</p>
         </CardContent>
       </Card>

@@ -314,7 +314,7 @@ export default function AstrologyGocharPage() {
 
           <GlassCard className="space-y-3">
             <h2 className="font-display text-xl">Planet positions</h2>
-            <div className="-mx-4 overflow-x-auto sm:mx-0">
+            <div className="table-scroll -mx-4 sm:mx-0">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b">

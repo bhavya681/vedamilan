@@ -13,38 +13,41 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 type SavRow = { house: number; sign: string; bindus: number; note: string };
+type BavRow = { house: number; sign: string; bindus: number };
 type Ashtaka = {
   methodology: string;
   lagnaSign: string;
   sarva: SavRow[];
-  bhinna: Record<string, Array<{ house: number; sign: string; bindus: number }>>;
+  bhinna: Record<string, BavRow[]>;
+  planetTotals?: Record<string, number>;
+  totalBindus?: number;
   highlights: string[];
 };
 
 const HOUSE_THEMES: Record<number, { area: string; theme: string }> = {
-  1: { area: "Self", theme: "Identity, vitality, new beginnings, physical body" },
-  2: { area: "Wealth", theme: "Speech, family, resources, values, food" },
-  3: { area: "Courage", theme: "Siblings, effort, short travel, communication" },
-  4: { area: "Home", theme: "Mother, home, emotional roots, peace, education" },
-  5: { area: "Creativity", theme: "Children, romance, intellect, creativity, speculation" },
-  6: { area: "Health", theme: "Enemies, obstacles, service, health, pets" },
-  7: { area: "Partnership", theme: "Marriage, partnerships, public, contracts" },
-  8: { area: "Transformation", theme: "Longevity, occult, shared resources, transformation" },
-  9: { area: "Dharma", theme: "Fortune, mentors, higher learning, long travel, philosophy" },
-  10: { area: "Career", theme: "Profession, status, authority, public image" },
-  11: { area: "Gains", theme: "Income, networks, friends, aspirations, elder siblings" },
-  12: { area: "Liberation", theme: "Foreign lands, expenses, spirituality, moksha, solitude" },
+  1: { area: "Self", theme: "Identity, vitality, body" },
+  2: { area: "Wealth", theme: "Speech, family, resources" },
+  3: { area: "Courage", theme: "Siblings, effort, short travel" },
+  4: { area: "Home", theme: "Mother, home, emotional roots" },
+  5: { area: "Creativity", theme: "Children, intellect, speculation" },
+  6: { area: "Health", theme: "Obstacles, service, illness" },
+  7: { area: "Partnership", theme: "Marriage, contracts, public" },
+  8: { area: "Transformation", theme: "Longevity, occult, shared resources" },
+  9: { area: "Dharma", theme: "Fortune, mentors, higher learning" },
+  10: { area: "Career", theme: "Profession, status, authority" },
+  11: { area: "Gains", theme: "Income, networks, aspirations" },
+  12: { area: "Liberation", theme: "Expenses, foreign lands, moksha" },
 };
 
 const SIGNS = [
@@ -62,71 +65,77 @@ const SIGNS = [
   "Pisces",
 ] as const;
 
-function strengthLabel(bindus: number): string {
+const PLANET_ORDER = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"] as const;
+
+function savLabel(bindus: number): string {
   if (bindus >= 30) return "Strong";
-  if (bindus >= 20) return "Supportive";
-  if (bindus >= 12) return "Average";
+  if (bindus >= 25) return "Supportive";
+  if (bindus >= 20) return "Average";
   return "Sensitive";
 }
 
-function strengthTone(bindus: number): string {
+function savTone(bindus: number): string {
   if (bindus >= 30)
-    return "text-emerald-700 dark:text-emerald-300 border-emerald-500/40 bg-emerald-500/10";
-  if (bindus >= 20) return "text-foreground border-gold/40 bg-gold/10";
-  if (bindus >= 12) return "text-foreground border-amber-500/40 bg-amber-500/10";
-  return "text-foreground border-rose/40 bg-rose/10";
+    return "border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300";
+  if (bindus >= 25) return "border-gold/40 bg-gold/10";
+  if (bindus >= 20) return "border-amber-500/40 bg-amber-500/10";
+  return "border-rose/40 bg-rose/10";
 }
 
-function binduProgress(bindus: number): number {
-  return Math.min(100, Math.max(0, (bindus / 56) * 100));
+function savFill(bindus: number): string {
+  if (bindus >= 30) return "#10B981";
+  if (bindus >= 25) return "#D4AF37";
+  if (bindus >= 20) return "#F59E0B";
+  return "#F43F5E";
 }
 
-const BINDU_COLORS: Record<number, string> = {
-  0: "border-border/40 bg-muted/20",
-  1: "border-border/40 bg-muted/20",
-  2: "border-border/40 bg-muted/20",
-  3: "border-border/40 bg-muted/20",
-  4: "border-border/40 bg-muted/20",
-  5: "border-border/40 bg-muted/20",
-  6: "border-border/40 bg-muted/20",
-  7: "border-border/40 bg-muted/20",
-  8: "border-border/40 bg-muted/20",
-  9: "border-border/40 bg-muted/20",
-  10: "border-border/40 bg-muted/20",
-  11: "border-border/40 bg-muted/20",
-  12: "border-amber-500/30 bg-amber-500/5",
-  13: "border-amber-500/30 bg-amber-500/5",
-  14: "border-amber-500/30 bg-amber-500/5",
-  15: "border-amber-500/30 bg-amber-500/5",
-  16: "border-amber-500/30 bg-amber-500/5",
-  17: "border-amber-500/30 bg-amber-500/5",
-  18: "border-amber-500/30 bg-amber-500/5",
-  19: "border-amber-500/30 bg-amber-500/5",
-  20: "border-gold/30 bg-primary/5",
-  21: "border-gold/30 bg-primary/5",
-  22: "border-gold/30 bg-primary/5",
-  23: "border-gold/30 bg-primary/5",
-  24: "border-gold/30 bg-primary/5",
-  25: "border-gold/30 bg-primary/5",
-  26: "border-gold/30 bg-primary/5",
-  27: "border-gold/30 bg-primary/5",
-  28: "border-gold/30 bg-primary/5",
-  29: "border-gold/30 bg-primary/5",
-  30: "border-emerald-500/30 bg-emerald-500/5",
-  31: "border-emerald-500/30 bg-emerald-500/5",
-  32: "border-emerald-500/30 bg-emerald-500/5",
-  33: "border-emerald-500/30 bg-emerald-500/5",
-  34: "border-emerald-500/30 bg-emerald-500/5",
-  35: "border-emerald-500/30 bg-emerald-500/5",
-  36: "border-emerald-500/30 bg-emerald-500/5",
-  37: "border-emerald-500/30 bg-emerald-500/5",
-  38: "border-emerald-500/30 bg-emerald-500/5",
-  39: "border-emerald-500/30 bg-emerald-500/5",
-  40: "border-emerald-500/30 bg-emerald-500/5",
-};
+function bavTone(bindus: number): string {
+  if (bindus >= 5) return "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300";
+  if (bindus >= 4) return "bg-gold/20";
+  if (bindus >= 3) return "bg-amber-500/15";
+  return "bg-rose/15 text-rose-800 dark:text-rose-300";
+}
 
-function binduColor(bindus: number) {
-  return BINDU_COLORS[Math.max(0, Math.min(40, bindus))] || "border-border/40 bg-muted/20";
+function SavKundli({ sarva, lagnaSign }: { sarva: SavRow[]; lagnaSign: string }) {
+  const byHouse = Object.fromEntries(sarva.map((r) => [r.house, r]));
+  const cell = (house: number) => {
+    const row = byHouse[house];
+    if (!row) return null;
+    return (
+      <div
+        className={cn(
+          "flex h-full min-h-[72px] flex-col items-center justify-center border p-1",
+          savTone(row.bindus),
+        )}
+      >
+        <span className="text-muted-foreground text-[9px]">H{house}</span>
+        <span className="font-display text-lg leading-none">{row.bindus}</span>
+        <span className="text-[9px] opacity-80">{row.sign.slice(0, 3)}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mx-auto grid aspect-square w-full max-w-md grid-cols-4 grid-rows-4 overflow-hidden rounded-xl border">
+      <div className="col-start-1 row-start-1">{cell(12)}</div>
+      <div className="col-start-2 row-start-1">{cell(1)}</div>
+      <div className="col-start-3 row-start-1">{cell(2)}</div>
+      <div className="col-start-4 row-start-1">{cell(3)}</div>
+      <div className="col-start-1 row-start-2">{cell(11)}</div>
+      <div className="col-start-4 row-start-2">{cell(4)}</div>
+      <div className="col-start-1 row-start-3">{cell(10)}</div>
+      <div className="col-start-4 row-start-3">{cell(5)}</div>
+      <div className="col-start-1 row-start-4">{cell(9)}</div>
+      <div className="col-start-2 row-start-4">{cell(8)}</div>
+      <div className="col-start-3 row-start-4">{cell(7)}</div>
+      <div className="col-start-4 row-start-4">{cell(6)}</div>
+      <div className="bg-muted/30 col-start-2 col-end-4 row-start-2 row-end-4 flex flex-col items-center justify-center border">
+        <p className="text-muted-foreground text-[10px] tracking-wider uppercase">Lagna</p>
+        <p className="font-display text-xl">{lagnaSign}</p>
+        <p className="text-muted-foreground text-[10px]">SAV bindus</p>
+      </div>
+    </div>
+  );
 }
 
 export default function AstrologyAshtakavargaPage() {
@@ -134,15 +143,10 @@ export default function AstrologyAshtakavargaPage() {
   const [planet, setPlanet] = useState("Sun");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedHouse, setExpandedHouse] = useState<number | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showMethodology, setShowMethodology] = useState(false);
-  const [showBavMatrix, setShowBavMatrix] = useState(false);
-  const [showHouseMap, setShowHouseMap] = useState(false);
+  const [matrixView, setMatrixView] = useState<"house" | "sign">("house");
   const [transit, setTransit] = useState<{
     jupiter?: { house: number; sign: string; retrograde: boolean };
     saturn?: { house: number; sign: string; retrograde: boolean };
-    highlights: string[];
   } | null>(null);
 
   useEffect(() => {
@@ -166,24 +170,18 @@ export default function AstrologyAshtakavargaPage() {
     void fetch("/api/gochar")
       .then((r) => r.json())
       .then((json) => {
-        if (cancelled) return;
-        if (!json.success) return;
-        const jupiter = (json.data?.planets || []).find(
-          (p: {
-            planet: string;
-            houseFromNatalLagna: number;
-            sign: string;
-            isRetrograde: boolean;
-          }) => p.planet === "Jupiter",
-        );
-        const saturn = (json.data?.planets || []).find(
-          (p: {
-            planet: string;
-            houseFromNatalLagna: number;
-            sign: string;
-            isRetrograde: boolean;
-          }) => p.planet === "Saturn",
-        );
+        if (cancelled || !json.success) return;
+        const findPlanet = (name: string) =>
+          (json.data?.planets || []).find(
+            (p: {
+              planet: string;
+              houseFromNatalLagna: number;
+              sign: string;
+              isRetrograde: boolean;
+            }) => p.planet === name,
+          );
+        const jupiter = findPlanet("Jupiter");
+        const saturn = findPlanet("Saturn");
         setTransit({
           jupiter: jupiter
             ? {
@@ -199,7 +197,6 @@ export default function AstrologyAshtakavargaPage() {
                 retrograde: saturn.isRetrograde,
               }
             : undefined,
-          highlights: json.data?.highlights || [],
         });
       })
       .catch(() => {});
@@ -210,37 +207,43 @@ export default function AstrologyAshtakavargaPage() {
 
   const metrics = useMemo(() => {
     if (!data?.sarva) return null;
-    const sarva = data.sarva;
-    const total = sarva.reduce((s, r) => s + r.bindus, 0);
-    const avg = total / sarva.length;
-    const sorted = [...sarva].sort((a, b) => b.bindus - a.bindus);
-    const strongest = sorted[0];
-    const weakest = sorted[sorted.length - 1];
-    const top5 = sorted.slice(0, 5);
-    const bottom5 = [...sorted].reverse().slice(0, 5);
-    return { total, avg, strongest, weakest, top5, bottom5 };
+    const total = data.totalBindus ?? data.sarva.reduce((s, r) => s + r.bindus, 0);
+    const avg = total / data.sarva.length;
+    const sorted = [...data.sarva].sort((a, b) => b.bindus - a.bindus);
+    return {
+      total,
+      avg,
+      strongest: sorted[0],
+      weakest: sorted[sorted.length - 1],
+    };
   }, [data]);
 
   const planetStats = useMemo(() => {
     if (!data?.bhinna || !planet) return null;
     const rows = data.bhinna[planet] || [];
-    const total = rows.reduce((s, r) => s + r.bindus, 0);
-    const avg = total / Math.max(1, rows.length);
+    const total = data.planetTotals?.[planet] ?? rows.reduce((s, r) => s + r.bindus, 0);
     const best = [...rows].sort((a, b) => b.bindus - a.bindus)[0];
     const worst = [...rows].sort((a, b) => a.bindus - b.bindus)[0];
-    return { total, avg, best, worst };
+    return { total, best, worst };
   }, [data, planet]);
+
+  const kakshya = (name: "Jupiter" | "Saturn", house?: number) => {
+    if (!data || !house) return null;
+    const sav = data.sarva[house - 1];
+    const bav = data.bhinna[name]?.[house - 1];
+    return { sav, bav };
+  };
 
   return (
     <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
         eyebrow="Sarvashtakavarga · Bhinnashtakavarga"
         title="Ashtakavarga"
-        description="Classical bindu strength analysis — SAV shows total house strength, BAV shows per-planet contributions. Higher bindus indicate stronger support for that house's themes."
+        description="SAV house bindus (classical total ≈ 337) and BAV 0–8 matrix — the same two views Jagannatha Hora and AstroSage lead with. SAV ≥ 30 is strong; BAV ≥ 5 supports that planet's transit."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href={routes.astrologyDivisionalCharts}>Charts</Link>
+              <Link href={routes.astrologyShadbala}>Shadbala</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href={routes.kundli}>Kundli</Link>
@@ -263,91 +266,84 @@ export default function AstrologyAshtakavargaPage() {
       ) : null}
 
       {data ? (
-        <TooltipProvider delayDuration={200}>
-          <div className="space-y-5">
-            {/* Summary Metrics */}
-            {metrics && (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <GlassCard className="space-y-1 p-3 sm:p-4">
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    Total SAV
-                  </p>
-                  <p className="font-display text-2xl sm:text-3xl">{metrics.total}</p>
-                  <p className="text-muted-foreground text-xs">
-                    Average {metrics.avg.toFixed(1)} per house
-                  </p>
-                </GlassCard>
-                <GlassCard className="space-y-1 p-3 sm:p-4">
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    Strongest House
-                  </p>
-                  <p className="font-display text-2xl sm:text-3xl">
-                    H{metrics.strongest?.house} ({metrics.strongest?.sign})
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {metrics.strongest?.bindus} bindus
-                  </p>
-                </GlassCard>
-                <GlassCard className="space-y-1 p-3 sm:p-4">
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    Weakest House
-                  </p>
-                  <p className="font-display text-2xl sm:text-3xl">
-                    H{metrics.weakest?.house} ({metrics.weakest?.sign})
-                  </p>
-                  <p className="text-muted-foreground text-xs">{metrics.weakest?.bindus} bindus</p>
-                </GlassCard>
-                <GlassCard className="space-y-1 p-3 sm:p-4">
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    Lagna Reference
-                  </p>
-                  <p className="font-display text-2xl sm:text-3xl">{data.lagnaSign}</p>
-                  <p className="text-muted-foreground text-xs">House counting from Lagna</p>
-                </GlassCard>
-              </div>
-            )}
+        <div className="space-y-5">
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10">
+              SAV ≥ 30 strong
+            </Badge>
+            <Badge variant="outline" className="border-rose/40 bg-rose/10">
+              SAV &lt; 25 sensitive
+            </Badge>
+            <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10">
+              BAV ≥ 5 supportive transit
+            </Badge>
+            <Badge variant="outline">8 contributors · 0–8 bindus</Badge>
+          </div>
 
-            {/* AI Insights */}
-            {metrics && (
-              <GlassCard className="border-gold/25 space-y-2 p-4 sm:p-5">
-                <p className="text-gold/85 flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
-                  AI Insight
+          {metrics && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <GlassCard className="space-y-1 p-3 sm:p-4">
+                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                  SAV total
                 </p>
-                <p className="font-display text-lg leading-snug sm:text-xl">
-                  {metrics.strongest && metrics.strongest.bindus >= 30
-                    ? `House ${metrics.strongest.house} (${metrics.strongest.sign}) shows strong bindu support. Traditionally, this may indicate easier expression of that house's themes.`
-                    : "No extremely strong houses — balanced chart with moderate support across areas."}
+                <p className="font-display text-2xl sm:text-3xl">{metrics.total}</p>
+                <p className="text-muted-foreground text-xs">
+                  Classical reference ≈ 337 · avg {metrics.avg.toFixed(1)} / house
                 </p>
-                {metrics.weakest && metrics.weakest.bindus <= 18 && (
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    House {metrics.weakest.house} ({metrics.weakest.sign}) has relatively fewer
-                    bindus. Traditional interpretation suggests this area may require more conscious
-                    effort or remedial focus.
-                  </p>
-                )}
               </GlassCard>
-            )}
+              <GlassCard className="space-y-1 p-3 sm:p-4">
+                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                  Strongest house
+                </p>
+                <p className="font-display text-2xl sm:text-3xl">
+                  H{metrics.strongest?.house} · {metrics.strongest?.sign}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {metrics.strongest?.bindus} SAV bindus
+                </p>
+              </GlassCard>
+              <GlassCard className="space-y-1 p-3 sm:p-4">
+                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                  Weakest house
+                </p>
+                <p className="font-display text-2xl sm:text-3xl">
+                  H{metrics.weakest?.house} · {metrics.weakest?.sign}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {metrics.weakest?.bindus} SAV bindus
+                </p>
+              </GlassCard>
+              <GlassCard className="space-y-1 p-3 sm:p-4">
+                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">Lagna</p>
+                <p className="font-display text-2xl sm:text-3xl">{data.lagnaSign}</p>
+                <p className="text-muted-foreground text-xs">Houses counted from lagna</p>
+              </GlassCard>
+            </div>
+          )}
 
-            {/* Sarvashtakavarga Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl">Sarvashtakavarga (SAV)</h2>
-                <Badge variant="outline" className="text-[10px]">
-                  Total bindu contribution from all planets
-                </Badge>
-              </div>
+          <Tabs defaultValue="sav">
+            <TabsList>
+              <TabsTrigger value="sav">Sarvashtakavarga</TabsTrigger>
+              <TabsTrigger value="bav">Bhinnashtakavarga</TabsTrigger>
+              <TabsTrigger value="transit">Transit kakshya</TabsTrigger>
+            </TabsList>
 
-              {/* SAV Visualization */}
-              {data?.sarva && (
+            <TabsContent value="sav" className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                 <GlassCard className="space-y-3">
+                  <div>
+                    <h2 className="font-display text-xl">SAV chart</h2>
+                    <p className="text-muted-foreground text-xs">
+                      Bindus in each bhava from lagna. Read like JHora's numeric kundli.
+                    </p>
+                  </div>
+                  <SavKundli sarva={data.sarva} lagnaSign={data.lagnaSign} />
+                </GlassCard>
+                <GlassCard className="space-y-3">
+                  <h2 className="font-display text-xl">House profile</h2>
                   <div className="h-64 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={data.sarva}
-                        onClick={(e) => {
-                          if (e?.activeLabel) setExpandedHouse(Number(e.activeLabel));
-                        }}
-                      >
+                      <BarChart data={data.sarva}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
                         <XAxis
                           dataKey="house"
@@ -361,82 +357,38 @@ export default function AstrologyAshtakavargaPage() {
                         />
                         <Bar dataKey="bindus" radius={[4, 4, 0, 0]}>
                           {data.sarva.map((entry) => (
-                            <Cell
-                              key={entry.house}
-                              fill={
-                                entry.bindus >= 30
-                                  ? "#10B981"
-                                  : entry.bindus >= 20
-                                    ? "#D4AF37"
-                                    : entry.bindus >= 12
-                                      ? "#F59E0B"
-                                      : "#F43F5E"
-                              }
-                            />
+                            <Cell key={entry.house} fill={savFill(entry.bindus)} />
                           ))}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </GlassCard>
-              )}
+              </div>
 
-              {/* SAV Detailed Table */}
               <GlassCard className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-display text-lg">SAV by House</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => setShowHouseMap(!showHouseMap)}
-                  >
-                    {showHouseMap ? "Hide house map" : "Show house map"}
-                  </Button>
-                </div>
-                {showHouseMap && (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                    {data.sarva.map((row) => {
-                      const theme = HOUSE_THEMES[row.house] || { area: "", theme: "" };
-                      return (
-                        <div
-                          key={row.house}
-                          className={cn("rounded-xl border p-3", binduColor(row.bindus))}
-                        >
-                          <p className="text-sm font-medium">
-                            H{row.house} · {row.sign}
-                          </p>
-                          <p className="text-muted-foreground text-[10px]">{theme.area}</p>
-                          <p className="font-display text-lg">{row.bindus}</p>
-                          <Badge
-                            variant="outline"
-                            className={cn("text-[10px]", strengthTone(row.bindus))}
-                          >
-                            {strengthLabel(row.bindus)}
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="-mx-4 overflow-x-auto sm:mx-0">
+                <h2 className="font-display text-lg">SAV by house</h2>
+                <div className="table-scroll -mx-4 sm:mx-0">
                   <table className="w-full min-w-[640px] text-sm">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
                           House
                         </th>
-                        <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
                           Sign
                         </th>
-                        <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
-                          SAV Score
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
+                          Area
                         </th>
-                        <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                        <th className="text-muted-foreground pb-2 text-right text-[10px] font-medium tracking-wider uppercase">
+                          SAV
+                        </th>
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
                           Strength
                         </th>
-                        <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
-                          Meaning
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
+                          Reading
                         </th>
                       </tr>
                     </thead>
@@ -445,32 +397,18 @@ export default function AstrologyAshtakavargaPage() {
                         <tr key={row.house} className="border-b last:border-0">
                           <td className="py-2.5 font-medium">H{row.house}</td>
                           <td className="py-2.5">{row.sign}</td>
-                          <td className="py-2.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-display text-base">{row.bindus}</span>
-                              <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
-                                <div
-                                  className={cn(
-                                    "h-full rounded-full transition-all duration-700",
-                                    row.bindus >= 30
-                                      ? "bg-emerald-500"
-                                      : row.bindus >= 20
-                                        ? "bg-gold"
-                                        : row.bindus >= 12
-                                          ? "bg-amber-500"
-                                          : "bg-rose",
-                                  )}
-                                  style={{ width: `${binduProgress(row.bindus)}%` }}
-                                />
-                              </div>
-                            </div>
+                          <td className="text-muted-foreground py-2.5 text-xs">
+                            {HOUSE_THEMES[row.house]?.area}
+                          </td>
+                          <td className="py-2.5 text-right">
+                            <span className="font-display text-base">{row.bindus}</span>
                           </td>
                           <td className="py-2.5">
                             <Badge
                               variant="outline"
-                              className={cn("text-[10px]", strengthTone(row.bindus))}
+                              className={cn("text-[10px]", savTone(row.bindus))}
                             >
-                              {strengthLabel(row.bindus)}
+                              {savLabel(row.bindus)}
                             </Badge>
                           </td>
                           <td className="text-muted-foreground py-2.5 text-xs">{row.note}</td>
@@ -480,419 +418,288 @@ export default function AstrologyAshtakavargaPage() {
                   </table>
                 </div>
               </GlassCard>
-            </div>
+            </TabsContent>
 
-            {/* House-wise Analysis */}
-            <GlassCard className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl">House-wise Analysis</h2>
-                  <p className="text-muted-foreground text-xs">
-                    Click any house to see detailed bindu breakdown, life area, and interpretation.
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {data.sarva.map((row) => {
-                  const isExpanded = expandedHouse === row.house;
-                  const theme = HOUSE_THEMES[row.house] || { area: "", theme: "" };
-                  return (
-                    <div
-                      key={row.house}
-                      className={cn(
-                        "cursor-pointer rounded-xl border p-3 transition-all",
-                        binduColor(row.bindus),
-                        isExpanded && "ring-gold/40 ring-1",
-                      )}
-                      onClick={() => setExpandedHouse(isExpanded ? null : row.house)}
+            <TabsContent value="bav" className="space-y-4">
+              <GlassCard className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="font-display text-xl">BAV matrix (0–8)</h2>
+                    <p className="text-muted-foreground text-xs">
+                      Each cell is bindus contributed to that house for the planet. ≥ 5 is a
+                      supportive kakshya for transits of that graha.
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant={matrixView === "house" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setMatrixView("house")}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">
-                            H{row.house} · {row.sign}
-                          </p>
-                          <p className="text-muted-foreground text-[10px]">{theme.area}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-display text-lg">{row.bindus}</p>
-                          <Badge
-                            variant="outline"
-                            className={cn("text-[10px]", strengthTone(row.bindus))}
-                          >
-                            {strengthLabel(row.bindus)}
-                          </Badge>
-                        </div>
-                      </div>
-                      {isExpanded && (
-                        <div className="border-border/50 mt-3 space-y-2 border-t pt-3">
-                          <p className="text-xs leading-relaxed">{theme.theme}</p>
-                          <p className="text-muted-foreground text-xs">{row.note}</p>
-                          <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                            {data.bhinna[planet]
-                              ?.filter((b) => b.house === row.house)
-                              .map((b) => (
-                                <div key={b.house} className="flex justify-between">
-                                  <span>{planet}</span>
-                                  <span className="font-medium">{b.bindus} bindus</span>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </GlassCard>
-
-            {/* Bhinnashtakavarga Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl">Bhinnashtakavarga (BAV)</h2>
-                  <p className="text-muted-foreground text-xs">
-                    Per-planet bindu contributions by house and sign.
-                  </p>
+                      By house
+                    </Button>
+                    <Button
+                      variant={matrixView === "sign" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setMatrixView("sign")}
+                    >
+                      By sign
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => setShowBavMatrix(!showBavMatrix)}
-                >
-                  {showBavMatrix ? "Hide matrix" : "Show BAV matrix"}
-                </Button>
-              </div>
-
-              {showBavMatrix && data && (
-                <GlassCard className="space-y-3">
-                  <div className="-mx-4 overflow-x-auto sm:mx-0">
-                    <table className="w-full min-w-[720px] text-xs">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-muted-foreground pb-2 text-left font-medium">
-                            Planet
-                          </th>
-                          {SIGNS.map((sign) => (
-                            <th
-                              key={sign}
-                              className="text-muted-foreground pb-2 text-center font-medium"
-                            >
-                              {sign.slice(0, 3)}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(data.bhinna).map(([p, rows]) => {
-                          const signBindus: Record<string, number> = {};
-                          for (const r of rows) {
-                            signBindus[r.sign] = (signBindus[r.sign] || 0) + r.bindus;
-                          }
-                          return (
-                            <tr key={p} className="border-b last:border-0">
-                              <td className="py-2 font-medium">{p}</td>
-                              {SIGNS.map((sign) => {
-                                const val = signBindus[sign] || 0;
-                                return (
-                                  <td key={sign} className="py-2 text-center">
+                <div className="table-scroll -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[720px] text-xs">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-muted-foreground sticky left-0 pb-2 text-left font-medium">
+                          Planet
+                        </th>
+                        {matrixView === "house"
+                          ? data.sarva.map((r) => (
+                              <th
+                                key={r.house}
+                                className="text-muted-foreground pb-2 text-center font-medium"
+                              >
+                                H{r.house}
+                              </th>
+                            ))
+                          : SIGNS.map((sign) => (
+                              <th
+                                key={sign}
+                                className="text-muted-foreground pb-2 text-center font-medium"
+                              >
+                                {sign.slice(0, 3)}
+                              </th>
+                            ))}
+                        <th className="text-muted-foreground pb-2 text-right font-medium">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {PLANET_ORDER.map((name) => {
+                        const rows = data.bhinna[name] || [];
+                        const total =
+                          data.planetTotals?.[name] ?? rows.reduce((s, r) => s + r.bindus, 0);
+                        const signBindus: Record<string, number> = {};
+                        for (const r of rows) signBindus[r.sign] = r.bindus;
+                        return (
+                          <tr
+                            key={name}
+                            className={cn(
+                              "border-b last:border-0",
+                              planet === name && "bg-primary/5",
+                            )}
+                          >
+                            <td className="sticky left-0 py-1.5 font-medium">
+                              <button type="button" onClick={() => setPlanet(name)}>
+                                {name}
+                              </button>
+                            </td>
+                            {matrixView === "house"
+                              ? rows.map((r) => (
+                                  <td key={r.house} className="py-1.5 text-center">
                                     <span
                                       className={cn(
-                                        "inline-block rounded px-1.5 py-0.5",
-                                        val >= 8
-                                          ? "bg-emerald-500/15 text-emerald-700"
-                                          : val >= 5
-                                            ? "bg-gold/15"
-                                            : val >= 3
-                                              ? "bg-amber-500/15"
-                                              : "bg-rose/10",
+                                        "inline-flex h-7 w-7 items-center justify-center rounded-md tabular-nums",
+                                        bavTone(r.bindus),
                                       )}
                                     >
-                                      {val}
+                                      {r.bindus}
                                     </span>
                                   </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                                ))
+                              : SIGNS.map((sign) => {
+                                  const val = signBindus[sign] ?? 0;
+                                  return (
+                                    <td key={sign} className="py-1.5 text-center">
+                                      <span
+                                        className={cn(
+                                          "inline-flex h-7 w-7 items-center justify-center rounded-md tabular-nums",
+                                          bavTone(val),
+                                        )}
+                                      >
+                                        {val}
+                                      </span>
+                                    </td>
+                                  );
+                                })}
+                            <td className="py-1.5 text-right font-medium tabular-nums">{total}</td>
+                          </tr>
+                        );
+                      })}
+                      {matrixView === "house" ? (
+                        <tr>
+                          <td className="py-2 font-medium">SAV</td>
+                          {data.sarva.map((r) => (
+                            <td key={r.house} className="py-2 text-center font-medium tabular-nums">
+                              {r.bindus}
+                            </td>
+                          ))}
+                          <td className="py-2 text-right font-medium tabular-nums">
+                            {metrics?.total}
+                          </td>
+                        </tr>
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+                {matrixView === "sign" && (
                   <p className="text-muted-foreground text-[10px]">
-                    BAV matrix shows per-planet bindu contributions aggregated by sign/rashi. Higher
-                    values indicate stronger sign support for that planet.
+                    Sign columns follow the rashi occupying each natal house from lagna. SAV row is
+                    shown only in house view.
                   </p>
-                </GlassCard>
-              )}
+                )}
+              </GlassCard>
 
               <GlassCard className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="font-display text-lg">Per-Planet BAV</h2>
+                    <h2 className="font-display text-lg">{planet} BAV</h2>
                     <p className="text-muted-foreground text-xs">
-                      Select a planet to see its house-wise bindu contributions.
+                      Individual kakshya for this graha. Total near the classical planet quota.
                     </p>
                   </div>
-                  {planetStats && (
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">Total: {planetStats.total}</Badge>
-                      <Badge variant="outline">Avg: {planetStats.avg.toFixed(1)}</Badge>
-                    </div>
-                  )}
+                  {planetStats && <Badge variant="secondary">Total {planetStats.total}</Badge>}
                 </div>
-                <div className="scrollbar-hidden -mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 [-webkit-overflow-scrolling:touch]">
-                  {Object.keys(data.bhinna).map((p) => (
+                <div className="scrollbar-hidden -mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5">
+                  {PLANET_ORDER.map((p) => (
                     <button
                       key={p}
                       type="button"
                       onClick={() => setPlanet(p)}
                       className={cn(
-                        "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm",
+                        "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium",
                         planet === p
                           ? "border-gold/40 bg-primary/12 text-foreground"
-                          : "border-border/60 text-muted-foreground hover:text-foreground",
+                          : "border-border/60 text-muted-foreground",
                       )}
                     >
                       {p}
                     </button>
                   ))}
                 </div>
-
                 {planetStats && (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div>
-                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                        Best House
-                      </p>
-                      <p className="font-display text-base sm:text-lg">
-                        H{planetStats.best?.house} ({planetStats.best?.sign})
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {planetStats.best?.bindus} bindus
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                        Challenging House
-                      </p>
-                      <p className="font-display text-base sm:text-lg">
-                        H{planetStats.worst?.house} ({planetStats.worst?.sign})
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {planetStats.worst?.bindus} bindus
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                        Total Bindus
-                      </p>
-                      <p className="font-display text-base sm:text-lg">{planetStats.total}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                        Average
-                      </p>
-                      <p className="font-display text-base sm:text-lg">
-                        {planetStats.avg.toFixed(1)}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Best H{planetStats.best?.house} ({planetStats.best?.bindus} bindus) · Sensitive
+                    H{planetStats.worst?.house} ({planetStats.worst?.bindus} bindus)
+                  </p>
                 )}
-
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
                   {(data.bhinna[planet] || []).map((row) => (
                     <div
                       key={row.house}
-                      className={cn("rounded-lg border p-2 text-center", binduColor(row.bindus))}
+                      className={cn("rounded-lg border p-2 text-center", bavTone(row.bindus))}
                     >
                       <p className="text-muted-foreground text-[10px]">H{row.house}</p>
-                      <p className="font-display text-lg sm:text-xl">{row.bindus}</p>
-                      <p className="text-muted-foreground text-[10px]">{row.sign}</p>
+                      <p className="font-display text-lg">{row.bindus}</p>
+                      <p className="text-[10px] opacity-80">{row.sign}</p>
                     </div>
                   ))}
                 </div>
-
-                <p className="text-muted-foreground text-[10px]">
-                  Bhinnashtakavarga shows how {planet} individually contributes bindus to each
-                  house. Higher bindus mean that planet supports the house&apos;s themes more
-                  strongly.
-                </p>
               </GlassCard>
-            </div>
+            </TabsContent>
 
-            {/* Transit Integration */}
-            {(transit?.jupiter || transit?.saturn) && (
+            <TabsContent value="transit" className="space-y-4">
               <GlassCard className="space-y-3">
-                <h2 className="font-display text-xl">Transit Interaction</h2>
-                <p className="text-muted-foreground text-xs">
-                  How current Jupiter and Saturn transits influence your Ashtakavarga scores.
-                </p>
+                <div>
+                  <h2 className="font-display text-xl">Transit kakshya</h2>
+                  <p className="text-muted-foreground text-xs">
+                    When a planet transits a house, read that planet's own BAV in the occupied house
+                    (0–8) together with the house SAV. BAV ≥ 5 and SAV ≥ 30 is the classical
+                    supportive window.
+                  </p>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {transit.jupiter && (
-                    <div className="border-border/60 bg-muted/20 rounded-xl border p-3 sm:p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">Jupiter Transit</p>
-                        <Badge variant="outline" className="text-[10px]">
-                          H{transit.jupiter.house}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Currently in {transit.jupiter.sign}
-                        {transit.jupiter.retrograde ? " (retrograde)" : ""} — house{" "}
-                        {transit.jupiter.house} from Lagna
-                      </p>
-                      {(() => {
-                        const row = data?.sarva?.[transit.jupiter.house - 1];
-                        return row ? (
-                          <p className="mt-2 text-xs leading-relaxed">
-                            This house has {row.bindus} SAV bindus
-                            {row.bindus >= 25
-                              ? " — supportive transit for expansion and growth in this area."
-                              : " — growth here may need more patience or remedial focus."}
+                  {(["Jupiter", "Saturn"] as const).map((name) => {
+                    const t = name === "Jupiter" ? transit?.jupiter : transit?.saturn;
+                    const k = kakshya(name, t?.house);
+                    return (
+                      <div
+                        key={name}
+                        className="border-border/60 bg-muted/20 rounded-xl border p-4"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">{name} transit</p>
+                          {t ? (
+                            <Badge variant="outline" className="text-[10px]">
+                              H{t.house} · {t.sign}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">
+                              Gochar needed
+                            </Badge>
+                          )}
+                        </div>
+                        {t && k ? (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div
+                              className={cn("rounded-lg border p-2", bavTone(k.bav?.bindus ?? 0))}
+                            >
+                              <p className="text-muted-foreground text-[10px] uppercase">
+                                {name} BAV
+                              </p>
+                              <p className="font-display text-2xl">{k.bav?.bindus ?? "—"}</p>
+                              <p className="text-[10px]">
+                                {(k.bav?.bindus ?? 0) >= 5 ? "Supportive kakshya" : "Lean kakshya"}
+                              </p>
+                            </div>
+                            <div
+                              className={cn("rounded-lg border p-2", savTone(k.sav?.bindus ?? 0))}
+                            >
+                              <p className="text-muted-foreground text-[10px] uppercase">
+                                House SAV
+                              </p>
+                              <p className="font-display text-2xl">{k.sav?.bindus ?? "—"}</p>
+                              <p className="text-[10px]">{savLabel(k.sav?.bindus ?? 0)}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground mt-2 text-xs">
+                            Current gochar is unavailable. Generate kundli and open Gochar to score
+                            this transit.
                           </p>
-                        ) : null;
-                      })()}
-                    </div>
-                  )}
-                  {transit.saturn && (
-                    <div className="border-border/60 bg-muted/20 rounded-xl border p-3 sm:p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">Saturn Transit</p>
-                        <Badge variant="outline" className="text-[10px]">
-                          H{transit.saturn.house}
-                        </Badge>
-                      </div>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        Currently in {transit.saturn.sign}
-                        {transit.saturn.retrograde ? " (retrograde)" : ""} — house{" "}
-                        {transit.saturn.house} from Lagna
-                      </p>
-                      {(() => {
-                        const row = data?.sarva?.[transit.saturn.house - 1];
-                        return row ? (
-                          <p className="mt-2 text-xs leading-relaxed">
-                            This house has {row.bindus} SAV bindus
-                            {row.bindus >= 25
-                              ? " — Saturn&apos;s discipline may strengthen existing support."
-                              : " — Saturn&apos;s influence may require structured effort here."}
+                        )}
+                        {t?.retrograde ? (
+                          <p className="text-muted-foreground mt-2 text-[10px]">
+                            Currently retrograde
                           </p>
-                        ) : null;
-                      })()}
-                    </div>
-                  )}
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               </GlassCard>
-            )}
+            </TabsContent>
+          </Tabs>
 
-            {/* Advanced / Methodology Toggle */}
-            <div className="space-y-3">
-              <Button
-                variant="ghost"
-                className="w-full justify-between"
-                onClick={() => setShowMethodology(!showMethodology)}
-              >
-                <span>How is this calculated?</span>
-                <span className="text-muted-foreground text-xs">
-                  {showMethodology ? "Hide" : "Show"}
-                </span>
-              </Button>
-              {showMethodology && (
-                <GlassCard className="space-y-2 p-4 sm:p-5">
-                  <p className="text-sm leading-relaxed">{data.methodology}</p>
-                  <p className="text-muted-foreground text-xs">
-                    SAV aggregates contributions from Sun, Moon, Mars, Mercury, Jupiter, Venus,
-                    Saturn, and Lagna. Each contributor adds a bindu to specific houses based on its
-                    sign position. BAV isolates each planet&apos;s individual contribution pattern.
-                  </p>
-                </GlassCard>
-              )}
+          <GlassCard className="space-y-2 p-4 sm:p-5">
+            <h2 className="font-display text-lg">How to read this</h2>
+            <p className="text-muted-foreground text-xs leading-relaxed">{data.methodology}</p>
+            <ul className="text-muted-foreground list-disc space-y-1 pl-4 text-xs">
+              <li>SAV is the sum of the seven BAV rows — not a separate 8-contributor chart.</li>
+              <li>BAV 5–8 in a house supports that planet when it transits there.</li>
+              <li>SAV 30+ houses are traditionally chosen for important activity.</li>
+            </ul>
+          </GlassCard>
 
-              <Button
-                variant="ghost"
-                className="w-full justify-between"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-              >
-                <span>Advanced View — Raw Matrix</span>
-                <span className="text-muted-foreground text-xs">
-                  {showAdvanced ? "Hide" : "Show"}
-                </span>
-              </Button>
-              {showAdvanced && (
-                <GlassCard className="space-y-3 p-4 sm:p-5">
-                  <div className="-mx-4 overflow-x-auto sm:mx-0">
-                    <table className="w-full min-w-[720px] text-xs">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-muted-foreground pb-2 text-left font-medium">
-                            Planet
-                          </th>
-                          {data.sarva.map((r) => (
-                            <th
-                              key={r.house}
-                              className="text-muted-foreground pb-2 text-center font-medium"
-                            >
-                              H{r.house}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(data.bhinna).map(([p, rows]) => (
-                          <tr key={p} className="border-b last:border-0">
-                            <td className="py-2 font-medium">{p}</td>
-                            {rows.map((r) => (
-                              <td key={r.house} className="py-2 text-center">
-                                <span
-                                  className={cn(
-                                    "inline-block rounded px-1.5 py-0.5",
-                                    r.bindus >= 30
-                                      ? "bg-emerald-500/15 text-emerald-700"
-                                      : r.bindus >= 20
-                                        ? "bg-gold/15"
-                                        : r.bindus >= 12
-                                          ? "bg-amber-500/15"
-                                          : "bg-rose/10",
-                                  )}
-                                >
-                                  {r.bindus}
-                                </span>
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </GlassCard>
-              )}
+          <GlassCard className="border-gold/20 space-y-3 p-4 sm:p-5">
+            <p className="text-gold/85 text-[11px] font-medium tracking-[0.16em] uppercase">
+              Ask the Astrology AI
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "Which houses have stronger Ashtakavarga support?",
+                "How should I read my BAV matrix?",
+                "Is Jupiter's current kakshya supportive?",
+              ].map((q) => (
+                <Button key={q} asChild variant="outline" size="sm" className="text-xs">
+                  <Link href={routes.aiInsights}>{q}</Link>
+                </Button>
+              ))}
             </div>
-
-            {/* AI Suggestions */}
-            <GlassCard className="border-gold/20 space-y-3 p-4 sm:p-5">
-              <p className="text-gold/85 text-[11px] font-medium tracking-[0.16em] uppercase">
-                Ask the Astrology AI
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "Which houses have stronger Ashtakavarga support?",
-                  "How does my Sarvashtakavarga compare?",
-                  "Which planet contributes most to my 10th house?",
-                  "How should I read my Ashtakavarga?",
-                  "Explain this like a beginner.",
-                ].map((q) => (
-                  <Button key={q} variant="outline" size="sm" className="text-xs">
-                    {q}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-muted-foreground text-[10px]">
-                AI uses your calculated Ashtakavarga data to explain bindu strength. It does not
-                recalculate astrology.
-              </p>
-            </GlassCard>
-          </div>
-        </TooltipProvider>
+          </GlassCard>
+        </div>
       ) : null}
     </div>
   );

@@ -18,7 +18,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LanguageSelector } from "@/components/i18n/language-selector";
 import { useT } from "@/components/i18n/i18n-provider";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -140,7 +139,9 @@ export function Navbar({
     >
       <div
         className={cn(
-          "flex h-14 w-full items-center justify-between gap-3 px-3 sm:h-16 sm:px-5 lg:px-6",
+          "flex h-14 w-full items-center justify-between gap-2 px-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:h-16 sm:gap-3 sm:px-5 lg:px-6",
+          isOverlay &&
+            "h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] sm:h-[calc(4rem+env(safe-area-inset-top,0px))]",
           !isDashboard && "mx-auto max-w-7xl lg:px-8",
         )}
       >
@@ -148,7 +149,8 @@ export function Navbar({
           {isDashboard ? <MobileDashboardMenu /> : null}
           <BrandLogo
             href={isAuthed ? homeHref : routes.home}
-            size="md"
+            size={isDashboard ? "sm" : "md"}
+            showWordmark={!isDashboard}
             priority
             className={cn(floating ? "[&_span]:text-ivory" : undefined, isDashboard && "md:hidden")}
           />
@@ -204,14 +206,6 @@ export function Navbar({
         )}
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
-          <LanguageSelector
-            compact
-            variant="ghost"
-            className={cn(
-              "hidden sm:inline-flex",
-              floating && "text-ivory hover:bg-ivory/10 hover:text-ivory",
-            )}
-          />
           <ThemeToggle
             className={cn(floating && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
           />
@@ -241,7 +235,9 @@ export function Navbar({
                     aria-label="My profile"
                   >
                     <UserAvatar name={userName} size="sm" />
-                    <span className="max-w-[7rem] truncate text-sm font-medium">{userName}</span>
+                    <span className="hidden max-w-[7rem] truncate text-sm font-medium lg:inline">
+                      {userName}
+                    </span>
                   </Link>
                   <Button
                     asChild

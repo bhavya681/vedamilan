@@ -154,10 +154,8 @@ export function genericInteraction(
     interaction: `Your root number (${mulank}, ${mProfile.planet} — ${mProfile.theme}) and life-path number (${bhagyank}, ${bProfile.planet} — ${bProfile.theme}) bring two planetary energies into dialogue.`,
     complement:
       "Different planetary themes can cover each other's blind spots when you stay curious.",
-    strengths:
-      "The mix gives you both the ${mProfile.theme} of your root self and the ${bProfile.theme} of your path.",
-    practicalAdvice:
-      "When ${mProfile.theme} pushes ahead, pause to listen to ${bProfile.theme} — and vice versa.",
+    strengths: `The mix gives you both the ${mProfile.theme} of your root self and the ${bProfile.theme} of your path.`,
+    practicalAdvice: `When ${mProfile.theme} pushes ahead, pause to listen to ${bProfile.theme} — and vice versa.`,
   };
 }
 

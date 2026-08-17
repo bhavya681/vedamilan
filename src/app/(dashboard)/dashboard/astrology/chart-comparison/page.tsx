@@ -40,6 +40,8 @@ type ChartComparison = {
   careerThemes: { user: string[]; partner: string[] };
   communicationThemes: { user: string[]; partner: string[] };
   emotionalThemes: { user: string[]; partner: string[] };
+  jaiminiSignals?: string[];
+  bnnOverlap?: string[];
 };
 
 export default function AstrologyChartComparisonPage() {
@@ -84,7 +86,7 @@ export default function AstrologyChartComparisonPage() {
               <Link href={routes.compatibility}>Compatibility</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routes.astrologyDivisionalCharts}>Divisional Charts</Link>
+              <Link href={routes.astrologyJaimini}>Jaimini</Link>
             </Button>
           </div>
         }
@@ -142,7 +144,7 @@ export default function AstrologyChartComparisonPage() {
 
           <GlassCard className="space-y-3">
             <h2 className="font-display text-xl">Planetary placements</h2>
-            <div className="overflow-x-auto">
+            <div className="table-scroll">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -237,6 +239,28 @@ export default function AstrologyChartComparisonPage() {
                   Partner: {data.emotionalThemes.partner.join(", ") || "—"}
                 </p>
               </div>
+            </GlassCard>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <GlassCard className="space-y-2">
+              <h2 className="font-display text-lg">Jaimini compatibility signals</h2>
+              <p className="text-muted-foreground text-[10px]">
+                Additional layer — does not replace Ashta Koota.
+              </p>
+              <ul className="list-disc space-y-1 pl-4 text-xs">
+                {(data.jaiminiSignals ?? []).map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </GlassCard>
+            <GlassCard className="space-y-2">
+              <h2 className="font-display text-lg">BNN pattern overlap</h2>
+              <ul className="list-disc space-y-1 pl-4 text-xs">
+                {(data.bnnOverlap ?? []).map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
             </GlassCard>
           </div>
 

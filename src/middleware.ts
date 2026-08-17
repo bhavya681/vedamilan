@@ -2,9 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 import {
+  DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_EXPLICIT_COOKIE,
   LOCALE_HEADER,
+  UI_I18N_ENABLED,
   isAppLocale,
   type AppLocale,
 } from "@/lib/i18n/locales";
@@ -41,6 +43,15 @@ function applyLocaleCookies(response: NextResponse, locale: AppLocale, explicit:
   }
 }
 
+function isProtectedPath(pathname: string) {
+  return (
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  );
+}
+
 export function middleware(request: NextRequest) {
   const maintenanceMode = process.env.MAINTENANCE_MODE === "true";
   const { pathname } = request.nextUrl;
@@ -62,6 +73,38 @@ export function middleware(request: NextRequest) {
   }
 
   const { locale: urlLocale, pathname: barePath } = stripLocaleFromPathname(pathname);
+  const sessionCookie = getSessionCookie(request);
+  const hasSessionCookie = Boolean(sessionCookie);
+
+  if (!UI_I18N_ENABLED) {
+    if (urlLocale) {
+      const url = request.nextUrl.clone();
+      url.pathname = barePath === "" ? "/" : barePath;
+      const response = NextResponse.redirect(url);
+      applyLocaleCookies(response, DEFAULT_LOCALE, true);
+      return response;
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(LOCALE_HEADER, DEFAULT_LOCALE);
+
+    if (isProtectedPath(barePath) && !hasSessionCookie) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", barePath);
+      const response = NextResponse.redirect(url);
+      applyLocaleCookies(response, DEFAULT_LOCALE, false);
+      return response;
+    }
+
+    const response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    applyLocaleCookies(response, DEFAULT_LOCALE, true);
+    response.headers.set(LOCALE_HEADER, DEFAULT_LOCALE);
+    return response;
+  }
+
   const locale = resolveLocale(request, urlLocale);
   const explicitFromUrl =
     Boolean(urlLocale) && request.cookies.get(LOCALE_EXPLICIT_COOKIE)?.value === "1";
@@ -82,12 +125,7 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(LOCALE_HEADER, locale);
 
-  const sessionCookie = getSessionCookie(request);
-  const hasSessionCookie = Boolean(sessionCookie);
-  const isDashboard = barePath === "/dashboard" || barePath.startsWith("/dashboard/");
-  const isAdmin = barePath === "/admin" || barePath.startsWith("/admin/");
-
-  if ((isDashboard || isAdmin) && !hasSessionCookie) {
+  if (isProtectedPath(barePath) && !hasSessionCookie) {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePrefix(locale, "/login");
     url.searchParams.set("next", barePath);

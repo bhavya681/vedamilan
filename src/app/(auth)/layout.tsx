@@ -1,7 +1,6 @@
 import Image from "next/image";
 
 import { BrandLogo, BrandMark } from "@/components/brand/brand-logo";
-import { LanguageSelector } from "@/components/i18n/language-selector";
 import { brand } from "@/lib/constants/brand";
 import { landingImages } from "@/lib/constants/images";
 import { routes } from "@/lib/constants/routes";
@@ -10,7 +9,7 @@ void routes;
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-2">
+    <div className="relative grid min-h-dvh lg:grid-cols-2">
       <div className="bg-navy relative hidden overflow-hidden lg:block">
         <Image
           src={landingImages.hero.src}
@@ -31,11 +30,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      <div className="bg-background relative flex items-center justify-center px-4 py-12">
+      <div className="bg-background relative flex items-center justify-center px-4 py-12 pt-[max(3rem,env(safe-area-inset-top,0px))] pb-[max(3rem,env(safe-area-inset-bottom,0px))]">
         <div className="mandala-bg absolute inset-0 opacity-20 lg:opacity-10" aria-hidden />
-        <div className="absolute end-4 top-4 z-10">
-          <LanguageSelector compact />
-        </div>
         <div className="relative w-full max-w-md">
           <div className="mb-8 text-center lg:text-left">
             <BrandLogo href={routes.home} size="lg" priority />

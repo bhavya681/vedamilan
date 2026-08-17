@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { APP_LOCALES, LOCALE_META, type AppLocale } from "@/lib/i18n/locales";
+import { APP_LOCALES, LOCALE_META, UI_I18N_ENABLED, type AppLocale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils/cn";
 
 type Props = {
@@ -35,6 +35,8 @@ export function LanguageSelector({
   const t = useT();
   const current = LOCALE_META[locale];
 
+  if (!UI_I18N_ENABLED) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -46,7 +48,9 @@ export function LanguageSelector({
           aria-label={`Language: ${current.nativeName}`}
         >
           <Languages className="h-4 w-4 shrink-0" aria-hidden />
-          <span className={cn(compact && "max-w-[7.5rem] truncate")}>{current.nativeName}</span>
+          <span className={cn(compact && "hidden max-w-[7.5rem] truncate lg:inline")}>
+            {current.nativeName}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="max-h-80 w-56 overflow-y-auto">

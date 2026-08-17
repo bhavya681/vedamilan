@@ -12,6 +12,9 @@ export type PlanetStrength = {
   strength: "strong" | "moderate" | "needs-attention";
   score: number;
   factors: string[];
+  houseKinds: string[];
+  interpretation: string;
+  isClassical: boolean;
 };
 
 export type StrengthLab = {
@@ -20,6 +23,57 @@ export type StrengthLab = {
   weakest: PlanetStrength | null;
   overallTheme: string;
 };
+
+const CLASSICAL_GRAHAS = new Set([
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Rahu",
+  "Ketu",
+]);
+
+function houseKinds(house: number): string[] {
+  const kinds: string[] = [];
+  if ([1, 4, 7, 10].includes(house)) kinds.push("Kendra");
+  if ([1, 5, 9].includes(house)) kinds.push("Trikona");
+  if ([6, 8, 12].includes(house)) kinds.push("Dusthana");
+  if ([3, 6, 10, 11].includes(house)) kinds.push("Upachaya");
+  if ([2, 7].includes(house)) kinds.push("Maraka");
+  if (kinds.length === 0) kinds.push("Panapara");
+  return kinds;
+}
+
+function interpretStrength(p: {
+  planet: string;
+  sign: string;
+  house: number;
+  dignity: string | null;
+  isRetrograde: boolean;
+  strength: PlanetStrength["strength"];
+  score: number;
+  houseKinds: string[];
+}): string {
+  const bits: string[] = [];
+  if (p.dignity === "Exalted") bits.push("exalted — able to give results with less obstruction");
+  else if (p.dignity === "Own") bits.push("in own sign — stable and self-supported");
+  else if (p.dignity === "Debilitated")
+    bits.push("debilitated — needs supportive dasha, aspects, or remedies");
+  else bits.push(`in ${p.sign}`);
+
+  if (p.houseKinds.includes("Kendra")) bits.push("angular (Kendra) — action-oriented");
+  if (p.houseKinds.includes("Trikona") && !p.houseKinds.includes("Kendra")) {
+    bits.push("trinal (Trikona) — dharmic support");
+  }
+  if (p.houseKinds.includes("Dusthana"))
+    bits.push("dusthana — works through effort, delay, or transformation");
+  if (p.isRetrograde) bits.push("retrograde — results often turn inward or arrive later");
+
+  return `${p.planet} is ${p.strength.replace("-", " ")} (${p.score}/100). ${bits.join("; ")}.`;
+}
 
 function dignityScore(dignity: string | null): number {
   if (dignity === "Exalted") return 90;
@@ -86,42 +140,61 @@ export class PlanetStrengthService {
       const nScore = nakshatraScore(p.nakshatra, p.planet);
       const rScore = retroAdjustment(p.planet, p.isRetrograde);
       const total = Math.max(0, Math.min(100, base + hScore + nScore + rScore));
+      const kinds = houseKinds(p.house);
+      const label = strengthLabel(total);
 
       const factors: string[] = [];
       if (p.dignity === "Exalted") factors.push("Exalted");
       if (p.dignity === "Own") factors.push("Own sign");
       if (p.dignity === "Debilitated") factors.push("Debilitated");
-      if ([1, 4, 7, 10].includes(p.house)) factors.push("Kendra");
-      if ([1, 5, 9].includes(p.house)) factors.push("Trikona");
+      for (const kind of kinds) {
+        if (kind !== "Panapara") factors.push(kind);
+      }
       if (p.isRetrograde) factors.push("Retrograde");
       if (nScore > 0) factors.push("Friendly nakshatra");
 
-      return {
+      const row: PlanetStrength = {
         planet: p.planet,
         sign: p.sign,
         house: p.house,
         nakshatra: p.nakshatra,
         dignity: p.dignity,
         isRetrograde: p.isRetrograde,
-        strength: strengthLabel(total),
+        strength: label,
         score: total,
         factors,
+        houseKinds: kinds,
+        interpretation: interpretStrength({
+          planet: p.planet,
+          sign: p.sign,
+          house: p.house,
+          dignity: p.dignity,
+          isRetrograde: p.isRetrograde,
+          strength: label,
+          score: total,
+          houseKinds: kinds,
+        }),
+        isClassical: CLASSICAL_GRAHAS.has(p.planet),
       };
+      return row;
     });
 
-    const sorted = [...strengths].sort((a, b) => b.score - a.score);
-    const strongest = sorted[0] || null;
-    const weakest = sorted[sorted.length - 1] || null;
+    const classical = strengths.filter((p) => p.isClassical);
+    const ranked = [...(classical.length > 0 ? classical : strengths)].sort(
+      (a, b) => b.score - a.score,
+    );
+    const strongest = ranked[0] || null;
+    const weakest = ranked[ranked.length - 1] || null;
 
     const themes: string[] = [];
     if (strongest && strongest.score >= 75) themes.push(`${strongest.planet} leads your chart`);
     if (weakest && weakest.score <= 40)
       themes.push(`${weakest.planet} may need supportive practices`);
-    const kendraPlanets = strengths.filter((p) => [1, 4, 7, 10].includes(p.house));
+    const kendraPlanets = classical.filter((p) => p.houseKinds.includes("Kendra"));
     if (kendraPlanets.length >= 3) themes.push("Strong angular emphasis");
-    const trikonaPlanets = strengths.filter((p) => [1, 5, 9].includes(p.house));
+    const trikonaPlanets = classical.filter((p) => p.houseKinds.includes("Trikona"));
     if (trikonaPlanets.length >= 3) themes.push("Strong trinal emphasis");
-    const dusthana = strengths.filter((p) => [6, 8, 12].includes(p.house));
+    const dusthana = classical.filter((p) => p.houseKinds.includes("Dusthana"));
     if (dusthana.length >= 3)
       themes.push("Multiple dusthana placements — channels energy through transformation");
 

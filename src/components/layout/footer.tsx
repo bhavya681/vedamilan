@@ -1,7 +1,6 @@
 "use client";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { LanguageSelector } from "@/components/i18n/language-selector";
 import { LocaleLink } from "@/components/i18n/locale-navigation";
 import { useT } from "@/components/i18n/i18n-provider";
 import { footerNav } from "@/config/navigation";
@@ -19,7 +18,7 @@ export function Footer() {
   const t = useT();
 
   return (
-    <footer className="border-border/40 bg-navy text-ivory border-t">
+    <footer className="border-border/40 bg-navy text-ivory border-t pb-[env(safe-area-inset-bottom,0px)]">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-16 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="md:col-span-2 lg:col-span-1">
           <BrandLogo href={routes.home} size="md" className="[&_span]:text-ivory" />
@@ -31,15 +30,6 @@ export function Footer() {
               {brand.supportEmail}
             </a>
           </p>
-          <div className="mt-6">
-            <p className="text-ivory/70 mb-2 text-xs tracking-[0.14em] uppercase">
-              {t("marketing.chooseLanguage")}
-            </p>
-            <LanguageSelector
-              variant="secondary"
-              className="bg-ivory/10 text-ivory border-ivory/20"
-            />
-          </div>
           <div className="text-ivory/65 mt-6 flex flex-wrap gap-3 text-xs">
             {Object.entries(brand.social).map(([key, href]) => (
               <a

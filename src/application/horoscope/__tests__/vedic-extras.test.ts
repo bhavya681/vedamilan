@@ -32,7 +32,14 @@ describe("ashtakavarga", () => {
       ],
     });
     expect(result.sarva).toHaveLength(12);
-    expect(result.sarva.every((r) => r.bindus >= 0)).toBe(true);
+    expect(result.sarva.every((r) => r.bindus >= 0 && r.bindus <= 56)).toBe(true);
+    expect(result.bhinna.Sun?.every((r) => r.bindus >= 0 && r.bindus <= 8)).toBe(true);
+    const house1FromBav = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].reduce(
+      (sum, planet) => sum + (result.bhinna[planet]?.[0]?.bindus ?? 0),
+      0,
+    );
+    expect(result.sarva[0]?.bindus).toBe(house1FromBav);
+    expect(result.totalBindus).toBeGreaterThan(200);
   });
 });
 

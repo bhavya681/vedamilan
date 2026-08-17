@@ -1,7 +1,12 @@
 /**
  * VedaMilan locale registry — scalable without rewriting the app.
  * Calculations stay language-independent; UI/AI use these codes.
+ *
+ * UI language switching is paused until screens are actually translated.
+ * Catalogs and `t()` stay in place so we can re-enable without a rewrite.
+ * Flip `UI_I18N_ENABLED` when a locale has complete, reviewed UI copy.
  */
+export const UI_I18N_ENABLED = false;
 
 export const APP_LOCALES = [
   "en",
@@ -36,6 +41,11 @@ export const FUTURE_LOCALES = [
 ] as const;
 
 export const DEFAULT_LOCALE: AppLocale = "en";
+
+/** Locales advertised in the product (selector, sitemap, hreflang). */
+export function publicLocales(): readonly AppLocale[] {
+  return UI_I18N_ENABLED ? APP_LOCALES : ([DEFAULT_LOCALE] as const);
+}
 
 export const LOCALE_COOKIE = "vedamilan.locale";
 export const LOCALE_EXPLICIT_COOKIE = "vedamilan.locale.explicit";

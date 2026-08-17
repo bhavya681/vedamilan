@@ -17,13 +17,13 @@ describe("i18n locales", () => {
     expect(DEFAULT_LOCALE).toBe("en");
   });
 
-  it("strips and prefixes locale paths", () => {
+  it("strips locale paths and skips prefixes while UI i18n is paused", () => {
     expect(stripLocaleFromPathname("/hi/dashboard/matches")).toEqual({
       locale: "hi",
       pathname: "/dashboard/matches",
     });
-    expect(withLocalePrefix("es", "/login")).toBe("/es/login");
-    expect(withLocalePrefix("en", "/")).toBe("/en");
+    expect(withLocalePrefix("es", "/login")).toBe("/login");
+    expect(withLocalePrefix("en", "/")).toBe("/");
   });
 
   it("negotiates Accept-Language", () => {
@@ -38,7 +38,7 @@ describe("i18n messages", () => {
   it("loads english namespaces and falls back for missing keys", async () => {
     const en = await getMessages("en");
     expect(translateKey(en, "common.save")).toBe("Save");
-    expect(translateKey(en, "settings.languageRegion")).toContain("Language");
+    expect(translateKey(en, "settings.languageRegion")).toContain("Region");
     const missing = translateKey(en, "common.doesNotExist");
     expect(missing).not.toBe("common.doesNotExist");
   });

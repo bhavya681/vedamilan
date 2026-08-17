@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { LanguageSelector } from "@/components/i18n/language-selector";
 import { useT } from "@/components/i18n/i18n-provider";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ModeSwitcher } from "@/components/layout/mode-switcher";
@@ -33,10 +32,7 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
           type="button"
           variant="outline"
           size="icon"
-          className={cn(
-            "border-border/60 bg-card/80 h-9 w-9 rounded-xl md:hidden",
-            triggerClassName,
-          )}
+          className={cn("border-border/60 bg-card/80 rounded-xl md:hidden", triggerClassName)}
           aria-label={t("navigation.more")}
         >
           <Menu className="h-4 w-4" />
@@ -60,8 +56,7 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
             <ModeSwitcher className="w-full" />
           </div>
         </SheetHeader>
-        <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
-          <LanguageSelector compact className="min-w-0 flex-1" />
+        <div className="border-border/50 flex items-center justify-end border-b px-4 py-3">
           <Button asChild variant="outline" size="icon" className="shrink-0 rounded-xl">
             <LocaleLink
               href={routes.notifications}
@@ -111,7 +106,7 @@ export function MobileDashboardMenu({ triggerClassName }: { triggerClassName?: s
             </div>
           ))}
         </nav>
-        <div className="border-border/50 border-t p-4">
+        <div className="border-border/50 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
           <SignOutButton
             className="w-full"
             label={t("navigation.signOut")}

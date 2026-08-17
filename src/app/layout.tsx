@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/config/site";
 import { getMessages } from "@/lib/i18n/get-messages";
-import { APP_LOCALES, getLocaleMeta, type AppLocale } from "@/lib/i18n/locales";
+import { publicLocales, getLocaleMeta, type AppLocale } from "@/lib/i18n/locales";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { withLocalePrefix } from "@/lib/i18n/path";
 
@@ -33,6 +33,16 @@ const indic = Noto_Sans_Devanagari({
 
 const DEVANAGARI_LOCALES = new Set<AppLocale>(["sa", "hi", "mr"]);
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f1e3" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0a08" },
+  ],
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const meta = getLocaleMeta(locale);
@@ -47,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
       : siteConfig.description;
 
   const languages = Object.fromEntries(
-    APP_LOCALES.map((code) => [code, `${siteConfig.url}${withLocalePrefix(code, "/")}`]),
+    publicLocales().map((code) => [code, `${siteConfig.url}${withLocalePrefix(code, "/")}`]),
   ) as Record<string, string>;
   languages["x-default"] = `${siteConfig.url}${withLocalePrefix("en", "/")}`;
 
@@ -133,7 +143,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           }}
         />
       </head>
-      <body className="min-h-screen font-sans antialiased">
+      <body className="min-h-dvh font-sans antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

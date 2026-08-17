@@ -2,19 +2,27 @@ import { NAKSHATRAS, VIMSHOTTARI_LORDS } from "./vedic-constants";
 import { swissEphemerisService } from "@/lib/services/swiss-ephemeris";
 
 export type Panchanga = {
-  tithi: { number: number; name: string; progress: number };
-  vara: { number: number; name: string; english: string };
+  tithi: {
+    number: number;
+    name: string;
+    progress: number;
+    paksha: "Shukla" | "Krishna";
+    pakshaTithi: number;
+    meaning: string;
+  };
+  vara: { number: number; name: string; english: string; sanskrit: string };
   nakshatra: { index: number; name: string; lord: string };
-  yoga: { index: number; name: string };
-  karana: { index: number; name: string; type: "moving" | "fixed" };
+  yoga: { index: number; name: string; nature: "auspicious" | "inauspicious" | "mixed" };
+  karana: { index: number; name: string; type: "moving" | "fixed"; note: string };
   sunrise: { time: string; timestamp: number };
   sunset: { time: string; timestamp: number };
   moonrise: { time: string; timestamp: number } | null;
   moonset: { time: string; timestamp: number } | null;
-  rahuKalam: { start: string; end: string };
-  yamaganda: { start: string; end: string };
-  gulika: { start: string; end: string };
-  abhijit: { start: string; end: string } | null;
+  dayLengthMinutes: number;
+  rahuKalam: { start: string; end: string; startTs: number; endTs: number };
+  yamaganda: { start: string; end: string; startTs: number; endTs: number };
+  gulika: { start: string; end: string; startTs: number; endTs: number };
+  abhijit: { start: string; end: string; startTs: number; endTs: number } | null;
 };
 
 export type MuhurtaWindow = {
@@ -23,6 +31,8 @@ export type MuhurtaWindow = {
   rating: "excellent" | "good" | "moderate" | "avoid";
   startTime: string;
   endTime: string;
+  startTs: number;
+  endTs: number;
   score: number;
   reasons: string[];
   cautions: string[];
@@ -30,7 +40,7 @@ export type MuhurtaWindow = {
 
 const TITHI_NAMES = [
   "Pratipada",
-  "Dwitiy",
+  "Dwitiya",
   "Tritiya",
   "Chaturthi",
   "Panchami",
@@ -45,7 +55,7 @@ const TITHI_NAMES = [
   "Chaturdashi",
   "Purnima",
   "Pratipada",
-  "Dwitiy",
+  "Dwitiya",
   "Tritiya",
   "Chaturthi",
   "Panchami",
@@ -94,6 +104,46 @@ const YOGA_NAMES = [
 const KARANA_NAMES = ["Bhadra", "Vishti", "Shakuni", "Chatushpada", "Naga", "Kimstughna"];
 
 const VARA_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const VARA_SANSKRIT = [
+  "Ravivara",
+  "Somavara",
+  "Mangalavara",
+  "Budhavara",
+  "Guruvara",
+  "Shukravara",
+  "Shanivara",
+];
+
+const INAUSPICIOUS_YOGAS = new Set([
+  "Vishkumbha",
+  "Atiganda",
+  "Shula",
+  "Ganda",
+  "Vyaghata",
+  "Vajra",
+  "Vyatipata",
+  "Parigha",
+  "Vaidhrti",
+]);
+
+const TITHI_MEANING: Record<number, string> = {
+  1: "Beginnings and first steps",
+  2: "Stabilising a new effort",
+  3: "Growth after a start — mixed for some rites",
+  4: "Obstacle-clearing; avoid hasty launches",
+  5: "Learning, remedies, and steady work",
+  6: "Courage and decisive action",
+  7: "Friendship, travel, and negotiation",
+  8: "Ancestral and protective rites; caution for new starts",
+  9: "Completion of a cycle of effort",
+  10: "Dharma, duty, and public work",
+  11: "Fasting, devotion, and restraint",
+  12: "Preparation before culmination",
+  13: "Fulfilment of ongoing work",
+  14: "Winding down — traditionally avoided for major starts",
+  15: "Purnima — fullness, teaching, and completion",
+  30: "Amavasya — ancestors, endings, and quiet work",
+};
 
 function rahuKalamFor(
   vara: number,
@@ -129,8 +179,62 @@ function gulikaFor(vara: number, sunrise: number, sunset: number): { start: numb
 
 function abhijitMuhurta(sunrise: number, sunset: number): { start: number; end: number } | null {
   const midday = (sunrise + sunset) / 2;
-  const quarter = (sunset - sunrise) / 8;
-  return { start: midday - quarter, end: midday + quarter };
+  const half = 12 * 60 * 1000;
+  return { start: midday - half, end: midday + half };
+}
+
+function clockWindow(start: number, end: number, timezone: string) {
+  return {
+    start: formatTime(start, timezone),
+    end: formatTime(end, timezone),
+    startTs: start,
+    endTs: end,
+  };
+}
+
+function yogaNature(name: string): "auspicious" | "inauspicious" | "mixed" {
+  if (INAUSPICIOUS_YOGAS.has(name)) return "inauspicious";
+  const auspicious = new Set([
+    "Priti",
+    "Ayushman",
+    "Saubhagya",
+    "Sobhana",
+    "Sukarman",
+    "Dhriti",
+    "Vriddhi",
+    "Dhruva",
+    "Harshana",
+    "Siddhi",
+    "Variyan",
+    "Shiva",
+    "Siddha",
+    "Sadhya",
+    "Shubha",
+    "Shukla",
+    "Brahma",
+    "Indra",
+  ]);
+  if (auspicious.has(name)) return "auspicious";
+  return "mixed";
+}
+
+function karanaNote(name: string, type: "moving" | "fixed"): string {
+  if (name === "Vishti" || name === "Bhadra") {
+    return "Vishti (Bhadra) — traditionally avoided for auspicious starts";
+  }
+  if (type === "fixed") return "Fixed karana — used for ancestral, spiritual, or specialised work";
+  return "Moving karana — generally suitable for worldly activity";
+}
+
+function tithiMeaning(
+  tithiNumber: number,
+  paksha: "Shukla" | "Krishna",
+  pakshaTithi: number,
+): string {
+  if (tithiNumber === 15) return TITHI_MEANING[15] || "Fullness and completion";
+  if (tithiNumber === 30) return TITHI_MEANING[30] || "Ancestral and ending work";
+  const base = TITHI_MEANING[pakshaTithi] || "Lunar day in the current paksha";
+  return `${base} · ${paksha} paksha`;
 }
 
 function formatTime(timestamp: number, timezone: string): string {
@@ -163,8 +267,10 @@ export function computePanchanga(
 
   const tithiSpan = 360 / 30;
   const tithiProgress = ((((moonLong - sunLong) % 360) + 360) % 360) / tithiSpan;
-  const tithiNumber = Math.floor(tithiProgress) + 1;
+  const tithiNumber = Math.min(30, Math.max(1, Math.floor(tithiProgress) + 1));
   const tithiName = TITHI_NAMES[Math.min(29, Math.max(0, tithiNumber - 1))];
+  const paksha: "Shukla" | "Krishna" = tithiNumber <= 15 ? "Shukla" : "Krishna";
+  const pakshaTithi = tithiNumber === 30 ? 15 : tithiNumber > 15 ? tithiNumber - 15 : tithiNumber;
 
   const vara = new Date(date).getDay();
   const varaName = VARA_NAMES[vara];
@@ -196,25 +302,41 @@ export function computePanchanga(
       number: tithiNumber,
       name: tithiName || "",
       progress: parseFloat((tithiProgress % 1).toFixed(3)),
+      paksha,
+      pakshaTithi,
+      meaning: tithiMeaning(tithiNumber, paksha, pakshaTithi),
     },
-    vara: { number: vara + 1, name: varaName || "", english: varaName || "" },
+    vara: {
+      number: vara + 1,
+      name: varaName || "",
+      english: varaName || "",
+      sanskrit: VARA_SANSKRIT[vara] || "",
+    },
     nakshatra: {
       index: moonNak,
       name: nakshatraName || "",
       lord: VIMSHOTTARI_LORDS[moonNak % 9] || "Moon",
     },
-    yoga: { index: yogaIndex, name: yogaName || "" },
-    karana: { index: karanaIndex, name: karanaName, type: karanaType },
+    yoga: {
+      index: yogaIndex,
+      name: yogaName || "",
+      nature: yogaNature(yogaName || ""),
+    },
+    karana: {
+      index: karanaIndex,
+      name: karanaName,
+      type: karanaType,
+      note: karanaNote(karanaName, karanaType),
+    },
     sunrise: { time: formatTime(sunriseTs, timezone), timestamp: sunriseTs },
     sunset: { time: formatTime(sunsetTs, timezone), timestamp: sunsetTs },
     moonrise: null,
     moonset: null,
-    rahuKalam: { start: formatTime(rahu.start, timezone), end: formatTime(rahu.end, timezone) },
-    yamaganda: { start: formatTime(yamag.start, timezone), end: formatTime(yamag.end, timezone) },
-    gulika: { start: formatTime(gulik.start, timezone), end: formatTime(gulik.end, timezone) },
-    abhijit: abhijit
-      ? { start: formatTime(abhijit.start, timezone), end: formatTime(abhijit.end, timezone) }
-      : null,
+    dayLengthMinutes: Math.max(0, Math.round((sunsetTs - sunriseTs) / 60000)),
+    rahuKalam: clockWindow(rahu.start, rahu.end, timezone),
+    yamaganda: clockWindow(yamag.start, yamag.end, timezone),
+    gulika: clockWindow(gulik.start, gulik.end, timezone),
+    abhijit: abhijit ? clockWindow(abhijit.start, abhijit.end, timezone) : null,
   };
 }
 
@@ -268,11 +390,9 @@ export function computeMuhurta(
     }
   }
 
-  const _isWeekend = [0, 6].includes(panchanga.vara.number - 1);
   const isTritiya = panchanga.tithi.number === 3;
   const isChaturdashi = panchanga.tithi.number === 14;
   const isAmavasya = panchanga.tithi.number === 30;
-  const _isPurnima = panchanga.tithi.number === 15;
   const favorableNakshatras = [
     "Ashwini",
     "Rohini",
@@ -289,24 +409,9 @@ export function computeMuhurta(
   const favorableYogas = ["Shubha", "Shukla", "Brahma", "Dhruva", "Siddhi", "Sadhya"];
   const favorableYoga = favorableYogas.includes(panchanga.yoga.name);
 
-  const abhijitWindow = abhijit ? { start: abhijit.start, end: abhijit.end } : null;
-
-  const morningWindow = {
-    start: formatTime(sunrise + 1800000, timezone),
-    end: formatTime(sunrise + 5400000, timezone),
-  };
-  const midMorning = {
-    start: formatTime(sunrise + 5400000, timezone),
-    end: formatTime(sunrise + 9000000, timezone),
-  };
-  const _afternoon = {
-    start: formatTime(sunrise + 9000000, timezone),
-    end: formatTime(sunset - 5400000, timezone),
-  };
-
   const generate = (
-    start: string,
-    end: string,
+    startTs: number,
+    endTs: number,
     rating: MuhurtaWindow["rating"],
     score: number,
     reasons: string[],
@@ -315,27 +420,29 @@ export function computeMuhurta(
     date: dateStr,
     activity: matchedActivity,
     rating,
-    startTime: start,
-    endTime: end,
+    startTime: formatTime(startTs, timezone),
+    endTime: formatTime(endTs, timezone),
+    startTs,
+    endTs,
     score,
     reasons,
     cautions,
   });
 
-  if (abhijitWindow && matchedActivity !== "travel") {
+  if (abhijit && matchedActivity !== "travel") {
     windows.push(
       generate(
-        abhijitWindow.start,
-        abhijitWindow.end,
+        abhijit.startTs,
+        abhijit.endTs,
         "excellent",
         92,
         [
-          "Abhijit Muhurta — 24 minutes centered on midday",
+          "Abhijit Muhurta — 24 minutes centered on local midday",
           favorableNakshatra
             ? `Favorable Nakshatra: ${panchanga.nakshatra.name}`
             : `Nakshatra: ${panchanga.nakshatra.name}`,
           favorableYoga ? `Favorable Yoga: ${panchanga.yoga.name}` : `Yoga: ${panchanga.yoga.name}`,
-          `Tithi: ${panchanga.tithi.name}`,
+          `${panchanga.tithi.paksha} ${panchanga.tithi.name}`,
         ],
         isAmavasya ? ["Amavasya — avoid major ceremonies"] : [],
       ),
@@ -345,12 +452,12 @@ export function computeMuhurta(
   if (!isAmavasya && !isChaturdashi && favorableNakshatra) {
     windows.push(
       generate(
-        morningWindow.start,
-        morningWindow.end,
+        sunrise + 1800000,
+        sunrise + 5400000,
         "good",
         78,
         [
-          "Post-sunrise Brahma Muhurta window",
+          "Post-sunrise morning window",
           `Nakshatra: ${panchanga.nakshatra.name}`,
           `Yoga: ${panchanga.yoga.name}`,
           "Rahu Kalam avoided",
@@ -366,21 +473,47 @@ export function computeMuhurta(
     matchedActivity === "houseEntry"
   ) {
     const reasons = [
-      "Mid-morning auspicious window",
-      `Vara: ${panchanga.vara.name}`,
+      "Mid-morning window for contracts and beginnings",
+      `Vara: ${panchanga.vara.sanskrit}`,
       favorableNakshatra ? "Favorable Nakshatra" : "",
     ].filter(Boolean);
-    windows.push(generate(midMorning.start, midMorning.end, "good", 72, reasons, []));
+    windows.push(generate(sunrise + 5400000, sunrise + 9000000, "good", 72, reasons, []));
+  }
+
+  const afternoonStart = sunrise + 9000000;
+  const afternoonEnd = sunset - 5400000;
+  if (afternoonEnd > afternoonStart && !isAmavasya && !isChaturdashi) {
+    windows.push(
+      generate(
+        afternoonStart,
+        afternoonEnd,
+        "moderate",
+        55,
+        [
+          "Afternoon window — usable for routine work",
+          `${panchanga.tithi.paksha} ${panchanga.tithi.name}`,
+          `Yoga: ${panchanga.yoga.name} (${panchanga.yoga.nature})`,
+        ],
+        ["Prefer morning or Abhijit for major starts"],
+      ),
+    );
   }
 
   windows.push(
-    generate(rahu.start, rahu.end, "avoid", 15, [], ["Rahu Kalam — avoid important activities"]),
+    generate(
+      rahu.startTs,
+      rahu.endTs,
+      "avoid",
+      15,
+      [],
+      ["Rahu Kalam — avoid important activities"],
+    ),
   );
   windows.push(
-    generate(yama.start, yama.end, "avoid", 12, [], ["Yamaganda — avoid important activities"]),
+    generate(yama.startTs, yama.endTs, "avoid", 12, [], ["Yamaganda — avoid important activities"]),
   );
   windows.push(
-    generate(gulik.start, gulik.end, "avoid", 10, [], ["Gulika — avoid important activities"]),
+    generate(gulik.startTs, gulik.endTs, "avoid", 10, [], ["Gulika — avoid important activities"]),
   );
 
   return windows.sort((a, b) => b.score - a.score);

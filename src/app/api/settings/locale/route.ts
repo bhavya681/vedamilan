@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Profile } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { requireSession } from "@/lib/auth/session";
-import { APP_LOCALES, BILLING_CURRENCIES, isAppLocale } from "@/lib/i18n/locales";
+import { APP_LOCALES, BILLING_CURRENCIES, UI_I18N_ENABLED, isAppLocale } from "@/lib/i18n/locales";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
 
@@ -30,9 +30,10 @@ export async function GET() {
     await connectMongo();
     const profile = await Profile.findOne({ userId: session.user.id, status: "ACTIVE" }).lean();
     const localization = {
-      language: isAppLocale(profile?.localization?.language)
-        ? profile?.localization?.language
-        : "en",
+      language:
+        UI_I18N_ENABLED && isAppLocale(profile?.localization?.language)
+          ? profile?.localization?.language
+          : "en",
       region: profile?.localization?.region || "IN",
       timezone: profile?.localization?.timezone || "Asia/Kolkata",
       dateFormat: profile?.localization?.dateFormat || "locale",
@@ -55,13 +56,18 @@ export async function PATCH(request: Request) {
     const parsed = localizationSchema.safeParse(body);
     if (!parsed.success) throw new ValidationError("Invalid language & region preferences");
 
+    const localization = {
+      ...parsed.data,
+      language: UI_I18N_ENABLED ? parsed.data.language : "en",
+    };
+
     await connectMongo();
     // Preference updates must never reactivate suspended/deleted accounts.
     const updated = await Profile.findOneAndUpdate(
       { userId: session.user.id },
       {
         $set: {
-          localization: parsed.data,
+          localization,
         },
         $setOnInsert: {
           userId: session.user.id,

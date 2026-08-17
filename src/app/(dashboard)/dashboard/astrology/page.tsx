@@ -34,11 +34,6 @@ function greetingForHour(hour: number) {
 }
 
 const LIFE_AREAS = [
-  {
-    title: "Graha Katha",
-    href: routes.grahaKatha,
-    hint: "Stories, symbolism & 12-house wisdom of the Grahas",
-  },
   { title: "Dashas", href: routes.astrologyDasha, hint: "Mahadasha and Antardasha timeline" },
   { title: "Yogas", href: routes.astrologyYogas, hint: "Yogas, doshas, and karmic patterns" },
   {
@@ -46,17 +41,17 @@ const LIFE_AREAS = [
     href: routes.astrologyDivisionalCharts,
     hint: "Moon, Sun, D9, D10, D7, D12 & more Vargas",
   },
-  { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
-  {
-    title: "Yogas & Doshas",
-    href: routes.astrologyYogas,
-    hint: "All yogas and doshas from your chart",
-  },
+  { title: "Predictions", href: routes.predictions, hint: "Life-area forecasts from your chart" },
+  { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
   { title: "Remedies", href: routes.lalKitab, hint: "Lal Kitab–inspired guidance" },
+  {
+    title: "Graha Katha",
+    href: routes.grahaKatha,
+    hint: "Stories, symbolism & 12-house wisdom of the Grahas",
+  },
 ] as const;
 
 const ADVANCED_AREAS = [
-  { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
   {
     title: "Planet Strength",
     href: routes.astrologyPlanetStrength,
@@ -68,6 +63,21 @@ const ADVANCED_AREAS = [
     hint: "Six-fold planetary strength analysis",
   },
   {
+    title: "Ashtakavarga",
+    href: routes.astrologyAshtakavarga,
+    hint: "SAV and BAV bindu strength by house",
+  },
+  {
+    title: "Jaimini Karakas",
+    href: routes.astrologyJaimini,
+    hint: "Chara Karakas, Atmakaraka, Darakaraka",
+  },
+  {
+    title: "BNN",
+    href: routes.astrologyBnn,
+    hint: "Bhrigu Nandi Nadi planetary patterns",
+  },
+  {
     title: "Panchanga",
     href: routes.astrologyPanchanga,
     hint: "Daily Tithi, Nakshatra, Yoga, Karana",
@@ -77,11 +87,7 @@ const ADVANCED_AREAS = [
     href: routes.astrologyMuhurta,
     hint: "Auspicious windows for important activities",
   },
-  {
-    title: "Spiritual Journey",
-    href: routes.astrologySpiritualJourney,
-    hint: "5th, 9th, 12th house themes",
-  },
+  { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
   {
     title: "Chart Comparison",
     href: routes.astrologyChartComparison,

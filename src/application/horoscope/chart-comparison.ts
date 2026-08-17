@@ -1,6 +1,8 @@
 import { Horoscope, Dasha } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { NotFoundError } from "@/lib/utils/error-handler";
+import { computeCharaKarakas } from "@/application/horoscope/jaimini/chara-karaka";
+import { detectBnnPatterns, matchBnnThemes } from "@/application/horoscope/bnn/bnn-patterns";
 
 export type ChartComparisonPlanet = {
   planet: string;
@@ -30,6 +32,8 @@ export type ChartComparison = {
   careerThemes: { user: string[]; partner: string[] };
   communicationThemes: { user: string[]; partner: string[] };
   emotionalThemes: { user: string[]; partner: string[] };
+  jaiminiSignals: string[];
+  bnnOverlap: string[];
 };
 
 export class ChartComparisonService {
@@ -51,12 +55,18 @@ export class ChartComparisonService {
       sign: string;
       house: number;
       nakshatra: string;
+      longitude?: number;
+      isRetrograde?: boolean;
+      dignity?: string | null;
     }>;
     const partnerPlanets = (partnerChart.planets || []) as Array<{
       planet: string;
       sign: string;
       house: number;
       nakshatra: string;
+      longitude?: number;
+      isRetrograde?: boolean;
+      dignity?: string | null;
     }>;
 
     const planetMap = new Map<
@@ -157,6 +167,69 @@ export class ChartComparisonService {
       ].filter(Boolean) as string[],
     };
 
+    const userKarakas = computeCharaKarakas(
+      userPlanets.filter((p) => typeof p.longitude === "number") as Array<{
+        planet: string;
+        sign: string;
+        house: number;
+        longitude: number;
+        isRetrograde?: boolean;
+        dignity?: string | null;
+      }>,
+    );
+    const partnerKarakas = computeCharaKarakas(
+      partnerPlanets.filter((p) => typeof p.longitude === "number") as Array<{
+        planet: string;
+        sign: string;
+        house: number;
+        longitude: number;
+        isRetrograde?: boolean;
+        dignity?: string | null;
+      }>,
+    );
+    const jaiminiSignals: string[] = [];
+    const uAk = userKarakas.byCode.AK;
+    const pAk = partnerKarakas.byCode.AK;
+    const uDk = userKarakas.byCode.DK;
+    const pDk = partnerKarakas.byCode.DK;
+    if (uAk && pAk && uAk.planet === pAk.planet) {
+      jaiminiSignals.push(`Shared Atmakaraka ${uAk.planet}.`);
+    }
+    if (uDk && pAk && uDk.planet === pAk.planet) {
+      jaiminiSignals.push(`Your DK is partner AK (${uDk.planet}).`);
+    }
+    if (pDk && uAk && pDk.planet === uAk.planet) {
+      jaiminiSignals.push(`Partner DK is your AK (${uAk.planet}).`);
+    }
+    if (uDk && pDk && uDk.planet === pDk.planet) {
+      jaiminiSignals.push(`Shared Darakaraka ${uDk.planet}.`);
+    }
+    if (uAk && pAk && uAk.sign === pAk.sign) {
+      jaiminiSignals.push(`Atmakarakas share sign ${uAk.sign}.`);
+    }
+    if (!jaiminiSignals.length) {
+      jaiminiSignals.push(
+        "No AK/DK overlap under 7-karaka convention. This layer does not replace Ashta Koota.",
+      );
+    }
+
+    const userBnn = matchBnnThemes(
+      detectBnnPatterns(userPlanets),
+      userPlanets,
+      String(userChart.lagnaSign || "Aries"),
+    );
+    const partnerBnn = matchBnnThemes(
+      detectBnnPatterns(partnerPlanets),
+      partnerPlanets,
+      String(partnerChart.lagnaSign || "Aries"),
+    );
+    const overlap = userBnn
+      .filter((t) => partnerBnn.some((p) => p.theme === t.theme))
+      .map((t) => t.title);
+    const bnnOverlap = overlap.length
+      ? overlap.map((title) => `Both charts show a BNN ${title.toLowerCase()} theme.`)
+      : ["No overlapping BNN v1 theme cards. Absence is not incompatibility."];
+
     return {
       userAscendant: userChart.lagnaSign || "—",
       partnerAscendant: partnerChart.lagnaSign || "—",
@@ -179,6 +252,8 @@ export class ChartComparisonService {
       careerThemes,
       communicationThemes,
       emotionalThemes,
+      jaiminiSignals,
+      bnnOverlap,
     };
   }
 }

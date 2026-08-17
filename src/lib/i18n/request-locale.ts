@@ -4,6 +4,7 @@ import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_HEADER,
+  UI_I18N_ENABLED,
   isAppLocale,
   type AppLocale,
 } from "@/lib/i18n/locales";
@@ -15,6 +16,8 @@ import { negotiateBrowserLocale } from "@/lib/i18n/path";
  * Explicit user choice is encoded in the cookie by the language selector / settings.
  */
 export async function getRequestLocale(): Promise<AppLocale> {
+  if (!UI_I18N_ENABLED) return DEFAULT_LOCALE;
+
   const headerStore = await headers();
   const fromHeader = headerStore.get(LOCALE_HEADER);
   if (isAppLocale(fromHeader)) return fromHeader;

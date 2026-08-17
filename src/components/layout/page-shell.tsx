@@ -34,7 +34,7 @@ export function PageHeader({
         {eyebrow ? <p className="text-muted-foreground text-sm font-medium">{eyebrow}</p> : null}
         <h1
           className={cn(
-            "font-display text-2xl tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-[2.75rem]",
+            "font-display text-[1.65rem] leading-tight tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-[2.75rem]",
             eyebrow ? "mt-1" : undefined,
           )}
         >
@@ -71,7 +71,7 @@ export function EmptyState({
       {icon ? <div className="text-primary mb-3">{icon}</div> : null}
       <h2 className="font-display text-2xl sm:text-3xl">{title}</h2>
       <p className="text-muted-foreground mt-3 max-w-md text-sm leading-relaxed">{description}</p>
-      {action ? <div className="mt-6">{action}</div> : null}
+      {action ? <div className="mt-6 w-full sm:w-auto">{action}</div> : null}
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils/cn";
 
 const sizes = {
   sm: { mark: 32, text: "text-lg" },
-  md: { mark: 40, text: "text-xl sm:text-2xl" },
+  md: { mark: 40, text: "text-lg sm:text-xl md:text-2xl" },
   lg: { mark: 56, text: "text-3xl" },
   xl: { mark: 80, text: "text-5xl" },
 } as const;
@@ -33,7 +33,7 @@ export function BrandLogo({
     <Link
       href={href}
       className={cn(
-        "focus-visible:ring-ring inline-flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:outline-none",
+        "focus-visible:ring-ring inline-flex min-w-0 items-center gap-2 rounded-lg transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:outline-none sm:gap-2.5",
         className,
       )}
       aria-label={`${brand.name} home`}
@@ -44,7 +44,7 @@ export function BrandLogo({
         width={dim.mark}
         height={dim.mark}
         priority={priority}
-        className="shrink-0 object-contain"
+        className={cn("shrink-0 object-contain", size === "md" && "h-8 w-8 sm:h-10 sm:w-10")}
         aria-hidden
       />
       {showWordmark ? (

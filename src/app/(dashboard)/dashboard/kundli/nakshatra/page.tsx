@@ -22,9 +22,14 @@ export default function NakshatraPage() {
         title="Nakshatra"
         description="Birth stars and padas from your chart"
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.kundli}>Back to kundli</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href={routes.kundli}>Back to kundli</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.astrologyNakshatra}>Full nakshatra lab</Link>
+            </Button>
+          </div>
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}

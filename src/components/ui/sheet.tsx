@@ -41,7 +41,8 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         "border-border/60 bg-background fixed z-50 flex h-auto flex-col border",
-        side === "bottom" && "inset-x-0 bottom-0 mt-24 rounded-t-2xl",
+        side === "bottom" &&
+          "inset-x-0 bottom-0 mt-24 max-h-[min(92dvh,44rem)] rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]",
         side === "top" && "inset-x-0 top-0 mb-24 rounded-b-2xl",
         side === "left" &&
           "inset-y-0 left-0 h-full w-[min(100%,19.5rem)] max-w-[85vw] rounded-r-2xl sm:max-w-sm",

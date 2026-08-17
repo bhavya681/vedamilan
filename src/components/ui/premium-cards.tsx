@@ -28,7 +28,7 @@ export function Surface({ children, className, glass = false }: SurfaceProps) {
   return (
     <div
       className={cn(
-        "rounded-xl p-5 sm:p-6",
+        "rounded-xl p-4 sm:p-5 lg:p-6",
         glass ? "glass-panel" : "border-border/70 bg-card border",
         className,
       )}
@@ -125,7 +125,7 @@ export function MatchCard({
             src={photo}
             alt=""
             fill
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
             unoptimized={shouldUnoptimizeImage(photo)}
           />
@@ -148,16 +148,16 @@ export function MatchCard({
           ) : null}
         </div>
 
-        <div className="text-ivory absolute inset-x-0 bottom-0 space-y-3 p-5">
-          <div>
-            <h3 className="font-display text-2xl tracking-tight">{name}</h3>
-            <p className="text-ivory/75 mt-1 text-sm">
+        <div className="text-ivory absolute inset-x-0 bottom-0 space-y-3 p-4 sm:p-5">
+          <div className="min-w-0">
+            <h3 className="font-display truncate text-xl tracking-tight sm:text-2xl">{name}</h3>
+            <p className="text-ivory/75 mt-1 truncate text-sm">
               {[age, city, profession].filter(Boolean).join(" · ")}
             </p>
           </div>
           <p className="text-ivory/85 line-clamp-2 text-sm leading-relaxed">{headline}</p>
-          <div className="flex gap-2 pt-1">
-            <Button asChild size="sm" className="flex-1">
+          <div className="flex min-w-0 gap-2 pt-1">
+            <Button asChild size="sm" className="min-w-0 flex-1">
               <Link href={href}>View profile</Link>
             </Button>
             {onInterest ? (

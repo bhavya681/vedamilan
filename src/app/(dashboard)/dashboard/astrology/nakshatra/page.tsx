@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useHoroscope } from "@/hooks/use-horoscope";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
@@ -8,344 +9,103 @@ import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { routes } from "@/lib/constants/routes";
+import { cn } from "@/lib/utils/cn";
+import {
+  getNakshatraDetails,
+  nakshatraNadi,
+  padaNavamsa,
+  padaPurushartha,
+  resolveNakshatraName,
+  vimshottariLordOf,
+  vimshottariYearsOf,
+} from "@/application/horoscope/nakshatra-catalog";
 
-const NAKSHATRA_DETAILS: Record<
-  string,
-  {
-    deity: string;
-    symbol: string;
-    gana: string;
-    yoni: string;
-    element: string;
-    motivation: string;
-    qualities: string[];
-    effect: string;
-  }
-> = {
-  Ashwini: {
-    deity: "Ashwini Kumaras",
-    symbol: "Horse head",
-    gana: "Deva",
-    yoni: "Horse",
-    element: "Earth",
-    motivation: "Dharma",
-    qualities: ["Swift", "Healing", "Pioneering"],
-    effect:
-      "Grants speed, healing ability, and initiative. Favors new beginnings and compassionate action.",
-  },
-  Bharani: {
-    deity: "Yama",
-    symbol: "Womb / Elephant",
-    gana: "Manushya",
-    yoni: "Elephant",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Nurturing", "Disciplined", "Transformative"],
-    effect:
-      "Carries the weight of restraint and creative nurture. Can manifest as intense responsibility or artistic purification.",
-  },
-  Krittika: {
-    deity: "Agni",
-    symbol: "Flame / Axe",
-    gana: "Rakshasa",
-    yoni: "Goat",
-    element: "Fire",
-    motivation: "Kama",
-    qualities: ["Fiery", "Critical", "Purifying"],
-    effect:
-      "Agni burns away impurity. Sharp intellect, but may incline toward criticism or inner friction.",
-  },
-  Rohini: {
-    deity: "Brahma",
-    symbol: "Chariot / Temple",
-    gana: "Manushya",
-    yoni: "Serpent",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Creative", "Grounded", "Fertile"],
-    effect:
-      "Most fertile nakshatra. Supports growth, beauty, material prosperity, and creative expression.",
-  },
-  Mrigashira: {
-    deity: "Soma",
-    symbol: "Deer head",
-    gana: "Deva",
-    yoni: "Serpent",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Curious", "Gentle", "Seeking"],
-    effect:
-      "Seeks, researches, and wanders. Favors discovery, communication, and subtle intuition.",
-  },
-  Ardra: {
-    deity: "Rudra",
-    symbol: "Teardrop / Diamond",
-    gana: "Manushya",
-    yoni: "Dog",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Intense", "Transformative", "Stormy"],
-    effect: "Storms clear the sky. Can bring upheaval followed by profound clarity and reform.",
-  },
-  Punarvasu: {
-    deity: "Aditi",
-    symbol: "Bow / Quiver",
-    gana: "Deva",
-    yoni: "Cat",
-    element: "Air",
-    motivation: "Moksha",
-    qualities: ["Renewing", "Nurturing", "Adaptable"],
-    effect:
-      "Returns and restores. Favors return of lost things, renewed energy, and adaptable wisdom.",
-  },
-  Pushya: {
-    deity: "Brihaspati",
-    symbol: "Lotus / Arrow",
-    gana: "Deva",
-    yoni: "Goat",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Nourishing", "Protective", "Wise"],
-    effect:
-      "Most auspicious for nourishment, learning, and spiritual nourishment. Strengthens dharma.",
-  },
-  Ashlesha: {
-    deity: "Nagas",
-    symbol: "Coiled serpent",
-    gana: "Rakshasa",
-    yoni: "Cat",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Mysterious", "Clinging", "Wise"],
-    effect:
-      "Kundalini-like intensity. Can bring wisdom through mystery, but also warns against poison or entanglement.",
-  },
-  Magha: {
-    deity: "Pitris",
-    symbol: "Royal throne",
-    gana: "Rakshasa",
-    yoni: "Rat",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Dignified", "Lineage", "Ambitious"],
-    effect: "Honors ancestors and authority. Favors leadership, legacy, and dignified power.",
-  },
-  "Purva Phalguni": {
-    deity: "Aryaman",
-    symbol: "Blanket / Hammock",
-    gana: "Manushya",
-    yoni: "Monkey",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Warm", "Social", "Creative"],
-    effect:
-      "Supports marriage, creativity, and social bonds. Favors enjoyment and artistic expression.",
-  },
-  "Uttara Phalguni": {
-    deity: "Bhaga",
-    symbol: "Small bed / Couch",
-    gana: "Manushya",
-    yoni: "Cow",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Stable", "Loyal", "Supportive"],
-    effect:
-      "Firm in friendship and partnership. Favors steady growth, loyalty, and lasting unions.",
-  },
-  Hasta: {
-    deity: "Savitar",
-    symbol: "Hand / Conch",
-    gana: "Deva",
-    yoni: "Buffalo",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Skillful", "Clever", "Serviceful"],
-    effect:
-      "Skill of the hands and mind. Favors craftsmanship, healing touch, and practical magic.",
-  },
-  Chitra: {
-    deity: "Tvastar",
-    symbol: "Bright jewel / Pearl",
-    gana: "Rakshasa",
-    yoni: "Tiger",
-    element: "Earth",
-    motivation: "Kama",
-    qualities: ["Artistic", "Charming", "Vain"],
-    effect: "Architect of beauty. Favors art, design, and charisma, but warns against vanity.",
-  },
-  Swati: {
-    deity: "Vayu",
-    symbol: "Coral / Sword",
-    gana: "Deva",
-    yoni: "Buffalo",
-    element: "Air",
-    motivation: "Dharma",
-    qualities: ["Independent", "Flexible", "Diplomatic"],
-    effect: "Wind of change. Favors independence, adaptability, and diplomatic skill.",
-  },
-  Vishakha: {
-    deity: "Indra-Agni",
-    symbol: "Archway / Triumphal gate",
-    gana: "Rakshasa",
-    yoni: "Tiger",
-    element: "Air",
-    motivation: "Artha",
-    qualities: ["Determined", "Goal-oriented", "Intense"],
-    effect:
-      "Triumphant but tested. Strong drive for achievement; may face obstacles before success.",
-  },
-  Anuradha: {
-    deity: "Mitra",
-    symbol: "Lotus / Staff",
-    gana: "Deva",
-    yoni: "Deer",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Devoted", "Loyal", "Balanced"],
-    effect:
-      "Friendship and devotion. Favors loyalty, balanced relationships, and following one's path.",
-  },
-  Jyeshtha: {
-    deity: "Indra",
-    symbol: "Earring / Umbrella",
-    gana: "Rakshasa",
-    yoni: "Deer",
-    element: "Air",
-    motivation: "Kama",
-    qualities: ["Senior", "Protective", "Responsible"],
-    effect: "Senior, protective, and responsible. May carry burdens of leadership or elder duty.",
-  },
-  Mula: {
-    deity: "Nirriti",
-    symbol: "Bunch of roots / Elephant goad",
-    gana: "Rakshasa",
-    yoni: "Dog",
-    element: "Earth",
-    motivation: "Moksha",
-    qualities: ["Rooted", "Investigative", "Destructive"],
-    effect:
-      "Destroys to rebuild at the root. Favors deep research, occult knowledge, and radical transformation.",
-  },
-  "Purva Ashadha": {
-    deity: "Aja Ekapada",
-    symbol: "Back legs of cot / Fan",
-    gana: "Manushya",
-    yoni: "Monkey",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Initiating", "Bold", "Energetic"],
-    effect:
-      "Invincible beginning. Favors early vigor, purification through effort, and invincible resolve.",
-  },
-  "Uttara Ashadha": {
-    deity: "Ahir Budhnya",
-    symbol: "Small bed / Snake",
-    gana: "Manushya",
-    yoni: "Mongoose",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Patient", "Loyal", "Organized"],
-    effect: "Slow but permanent victory. Favors patience, integrity, and lasting achievement.",
-  },
-  Shravana: {
-    deity: "Vishnu",
-    symbol: "Ear / Footprint",
-    gana: "Deva",
-    yoni: "Monkey",
-    element: "Earth",
-    motivation: "Moksha",
-    qualities: ["Learning", "Listening", "Travel"],
-    effect: "Sacred hearing and learning. Favors teaching, travel for wisdom, and dharma.",
-  },
-  Dhanishta: {
-    deity: "Vasus",
-    symbol: "Drum / Flute",
-    gana: "Rakshasa",
-    yoni: "Lion",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Musical", "Generous", "Rhythmic"],
-    effect: "Rhythm of prosperity. Favors music, wealth, and rhythmical skill.",
-  },
-  Shatabhisha: {
-    deity: "Varuna",
-    symbol: "Circle / Thousand stars",
-    gana: "Rakshasa",
-    yoni: "Horse",
-    element: "Air",
-    motivation: "Moksha",
-    qualities: ["Healing", "Mystical", "Independent"],
-    effect:
-      "Cosmic healing and secrecy. Favors medicine, mysticism, and independent healing paths.",
-  },
-  "Purva Bhadrapada": {
-    deity: "Aja Ekapada",
-    symbol: "Sword / Two legs of cot",
-    gana: "Manushya",
-    yoni: "Lion",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Fierce", "Passionate", "Courageous"],
-    effect:
-      "Fiery sacrifice. Favors intense spirituality, transformation through fire, and courage.",
-  },
-  "Uttara Bhadrapada": {
-    deity: "Ahir Budhnya",
-    symbol: "Serpent / Cot",
-    gana: "Manushya",
-    yoni: "Cow",
-    element: "Earth",
-    motivation: "Artha",
-    qualities: ["Compassionate", "Wise", "Serviceful"],
-    effect: "Deep compassion and wisdom. Favors moksha, service, and secret spiritual knowledge.",
-  },
-  Revati: {
-    deity: "Pushan",
-    symbol: "Fish / Drum",
-    gana: "Deva",
-    yoni: "Elephant",
-    element: "Earth",
-    motivation: "Moksha",
-    qualities: ["Nurturing", "Protective", "Abundant"],
-    effect:
-      "Guides the journey home. Favors safe travels, nourishment, and abundance at life's transitions.",
-  },
+const CLASSICAL_ORDER = [
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Rahu",
+  "Ketu",
+] as const;
+
+type PlanetRow = {
+  planet: string;
+  sign: string;
+  house: number;
+  nakshatra: string;
+  nakshatraPada?: number;
+  dignity?: string | null;
+  isRetrograde?: boolean;
 };
 
-function getNakshatraDetails(name: string | undefined) {
-  const clean = name?.trim() || "Ashwini";
-  if (clean in NAKSHATRA_DETAILS)
-    return NAKSHATRA_DETAILS[clean as keyof typeof NAKSHATRA_DETAILS]!;
-  const first = clean.split(" ")[0] || clean;
-  if (first in NAKSHATRA_DETAILS)
-    return NAKSHATRA_DETAILS[first as keyof typeof NAKSHATRA_DETAILS]!;
-  return NAKSHATRA_DETAILS["Ashwini"];
+function Meta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-muted-foreground text-[10px] tracking-wider uppercase">{label}</p>
+      <p className="mt-0.5 text-sm font-medium break-words">{value}</p>
+    </div>
+  );
 }
 
 export default function AstrologyNakshatraPage() {
   const { data, error, loading } = useHoroscope();
-  const planets = data?.horoscope?.planets || [];
+  const planets = useMemo(
+    () => (data?.horoscope?.planets || []) as PlanetRow[],
+    [data?.horoscope?.planets],
+  );
+  const [selectedPlanet, setSelectedPlanet] = useState<string>("Moon");
+
+  const ordered = useMemo(() => {
+    const byName = new Map(planets.map((p) => [p.planet, p]));
+    const classical = CLASSICAL_ORDER.map((name) => byName.get(name)).filter((p): p is PlanetRow =>
+      Boolean(p),
+    );
+    const rest = planets.filter(
+      (p) => !CLASSICAL_ORDER.includes(p.planet as (typeof CLASSICAL_ORDER)[number]),
+    );
+    return [...classical, ...rest];
+  }, [planets]);
+
+  const moon = planets.find((p) => p.planet === "Moon") || null;
+  const selected = ordered.find((p) => p.planet === selectedPlanet) || moon || ordered[0] || null;
+
+  const janmaName = resolveNakshatraName(moon?.nakshatra);
+  const janma = getNakshatraDetails(janmaName);
+  const lagnaName = data?.horoscope?.lagnaNakshatra
+    ? resolveNakshatraName(data.horoscope.lagnaNakshatra)
+    : null;
+  const lagnaDetails = lagnaName ? getNakshatraDetails(lagnaName) : null;
 
   return (
     <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
-        eyebrow="Vedic birth star intelligence"
+        eyebrow="Janma Nakshatra · Vimshottari"
         title="Nakshatra"
-        description="Every planet sits in a nakshatra. See each placement, its pada, and its traditional effect."
+        description="Moon’s birth star leads the reading — pada, deity, gana, yoni, nadi, and Vimshottari lord — then every graha in the chart."
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.kundli}>Back to kundli</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href={routes.kundli}>Kundli</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.astrologyDasha}>Dasha</Link>
+            </Button>
+          </div>
         }
       />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {loading ? <PanelSkeleton lines={6} /> : null}
+      {loading ? <PanelSkeleton lines={8} /> : null}
 
       {!loading && planets.length === 0 ? (
         <EmptyState
           title="No nakshatra data"
-          description="Generate kundli to see planet-wise nakshatras and padas."
+          description="Generate kundli to see Janma Nakshatra, padas, and planet-wise birth stars."
           action={
             <Button asChild>
               <Link href={routes.kundli}>Generate</Link>
@@ -354,67 +114,228 @@ export default function AstrologyNakshatraPage() {
         />
       ) : null}
 
-      {!loading && planets.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {planets.map((p) => {
-            const details = getNakshatraDetails(p.nakshatra)!;
-            return (
-              <GlassCard key={p.planet} className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-display text-base sm:text-lg">{p.planet}</p>
-                    <p className="text-muted-foreground text-xs break-words">
-                      {p.sign} · {p.nakshatra}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0">
-                    Pada {p.nakshatraPada ?? "—"}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      Lord
-                    </p>
-                    <p className="mt-0.5 font-medium break-words">{details.deity}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      Gana
-                    </p>
-                    <p className="mt-0.5 font-medium">{details.gana}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      Yoni
-                    </p>
-                    <p className="mt-0.5 font-medium break-words">{details.yoni}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      Element
-                    </p>
-                    <p className="mt-0.5 font-medium">{details.element}</p>
-                  </div>
-                </div>
+      {!loading && moon ? (
+        <div className="space-y-5">
+          <GlassCard className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                  Janma Nakshatra · Moon
+                </p>
+                <h2 className="font-display mt-1 text-3xl sm:text-4xl">{janmaName}</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {moon.sign} · House {moon.house} · Pada {moon.nakshatraPada ?? "—"} (
+                  {padaPurushartha(moon.nakshatraPada)}) · Navamsa{" "}
+                  {padaNavamsa(janmaName, moon.nakshatraPada)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">Vimshottari {vimshottariLordOf(janmaName)}</Badge>
+                <Badge variant="outline">{vimshottariYearsOf(janmaName)} years</Badge>
+                <Badge variant="outline">{nakshatraNadi(janmaName)} nadi</Badge>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed">{janma.effect}</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <Meta label="Deity" value={janma.deity} />
+              <Meta label="Symbol" value={janma.symbol} />
+              <Meta label="Gana" value={janma.gana} />
+              <Meta label="Yoni" value={janma.yoni} />
+              <Meta label="Element" value={janma.element} />
+              <Meta label="Motivation" value={janma.motivation} />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {janma.qualities.map((q) => (
+                <Badge key={q} variant="secondary" className="text-[10px]">
+                  {q}
+                </Badge>
+              ))}
+            </div>
+          </GlassCard>
+
+          {lagnaName && lagnaDetails ? (
+            <GlassCard className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div>
+                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                  Lagna Nakshatra
+                </p>
+                <p className="font-display text-xl">{lagnaName}</p>
+                <p className="text-muted-foreground text-xs">
+                  Pada {data?.horoscope?.lagnaNakshatraPada ?? "—"} · Deity {lagnaDetails.deity} ·
+                  Lord {vimshottariLordOf(lagnaName)}
+                </p>
+              </div>
+              <Badge variant="outline">{lagnaDetails.gana} gana</Badge>
+            </GlassCard>
+          ) : null}
+
+          <Tabs defaultValue="table">
+            <TabsList>
+              <TabsTrigger value="table">Planet table</TabsTrigger>
+              <TabsTrigger value="detail">Star detail</TabsTrigger>
+              <TabsTrigger value="guide">How to read</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="table">
+              <GlassCard className="space-y-3">
                 <div>
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    Traditional effect
+                  <h2 className="font-display text-xl">Graha · Nakshatra · Pada</h2>
+                  <p className="text-muted-foreground text-xs">
+                    Classical nine grahas first. Select a row for deity, nadi, and pada navamsa.
                   </p>
-                  <p className="mt-1 text-xs leading-relaxed break-words">{details.effect}</p>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {details.qualities.map((q) => (
-                    <Badge key={q} variant="secondary" className="text-[10px]">
-                      {q}
-                    </Badge>
-                  ))}
+                <div className="table-scroll -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[720px] text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        {["Graha", "Nakshatra", "Pada", "Vimshottari", "Sign", "House", "Nadi"].map(
+                          (h) => (
+                            <th
+                              key={h}
+                              className="text-muted-foreground pr-3 pb-2 text-left text-[10px] font-medium tracking-wider uppercase"
+                            >
+                              {h}
+                            </th>
+                          ),
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordered.map((p) => {
+                        const name = resolveNakshatraName(p.nakshatra);
+                        const active = selected?.planet === p.planet;
+                        return (
+                          <tr
+                            key={p.planet}
+                            className={cn(
+                              "cursor-pointer border-b last:border-0",
+                              active ? "bg-gold/10" : "hover:bg-muted/40",
+                            )}
+                            onClick={() => setSelectedPlanet(p.planet)}
+                          >
+                            <td className="py-2.5 pr-3 font-medium">
+                              {p.planet}
+                              {p.planet === "Moon" ? (
+                                <span className="text-muted-foreground ml-1 text-[10px]">
+                                  Janma
+                                </span>
+                              ) : null}
+                            </td>
+                            <td className="py-2.5 pr-3">{name}</td>
+                            <td className="py-2.5 pr-3">{p.nakshatraPada ?? "—"}</td>
+                            <td className="py-2.5 pr-3">{vimshottariLordOf(name)}</td>
+                            <td className="py-2.5 pr-3">{p.sign}</td>
+                            <td className="py-2.5 pr-3">{p.house}</td>
+                            <td className="py-2.5 pr-3">{nakshatraNadi(name)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </GlassCard>
-            );
-          })}
+            </TabsContent>
+
+            <TabsContent value="detail">
+              {selected ? (
+                <NakshatraDetailCard
+                  planet={selected}
+                  onPrev={() => {
+                    const i = ordered.findIndex((p) => p.planet === selected.planet);
+                    const next = ordered[i <= 0 ? ordered.length - 1 : i - 1];
+                    if (next) setSelectedPlanet(next.planet);
+                  }}
+                  onNext={() => {
+                    const i = ordered.findIndex((p) => p.planet === selected.planet);
+                    const next = ordered[(i + 1) % ordered.length];
+                    if (next) setSelectedPlanet(next.planet);
+                  }}
+                />
+              ) : null}
+            </TabsContent>
+
+            <TabsContent value="guide">
+              <GlassCard className="space-y-3 text-sm leading-relaxed">
+                <h2 className="font-display text-xl">How this is read</h2>
+                <p>
+                  Janma Nakshatra is the Moon’s star at birth. It sets the Vimshottari dasha
+                  sequence and is the star used in guna milan. Lagna Nakshatra describes the rising
+                  point, not the birth star.
+                </p>
+                <p>
+                  Each nakshatra spans 13°20′ and four padas of 3°20′. Pada maps to a Navamsa sign.
+                  Vimshottari lord follows the classical
+                  Ketu–Venus–Sun–Moon–Mars–Rahu–Jupiter–Saturn–Mercury cycle from Ashwini.
+                </p>
+                <p>
+                  Gana, yoni, and nadi are Ashta Koota attributes used in match-making. They
+                  describe temperament, vitality pairing, and physiological compatibility — they do
+                  not replace the full chart.
+                </p>
+              </GlassCard>
+            </TabsContent>
+          </Tabs>
         </div>
       ) : null}
     </div>
+  );
+}
+
+function NakshatraDetailCard({
+  planet,
+  onPrev,
+  onNext,
+}: {
+  planet: PlanetRow;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const name = resolveNakshatraName(planet.nakshatra);
+  const details = getNakshatraDetails(name);
+  return (
+    <GlassCard className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
+            {planet.planet}
+            {planet.isRetrograde ? " · Retrograde" : ""}
+          </p>
+          <h2 className="font-display text-2xl">{name}</h2>
+          <p className="text-muted-foreground text-xs">
+            {planet.sign} · House {planet.house} · Pada {planet.nakshatraPada ?? "—"} · Navamsa{" "}
+            {padaNavamsa(name, planet.nakshatraPada)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onPrev}>
+            Previous
+          </Button>
+          <Button variant="outline" size="sm" onClick={onNext}>
+            Next
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Meta label="Deity" value={details.deity} />
+        <Meta
+          label="Vimshottari lord"
+          value={`${vimshottariLordOf(name)} · ${vimshottariYearsOf(name)}y`}
+        />
+        <Meta label="Gana" value={details.gana} />
+        <Meta label="Yoni" value={details.yoni} />
+        <Meta label="Nadi" value={nakshatraNadi(name)} />
+        <Meta label="Element" value={details.element} />
+        <Meta label="Motivation" value={details.motivation} />
+        <Meta label="Pada theme" value={padaPurushartha(planet.nakshatraPada)} />
+      </div>
+      <p className="text-sm leading-relaxed">{details.effect}</p>
+      <div className="flex flex-wrap gap-1">
+        {details.qualities.map((q) => (
+          <Badge key={q} variant="secondary" className="text-[10px]">
+            {q}
+          </Badge>
+        ))}
+      </div>
+    </GlassCard>
   );
 }

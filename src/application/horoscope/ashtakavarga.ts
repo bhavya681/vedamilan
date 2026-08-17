@@ -2,8 +2,9 @@ import { SIGNS } from "@/application/horoscope/vedic-constants";
 
 /**
  * Classical Sarvashtakavarga / Bhinnashtakavarga-style bindu contributions.
- * Tables: houses (1–12) counted from each contributor's rashi that receive a bindu.
- * Deterministic — not AI. Max SAV per house is typically ≤ 56.
+ * BAV: 0–8 bindus per house from 8 contributors (Sun–Saturn + Lagna).
+ * SAV: sum of the seven planet BAV tables (classical total ≈ 337).
+ * Deterministic teaching tables — not AI. Max SAV per house ≤ 56.
  */
 
 /** Houses from the contributor that receive a bindu in SAV aggregation. */
@@ -35,10 +36,14 @@ const BAV_OWN: Record<string, number[]> = {
 export type AshtakavargaResult = {
   methodology: string;
   lagnaSign: string;
-  /** Bindus per house 1–12 from Lagna (Sarvashtakavarga) */
+  /** Bindus per house 1–12 from Lagna (Sarvashtakavarga = sum of 7 BAVs). */
   sarva: Array<{ house: number; sign: string; bindus: number; note: string }>;
-  /** Individual planet BAV totals by house from Lagna */
+  /** Individual planet BAV totals by house from Lagna (0–8 bindus). */
   bhinna: Record<string, Array<{ house: number; sign: string; bindus: number }>>;
+  /** Sum of each planet's 12 BAV houses (classical totals near 337 combined). */
+  planetTotals: Record<string, number>;
+  /** Grand total of SAV bindus (classical ≈ 337). */
+  totalBindus: number;
   highlights: string[];
 };
 
@@ -54,6 +59,8 @@ function houseNote(bindus: number) {
   return "Sensitive — prefer caution and remedies for this house";
 }
 
+const BAV_PLANETS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"] as const;
+
 export function computeAshtakavarga(input: {
   lagnaSign: string;
   planets: Array<{ planet: string; sign: string; signId?: number }>;
@@ -65,16 +72,35 @@ export function computeAshtakavarga(input: {
     positions[p.planet] = typeof p.signId === "number" ? p.signId : signIdOf(p.sign);
   }
 
-  const sav = Array.from({ length: 12 }, () => 0);
-  for (const [name, fromSignId] of Object.entries(positions)) {
-    const houses = SAV_CONTRIB[name];
-    if (!houses) continue;
-    for (const h of houses) {
-      const signId = (fromSignId + (h - 1)) % 12;
-      const houseFromLagna = ((signId - lagnaSignId + 12) % 12) + 1;
-      sav[houseFromLagna - 1]! += 1;
+  const bhinna: AshtakavargaResult["bhinna"] = {};
+  for (const target of BAV_PLANETS) {
+    const row = Array.from({ length: 12 }, () => 0);
+    const ownHouses = BAV_OWN[target]!;
+    const targetSign = positions[target];
+    if (typeof targetSign !== "number") continue;
+    for (const [contrib, fromSignId] of Object.entries(positions)) {
+      const table = contrib === target ? ownHouses : SAV_CONTRIB[contrib] || ownHouses;
+      for (const h of table) {
+        const signId = (fromSignId + (h - 1)) % 12;
+        const houseFromLagna = ((signId - lagnaSignId + 12) % 12) + 1;
+        row[houseFromLagna - 1]! += 1;
+      }
     }
+    bhinna[target] = row.map((raw, idx) => ({
+      house: idx + 1,
+      sign: SIGNS[(lagnaSignId + idx) % 12] ?? "Aries",
+      bindus: Math.min(8, raw),
+    }));
   }
+
+  const planetTotals: Record<string, number> = {};
+  for (const target of BAV_PLANETS) {
+    planetTotals[target] = (bhinna[target] || []).reduce((s, c) => s + c.bindus, 0);
+  }
+
+  const sav = Array.from({ length: 12 }, (_, idx) =>
+    BAV_PLANETS.reduce((sum, planet) => sum + (bhinna[planet]?.[idx]?.bindus ?? 0), 0),
+  );
 
   const sarva = sav.map((bindus, idx) => {
     const house = idx + 1;
@@ -87,44 +113,25 @@ export function computeAshtakavarga(input: {
     };
   });
 
-  const bhinna: AshtakavargaResult["bhinna"] = {};
-  for (const target of Object.keys(BAV_OWN)) {
-    const row = Array.from({ length: 12 }, () => 0);
-    const ownHouses = BAV_OWN[target]!;
-    const targetSign = positions[target];
-    if (typeof targetSign !== "number") continue;
-    // Own planet contributions from all SAV contributors into this planet's BAV using own table relative to each contributor
-    for (const [contrib, fromSignId] of Object.entries(positions)) {
-      if (contrib === "Lagna" && !(contrib in SAV_CONTRIB)) continue;
-      const table = contrib === target ? ownHouses : SAV_CONTRIB[contrib] || ownHouses;
-      for (const h of table) {
-        const signId = (fromSignId + (h - 1)) % 12;
-        const houseFromLagna = ((signId - lagnaSignId + 12) % 12) + 1;
-        row[houseFromLagna - 1]! += 1;
-      }
-    }
-    bhinna[target] = row.map((bindus, idx) => ({
-      house: idx + 1,
-      sign: SIGNS[(lagnaSignId + idx) % 12] ?? "Aries",
-      bindus,
-    }));
-  }
-
+  const totalBindus = sav.reduce((s, n) => s + n, 0);
   const strongest = [...sarva].sort((a, b) => b.bindus - a.bindus).slice(0, 3);
   const weakest = [...sarva].sort((a, b) => a.bindus - b.bindus).slice(0, 2);
 
   return {
     methodology:
-      "Classical Sarvashtakavarga bindu contribution (Sun–Saturn + Lagna). Engine v1 — deterministic tables, not AI.",
+      "Bhinnashtakavarga uses 8 contributors (Sun–Saturn + Lagna), 0–8 bindus per house. Sarvashtakavarga is the sum of the seven planet BAVs (classical total ≈ 337). Engine v1 teaching tables — directional, comparable to JHora / AstroSage layout.",
     lagnaSign: input.lagnaSign,
     sarva,
     bhinna,
+    planetTotals,
+    totalBindus,
     highlights: [
+      `SAV total ${totalBindus} bindus (classical reference ≈ 337)`,
       ...strongest.map(
-        (h) => `House ${h.house} (${h.sign}) is relatively strong with ${h.bindus} bindus`,
+        (h) => `House ${h.house} (${h.sign}) is relatively strong with ${h.bindus} SAV bindus`,
       ),
       ...weakest.map(
-        (h) => `House ${h.house} (${h.sign}) is relatively soft with ${h.bindus} bindus`,
+        (h) => `House ${h.house} (${h.sign}) is relatively soft with ${h.bindus} SAV bindus`,
       ),
     ],
   };

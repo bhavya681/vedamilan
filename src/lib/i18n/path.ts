@@ -1,4 +1,10 @@
-import { APP_LOCALES, DEFAULT_LOCALE, isAppLocale, type AppLocale } from "@/lib/i18n/locales";
+import {
+  APP_LOCALES,
+  DEFAULT_LOCALE,
+  UI_I18N_ENABLED,
+  isAppLocale,
+  type AppLocale,
+} from "@/lib/i18n/locales";
 
 /** Paths that never receive a locale prefix (APIs, assets, health). */
 export const LOCALE_PATH_EXEMPT_PREFIXES = [
@@ -39,8 +45,10 @@ export function stripLocaleFromPathname(pathname: string): {
 
 export function withLocalePrefix(locale: AppLocale, pathname: string): string {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  if (path === "/") return `/${locale}`;
-  return `/${locale}${path}`;
+  const normalized = path || "/";
+  if (!UI_I18N_ENABLED) return normalized;
+  if (normalized === "/") return `/${locale}`;
+  return `/${locale}${normalized}`;
 }
 
 export function negotiateBrowserLocale(acceptLanguage: string | null): AppLocale {

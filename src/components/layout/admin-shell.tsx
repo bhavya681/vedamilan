@@ -1,15 +1,47 @@
 "use client";
 
+import { Menu } from "lucide-react";
+import { useState } from "react";
+
 import { PageTransition } from "@/components/animations/motion";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { adminNav } from "@/config/navigation";
 import { cn } from "@/lib/utils/cn";
+
+function AdminNavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  return (
+    <div className="space-y-0.5">
+      {adminNav.map((item) => {
+        const active = pathname === item.href;
+        return (
+          <LocaleLink
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "relative block rounded-xl px-2.5 py-2 text-sm font-medium transition-colors",
+              active
+                ? "bg-primary/12 text-foreground dark:bg-primary/18"
+                : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+            )}
+            aria-current={active ? "page" : undefined}
+          >
+            {item.title}
+          </LocaleLink>
+        );
+      })}
+    </div>
+  );
+}
 
 /** Preserves existing admin chrome; auth gating happens in the server layout. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = useAppPathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="bg-background flex h-dvh max-h-dvh flex-col overflow-hidden md:flex-row">
@@ -22,38 +54,42 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           className="scrollbar-premium min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4"
           aria-label="Admin"
         >
-          <div className="space-y-0.5">
-            {adminNav.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <LocaleLink
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "relative block rounded-xl px-2.5 py-2 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-primary/12 text-foreground dark:bg-primary/18"
-                      : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-                  )}
-                  aria-current={active ? "page" : undefined}
-                >
-                  {item.title}
-                </LocaleLink>
-              );
-            })}
-          </div>
+          <AdminNavLinks pathname={pathname} />
         </nav>
       </aside>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="border-border/50 bg-background/90 dark:bg-background/85 flex h-14 shrink-0 items-center justify-between border-b px-4 backdrop-blur-xl sm:h-16 sm:px-5">
-          <p className="text-sm font-medium md:hidden">Admin</p>
+        <header className="border-border/50 bg-background/90 dark:bg-background/85 flex h-14 shrink-0 items-center justify-between gap-3 border-b px-[max(1rem,env(safe-area-inset-left,0px))] backdrop-blur-xl sm:h-16 sm:px-5">
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="md:hidden"
+                aria-label="Open admin menu"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-background p-0">
+              <SheetHeader className="border-border/50 border-b p-4 text-left">
+                <SheetTitle>
+                  <BrandLogo href="/admin" size="sm" />
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="p-3" aria-label="Admin">
+                <AdminNavLinks pathname={pathname} onNavigate={() => setMenuOpen(false)} />
+              </nav>
+            </SheetContent>
+          </Sheet>
+          <p className="min-w-0 truncate text-sm font-medium md:hidden">Admin</p>
           <div className="ml-auto">
             <ThemeToggle />
           </div>
         </header>
         <main
           id="main-content"
-          className="scrollbar-premium min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-3 sm:p-5 md:p-6 lg:p-8"
+          className="scrollbar-premium min-h-0 flex-1 overflow-x-clip overflow-y-auto overscroll-contain p-3 sm:p-5 md:p-6 lg:p-8"
         >
           <div className="mx-auto w-full max-w-6xl min-w-0 xl:max-w-7xl">
             <PageTransition>{children}</PageTransition>

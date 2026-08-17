@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Crown, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Crown, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { GlassCard } from "@/components/ui/premium-cards";
 import { cn } from "@/lib/utils/cn";
 
 export type YogaExemplar = {
@@ -55,7 +54,7 @@ function ExemplarPanel({
   return (
     <div
       className={cn(
-        "mt-3 space-y-3 rounded-xl border p-3.5 sm:p-4",
+        "space-y-3 rounded-xl border p-3.5 sm:p-4",
         tone === "yoga"
           ? "border-gold/35 from-gold/10 bg-gradient-to-br to-transparent"
           : "border-primary/30 from-primary/8 bg-gradient-to-br to-transparent",
@@ -113,11 +112,11 @@ function DetailPanel({
   tone?: "yoga" | "dosha";
 }) {
   return (
-    <div className="mt-3 space-y-3">
+    <div className="space-y-3">
       {insight.exemplar ? <ExemplarPanel exemplar={insight.exemplar} tone={tone} /> : null}
 
-      <div className="border-border/40 bg-muted/25 space-y-3 rounded-xl border p-3 text-sm">
-        <div>
+      <div className="border-border/40 bg-muted/25 grid gap-3 rounded-xl border p-3 text-sm sm:grid-cols-2">
+        <div className="sm:col-span-2">
           <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
             What it means
           </p>
@@ -139,7 +138,7 @@ function DetailPanel({
           <p className="mt-1 leading-relaxed">{insight.watchFor}</p>
         </div>
         {insight.lifeAreas?.length ? (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 sm:col-span-2">
             {insight.lifeAreas.map((a) => (
               <Badge key={a} variant="outline">
                 {a}
@@ -147,8 +146,20 @@ function DetailPanel({
             ))}
           </div>
         ) : null}
-        <p className="text-muted-foreground text-[11px]">{insight.engineNote}</p>
+        <p className="text-muted-foreground text-[11px] sm:col-span-2">{insight.engineNote}</p>
       </div>
+    </div>
+  );
+}
+
+function StrengthMeter({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div className="flex min-w-[5.5rem] items-center gap-2">
+      <div className="bg-muted h-1.5 w-14 overflow-hidden rounded-full sm:w-16">
+        <div className="bg-gold h-full" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-muted-foreground text-xs tabular-nums">{value}</span>
     </div>
   );
 }
@@ -168,50 +179,60 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
         const badge = y.insight.exemplar?.badge;
         return (
           <li key={key}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : key)}
+            <article
               className={cn(
-                "border-border/50 hover:border-gold/35 w-full rounded-2xl border px-3.5 py-3.5 text-left transition-colors sm:px-4",
+                "border-border/50 overflow-hidden rounded-2xl border transition-colors",
                 isOpen && "border-gold/40 from-gold/5 bg-gradient-to-br to-transparent shadow-sm",
               )}
             >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 space-y-1.5">
-                  <p className="font-display text-base font-medium sm:text-lg">{y.name}</p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {badge ? (
-                      <Badge className="border-gold/40 bg-gold/15 text-foreground border text-[10px]">
-                        {badge}
-                      </Badge>
-                    ) : null}
-                    {y.category ? <Badge variant="outline">{y.category}</Badge> : null}
-                    {typeof y.strength === "number" ? (
-                      <Badge variant="secondary">Strength {y.strength}</Badge>
-                    ) : null}
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : key)}
+                className="hover:bg-muted/30 w-full px-3.5 py-3.5 text-left sm:px-4"
+                aria-expanded={isOpen}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="font-display text-base font-medium sm:text-lg">{y.name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {badge ? (
+                        <Badge className="border-gold/40 bg-gold/15 text-foreground border text-[10px]">
+                          {badge}
+                        </Badge>
+                      ) : null}
+                      {y.category ? <Badge variant="outline">{y.category}</Badge> : null}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {typeof y.strength === "number" ? <StrengthMeter value={y.strength} /> : null}
+                    <ChevronDown
+                      className={cn(
+                        "text-muted-foreground h-4 w-4 transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                      aria-hidden
+                    />
                   </div>
                 </div>
-                <span className="text-muted-foreground shrink-0 text-xs">
-                  {isOpen ? "Hide" : "See parallel"}
-                </span>
-              </div>
-
-              {!isOpen && y.insight.exemplar ? (
-                <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed sm:text-sm">
-                  <span className="text-foreground/80 font-medium">
-                    Like {y.insight.exemplar.parallelTitle.toLowerCase()}
-                  </span>
-                  {" — "}
-                  {y.insight.exemplar.knownOutcome}
-                </p>
+                {!isOpen && y.insight.exemplar ? (
+                  <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed sm:text-sm">
+                    <span className="text-foreground/80 font-medium">
+                      Like {y.insight.exemplar.parallelTitle.toLowerCase()}
+                    </span>
+                    {" — "}
+                    {y.insight.exemplar.knownOutcome}
+                  </p>
+                ) : null}
+                {!isOpen && !y.insight.exemplar && y.description ? (
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">{y.description}</p>
+                ) : null}
+              </button>
+              {isOpen ? (
+                <div className="px-3.5 pb-4 sm:px-4">
+                  <DetailPanel insight={y.insight} tone="yoga" />
+                </div>
               ) : null}
-
-              {!isOpen && !y.insight.exemplar && y.description ? (
-                <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">{y.description}</p>
-              ) : null}
-
-              {isOpen ? <DetailPanel insight={y.insight} tone="yoga" /> : null}
-            </button>
+            </article>
           </li>
         );
       })}
@@ -220,7 +241,13 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
 }
 
 export function DoshaDetailList({ items }: { items: DoshaItem[] }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const present = items.filter((d) => d.present);
+  const [open, setOpen] = useState<string | null>(present[0]?.code ?? null);
+
+  if (!items.length) {
+    return <p className="text-muted-foreground text-sm">No dosha flags in this chart view.</p>;
+  }
+
   return (
     <ul className="space-y-2.5">
       {items.map((d) => {
@@ -228,41 +255,56 @@ export function DoshaDetailList({ items }: { items: DoshaItem[] }) {
         const badge = d.insight.exemplar?.badge;
         return (
           <li key={d.code}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : d.code)}
+            <article
               className={cn(
-                "border-border/50 hover:border-primary/35 w-full rounded-2xl border px-3.5 py-3.5 text-left transition-colors sm:px-4",
+                "border-border/50 overflow-hidden rounded-2xl border transition-colors",
                 isOpen && "border-primary/35 from-primary/5 bg-gradient-to-br to-transparent",
+                !d.present && "opacity-80",
               )}
             >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 space-y-1.5">
-                  <p className="font-display text-base font-medium sm:text-lg">{d.name}</p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {badge ? (
-                      <Badge className="border-primary/35 bg-primary/10 text-foreground border text-[10px]">
-                        {badge}
+              <button
+                type="button"
+                onClick={() => setOpen(isOpen ? null : d.code)}
+                className="hover:bg-muted/30 w-full px-3.5 py-3.5 text-left sm:px-4"
+                aria-expanded={isOpen}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="font-display text-base font-medium sm:text-lg">{d.name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {badge ? (
+                        <Badge className="border-primary/35 bg-primary/10 text-foreground border text-[10px]">
+                          {badge}
+                        </Badge>
+                      ) : null}
+                      <Badge variant={d.present ? "secondary" : "outline"}>
+                        {d.insight.statusLabel || (d.present ? "Present" : "Clear")}
                       </Badge>
-                    ) : null}
-                    <Badge variant={d.present ? "secondary" : "outline"}>
-                      {d.insight.statusLabel || (d.present ? "Present" : "Clear")}
-                    </Badge>
+                      {d.severity && d.present ? (
+                        <Badge variant="outline">{d.severity}</Badge>
+                      ) : null}
+                    </div>
                   </div>
+                  <ChevronDown
+                    className={cn(
+                      "text-muted-foreground h-4 w-4 shrink-0 transition-transform",
+                      isOpen && "rotate-180",
+                    )}
+                    aria-hidden
+                  />
                 </div>
-                <span className="text-muted-foreground shrink-0 text-xs">
-                  {isOpen ? "Hide" : "See parallel"}
-                </span>
-              </div>
-
-              {!isOpen && d.insight.exemplar && d.present ? (
-                <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed sm:text-sm">
-                  Reframe: {d.insight.exemplar.knownOutcome}
-                </p>
+                {!isOpen && d.insight.exemplar && d.present ? (
+                  <p className="text-muted-foreground mt-2 line-clamp-2 text-xs leading-relaxed sm:text-sm">
+                    Reframe: {d.insight.exemplar.knownOutcome}
+                  </p>
+                ) : null}
+              </button>
+              {isOpen ? (
+                <div className="px-3.5 pb-4 sm:px-4">
+                  <DetailPanel insight={d.insight} tone="dosha" />
+                </div>
               ) : null}
-
-              {isOpen ? <DetailPanel insight={d.insight} tone="dosha" /> : null}
-            </button>
+            </article>
           </li>
         );
       })}
@@ -272,25 +314,22 @@ export function DoshaDetailList({ items }: { items: DoshaItem[] }) {
 
 export function VedicExtrasBanner() {
   return (
-    <GlassCard className="border-gold/25 from-gold/8 space-y-2 bg-gradient-to-br to-transparent py-4 sm:py-5">
+    <div className="border-border/50 from-gold/8 space-y-2 rounded-2xl border bg-gradient-to-br to-transparent p-4 sm:p-5">
       <div className="flex items-start gap-3">
         <span className="bg-gold/15 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
           <Crown className="h-4 w-4" />
         </span>
         <div className="min-w-0 space-y-1.5">
           <p className="font-display text-lg leading-snug sm:text-xl">
-            Your yogas · paths that look like this in public life
+            Combinations from your stored Kundli
           </p>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Each combination below includes a{" "}
-            <span className="text-foreground/90 font-medium">public-life parallel</span> — how
-            teachers explain the same theme through admired careers — plus{" "}
-            <span className="text-foreground/90 font-medium">your edge</span> for using it with
-            dasha timing. Parallels illustrate the theme; they are not verified celebrity charts or
-            guaranteed outcomes.
+            Yogas are supportive patterns. Doshas are friction themes — not curses. Open any row for
+            formation, dasha timing, and a public-life parallel. Parallels illustrate the theme;
+            they are not celebrity-chart claims or guaranteed outcomes.
           </p>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }

@@ -7,6 +7,9 @@ export type ShadbalaComponent = {
   sanskrit: string;
   score: number;
   max: number;
+  /** Display units used by JHora / AstroSage (60 virupas = 1 rupa). */
+  virupas: number;
+  virupaMax: number;
   note: string;
 };
 
@@ -14,7 +17,16 @@ export type PlanetShadbala = {
   planet: string;
   sign: string;
   house: number;
+  /** Engine-unit total (legacy). Prefer `virupas` for display. */
   total: number;
+  virupas: number;
+  rupas: number;
+  requiredVirupas: number;
+  /** Virupas ÷ required. ≥ 1.00 meets the classical minimum. */
+  ratio: number;
+  meetsMinimum: boolean;
+  ishtaPhala: number;
+  kashtaPhala: number;
   percentage: number;
   grade: "Excellent" | "Good" | "Average" | "Weak";
   components: ShadbalaComponent[];
@@ -22,10 +34,42 @@ export type PlanetShadbala = {
 };
 
 export type ShadbalaLab = {
+  methodology: string;
   planets: PlanetShadbala[];
   strongest: PlanetShadbala | null;
   weakest: PlanetShadbala | null;
   overallTheme: string;
+};
+
+/** BPHS required Shadbala (virupas). 60 virupas = 1 rupa. */
+export const REQUIRED_VIRUPAS: Record<string, number> = {
+  Sun: 390,
+  Moon: 360,
+  Mars: 300,
+  Mercury: 420,
+  Jupiter: 390,
+  Venus: 330,
+  Saturn: 300,
+};
+
+/** Parashara component maxima in virupas — used to scale engine v1 scores for display. */
+const VIRUPA_MAX = {
+  Sthana: 240,
+  Dig: 60,
+  Kala: 180,
+  Chesta: 60,
+  Naisargika: 60,
+  Drik: 60,
+} as const;
+
+const DEBILITATED_SIGNS: Record<string, string> = {
+  Sun: "Libra",
+  Moon: "Scorpio",
+  Mars: "Cancer",
+  Mercury: "Pisces",
+  Jupiter: "Capricorn",
+  Venus: "Virgo",
+  Saturn: "Aries",
 };
 
 const KENDRA = new Set([1, 4, 7, 10]);
@@ -294,10 +338,22 @@ function drikBala(
   return { score, note };
 }
 
-function grade(total: number): PlanetShadbala["grade"] {
-  if (total >= 300) return "Excellent";
-  if (total >= 220) return "Good";
-  if (total >= 150) return "Average";
+function toVirupa(score: number, engineMax: number, virupaMax: number): number {
+  if (engineMax <= 0) return 0;
+  return Math.round((Math.max(0, score) / engineMax) * virupaMax);
+}
+
+function ucchaBala(planet: string, sign: string, dignity: string | null): number {
+  if (dignity === "Exalted" || EXALTED_SIGNS[planet] === sign) return 60;
+  if (dignity === "Debilitated" || DEBILITATED_SIGNS[planet] === sign) return 0;
+  if (dignity === "Own" || OWN_SIGNS[planet]?.includes(sign)) return 45;
+  return 30;
+}
+
+function gradeFromRatio(ratio: number): PlanetShadbala["grade"] {
+  if (ratio >= 1.25) return "Excellent";
+  if (ratio >= 1) return "Good";
+  if (ratio >= 0.75) return "Average";
   return "Weak";
 }
 
@@ -377,63 +433,112 @@ export class ShadbalaService {
         const naisargika = naisargikaBala(p.planet);
         const drik = drikBala(p.planet, planets);
 
-        const total =
-          sthana.score + dig.score + kala.score + chesta.score + naisargika.score + drik.score;
-        const g = grade(total);
+        const components: ShadbalaComponent[] = [
+          {
+            name: "Sthana",
+            sanskrit: "Sthana Bala",
+            score: sthana.score,
+            max: 60,
+            virupas: toVirupa(sthana.score, 60, VIRUPA_MAX.Sthana),
+            virupaMax: VIRUPA_MAX.Sthana,
+            note: sthana.note,
+          },
+          {
+            name: "Dig",
+            sanskrit: "Dig Bala",
+            score: dig.score,
+            max: 20,
+            virupas: toVirupa(dig.score, 20, VIRUPA_MAX.Dig),
+            virupaMax: VIRUPA_MAX.Dig,
+            note: dig.note,
+          },
+          {
+            name: "Kala",
+            sanskrit: "Kala Bala",
+            score: kala.score,
+            max: 20,
+            virupas: toVirupa(kala.score, 20, VIRUPA_MAX.Kala),
+            virupaMax: VIRUPA_MAX.Kala,
+            note: kala.note,
+          },
+          {
+            name: "Chesta",
+            sanskrit: "Chesta Bala",
+            score: chesta.score,
+            max: 20,
+            virupas: toVirupa(chesta.score, 20, VIRUPA_MAX.Chesta),
+            virupaMax: VIRUPA_MAX.Chesta,
+            note: chesta.note,
+          },
+          {
+            name: "Naisargika",
+            sanskrit: "Naisargika Bala",
+            score: naisargika.score,
+            max: 60,
+            virupas: toVirupa(naisargika.score, 60, VIRUPA_MAX.Naisargika),
+            virupaMax: VIRUPA_MAX.Naisargika,
+            note: naisargika.note,
+          },
+          {
+            name: "Drik",
+            sanskrit: "Drik Bala",
+            score: drik.score,
+            max: 20,
+            virupas: toVirupa(drik.score, 20, VIRUPA_MAX.Drik),
+            virupaMax: VIRUPA_MAX.Drik,
+            note: drik.note,
+          },
+        ];
+
+        const total = components.reduce((sum, c) => sum + c.score, 0);
+        const virupas = components.reduce((sum, c) => sum + c.virupas, 0);
+        const requiredVirupas = REQUIRED_VIRUPAS[p.planet] ?? 300;
+        const ratio = requiredVirupas > 0 ? virupas / requiredVirupas : 0;
+        const g = gradeFromRatio(ratio);
+
+        const uccha = ucchaBala(p.planet, p.sign, p.dignity);
+        const chesta60 = toVirupa(chesta.score, 20, 60);
+        const ishtaPhala = Math.round(Math.sqrt(uccha * chesta60));
+        const kashtaPhala = Math.round(Math.sqrt((60 - uccha) * (60 - chesta60)));
 
         return {
           planet: p.planet,
           sign: p.sign,
           house: p.house,
           total,
-          percentage: Math.min(100, Math.round((total / 330) * 100)),
+          virupas,
+          rupas: Math.round((virupas / 60) * 100) / 100,
+          requiredVirupas,
+          ratio: Math.round(ratio * 100) / 100,
+          meetsMinimum: ratio >= 1,
+          ishtaPhala,
+          kashtaPhala,
+          percentage: Math.round(ratio * 100),
           grade: g,
-          components: [
-            {
-              name: "Sthana",
-              sanskrit: "Sthana Bala",
-              score: sthana.score,
-              max: 60,
-              note: sthana.note,
-            },
-            { name: "Dig", sanskrit: "Dig Bala", score: dig.score, max: 20, note: dig.note },
-            { name: "Kala", sanskrit: "Kala Bala", score: kala.score, max: 20, note: kala.note },
-            {
-              name: "Chesta",
-              sanskrit: "Chesta Bala",
-              score: chesta.score,
-              max: 20,
-              note: chesta.note,
-            },
-            {
-              name: "Naisargika",
-              sanskrit: "Naisargika Bala",
-              score: naisargika.score,
-              max: 60,
-              note: naisargika.note,
-            },
-            { name: "Drik", sanskrit: "Drik Bala", score: drik.score, max: 20, note: drik.note },
-          ],
+          components,
           interpretation: interpretation(p.planet, total, g),
         };
       });
 
-    const sorted = [...shadbala].sort((a, b) => b.total - a.total);
+    const sorted = [...shadbala].sort((a, b) => b.virupas - a.virupas);
     const strongest = sorted[0] || null;
     const weakest = sorted[sorted.length - 1] || null;
 
     const themes: string[] = [];
-    if (strongest && strongest.percentage >= 70)
-      themes.push(`${strongest.planet} shows the highest Shadbala`);
-    if (weakest && weakest.percentage <= 50)
-      themes.push(`${weakest.planet} may benefit from supportive practices`);
-    const excellent = shadbala.filter((p) => p.grade === "Excellent").length;
-    if (excellent >= 3)
-      themes.push("Multiple planets with excellent strength — chart supports action");
+    if (strongest)
+      themes.push(
+        `${strongest.planet} leads at ${strongest.rupas} rupas (${strongest.ratio.toFixed(2)}× required)`,
+      );
+    if (weakest && !weakest.meetsMinimum)
+      themes.push(`${weakest.planet} is below the classical minimum — supportive practices help`);
+    const above = shadbala.filter((p) => p.meetsMinimum).length;
+    if (above >= 5) themes.push("Most grahas meet required Shadbala — chart supports action");
     const weak = shadbala.filter((p) => p.grade === "Weak").length;
     if (weak >= 3) themes.push("Several planets require attention — remedial focus advised");
 
     return {
+      methodology:
+        "Displayed in Virupas (60 virupas = 1 rupa) with BPHS required minima, comparable to Jagannatha Hora and AstroSage strength tables. Engine v1 scales a teaching approximation to Parashara component maxima — directional, not a full degree-based Shadbala.",
       planets: shadbala,
       strongest,
       weakest,

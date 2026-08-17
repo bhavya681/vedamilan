@@ -1,12 +1,19 @@
 "use client";
 
 import {
-  BookOpen,
+  BrainCircuit,
+  Compass,
   Heart,
-  LayoutDashboard,
+  Home,
+  Library,
   MessageCircle,
+  MessagesSquare,
   MoreHorizontal,
+  NotebookPen,
+  PieChart,
   Stars,
+  Sunrise,
+  UserRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -33,25 +40,25 @@ export function MobileBottomNav() {
   const primary = useMemo(() => {
     if (mode === "astrology") {
       return [
-        { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
-        { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
-        { href: routes.dasha, labelKey: "navigation.dashas", icon: BookOpen },
-        { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: MessageCircle },
+        { href: homeHref, labelKey: "navigation.home", icon: Stars },
+        { href: routes.horoscope, labelKey: "navigation.horoscope", icon: Sunrise },
+        { href: routes.kundli, labelKey: "navigation.kundli", icon: PieChart },
+        { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: BrainCircuit },
       ];
     }
     if (mode === "wisdom") {
       return [
-        { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
-        { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: Stars },
-        { href: routes.wisdomJournal, labelKey: "navigation.wisdomJournal", icon: BookOpen },
-        { href: routes.aiInsights, labelKey: "navigation.aiInsights", icon: MessageCircle },
+        { href: homeHref, labelKey: "navigation.home", icon: Library },
+        { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: MessagesSquare },
+        { href: routes.wisdomJournal, labelKey: "navigation.wisdomJournal", icon: NotebookPen },
+        { href: routes.profile, labelKey: "navigation.profile", icon: UserRound },
       ];
     }
     return [
-      { href: homeHref, labelKey: "navigation.home", icon: LayoutDashboard },
+      { href: homeHref, labelKey: "navigation.home", icon: Home },
       { href: routes.matches, labelKey: "navigation.matches", icon: Heart },
-      { href: routes.compatibility, labelKey: "navigation.compatibility", icon: BookOpen },
       { href: routes.chat, labelKey: "navigation.messages", icon: MessageCircle },
+      { href: routes.compatibility, labelKey: "navigation.compatibility", icon: Compass },
     ];
   }, [mode, homeHref]);
 
@@ -120,7 +127,10 @@ export function MobileBottomNav() {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl">
+        <SheetContent
+          side="bottom"
+          className="max-h-[min(90dvh,40rem)] overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]"
+        >
           <SheetHeader>
             <SheetTitle>{t("navigation.more")}</SheetTitle>
           </SheetHeader>
@@ -131,7 +141,7 @@ export function MobileBottomNav() {
                 <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-[0.16em] uppercase">
                   {t(navGroupKey(group))}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {items
                     .filter((item) => (item.group ?? "Menu") === group)
                     .map((item) => {
