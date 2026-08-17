@@ -2,7 +2,8 @@
  * Shared readiness checks for compulsory onboarding.
  * Members must finish basics + birth + kundli before using the dashboard.
  *
- * Note: Date of birth (dob) is not part of basics, as it is handled in the astrology/birth details section.
+ * Date of birth and city are collected once in astrology/birth details,
+ * then copied onto the profile — not asked again on the first step.
  */
 
 export type OnboardingReadiness = {
@@ -16,12 +17,20 @@ export type OnboardingReadiness = {
   missing: string[];
 };
 
+/** First segment of "City, Region, Country" for the profile city field. */
+export function cityFromPlaceName(placeName: string | null | undefined): string {
+  return (
+    String(placeName || "")
+      .split(",")[0]
+      ?.trim() || ""
+  );
+}
+
 export function evaluateOnboardingReadiness(input: {
   gender?: string | null;
   city?: string | null;
   profession?: string | null;
   education?: string | null;
-  // dateOfBirth removed from basics, as DOB is gathered via birth details, not here
   photos?: unknown[] | null;
   completionScore?: number | null;
   hasBirthDetails?: boolean;
@@ -30,19 +39,17 @@ export function evaluateOnboardingReadiness(input: {
   const gender = String(input.gender || "").toUpperCase();
   const hasGender = gender === "MALE" || gender === "FEMALE";
   const hasPhoto = Array.isArray(input.photos) && input.photos.length > 0;
-  // 'hasBasics' no longer includes dateOfBirth
-  const hasBasics = Boolean(input.city && input.profession && input.education && hasGender);
   const hasBirth = Boolean(input.hasBirthDetails);
   const hasChart = Boolean(input.hasChart);
   const completion = Number(input.completionScore ?? 0);
+  // City/DOB live on the birth-details step; basics are identity + work only.
+  const hasBasics = Boolean(input.profession && input.education && hasGender);
 
   const missing: string[] = [];
   if (!hasGender) missing.push("gender");
   if (!hasPhoto) missing.push("photo");
-  if (!input.city) missing.push("city");
   if (!input.profession) missing.push("profession");
   if (!input.education) missing.push("education");
-  // Do not require dateOfBirth here; it's part of birthDetails only
   if (!hasBirth) missing.push("birthDetails");
   if (!hasChart) missing.push("kundli");
 

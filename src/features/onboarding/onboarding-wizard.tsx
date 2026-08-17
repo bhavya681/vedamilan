@@ -13,7 +13,10 @@ import {
   ProfilePhotoUploader,
   type ProfilePhotoItem,
 } from "@/features/profile/components/profile-photo-uploader";
-import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
+import {
+  cityFromPlaceName,
+  evaluateOnboardingReadiness,
+} from "@/features/onboarding/onboarding-status";
 import { authClient } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -141,10 +144,10 @@ export function OnboardingWizard() {
     }
 
     // Resume step if partially done — never skip required setup
-    if (readiness.hasChart && readiness.hasBirth && p?.city && readiness.hasPhoto) {
+    if (readiness.hasChart && readiness.hasBirth && readiness.hasPhoto && readiness.hasBasics) {
       setStep(3);
     } else if (readiness.hasBirth) setStep(2);
-    else if (p?.city && p?.profession) setStep(1);
+    else if (readiness.hasBasics && readiness.hasPhoto) setStep(1);
   }, [router]);
 
   useEffect(() => {
@@ -176,7 +179,7 @@ export function OnboardingWizard() {
       setBusy(false);
       return;
     }
-    if (!form.dateOfBirth || !form.city || !form.profession || !form.education) {
+    if (!form.profession || !form.education) {
       setError("Please fill the required fields.");
       setBusy(false);
       return;
@@ -193,8 +196,6 @@ export function OnboardingWizard() {
         body: JSON.stringify({
           name: form.name.trim(),
           gender: form.gender,
-          dateOfBirth: form.dateOfBirth,
-          city: form.city,
           profession: form.profession,
           education: form.education,
           heightCm: form.heightCm ? Number(form.heightCm) : null,
@@ -245,20 +246,12 @@ export function OnboardingWizard() {
       if (!birthJson.success)
         throw new Error(birthJson.error?.message || "Could not save birth details");
 
-      if (!form.dateOfBirth && form.birthDate) {
-        await fetch("/api/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dateOfBirth: form.birthDate }),
-        });
-      }
-      if (!form.city && form.placeName) {
-        await fetch("/api/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ city: form.placeName }),
-        });
-      }
+      const cityFromPlace = cityFromPlaceName(form.placeName);
+      setForm((f) => ({
+        ...f,
+        dateOfBirth: form.birthDate,
+        city: f.city || cityFromPlace,
+      }));
 
       setStep(2);
       setGenPhase(0);
@@ -351,7 +344,7 @@ export function OnboardingWizard() {
           {step === 0
             ? "A few essentials so we can introduce you thoughtfully."
             : step === 1
-              ? "Your date of birth and city are pre-filled from your profile. Add your exact birth time — the rest fine-tunes your Vedic chart."
+              ? "Asked once here — we use this date and place for your Vedic chart and your profile."
               : step === 2
                 ? "We're preparing your Ascendant, Moon, and relationship patterns."
                 : step === 3
@@ -389,25 +382,6 @@ export function OnboardingWizard() {
                   <option value="FEMALE">Female</option>
                   <option value="OTHER">Other</option>
                 </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="dob">Date of birth</Label>
-                <Input
-                  id="dob"
-                  type="date"
-                  value={form.dateOfBirth}
-                  onChange={(e) => setField("dateOfBirth", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={form.city}
-                  onChange={(e) => setField("city", e.target.value)}
-                  required
-                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="profession">Profession</Label>
@@ -514,25 +488,17 @@ export function OnboardingWizard() {
                 Your birth details help us understand compatibility.
               </h2>
               <p className="text-muted-foreground text-sm">
-                Your date of birth and city were saved in the previous step. Here we collect your
-                exact birth time and confirm the birth location for your Vedic birth chart.
+                Date of birth and birth city are collected here only. We use them for your kundli
+                and to complete your profile — you will not be asked again.
               </p>
               <p className="text-muted-foreground text-sm">
                 Your exact birth time helps us calculate your Ascendant, houses, planetary
                 positions, and relationship indicators more accurately.
               </p>
-              {form.dateOfBirth && form.birthDate === form.dateOfBirth ? (
-                <p className="text-gold/80 text-xs">Date of birth pre-filled from your profile.</p>
-              ) : null}
-              {form.city && form.placeName === form.city ? (
-                <p className="text-gold/80 text-xs">
-                  Birth location pre-filled from your city. Edit if different.
-                </p>
-              ) : null}
             </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="bdate">Birth date</Label>
+                <Label htmlFor="bdate">Date of birth</Label>
                 <Input
                   id="bdate"
                   type="date"
@@ -567,7 +533,7 @@ export function OnboardingWizard() {
                 ) : null}
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="place">Birth location</Label>
+                <Label htmlFor="place">Birth city / place</Label>
                 <Input
                   id="place"
                   value={form.placeName}

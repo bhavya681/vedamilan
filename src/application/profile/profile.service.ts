@@ -408,6 +408,18 @@ export class ProfileService {
       },
       { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
     ).lean();
+
+    const city = String(input.placeName || "")
+      .split(",")[0]
+      ?.trim();
+    const profilePatch: Record<string, unknown> = {
+      dateOfBirth: new Date(input.birthDate),
+    };
+    await this.getOrCreateProfile(userId);
+    const existing = await Profile.findOne({ userId }).select("city").lean();
+    if (city && !existing?.city) profilePatch.city = city;
+    await Profile.updateOne({ userId }, { $set: profilePatch });
+
     return doc;
   }
 

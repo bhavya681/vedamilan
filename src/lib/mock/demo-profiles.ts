@@ -5,6 +5,7 @@
  */
 
 import { INTERNATIONAL_DEMO_MEMBERS } from "@/lib/mock/international-demo-profiles";
+import { REAL_CELEB_MEMBERS } from "@/lib/mock/real-celeb-profiles";
 
 export type DemoBirth = {
   birthDate: string; // YYYY-MM-DD
@@ -37,7 +38,7 @@ export type DemoMember = {
   profession: string;
   company?: string;
   incomeRange?: string;
-  maritalStatus: "NEVER_MARRIED" | "DIVORCED" | "WIDOWED" | "AWAITING_DIVORCE";
+  maritalStatus: "NEVER_MARRIED" | "MARRIED" | "DIVORCED" | "WIDOWED" | "AWAITING_DIVORCE";
   headline: string;
   about: string;
   lifestyle: { diet: string; smoking: string; drinking: string };
@@ -2333,7 +2334,11 @@ const CORE_DEMO_MEMBERS: DemoMember[] = [
   },
 ];
 
-export const DEMO_MEMBERS: DemoMember[] = [...CORE_DEMO_MEMBERS, ...INTERNATIONAL_DEMO_MEMBERS];
+export const DEMO_MEMBERS: DemoMember[] = [
+  ...CORE_DEMO_MEMBERS,
+  ...INTERNATIONAL_DEMO_MEMBERS,
+  ...REAL_CELEB_MEMBERS,
+];
 
 export const DEMO_PRIMARY = DEMO_MEMBERS.find((m) => m.id === "m_aditi")!;
 
