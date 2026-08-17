@@ -8,6 +8,14 @@ import {
   PartnerPreferences,
 } from "@/infrastructure/database/models";
 import { connectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
+import {
+  compareRecommendedMatches,
+  gunaMilanReason,
+  preferenceFitScore,
+  recommendationTier,
+  selectRecommendedMatches,
+  type RecommendationTier,
+} from "@/application/matchmaking/recommendation-tiers";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
 import { scoreNumerologyCompatibility } from "@/application/rules/numerology-compatibility";
 import {
@@ -84,6 +92,11 @@ export type RankedMatch = {
   religion: string | null;
   languages: string[];
   heightCm: number | null;
+  community?: string | null;
+  motherTongue?: string | null;
+  country?: string | null;
+  maritalStatus?: string | null;
+  diet?: string | null;
   manglik: string;
   nakshatra: string | null;
   /** Approx core kundli blend % — ranks discovery; not deep compatibility. */
@@ -99,7 +112,9 @@ export type RankedMatch = {
   cardSummary: string;
   gunaBreakdown: Array<{ koota: string; score: number; max: number; note: string }>;
   rank: number;
-  recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
+  recommendationTier?: RecommendationTier;
+  /** 0–100 how well this profile matches saved partner preferences (neutral 50 if unset). */
+  preferenceFit?: number;
   /** True when this member completed Situational Alignment Q&A. */
   hasSituationalAlignment?: boolean;
   /** Approx situational alignment % when both completed (optional). */
@@ -250,13 +265,18 @@ type DiscoveryProfile = {
   gender?: string | null;
   dateOfBirth?: Date | string | null;
   city?: string | null;
+  country?: string | null;
   profession?: string | null;
   education?: string | null;
   religion?: string | null;
+  community?: string | null;
+  motherTongue?: string | null;
+  maritalStatus?: string | null;
   languages?: string[];
   heightCm?: number | null;
   about?: string | null;
   headline?: string | null;
+  lifestyle?: { diet?: string | null };
   photos?: Array<{ secureUrl?: string; isPrimary?: boolean }>;
 };
 
@@ -527,6 +547,11 @@ export class MatchmakingService {
         religion: profile.religion ?? null,
         languages: profile.languages || [],
         heightCm: profile.heightCm ?? null,
+        community: profile.community ?? null,
+        motherTongue: profile.motherTongue ?? null,
+        country: profile.country ?? null,
+        maritalStatus: profile.maritalStatus ?? null,
+        diet: profile.lifestyle?.diet ?? null,
         manglik: chart?.manglikStatus || "UNKNOWN",
         nakshatra: chart ? moonMeta(chart).nakshatra : null,
         compatibilityScore,
@@ -836,8 +861,8 @@ export class MatchmakingService {
   }
 
   /**
-   * Kundli-first recommendations: only charted pairs, sorted by best compatibility.
-   * Soft preference alignment is a tie-breaker — never overrides Vedic score order.
+   * Kundli-first recommendations: best compatibility first.
+   * Partner-preference fit is a small probability boost among similar scores — never hides a clearly better chart.
    */
   async recommend(userId: string): Promise<MatchSearchResult & { hasSelfChart: boolean }> {
     await connectMongo();
@@ -853,7 +878,7 @@ export class MatchmakingService {
     const prefs = await PartnerPreferences.findOne({ userId }).lean();
     // Score a large charted pool, then take the highest-ranked page (not an arbitrary DB slice).
     const result = await this.search(userId, {
-      limit: 200,
+      limit: 400,
       page: 1,
       minCompatibility: 0,
       applyPreferences: false,
@@ -872,64 +897,57 @@ export class MatchmakingService {
 
     const withPriority = charted
       .map((m) => {
-        let preferenceBoost = 0;
-        if (prefs) {
-          if (prefs.ageMin != null && m.age != null && m.age >= prefs.ageMin) preferenceBoost += 1;
-          if (prefs.ageMax != null && m.age != null && m.age <= prefs.ageMax) preferenceBoost += 1;
-          if (prefs.cities?.length && m.city && prefs.cities.includes(m.city)) {
-            preferenceBoost += 2;
-          }
-          if (prefs.religions?.length && m.religion && prefs.religions.includes(m.religion)) {
-            preferenceBoost += 1;
-          }
-        }
-        return { ...m, preferenceBoost };
+        const preferenceFit = preferenceFitScore(prefs, {
+          age: m.age,
+          heightCm: m.heightCm,
+          religion: m.religion,
+          community: m.community,
+          motherTongue: m.motherTongue,
+          country: m.country,
+          city: m.city,
+          education: m.education,
+          profession: m.profession,
+          maritalStatus: m.maritalStatus,
+          diet: m.diet,
+          manglik: m.manglik,
+          languages: m.languages,
+          totalGuna: m.totalGuna,
+        });
+        return { ...m, preferenceFit };
       })
-      .sort((a, b) => {
-        // Primary: kundli match score (same engine as discovery cards)
-        if (b.compatibilityScore !== a.compatibilityScore) {
-          return b.compatibilityScore - a.compatibilityScore;
-        }
-        // Secondary: Ashta Guna total
-        if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
-        // Tertiary: soft preference alignment (never beats a higher score)
-        if (b.preferenceBoost !== a.preferenceBoost) {
-          return b.preferenceBoost - a.preferenceBoost;
-        }
-        return a.name.localeCompare(b.name);
-      })
-      .map(({ preferenceBoost: _boost, ...m }, index) => {
-        const tier: NonNullable<RankedMatch["recommendationTier"]> =
-          m.compatibilityScore >= 80
-            ? "BEST"
-            : m.compatibilityScore >= 68
-              ? "STRONG"
-              : m.compatibilityScore >= 55
-                ? "GOOD"
-                : "EXPLORE";
-        const kundliReason =
-          m.totalGuna >= 28
-            ? `Strong Ashta Koota (${m.totalGuna}/${m.maxGuna}) · ~${m.compatibilityScore}% core`
-            : m.totalGuna >= 24
-              ? `Solid Guna Milan (${m.totalGuna}/${m.maxGuna}) · ~${m.compatibilityScore}% core`
-              : m.reasons?.[0] || `Approx core match ~${m.compatibilityScore}%`;
-        const mindReason = m.mindApprox > 0 ? `Mind / temperament ~${m.mindApprox}%` : null;
-        return {
-          ...m,
-          rank: index + 1,
-          recommendationTier: tier,
-          reasons: [
-            kundliReason,
-            ...(mindReason ? [mindReason] : []),
-            ...(m.reasons || []).filter((r) => r !== kundliReason && r !== mindReason),
-          ].slice(0, 3),
-          cardSummary: kundliReason,
-        };
-      });
+      .sort(compareRecommendedMatches);
 
-    const top = withPriority.slice(0, 60);
+    const selected = selectRecommendedMatches(withPriority);
+    const top = selected.map((m, index) => {
+      const tier = recommendationTier(m.compatibilityScore, m.totalGuna);
+      const kundliReason =
+        gunaMilanReason(m.totalGuna, m.maxGuna, m.compatibilityScore) ||
+        m.reasons?.[0] ||
+        `Approx core match ~${m.compatibilityScore}%`;
+      const mindReason = m.mindApprox > 0 ? `Mind / temperament ~${m.mindApprox}%` : null;
+      const prefReason =
+        m.preferenceFit != null && m.preferenceFit >= 70
+          ? `Fits your preferences ~${m.preferenceFit}%`
+          : null;
+      return {
+        ...m,
+        rank: index + 1,
+        recommendationTier: tier,
+        preferenceFit: m.preferenceFit,
+        reasons: [
+          kundliReason,
+          ...(mindReason ? [mindReason] : []),
+          ...(prefReason ? [prefReason] : []),
+          ...(m.reasons || []).filter(
+            (r) => r !== kundliReason && r !== mindReason && r !== prefReason,
+          ),
+        ].slice(0, 3),
+        cardSummary: kundliReason,
+      };
+    });
+
     return {
-      ...toPaginatedResult(top, withPriority.length, 1, 60),
+      ...toPaginatedResult(top, selected.length, 1, top.length || 80),
       self: { hasChart: true, city: result.self.city },
       hasSelfChart: true,
     };

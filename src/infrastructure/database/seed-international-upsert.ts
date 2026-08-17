@@ -7,11 +7,19 @@ import "dotenv/config";
 import { connectMongo, disconnectMongo, getMongoDb } from "@/infrastructure/database/mongodb";
 import {
   BirthDetails,
+  Chat,
+  CompatibilityReport,
   Dasha,
   Horoscope,
+  Like,
+  Match,
+  Message,
+  Notification,
   PartnerPreferences,
   Profile,
+  Shortlist,
   SituationalProfile,
+  Visitor,
 } from "@/infrastructure/database/models";
 import { INTERNATIONAL_DEMO_MEMBERS } from "@/lib/mock/international-demo-profiles";
 import { allDemoPhotoUrls } from "@/lib/mock/demo-extra-photos";
@@ -64,6 +72,98 @@ async function ensureAuthUser(input: { email: string; password: string; name: st
     .collection("user")
     .updateOne({ _id: result.user.id as never }, { $set: { emailVerified: true } });
   return userId;
+}
+
+async function purgeDemoUser(userId: string) {
+  const db = getMongoDb();
+  await Promise.all([
+    Profile.deleteMany({ userId }),
+    PartnerPreferences.deleteMany({ userId }),
+    BirthDetails.deleteMany({ userId }),
+    Horoscope.deleteMany({ userId }),
+    Dasha.deleteMany({ userId }),
+    SituationalProfile.deleteMany({ userId }),
+    Match.deleteMany({ $or: [{ userId }, { candidateUserId: userId }] } as never),
+    Like.deleteMany({ $or: [{ fromUserId: userId }, { toUserId: userId }] } as never),
+    Visitor.deleteMany({
+      $or: [{ visitorUserId: userId }, { profileUserId: userId }],
+    } as never),
+    Shortlist.deleteMany({ $or: [{ userId }, { targetUserId: userId }] } as never),
+    CompatibilityReport.deleteMany({
+      $or: [{ userAId: userId }, { userBId: userId }],
+    } as never),
+    Chat.deleteMany({ participantIds: userId } as never),
+    Message.deleteMany({ senderId: userId } as never),
+    Notification.deleteMany({ userId }),
+    db.collection("session").deleteMany({ userId }),
+    db.collection("account").deleteMany({ userId }),
+  ]);
+}
+
+/** Drop extra demo accounts that share a celeb name (e.g. two Dua Lipa rows). */
+async function retireDuplicateNamedDemos() {
+  const db = getMongoDb();
+  const keepEmails = new Set(INTERNATIONAL_DEMO_MEMBERS.map((m) => m.email.toLowerCase()));
+  const leftoverEmails = ["dualipa@demo.vedamilan.ai"];
+
+  let removed = 0;
+
+  for (const email of leftoverEmails) {
+    if (keepEmails.has(email)) continue;
+    const user = await db.collection("user").findOne({ email });
+    if (!user) continue;
+    const userId = String(user.id || user._id);
+    await purgeDemoUser(userId);
+    await db.collection("user").deleteOne({ _id: user._id });
+    if (user._id) {
+      await db.collection("user").deleteOne({ id: userId });
+    }
+    removed += 1;
+    logger.info({ email, userId }, "Retired leftover demo email");
+  }
+
+  const profiles = await Profile.find({
+    name: { $regex: /^dua\s*lipa$/i },
+  })
+    .select("userId name")
+    .lean();
+
+  if (profiles.length < 2) return removed;
+
+  const userIds = profiles.map((p) => p.userId);
+  const users = await db
+    .collection("user")
+    .find({
+      $or: [{ id: { $in: userIds } }, { _id: { $in: userIds as never[] } }],
+    })
+    .toArray();
+  const emailByUserId = new Map<string, string>();
+  for (const user of users) {
+    const id = String(user.id || user._id);
+    emailByUserId.set(id, String(user.email || "").toLowerCase());
+    emailByUserId.set(String(user._id), String(user.email || "").toLowerCase());
+  }
+
+  const keepUserId =
+    profiles.find((p) => keepEmails.has(emailByUserId.get(p.userId) || ""))?.userId ||
+    profiles[0]!.userId;
+
+  for (const profile of profiles) {
+    if (profile.userId === keepUserId) continue;
+    const email = emailByUserId.get(profile.userId) || "";
+    if (keepEmails.has(email)) continue;
+    await purgeDemoUser(profile.userId);
+    await db.collection("user").deleteMany({
+      $or: [{ id: profile.userId }, { _id: profile.userId as never }],
+    });
+    removed += 1;
+    logger.info(
+      { name: profile.name, email, userId: profile.userId },
+      "Retired duplicate demo profile",
+    );
+  }
+
+  return removed;
 }
 
 async function upsertOne(userId: string, member: DemoMember) {
@@ -171,8 +271,16 @@ async function main() {
   }
 
   const onlyNew = process.argv.includes("--only-new");
+  const retireOnly = process.argv.includes("--retire-duplicates");
   await connectMongo();
   const db = getMongoDb();
+
+  const retired = await retireDuplicateNamedDemos();
+  logger.info({ retired }, "Duplicate demo names retired");
+  if (retireOnly) {
+    await disconnectMongo();
+    return;
+  }
 
   let ok = 0;
   let fail = 0;

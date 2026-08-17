@@ -120,7 +120,7 @@ export default function RecommendationsPage() {
         />
       ) : !loading ? (
         <ContentReveal className="grid gap-4 md:grid-cols-2">
-          {matches.slice(0, 6).map((m) => (
+          {matches.slice(0, 9).map((m) => (
             <MatchCard
               key={m.userId}
               name={m.name}

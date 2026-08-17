@@ -3047,45 +3047,6 @@ const MUSIC_ARTISTS: DemoMember[] = [
     },
     matchHeadline: "Libra charm with Scorpio depth — late-thirties marriage window.",
   }),
-  member({
-    id: "i_dualipa",
-    email: "dualipa@demo.vedamilan.ai",
-    name: "Dua Lipa",
-    gender: "FEMALE",
-    dateOfBirth: "1995-08-22",
-    heightCm: 165,
-    city: "London",
-    state: "England",
-    country: "United Kingdom",
-    coordinates: [-0.1276, 51.5074],
-    religion: "Christian",
-    community: "Albanian–British",
-    motherTongue: "English",
-    languages: ["English", "Albanian"],
-    education: "Sylvia Young Theatre School",
-    profession: "Pop Singer & Songwriter",
-    company: "Warner Records",
-    incomeRange: "1 Cr+",
-    maritalStatus: "NEVER_MARRIED",
-    headline: "Albanian-British pop powerhouse — private, loyal, ambitious",
-    about:
-      "Demo pop artist profile. Approximate chart from published DOB (London; time unknown). Seeks someone grounded who can handle touring schedules and still build a home base.",
-    lifestyle: { diet: "Non-vegetarian", smoking: "No", drinking: "Occasionally" },
-    photo:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Dua_Lipa_2019.jpg/960px-Dua_Lipa_2019.jpg",
-    isCelebrity: true,
-    isVerified: true,
-    birth: {
-      birthDate: "1995-08-22",
-      birthTime: "12:30:00",
-      birthTimeUnknown: true,
-      placeName: "London, England, UK",
-      latitude: 51.5074,
-      longitude: -0.1276,
-      timezone: "Europe/London",
-    },
-    matchHeadline: "Leo confidence with Virgo precision — late-twenties marriage window.",
-  }),
 ];
 
 /** Fashion models from diverse regions */
@@ -4430,7 +4391,24 @@ const DIVERSE_FIELDS: DemoMember[] = [
   }),
 ];
 
-export const INTERNATIONAL_DEMO_MEMBERS: DemoMember[] = [
+function uniqueDemoMembers(members: DemoMember[]): DemoMember[] {
+  const seenId = new Set<string>();
+  const seenEmail = new Set<string>();
+  const seenName = new Set<string>();
+  const out: DemoMember[] = [];
+  for (const member of members) {
+    const email = member.email.trim().toLowerCase();
+    const name = member.name.trim().toLowerCase();
+    if (seenId.has(member.id) || seenEmail.has(email) || seenName.has(name)) continue;
+    seenId.add(member.id);
+    seenEmail.add(email);
+    seenName.add(name);
+    out.push(member);
+  }
+  return out;
+}
+
+export const INTERNATIONAL_DEMO_MEMBERS: DemoMember[] = uniqueDemoMembers([
   ...MMA,
   ...WWE,
   ...HOLLYWOOD,
@@ -4445,4 +4423,4 @@ export const INTERNATIONAL_DEMO_MEMBERS: DemoMember[] = [
   ...SPORTS_PERSONALITIES,
   ...TECH_ENTREPRENEURS,
   ...DIVERSE_FIELDS,
-];
+]);

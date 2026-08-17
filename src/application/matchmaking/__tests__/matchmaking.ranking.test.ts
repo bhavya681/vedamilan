@@ -3,6 +3,14 @@ import { describe, expect, it } from "vitest";
 import { scoreAshtaKoota } from "@/application/rules/ashta-koota";
 import { scoreMatchBlend } from "@/application/rules/match-blend";
 import { normalizeGender, oppositeGender } from "@/application/matchmaking/matchmaking.service";
+import {
+  compareRecommendedMatches,
+  isMarriageSustainable,
+  preferenceFitScore,
+  rankingScore,
+  recommendationTier,
+  selectRecommendedMatches,
+} from "@/application/matchmaking/recommendation-tiers";
 
 describe("Module 6 — matchmaking ranking", () => {
   it("suggests opposite gender only", () => {
@@ -79,22 +87,92 @@ describe("Module 6 — matchmaking ranking", () => {
     expect(blended.totalGuna).toBeGreaterThan(0);
   });
 
-  it("never lets preference boost outrank a higher match score", () => {
+  it("never lets preference boost outrank a clearly better kundli match", () => {
     const ranked = [
-      { id: "pref-fit-low", compatibilityScore: 67, totalGuna: 22, preferenceBoost: 5 },
-      { id: "high-score", compatibilityScore: 84, totalGuna: 28, preferenceBoost: 0 },
-      { id: "mid", compatibilityScore: 72, totalGuna: 25, preferenceBoost: 3 },
-    ].sort((a, b) => {
-      if (b.compatibilityScore !== a.compatibilityScore) {
-        return b.compatibilityScore - a.compatibilityScore;
-      }
-      if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
-      if (b.preferenceBoost !== a.preferenceBoost) {
-        return b.preferenceBoost - a.preferenceBoost;
-      }
-      return 0;
-    });
+      { id: "pref-fit-low", compatibilityScore: 67, totalGuna: 22, preferenceFit: 100, name: "a" },
+      { id: "high-score", compatibilityScore: 84, totalGuna: 28, preferenceFit: 0, name: "b" },
+      { id: "mid", compatibilityScore: 72, totalGuna: 25, preferenceFit: 80, name: "c" },
+    ].sort(compareRecommendedMatches);
 
     expect(ranked.map((r) => r.id)).toEqual(["high-score", "mid", "pref-fit-low"]);
+  });
+
+  it("among similar kundli scores, higher preference fit ranks first", () => {
+    const ranked = [
+      { id: "close-no-pref", compatibilityScore: 73, totalGuna: 24, preferenceFit: 10, name: "a" },
+      { id: "close-pref", compatibilityScore: 72, totalGuna: 24, preferenceFit: 100, name: "b" },
+    ].sort(compareRecommendedMatches);
+
+    expect(ranked[0]?.id).toBe("close-pref");
+    expect(rankingScore(80, 100)).toBeLessThan(rankingScore(85, 0));
+  });
+
+  it("scores partner-preference probability from stated criteria", () => {
+    const fit = preferenceFitScore(
+      {
+        ageMin: 25,
+        ageMax: 32,
+        cities: ["Mumbai"],
+        religions: ["Hindu"],
+        manglikPreference: "NON_MANGLIK",
+      },
+      {
+        age: 28,
+        city: "Mumbai",
+        religion: "Hindu",
+        manglik: "NON_MANGLIK",
+      },
+    );
+    const miss = preferenceFitScore(
+      {
+        ageMin: 25,
+        ageMax: 32,
+        cities: ["Mumbai"],
+        religions: ["Hindu"],
+      },
+      {
+        age: 40,
+        city: "London",
+        religion: "Christian",
+      },
+    );
+    expect(fit).toBe(100);
+    expect(miss).toBe(0);
+    expect(preferenceFitScore(null, { age: 28 })).toBe(50);
+  });
+});
+
+describe("recommendation tiers — marriage-sustainable suggestions", () => {
+  it("treats 18+ Gunas as marriage-viable even when blend is not elite", () => {
+    expect(isMarriageSustainable(49, 18)).toBe(true);
+    expect(isMarriageSustainable(40, 17)).toBe(false);
+    expect(recommendationTier(49, 18)).toBe("GOOD");
+    expect(recommendationTier(72, 20)).toBe("BEST");
+    expect(recommendationTier(60, 28)).toBe("STRONG");
+  });
+
+  it("prefers sustainable matches then fills so the list is not too thin", () => {
+    const pool = [
+      { id: "a", compatibilityScore: 74, totalGuna: 28 },
+      { id: "b", compatibilityScore: 61, totalGuna: 24 },
+      { id: "c", compatibilityScore: 50, totalGuna: 18 },
+      { id: "d", compatibilityScore: 42, totalGuna: 14 },
+      { id: "e", compatibilityScore: 38, totalGuna: 12 },
+    ];
+    const picked = selectRecommendedMatches(pool, { min: 4, max: 8 });
+    expect(picked.map((p) => p.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("does not drop a large sustainable pool down to a tiny elite slice", () => {
+    const pool = Array.from({ length: 50 }, (_, i) => ({
+      id: String(i),
+      compatibilityScore: 50 + (i % 20),
+      totalGuna: 18 + (i % 10),
+    }));
+    const picked = selectRecommendedMatches(pool, { min: 36, max: 80 });
+    expect(picked.length).toBeGreaterThanOrEqual(36);
+    expect(picked.every((p) => isMarriageSustainable(p.compatibilityScore, p.totalGuna))).toBe(
+      true,
+    );
   });
 });

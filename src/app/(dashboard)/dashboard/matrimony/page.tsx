@@ -115,7 +115,7 @@ export default function MatrimonyHomePage() {
           userName: formatPersonName(me.user?.name || profileData?.user?.name, "Friend"),
           moonSign: chartRes.data?.horoscope?.moonSign || null,
           currentMaha: chartRes.data?.dasha?.currentMaha || null,
-          matches: matchItems.slice(0, 3),
+          matches: matchItems.slice(0, 6),
           insight: insight ? String(insight).slice(0, 320) : null,
           unread: notes.success ? notes.data.unread || 0 : 0,
           spouseTendencies: marriageRes?.success
@@ -239,8 +239,8 @@ export default function MatrimonyHomePage() {
                 <div className="min-w-0">
                   <h2 className="font-display text-2xl">Recommended for you</h2>
                   <p className="text-muted-foreground mt-1 text-sm">
-                    Best kundli matches first — approx core fit from your chart. Open Compatibility
-                    for deep analysis.
+                    Strongest kundli matches first. Among similar scores, profiles that also fit
+                    your partner preferences appear sooner. Open Compatibility for deep analysis.
                   </p>
                 </div>
                 <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">

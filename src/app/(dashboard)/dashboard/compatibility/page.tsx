@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -139,6 +138,8 @@ type RecMatch = {
   city: string | null;
   photo: string | null;
   compatibilityScore: number;
+  preferenceFit?: number | null;
+  recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
 };
 
 type PairInfo = {
@@ -168,7 +169,6 @@ export default function CompatibilityPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState("why");
-  const [showAdvancedId, setShowAdvancedId] = useState(false);
   const autoRanCandidate = useRef<string | null>(null);
 
   async function loadReports() {
@@ -209,10 +209,14 @@ export default function CompatibilityPage() {
     });
   }
 
-  async function runCompare(id?: string) {
+  async function runCompare(id?: string, allowed = candidates) {
     const target = (id || candidateUserId).trim();
     if (!target) {
       setError("Choose someone to explore compatibility with.");
+      return;
+    }
+    if (!allowed.some((c) => c.userId === target)) {
+      setError("Compatibility is only available for your preferred suggested profiles.");
       return;
     }
     setCandidateUserId(target);
@@ -237,23 +241,24 @@ export default function CompatibilityPage() {
   useEffect(() => {
     const candidate = new URLSearchParams(window.location.search).get("candidate")?.trim() || "";
     void loadReports().catch(() => setError("Failed to load compatibility"));
-    // Full opposite-gender roster (celebs + members) for personalized compatibility picks
-    void fetch("/api/matches?limit=80&applyPreferences=false&minCompatibility=0")
+    // Same preferred suggestions as Matches — not the full unfiltered roster
+    void fetch("/api/recommendations")
       .then((r) => r.json())
       .then((json) => {
-        if (json.success) {
-          const rows = (json.data?.data || []) as RecMatch[];
-          setCandidates(rows);
+        if (!json.success) return;
+        const rows = (json.data?.data || []) as RecMatch[];
+        setCandidates(rows);
+        if (
+          candidate &&
+          rows.some((c) => c.userId === candidate) &&
+          autoRanCandidate.current !== candidate
+        ) {
+          autoRanCandidate.current = candidate;
+          setCandidateUserId(candidate);
+          void runCompare(candidate, rows);
         }
       })
       .catch(() => undefined);
-
-    // Coming from Matches / profile with a specific partner — run deep compare immediately
-    if (candidate && autoRanCandidate.current !== candidate) {
-      autoRanCandidate.current = candidate;
-      setCandidateUserId(candidate);
-      void runCompare(candidate);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -305,7 +310,7 @@ export default function CompatibilityPage() {
         description={
           active
             ? "Emotion first, then meaning, then the deeper Vedic evidence."
-            : "Choose someone meaningful. See how you may align before diving into charts."
+            : "Choose from your preferred suggested profiles. See how you may align before diving into charts."
         }
         actions={
           active?._id ? (
@@ -321,8 +326,8 @@ export default function CompatibilityPage() {
           <div>
             <h2 className="font-display text-xl sm:text-2xl">Who would you like to understand?</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Opposite-gender connections with Vedic charts — tap someone to run deep compatibility
-              right away.
+              Only your preferred suggested profiles — the same kundli-ranked people from Matches.
+              Tap someone to run deep compatibility.
             </p>
           </div>
           {candidates.length ? (
@@ -356,6 +361,7 @@ export default function CompatibilityPage() {
                     </p>
                     <p className="text-muted-foreground truncate text-xs">
                       {c.city || "—"} · {c.compatibilityScore}% preview
+                      {typeof c.preferenceFit === "number" ? ` · prefs ${c.preferenceFit}%` : ""}
                     </p>
                   </div>
                 </button>
@@ -363,8 +369,8 @@ export default function CompatibilityPage() {
             </div>
           ) : (
             <EmptyState
-              title="Your compatibility journey starts here"
-              description="Explore Matches first to find people worth understanding more deeply."
+              title="No suggested profiles yet"
+              description="Generate your kundli and open Matches first. Compatibility only compares your preferred suggested people."
               action={
                 <Button asChild className="w-full sm:w-auto">
                   <Link href={routes.matches}>Explore Matches</Link>
@@ -374,36 +380,9 @@ export default function CompatibilityPage() {
           )}
 
           <p className="text-muted-foreground text-xs sm:text-sm">
-            Tap a person above to run deep compatibility immediately — no extra confirmation.
+            Tap a suggested profile to run deep compatibility. People outside this list are not
+            compared here.
           </p>
-
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground ml-2 text-sm hover:underline"
-            onClick={() => setShowAdvancedId((v) => !v)}
-          >
-            {showAdvancedId ? "Hide profile id" : "Enter a profile id"}
-          </button>
-
-          {showAdvancedId ? (
-            <form
-              className="flex flex-col gap-3 sm:flex-row sm:items-center"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void runCompare();
-              }}
-            >
-              <Input
-                value={candidateUserId}
-                onChange={(e) => setCandidateUserId(e.target.value)}
-                placeholder="Profile id"
-                className="w-full sm:flex-1"
-              />
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                Continue
-              </Button>
-            </form>
-          ) : null}
 
           {error ? <p className="text-destructive text-sm">{error}</p> : null}
         </div>
@@ -862,7 +841,7 @@ export default function CompatibilityPage() {
           <div className="border-border/70 bg-card shadow-soft overflow-hidden rounded-2xl border px-4 py-10">
             <EmptyState
               title="No reports yet"
-              description="Pick someone from your matches to run your first compatibility check — both photos and a clear score will appear here."
+              description="Pick someone from your preferred suggested profiles to run your first compatibility check — both photos and a clear score will appear here."
               action={
                 <Button asChild className="w-full sm:w-auto">
                   <Link href={routes.matches}>Explore Matches</Link>

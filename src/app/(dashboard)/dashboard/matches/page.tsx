@@ -12,6 +12,11 @@ import { MatchCard } from "@/components/ui/premium-cards";
 import { ContentReveal, MatchesPageSkeleton } from "@/components/ui/page-skeletons";
 import { ScoreExplainCallout } from "@/features/matchmaking/components/score-explain";
 import { routes } from "@/lib/constants/routes";
+import {
+  recommendationTier,
+  TIER_BEST_SCORE,
+  TIER_STRONG_SCORE,
+} from "@/application/matchmaking/recommendation-tiers";
 
 type MatchItem = {
   userId: string;
@@ -30,6 +35,7 @@ type MatchItem = {
   reasons: string[];
   gunaBreakdown: Array<{ koota: string; score: number; max: number }>;
   recommendationTier?: "BEST" | "STRONG" | "GOOD" | "EXPLORE";
+  preferenceFit?: number | null;
   rank?: number;
   hasSituationalAlignment?: boolean;
   situationalScore?: number | null;
@@ -103,11 +109,18 @@ export default function MatchesPage() {
       const data = ((recJson.data?.data || []) as MatchItem[])
         .slice()
         .sort((a, b) => {
+          // Keep server order: best kundli first, then preference fit among similar scores.
+          const rankA = a.rank ?? Number.MAX_SAFE_INTEGER;
+          const rankB = b.rank ?? Number.MAX_SAFE_INTEGER;
+          if (rankA !== rankB) return rankA - rankB;
           if (b.compatibilityScore !== a.compatibilityScore) {
             return b.compatibilityScore - a.compatibilityScore;
           }
+          if ((b.preferenceFit ?? 0) !== (a.preferenceFit ?? 0)) {
+            return (b.preferenceFit ?? 0) - (a.preferenceFit ?? 0);
+          }
           if (b.totalGuna !== a.totalGuna) return b.totalGuna - a.totalGuna;
-          return (a.rank ?? 0) - (b.rank ?? 0);
+          return 0;
         })
         .map((m, i) => ({ ...m, rank: m.rank ?? i + 1 }));
       // Kundli-sorted: highest overall compatibility first
@@ -144,29 +157,19 @@ export default function MatchesPage() {
     void load();
   }, [load]);
 
-  const best = useMemo(
-    () =>
-      matches
-        .filter(
-          (m) => (m.recommendationTier || (m.compatibilityScore >= 80 ? "BEST" : "")) === "BEST",
-        )
-        .slice(0, 9),
-    [matches],
-  );
+  const tierOf = (m: MatchItem) =>
+    m.recommendationTier || recommendationTier(m.compatibilityScore, m.totalGuna);
+
+  const best = useMemo(() => matches.filter((m) => tierOf(m) === "BEST").slice(0, 24), [matches]);
   const strong = useMemo(
-    () =>
-      matches
-        .filter((m) => {
-          const tier = m.recommendationTier || (m.compatibilityScore >= 68 ? "STRONG" : "");
-          return tier === "STRONG";
-        })
-        .slice(0, 9),
+    () => matches.filter((m) => tierOf(m) === "STRONG").slice(0, 24),
     [matches],
   );
+  const good = useMemo(() => matches.filter((m) => tierOf(m) === "GOOD").slice(0, 24), [matches]);
   const more = useMemo(() => {
-    const topIds = new Set([...best, ...strong].map((m) => m.userId));
+    const topIds = new Set([...best, ...strong, ...good].map((m) => m.userId));
     return matches.filter((m) => !topIds.has(m.userId)).slice(0, 12);
-  }, [matches, best, strong]);
+  }, [matches, best, strong, good]);
 
   async function shortlist(userId: string) {
     setShortlisting(userId);
@@ -250,6 +253,9 @@ export default function MatchesPage() {
               {typeof match.numerologyScore === "number" ? (
                 <span>Numerology ~{match.numerologyScore}%</span>
               ) : null}
+              {typeof match.preferenceFit === "number" ? (
+                <span>Prefs ~{match.preferenceFit}%</span>
+              ) : null}
               <span>
                 Guna {match.totalGuna}/{match.maxGuna || 36}
               </span>
@@ -269,7 +275,7 @@ export default function MatchesPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         title={t("pages.matchesTitle")}
-        description="Ranked by your kundli — best approx core matches first. Mind % is a temperament preview; open Compatibility for deep analysis."
+        description="Best kundli matches first. Among similar chart scores, people who also fit your partner preferences rise next. Mind % is a temperament preview; open Compatibility for deep analysis."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -377,7 +383,9 @@ export default function MatchesPage() {
                   <h2 className="font-display text-2xl">Best kundli matches</h2>
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Highest chart compatibility with your Moon, Nakshatra, and Ashta Koota (80%+).
+                  Highest chart compatibility with your Moon, Nakshatra, and Ashta Koota (
+                  {TIER_BEST_SCORE}%+). Most likely to be a strong match — preference fit only
+                  reorders people with similar scores.
                 </p>
               </div>
               {renderGrid(best)}
@@ -389,10 +397,24 @@ export default function MatchesPage() {
               <div>
                 <h2 className="font-display text-2xl">Strong Vedic alignment</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Solid multi-factor scores from your birth charts (68–79%).
+                  Solid multi-factor scores from your birth charts ({TIER_STRONG_SCORE}–
+                  {TIER_BEST_SCORE - 1}% or 28+ Gunas). Good foundation for a lasting match.
                 </p>
               </div>
               {renderGrid(strong)}
+            </section>
+          ) : null}
+
+          {good.length ? (
+            <section className="space-y-4">
+              <div>
+                <h2 className="font-display text-2xl">Marriage can sustain</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Classic Ashta Koota floor of 18/36 (or ~48%+ core). Not the very strongest charts,
+                  but traditionally considered viable for marriage — still ranked by kundli blend.
+                </p>
+              </div>
+              {renderGrid(good)}
             </section>
           ) : null}
 
@@ -401,15 +423,15 @@ export default function MatchesPage() {
               <div>
                 <h2 className="font-display text-2xl">More suggestions</h2>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Next-highest match scores (under 68%). Still sorted by kundli blend — not by
-                  partner-preference leftovers. Open Compatibility for a deeper chart compare.
+                  Next-highest match scores below the marriage-viable band. Still sorted by kundli
+                  blend. Open Compatibility for a deeper chart compare.
                 </p>
               </div>
               {renderGrid(more)}
             </section>
           ) : null}
 
-          {!best.length && !strong.length && more.length === 0 ? (
+          {!best.length && !strong.length && !good.length && more.length === 0 ? (
             <section className="space-y-4">
               <div>
                 <h2 className="font-display text-2xl">Recommended for you</h2>
@@ -417,7 +439,7 @@ export default function MatchesPage() {
                   Ranked by Vedic compatibility from your kundli.
                 </p>
               </div>
-              {renderGrid(matches.slice(0, 12))}
+              {renderGrid(matches.slice(0, 24))}
             </section>
           ) : null}
         </ContentReveal>
