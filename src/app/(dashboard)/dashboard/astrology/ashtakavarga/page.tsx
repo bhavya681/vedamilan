@@ -334,7 +334,7 @@ export default function AstrologyAshtakavargaPage() {
                   <div>
                     <h2 className="font-display text-xl">SAV chart</h2>
                     <p className="text-muted-foreground text-xs">
-                      Bindus in each bhava from lagna. Read like JHora's numeric kundli.
+                      Bindus in each bhava from lagna. Read like the numeric kundli in JHora.
                     </p>
                   </div>
                   <SavKundli sarva={data.sarva} lagnaSign={data.lagnaSign} />
@@ -605,9 +605,9 @@ export default function AstrologyAshtakavargaPage() {
                 <div>
                   <h2 className="font-display text-xl">Transit kakshya</h2>
                   <p className="text-muted-foreground text-xs">
-                    When a planet transits a house, read that planet's own BAV in the occupied house
-                    (0–8) together with the house SAV. BAV ≥ 5 and SAV ≥ 30 is the classical
-                    supportive window.
+                    When a planet transits a house, read its own BAV in the occupied house (0–8)
+                    together with the house SAV. BAV ≥ 5 and SAV ≥ 30 is the classical supportive
+                    window.
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
