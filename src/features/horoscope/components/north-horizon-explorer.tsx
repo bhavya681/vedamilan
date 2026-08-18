@@ -57,6 +57,15 @@ const AI_PROMPTS = [
   "What does this planetary alignment mean according to Vedic astrology?",
 ];
 
+function skyChipClass(active = false) {
+  return cn(
+    "inline-flex h-7 items-center justify-center gap-1 rounded-lg border px-2 text-[10px] font-semibold backdrop-blur-md transition-colors",
+    active
+      ? "border-gold/55 bg-gold/30 text-ivory"
+      : "border-ivory/20 bg-black/50 text-ivory/90 hover:bg-black/70",
+  );
+}
+
 function isoFromLocal(value: string) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
@@ -400,9 +409,11 @@ export function NorthHorizonExplorer() {
       data-dashboard-bleed
       className="flex min-h-0 w-full flex-1 flex-col gap-2 lg:h-full lg:min-h-0 lg:overflow-hidden"
     >
-      <header className="flex shrink-0 flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <header className="flex shrink-0 flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h1 className="font-display text-lg tracking-tight sm:text-xl">Horizon</h1>
+          <h1 className="font-display text-foreground text-lg tracking-tight sm:text-xl">
+            Horizon
+          </h1>
           <Tabs
             value={skyTab}
             onValueChange={(v) => {
@@ -443,16 +454,16 @@ export function NorthHorizonExplorer() {
             </span>
           ) : null}
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
           {mode === "live" ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-[1_1_12rem] items-center gap-1.5 sm:flex-none">
               <Label htmlFor="nh-at" className="sr-only">
                 Date and time
               </Label>
               <input
                 id="nh-at"
                 type="datetime-local"
-                className="border-input bg-background h-8 min-w-[11.5rem] rounded-md border px-2 text-xs tabular-nums"
+                className="border-input bg-background text-foreground h-8 w-full min-w-0 rounded-md border px-2 text-xs tabular-nums [color-scheme:light] sm:w-auto sm:min-w-[12.5rem] dark:[color-scheme:dark]"
                 value={localInput(at)}
                 onChange={(e) => {
                   setPreset("custom");
@@ -466,22 +477,40 @@ export function NorthHorizonExplorer() {
               {data?.natal?.birthLabel || "Birth sky"}
             </p>
           )}
-          <span className="text-muted-foreground inline-flex max-w-[14rem] items-center gap-1 truncate text-xs">
+          <span className="text-muted-foreground inline-flex max-w-[11rem] min-w-0 items-center gap-1 truncate text-xs sm:max-w-[16rem]">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
             {data?.location.label || "Location"}
           </span>
           {data ? (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="hidden text-[10px] sm:inline-flex">
               {data.location.timezone}
             </Badge>
           ) : null}
-          <Button type="button" size="sm" variant="outline" onClick={() => setLocSource("birth")}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 px-2.5 sm:px-4"
+            onClick={() => setLocSource("birth")}
+          >
             Birth
           </Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => readDeviceLocation()}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 px-2.5 sm:px-4"
+            onClick={() => readDeviceLocation()}
+          >
             Here
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setHelp(true)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2"
+            onClick={() => setHelp(true)}
+          >
             <Info className="h-4 w-4" />
             <span className="hidden sm:inline">Guide</span>
           </Button>
@@ -523,8 +552,8 @@ export function NorthHorizonExplorer() {
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2">
-          <div className="grid min-h-0 flex-1 gap-2 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_21rem]">
-            <section className="border-gold/20 relative flex min-h-[min(72dvh,44rem)] min-w-0 flex-col overflow-hidden rounded-2xl border bg-[#070b14] lg:min-h-0">
+          <div className="grid min-h-0 flex-1 gap-2 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_21rem]">
+            <section className="border-gold/25 relative flex min-h-[min(52dvh,28rem)] min-w-0 flex-col overflow-hidden rounded-2xl border bg-[#070b14] sm:min-h-[min(58dvh,34rem)] md:min-h-[min(62dvh,40rem)] lg:min-h-0">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 opacity-90"
@@ -546,7 +575,7 @@ export function NorthHorizonExplorer() {
               ) : data ? (
                 <>
                   <div className="relative flex min-h-0 flex-1 flex-col">
-                    <div className="relative min-h-0 flex-1 p-1 sm:p-2">
+                    <div className="relative min-h-0 flex-1 p-0.5 sm:p-2">
                       <CelestialSkyMap
                         snapshot={sky || data}
                         layers={layers}
@@ -559,8 +588,8 @@ export function NorthHorizonExplorer() {
                         focusNakshatra={nakOpen}
                         fill
                       />
-                      <div className="pointer-events-none absolute inset-0 z-20 p-2 sm:p-3">
-                        <div className="pointer-events-auto flex max-w-[min(100%,22rem)] flex-wrap gap-1">
+                      <div className="pointer-events-none absolute inset-0 z-20 p-1.5 sm:p-3">
+                        <div className="pointer-events-auto flex max-w-[min(100%,11.5rem)] flex-wrap gap-1 sm:max-w-[min(100%,22rem)]">
                           {(
                             [
                               ["sky", "Sky"],
@@ -568,12 +597,10 @@ export function NorthHorizonExplorer() {
                               ["learning", "Learn"],
                             ] as const
                           ).map(([id, label]) => (
-                            <Button
+                            <button
                               key={id}
                               type="button"
-                              size="sm"
-                              variant={viewMode === id ? "default" : "outline"}
-                              className="border-ivory/15 text-ivory h-7 bg-black/45 px-2 text-[10px] backdrop-blur-md"
+                              className={skyChipClass(viewMode === id)}
                               onClick={() => {
                                 setViewMode(id);
                                 if (id === "vedic") {
@@ -582,42 +609,37 @@ export function NorthHorizonExplorer() {
                               }}
                             >
                               {label}
-                            </Button>
+                            </button>
                           ))}
                         </div>
                         {data ? (
                           <button
                             type="button"
-                            className="border-gold/25 pointer-events-auto mt-2 max-w-[13.5rem] rounded-xl border bg-black/50 px-2.5 py-2 text-left backdrop-blur-md"
+                            className="border-gold/30 pointer-events-auto mt-1.5 max-w-[9.75rem] rounded-xl border bg-black/55 px-2 py-1.5 text-left backdrop-blur-md sm:mt-2 sm:max-w-[13.5rem] sm:px-2.5 sm:py-2"
                             onClick={() => setLagnaOpen(true)}
                           >
-                            <p className="text-gold/80 text-[9px] tracking-[0.16em] uppercase">
+                            <p className="text-gold/85 text-[9px] tracking-[0.16em] uppercase">
                               Ascendant
                             </p>
-                            <p className="font-display text-ivory text-sm">
+                            <p className="font-display text-ivory text-xs sm:text-sm">
                               {data.ascendant.sign} {data.ascendant.degreeInSign}
                             </p>
-                            <p className="text-ivory/65 text-[10px] leading-snug">
+                            <p className="text-ivory/65 hidden text-[10px] leading-snug sm:block">
                               {data.ascendant.nakshatra} · pada {data.ascendant.nakshatraPada}
                             </p>
                           </button>
                         ) : null}
-                        <div className="pointer-events-auto absolute top-2 right-2 sm:top-3 sm:right-3">
+                        <div className="pointer-events-auto absolute top-1.5 right-1.5 sm:top-3 sm:right-3">
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="border-ivory/15 text-ivory h-7 gap-1 bg-black/45 px-2 text-[10px] backdrop-blur-md"
-                              >
+                              <button type="button" className={skyChipClass()}>
                                 <Layers className="size-3" />
-                                Layers
-                              </Button>
+                                <span className="hidden sm:inline">Layers</span>
+                              </button>
                             </PopoverTrigger>
                             <PopoverContent
                               align="end"
-                              className="w-44 p-2 text-[11px]"
+                              className="bg-popover text-popover-foreground w-44 p-2 text-[11px]"
                               onOpenAutoFocus={(e) => e.preventDefault()}
                             >
                               <p className="text-muted-foreground mb-1.5 text-[10px] tracking-[0.14em] uppercase">
@@ -647,7 +669,7 @@ export function NorthHorizonExplorer() {
                             </PopoverContent>
                           </Popover>
                         </div>
-                        <div className="pointer-events-auto absolute bottom-14 left-2 flex flex-wrap gap-1 sm:bottom-16 sm:left-3">
+                        <div className="pointer-events-auto absolute bottom-1.5 left-1.5 flex max-w-[calc(100%-7.5rem)] flex-wrap gap-1 sm:bottom-2 sm:left-3">
                           {(
                             [
                               ["all", "All"],
@@ -655,24 +677,22 @@ export function NorthHorizonExplorer() {
                               ["below", "Below"],
                             ] as const
                           ).map(([id, label]) => (
-                            <Button
+                            <button
                               key={id}
                               type="button"
-                              size="sm"
-                              variant={filter === id ? "default" : "outline"}
-                              className="border-ivory/15 text-ivory h-7 bg-black/45 px-2 text-[10px] backdrop-blur-md"
+                              className={skyChipClass(filter === id)}
                               onClick={() => setFilter(id)}
                             >
                               {label}
-                            </Button>
+                            </button>
                           ))}
                         </div>
-                        <div className="text-ivory/55 pointer-events-none absolute right-2 bottom-14 hidden items-center gap-1 text-[9px] tracking-[0.2em] uppercase sm:bottom-16 sm:flex">
+                        <div className="text-ivory/55 pointer-events-none absolute right-1.5 bottom-[4.35rem] hidden items-center gap-1 text-[9px] tracking-[0.2em] uppercase md:flex">
                           <Compass className="h-3 w-3" />N zenith · E rising
                         </div>
                       </div>
                     </div>
-                    <div className="border-ivory/10 relative z-10 shrink-0 border-t bg-black/35 px-2 pt-2 pb-2 backdrop-blur-md sm:px-3">
+                    <div className="border-ivory/10 relative z-10 shrink-0 border-t bg-black/40 px-1.5 pt-1.5 pb-1.5 backdrop-blur-md sm:px-3 sm:pt-2 sm:pb-2">
                       <HorizonNakshatraRail
                         selected={nakOpen}
                         lagna={data.ascendant.nakshatra}
@@ -684,7 +704,7 @@ export function NorthHorizonExplorer() {
                       />
                     </div>
                   </div>
-                  <p className="text-ivory/40 relative z-10 px-3 pb-2 text-center text-[10px]">
+                  <p className="text-ivory/45 relative z-10 px-3 pb-2 text-center text-[10px]">
                     Calculated by VedaMilan astrology engine · Lahiri sidereal · pinch or +/− to
                     zoom
                   </p>
@@ -839,14 +859,14 @@ export function NorthHorizonExplorer() {
           </div>
 
           {data ? (
-            <div className="border-border/60 bg-card/50 shrink-0 space-y-2 rounded-2xl border p-2 sm:p-3">
+            <div className="border-border/60 bg-card text-foreground shadow-soft shrink-0 space-y-2 rounded-2xl border p-2 sm:p-3">
               {mode === "live" ? (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => shiftAt(-24)}
                   >
                     −1 day
@@ -855,7 +875,7 @@ export function NorthHorizonExplorer() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => stepHours(-1)}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -865,7 +885,7 @@ export function NorthHorizonExplorer() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => {
                       if (paused && preset === "now") setAt(new Date().toISOString());
                       setPaused((p) => !p);
@@ -878,7 +898,7 @@ export function NorthHorizonExplorer() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => stepHours(1)}
                   >
                     +1 h
@@ -888,7 +908,7 @@ export function NorthHorizonExplorer() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => shiftAt(24)}
                   >
                     +1 day
@@ -897,7 +917,7 @@ export function NorthHorizonExplorer() {
                     type="button"
                     size="sm"
                     variant={preset === "now" && !paused ? "default" : "outline"}
-                    className="shrink-0"
+                    className="h-8 shrink-0 px-2.5 sm:h-9 sm:px-4"
                     onClick={() => goNow()}
                   >
                     Now
@@ -908,13 +928,13 @@ export function NorthHorizonExplorer() {
                       type="button"
                       size="sm"
                       variant={preset === p.id ? "default" : "outline"}
-                      className="hidden shrink-0 md:inline-flex"
+                      className="hidden h-8 shrink-0 px-2.5 sm:h-9 sm:px-4 md:inline-flex"
                       onClick={() => applyPreset(p.hours, p.id)}
                     >
                       {p.label}
                     </Button>
                   ))}
-                  <p className="text-muted-foreground ml-auto text-[11px] tabular-nums">
+                  <p className="text-muted-foreground w-full text-[11px] tabular-nums sm:ml-auto sm:w-auto">
                     {new Date(at).toLocaleString()}
                   </p>
                 </div>
@@ -971,7 +991,7 @@ export function NorthHorizonExplorer() {
       >
         <SheetContent
           side="bottom"
-          className="md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-[min(100%,24rem)] md:rounded-none"
+          className="bg-card text-card-foreground md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-[min(100%,24rem)] md:rounded-none"
         >
           {selectedBody ? (
             <>
@@ -1040,38 +1060,50 @@ export function NorthHorizonExplorer() {
       <Dialog open={Boolean(nakMeta)} onOpenChange={(o) => !o && setNakOpen(null)}>
         <DialogContent
           className={cn(
-            "border-ivory/15 text-ivory gap-0 overflow-hidden bg-black p-0 shadow-[0_24px_80px_rgba(0,0,0,0.55)]",
-            "w-[calc(100%-1.5rem)] max-w-md sm:max-w-lg",
-            "[&>button]:border-ivory/25 [&>button]:text-ivory [&>button]:z-20 [&>button]:rounded-full [&>button]:border [&>button]:bg-black/55 [&>button]:p-1.5 [&>button]:opacity-100 [&>button]:backdrop-blur-md [&>button]:hover:bg-black/80",
+            "bg-card text-card-foreground border-border/70 shadow-elevated gap-0 overflow-x-hidden overflow-y-auto p-0",
+            "w-[calc(100%-1.25rem)] max-w-md sm:w-full sm:max-w-lg",
+            "max-h-[min(88dvh,36rem)]",
+            "[&>button]:border-ivory/35 [&>button]:text-ivory [&>button]:top-2.5 [&>button]:right-2.5 [&>button]:z-20 [&>button]:rounded-full [&>button]:border [&>button]:bg-black/60 [&>button]:p-1.5 [&>button]:opacity-100 [&>button]:hover:bg-black/80",
           )}
         >
           {nakMeta ? (
             <>
-              <NakshatraStarFigure name={nakMeta.name} className="h-40 w-full sm:h-48 md:h-52" />
-              <DialogHeader className="space-y-1 px-5 pt-4 text-left sm:px-6">
-                <DialogTitle className="text-ivory text-xl sm:text-2xl">{nakMeta.name}</DialogTitle>
+              <div className="overflow-hidden bg-black">
+                <NakshatraStarFigure name={nakMeta.name} className="h-32 w-full sm:h-40 md:h-48" />
+              </div>
+              <DialogHeader className="space-y-1 px-4 pt-3 text-left sm:px-6 sm:pt-4">
+                <DialogTitle className="text-xl sm:text-2xl">{nakMeta.name}</DialogTitle>
               </DialogHeader>
-              <div className="text-ivory/85 space-y-2 px-5 pt-2 pb-6 text-sm sm:px-6">
-                <p>Deity · {nakMeta.deity}</p>
-                <p>Symbol · {nakMeta.symbol}</p>
-                <p>Ruling planet · {nakMeta.lord}</p>
-                <Button
-                  type="button"
-                  variant="ai"
-                  className="mt-3 w-full sm:w-auto"
-                  onClick={() =>
-                    void askGuru(`Ask AI about ${nakMeta.name} Nakshatra from this calculated sky.`)
-                  }
-                >
-                  Ask AI about {nakMeta.name}
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-ivory/25 text-ivory hover:text-ivory mt-2 w-full bg-black/40 hover:bg-black/60 sm:w-auto"
-                >
-                  <Link href={routes.astrologyNakshatra}>Understand this Nakshatra</Link>
-                </Button>
+              <div className="space-y-2 px-4 pt-1 pb-5 text-sm sm:px-6 sm:pb-6">
+                <p>
+                  <span className="text-muted-foreground">Deity · </span>
+                  {nakMeta.deity}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Symbol · </span>
+                  {nakMeta.symbol}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Ruling planet · </span>
+                  {nakMeta.lord}
+                </p>
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
+                  <Button
+                    type="button"
+                    variant="ai"
+                    className="w-full sm:w-auto"
+                    onClick={() =>
+                      void askGuru(
+                        `Ask AI about ${nakMeta.name} Nakshatra from this calculated sky.`,
+                      )
+                    }
+                  >
+                    Ask AI about {nakMeta.name}
+                  </Button>
+                  <Button asChild variant="outline" className="w-full sm:w-auto">
+                    <Link href={routes.astrologyNakshatra}>Understand this Nakshatra</Link>
+                  </Button>
+                </div>
               </div>
             </>
           ) : null}
@@ -1081,7 +1113,7 @@ export function NorthHorizonExplorer() {
       <Sheet open={lagnaOpen} onOpenChange={setLagnaOpen}>
         <SheetContent
           side="bottom"
-          className="md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-[min(100%,24rem)] md:rounded-none"
+          className="bg-card text-card-foreground md:inset-y-0 md:right-0 md:left-auto md:h-full md:max-h-none md:w-[min(100%,24rem)] md:rounded-none"
         >
           {data ? (
             <>
@@ -1114,7 +1146,7 @@ export function NorthHorizonExplorer() {
       </Sheet>
 
       <Sheet open={help} onOpenChange={setHelp}>
-        <SheetContent side="bottom">
+        <SheetContent side="bottom" className="bg-card text-card-foreground">
           <SheetHeader>
             <SheetTitle>What am I seeing?</SheetTitle>
           </SheetHeader>
@@ -1156,7 +1188,10 @@ export function NorthHorizonExplorer() {
       </Sheet>
 
       <Sheet open={skyNotesOpen} onOpenChange={setSkyNotesOpen}>
-        <SheetContent side="bottom" className="max-h-[min(88dvh,36rem)]">
+        <SheetContent
+          side="bottom"
+          className="bg-card text-card-foreground max-h-[min(88dvh,36rem)]"
+        >
           <SheetHeader>
             <SheetTitle>Sky notes</SheetTitle>
           </SheetHeader>

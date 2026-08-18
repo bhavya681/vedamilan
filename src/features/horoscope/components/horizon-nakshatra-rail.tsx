@@ -31,15 +31,15 @@ export function HorizonNakshatraRail({
 
   return (
     <div className="min-w-0">
-      <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
-        <p className="text-ivory/70 text-[10px] font-semibold tracking-[0.16em] uppercase">
+      <div className="mb-1 flex items-center justify-between gap-2 px-0.5 sm:mb-1.5">
+        <p className="text-ivory/75 text-[10px] font-semibold tracking-[0.16em] uppercase">
           Nakshatras
         </p>
-        <p className="text-ivory/45 text-[10px]">Scroll to visit each star group</p>
+        <p className="text-ivory/45 hidden text-[10px] sm:block">Scroll to visit each star group</p>
       </div>
       <div
         ref={scroller}
-        className="scrollbar-premium flex gap-1.5 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none]"
+        className="scrollbar-premium flex gap-1 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] sm:gap-1.5"
         role="listbox"
         aria-label="Nakshatras along the ecliptic"
       >
@@ -57,17 +57,20 @@ export function HorizonNakshatraRail({
               aria-selected={active}
               onClick={() => onSelect(name)}
               className={cn(
-                "flex min-w-[6.6rem] shrink-0 flex-col items-center gap-1 rounded-2xl border px-2.5 py-2 text-center transition-colors",
+                "flex min-w-[5.15rem] shrink-0 flex-col items-center gap-0.5 rounded-2xl border px-1.5 py-1.5 text-center transition-colors sm:min-w-[6.6rem] sm:gap-1 sm:px-2.5 sm:py-2",
                 active
                   ? "border-gold/70 bg-gold/15 text-ivory"
-                  : "border-ivory/10 text-ivory/80 hover:border-gold/35 bg-black/25 hover:bg-black/40",
+                  : "border-ivory/15 text-ivory/85 hover:border-gold/35 bg-black/30 hover:bg-black/45",
               )}
             >
               <NakshatraGlyph
                 name={name}
-                className={cn("h-6 w-6", active || isLagna ? "text-gold" : "text-ivory/70")}
+                className={cn(
+                  "h-5 w-5 sm:h-6 sm:w-6",
+                  active || isLagna ? "text-gold" : "text-ivory/75",
+                )}
               />
-              <span className="text-[11px] leading-tight font-medium">{name}</span>
+              <span className="text-[10px] leading-tight font-medium sm:text-[11px]">{name}</span>
               <span className="text-ivory/50 text-[9px] leading-tight">
                 {detail?.symbol?.split(" / ")[0]} · {vimshottariLordOf(name)}
               </span>

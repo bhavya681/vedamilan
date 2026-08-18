@@ -85,14 +85,14 @@ export function NakshatraStarFigure({ name, className }: { name: string; classNa
       preserveAspectRatio="xMidYMid slice"
     >
       <defs>
-        <radialGradient id={`${uid}-core`} cx="48%" cy="40%" r="70%">
-          <stop offset="0%" stopColor="#243868" />
-          <stop offset="38%" stopColor="#121a33" />
-          <stop offset="100%" stopColor="#05070e" />
+        <radialGradient id={`${uid}-core`} cx="48%" cy="40%" r="72%">
+          <stop offset="0%" stopColor="#0c1018" />
+          <stop offset="42%" stopColor="#05070c" />
+          <stop offset="100%" stopColor="#000000" />
         </radialGradient>
         <linearGradient id={`${uid}-milky`} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#b9c7ff" stopOpacity="0" />
-          <stop offset="46%" stopColor="#e8dcc0" stopOpacity="0.28" />
+          <stop offset="46%" stopColor="#e8dcc0" stopOpacity="0.08" />
           <stop offset="100%" stopColor="#8b6ad4" stopOpacity="0" />
         </linearGradient>
         <filter id={`${uid}-glow`} x="-80%" y="-80%" width="260%" height="260%">
@@ -103,6 +103,7 @@ export function NakshatraStarFigure({ name, className }: { name: string; classNa
           </feMerge>
         </filter>
       </defs>
+      <rect width={VW} height={VH} fill="#000000" />
       <rect width={VW} height={VH} fill={`url(#${uid}-core)`} />
       <ellipse
         cx="80"
@@ -120,7 +121,7 @@ export function NakshatraStarFigure({ name, className }: { name: string; classNa
           rx={n.rx * 1.15}
           ry={n.ry}
           fill={n.fill}
-          opacity={n.o + 0.06}
+          opacity={Math.min(0.08, n.o * 0.45)}
           transform={`rotate(${n.rot} ${n.cx * 1.6} ${n.cy * 0.9})`}
         />
       ))}

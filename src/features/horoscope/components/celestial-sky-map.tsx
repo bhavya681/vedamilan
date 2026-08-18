@@ -133,10 +133,8 @@ function SkyHaloText({
       paintOrder="stroke fill"
       strokeWidth={size === "lg" ? 0.92 : size === "sm" ? 0.64 : 0.78}
       className={cn(
-        "stroke-background pointer-events-none",
-        emphasize
-          ? "fill-primary dark:fill-gold font-semibold"
-          : "fill-foreground/90 dark:fill-ivory/92",
+        "pointer-events-none stroke-[#05070e]",
+        emphasize ? "fill-[#e8c547] font-semibold" : "fill-[#f7f1e3]/92",
         size === "lg" && "text-[2.7px] tracking-wide",
         size === "md" && "text-[2.35px]",
         size === "sm" && "text-[2px]",
@@ -619,7 +617,7 @@ export function CelestialSkyMap({
                 y1={CY}
                 x2="88"
                 y2={CY}
-                className="stroke-border/70 dark:stroke-ivory/18"
+                className="stroke-ivory/22"
                 strokeWidth="0.22"
               />
               <line
@@ -627,7 +625,7 @@ export function CelestialSkyMap({
                 y1="12"
                 x2={CX}
                 y2="88"
-                className="stroke-border/70 dark:stroke-ivory/18"
+                className="stroke-ivory/22"
                 strokeWidth="0.22"
               />
               {(
@@ -681,7 +679,7 @@ export function CelestialSkyMap({
                   <path
                     key={`const-${sign}`}
                     d={pathFromPoints(samples)}
-                    className="stroke-foreground/20 dark:stroke-ivory/20 fill-none"
+                    className="stroke-ivory/22 fill-none"
                     strokeWidth="0.18"
                   />
                 );
@@ -691,7 +689,7 @@ export function CelestialSkyMap({
           {layers.zodiac ? (
             <path
               d={`${pathFromPoints(ecliptic)} Z`}
-              className="stroke-primary/45 dark:stroke-gold/45 fill-none"
+              className="stroke-gold/50 fill-none"
               strokeWidth="0.32"
             />
           ) : null}
@@ -731,13 +729,13 @@ export function CelestialSkyMap({
                     }}
                   >
                     <circle cx={pt.x} cy={pt.y} r="3.1" className="fill-transparent" />
-                    <circle cx={tick.x} cy={tick.y} r="0.32" className="fill-muted-foreground/40" />
+                    <circle cx={tick.x} cy={tick.y} r="0.32" className="fill-ivory/45" />
                     {isMoon ? (
                       <circle
                         cx={pt.x}
                         cy={pt.y}
                         r="2.4"
-                        className="stroke-primary/70 dark:stroke-gold/70 fill-none"
+                        className="stroke-gold/70 fill-none"
                         strokeWidth="0.2"
                       />
                     ) : null}
@@ -759,7 +757,7 @@ export function CelestialSkyMap({
                       className={
                         isLagna || isMoon || focusNakshatra === name
                           ? undefined
-                          : "fill-foreground/70 dark:fill-ivory/75"
+                          : "fill-[#f7f1e3]/78"
                       }
                     >
                       {name.replace("Purva ", "P.").replace("Uttara ", "U.")}
@@ -911,7 +909,7 @@ export function CelestialSkyMap({
             y1={CY}
             x2={lagnaPt.x}
             y2={lagnaPt.y}
-            className="stroke-primary/50 dark:stroke-gold/45"
+            className="stroke-gold/50"
             strokeWidth="0.28"
             strokeDasharray="0.7 0.55"
           />
@@ -926,12 +924,7 @@ export function CelestialSkyMap({
               if (e.key === "Enter" || e.key === " ") e.preventDefault();
             }}
           >
-            <circle
-              cx={lagnaPt.x}
-              cy={lagnaPt.y}
-              r="2.05"
-              className="fill-primary dark:fill-gold"
-            />
+            <circle cx={lagnaPt.x} cy={lagnaPt.y} r="2.05" className="fill-gold" />
             <SkyHaloText x={lagnaPt.x} y={lagnaPt.y} inset={11} emphasize size="lg" dy={-1.7}>
               {snapshot.ascendant.sign}
             </SkyHaloText>
@@ -953,12 +946,7 @@ export function CelestialSkyMap({
               onMouseEnter={() => beginInspect({ kind: "mc", x: mcPt.x, y: mcPt.y })}
               onMouseLeave={() => endInspect()}
             >
-              <circle
-                cx={mcPt.x}
-                cy={mcPt.y}
-                r="1.15"
-                className="fill-muted-foreground dark:fill-ivory/80"
-              />
+              <circle cx={mcPt.x} cy={mcPt.y} r="1.15" className="fill-ivory/85" />
               <SkyHaloText x={mcPt.x} y={mcPt.y} inset={4.4} size="sm" dy={-2.15}>
                 MC
               </SkyHaloText>
@@ -1003,7 +991,7 @@ export function CelestialSkyMap({
           </p>
         </div>
       ) : null}
-      <div className="absolute right-2 bottom-2 z-10 flex flex-col items-end gap-1">
+      <div className="absolute right-1.5 bottom-1.5 z-10 flex flex-col items-end gap-1 sm:right-2 sm:bottom-2">
         <div className="border-ivory/15 flex overflow-hidden rounded-lg border bg-black/45 backdrop-blur-md">
           <button
             type="button"
@@ -1095,7 +1083,7 @@ function PlanetMark({
           cx={pt.x}
           cy={pt.y}
           r={r + 1.05}
-          className="stroke-primary dark:stroke-gold"
+          className="stroke-gold"
           fill="none"
           strokeWidth="0.16"
           opacity="0.7"
