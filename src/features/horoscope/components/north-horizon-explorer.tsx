@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,6 +36,7 @@ import {
   type SkyViewMode,
 } from "@/features/horoscope/components/celestial-sky-map";
 import { HorizonNakshatraRail } from "@/features/horoscope/components/horizon-nakshatra-rail";
+import { NakshatraStarFigure } from "@/features/horoscope/components/nakshatra-star-figure";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -1035,35 +1037,46 @@ export function NorthHorizonExplorer() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={Boolean(nakMeta)} onOpenChange={(o) => !o && setNakOpen(null)}>
-        <SheetContent side="bottom">
+      <Dialog open={Boolean(nakMeta)} onOpenChange={(o) => !o && setNakOpen(null)}>
+        <DialogContent
+          className={cn(
+            "border-ivory/15 text-ivory gap-0 overflow-hidden bg-black p-0 shadow-[0_24px_80px_rgba(0,0,0,0.55)]",
+            "w-[calc(100%-1.5rem)] max-w-md sm:max-w-lg",
+            "[&>button]:border-ivory/25 [&>button]:text-ivory [&>button]:z-20 [&>button]:rounded-full [&>button]:border [&>button]:bg-black/55 [&>button]:p-1.5 [&>button]:opacity-100 [&>button]:backdrop-blur-md [&>button]:hover:bg-black/80",
+          )}
+        >
           {nakMeta ? (
             <>
-              <SheetHeader>
-                <SheetTitle>{nakMeta.name}</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-2 px-4 pb-6 text-sm">
+              <NakshatraStarFigure name={nakMeta.name} className="h-40 w-full sm:h-48 md:h-52" />
+              <DialogHeader className="space-y-1 px-5 pt-4 text-left sm:px-6">
+                <DialogTitle className="text-ivory text-xl sm:text-2xl">{nakMeta.name}</DialogTitle>
+              </DialogHeader>
+              <div className="text-ivory/85 space-y-2 px-5 pt-2 pb-6 text-sm sm:px-6">
                 <p>Deity · {nakMeta.deity}</p>
                 <p>Symbol · {nakMeta.symbol}</p>
                 <p>Ruling planet · {nakMeta.lord}</p>
                 <Button
                   type="button"
                   variant="ai"
-                  className="mt-2"
+                  className="mt-3 w-full sm:w-auto"
                   onClick={() =>
                     void askGuru(`Ask AI about ${nakMeta.name} Nakshatra from this calculated sky.`)
                   }
                 >
                   Ask AI about {nakMeta.name}
                 </Button>
-                <Button asChild className="mt-1">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-ivory/25 text-ivory hover:text-ivory mt-2 w-full bg-black/40 hover:bg-black/60 sm:w-auto"
+                >
                   <Link href={routes.astrologyNakshatra}>Understand this Nakshatra</Link>
                 </Button>
               </div>
             </>
           ) : null}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={lagnaOpen} onOpenChange={setLagnaOpen}>
         <SheetContent
