@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Progress } from "@/components/ui/progress";
 import { SoftEmoji } from "@/features/compatibility/compatibility-visuals";
+import { northHorizonHref } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 export type TimingPredictionView = {
@@ -278,6 +280,14 @@ function WindowsSection({
                 <p className="text-primary/80 text-xs font-medium">{w.approxNote}</p>
               ) : null}
               <p className="text-muted-foreground text-sm leading-relaxed">{w.reason}</p>
+              {w.startDate ? (
+                <Link
+                  href={northHorizonHref({ at: w.startDate, intent: "marriage" })}
+                  className="text-primary text-xs font-medium underline-offset-4 hover:underline"
+                >
+                  Marriage sky
+                </Link>
+              ) : null}
             </div>
             <p className="font-display shrink-0 text-3xl">{w.score}</p>
           </div>

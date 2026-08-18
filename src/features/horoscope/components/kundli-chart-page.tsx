@@ -14,6 +14,7 @@ import {
   NorthIndianKundli,
   SouthIndianKundli,
 } from "@/features/horoscope/components/kundli-charts";
+import { NorthHorizonGalaxy } from "@/features/horoscope/components/north-horizon-galaxy";
 import { ChartSkeleton, ContentReveal } from "@/components/ui/page-skeletons";
 import { useHoroscope } from "@/hooks/use-horoscope";
 import { routes } from "@/lib/constants/routes";
@@ -54,6 +55,11 @@ export function KundliChartPage({
             <Button asChild variant="outline">
               <Link href={routes.planets}>Planets</Link>
             </Button>
+            {pick === "chartNorth" ? (
+              <Button asChild variant="outline">
+                <Link href={routes.astrologyNorthHorizon}>Live sky</Link>
+              </Button>
+            ) : null}
           </div>
         }
       />
@@ -70,82 +76,101 @@ export function KundliChartPage({
           }
         />
       ) : body && !loading ? (
-        <ContentReveal className="grid gap-6 lg:grid-cols-[auto_1fr]">
-          <GlassCard className="flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
-            {body}
-            <p className="text-muted-foreground text-center text-xs">
-              Lagna {h?.lagnaSign} · Moon {h?.moonSign} · Sun {h?.sunSign}
-            </p>
-          </GlassCard>
-          <GlassCard className="space-y-3">
-            <p className="font-display text-xl">How to read</p>
-            <ul className="text-muted-foreground list-inside list-disc space-y-2 text-sm">
-              {pick === "chartNorth" ? (
-                <>
-                  <li>
-                    House 1 / Asc always at top; count anti-clockwise (4 left, 7 bottom, 10 right).
-                  </li>
-                  <li>Numbers are rashis (1=Aries … 12=Pisces) — Asc Gemini shows 3 in house 1.</li>
-                  <li>Same-sign planets share one house (whole-sign from Lagna).</li>
-                  <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
-                  <li>
-                    Switch Labels / Symbols above the chart — names or visual graha icons in each
-                    house.
-                  </li>
-                  <li>
-                    Use the planet buttons under the D1 chart — each graha tells a short story about
-                    its condition.
-                  </li>
-                </>
-              ) : pick === "chartSouth" ? (
-                <>
-                  <li>Fixed rashis — Aries is top row, second cell.</li>
-                  <li>Corner number = house from Lagna; abbr = sign.</li>
-                  <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro with degree.</li>
-                </>
-              ) : (
-                <>
-                  <li>Fixed rashis — Aries at top; count houses anti-clockwise from Lagna.</li>
-                  <li>Corner number = house from Asc; planets sit in their sign.</li>
-                  <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retrograde.</li>
-                </>
-              )}
-            </ul>
-            {h?.planets?.length ? (
-              <div className="border-border/50 mt-4 grid gap-2 border-t pt-4 sm:grid-cols-2">
-                {h.planets
-                  .filter((p) =>
-                    [
-                      "Sun",
-                      "Moon",
-                      "Mars",
-                      "Mercury",
-                      "Jupiter",
-                      "Venus",
-                      "Saturn",
-                      "Rahu",
-                      "Ketu",
-                    ].includes(p.planet),
-                  )
-                  .map((p) => (
-                    <div key={p.planet} className="text-sm">
-                      <span className="font-medium">
-                        {p.planet}
-                        {p.dignity === "Exalted" ? " ↑" : ""}
-                        {p.dignity === "Debilitated" ? " ↓" : ""}
-                        {p.dignity === "Own" ? " ◉" : ""}
-                        {p.isRetrograde ? " ℞" : ""}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {p.sign} · H{p.house}
-                        {p.dignity && p.dignity !== "Neutral" ? ` · ${p.dignity}` : ""}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            ) : null}
-          </GlassCard>
+        <ContentReveal className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
+            <GlassCard className="flex flex-col items-center justify-center gap-3 p-4 sm:p-6">
+              {body}
+              <p className="text-muted-foreground text-center text-xs">
+                Lagna {h?.lagnaSign} · Moon {h?.moonSign} · Sun {h?.sunSign}
+              </p>
+            </GlassCard>
+            <GlassCard className="space-y-3">
+              <p className="font-display text-xl">How to read</p>
+              <ul className="text-muted-foreground list-inside list-disc space-y-2 text-sm">
+                {pick === "chartNorth" ? (
+                  <>
+                    <li>
+                      House 1 / Asc always at top; count anti-clockwise (4 left, 7 bottom, 10
+                      right).
+                    </li>
+                    <li>
+                      Numbers are rashis (1=Aries … 12=Pisces) — Asc Gemini shows 3 in house 1.
+                    </li>
+                    <li>Same-sign planets share one house (whole-sign from Lagna).</li>
+                    <li>↑ Ucch (exalted) · ↓ Neech (debilitated) · ◉ Own · ℞ Retrograde.</li>
+                    <li>
+                      Switch Labels / Symbols above the chart — names or visual graha icons in each
+                      house.
+                    </li>
+                    <li>
+                      Use the planet buttons under the D1 chart — each graha tells a short story
+                      about its condition.
+                    </li>
+                    <li>
+                      Scroll to the galaxy overview: East/Lagna at the top, nakshatras on the outer
+                      ring, grahas on the inner orbit. Gold marks the rising window.
+                    </li>
+                  </>
+                ) : pick === "chartSouth" ? (
+                  <>
+                    <li>Fixed rashis — Aries is top row, second cell.</li>
+                    <li>Corner number = house from Lagna; abbr = sign.</li>
+                    <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retro with degree.</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Fixed rashis — Aries at top; count houses anti-clockwise from Lagna.</li>
+                    <li>Corner number = house from Asc; planets sit in their sign.</li>
+                    <li>↑ Ucch · ↓ Neech · ◉ Own · ℞ Retrograde.</li>
+                  </>
+                )}
+              </ul>
+              {h?.planets?.length ? (
+                <div className="border-border/50 mt-4 grid gap-2 border-t pt-4 sm:grid-cols-2">
+                  {h.planets
+                    .filter((p) =>
+                      [
+                        "Sun",
+                        "Moon",
+                        "Mars",
+                        "Mercury",
+                        "Jupiter",
+                        "Venus",
+                        "Saturn",
+                        "Rahu",
+                        "Ketu",
+                      ].includes(p.planet),
+                    )
+                    .map((p) => (
+                      <div key={p.planet} className="text-sm">
+                        <span className="font-medium">
+                          {p.planet}
+                          {p.dignity === "Exalted" ? " ↑" : ""}
+                          {p.dignity === "Debilitated" ? " ↓" : ""}
+                          {p.dignity === "Own" ? " ◉" : ""}
+                          {p.isRetrograde ? " ℞" : ""}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {p.sign} · H{p.house}
+                          {p.dignity && p.dignity !== "Neutral" ? ` · ${p.dignity}` : ""}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              ) : null}
+            </GlassCard>
+          </div>
+          {pick === "chartNorth" ? (
+            <NorthHorizonGalaxy
+              lagnaSign={h?.lagnaSign}
+              lagnaDegree={h?.lagnaDegree ?? (isNorthChart(chart) ? chart.lagnaDegree : null)}
+              lagnaSignId={isNorthChart(chart) ? chart.lagnaSignId : null}
+              lagnaNakshatra={h?.lagnaNakshatra}
+              lagnaNakshatraPada={h?.lagnaNakshatraPada}
+              planets={h?.planets}
+            />
+          ) : null}
         </ContentReveal>
       ) : null}
     </div>

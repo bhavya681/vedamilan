@@ -15,17 +15,16 @@ import {
   Sunrise,
   UserRound,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { LocaleLink, useAppPathname } from "@/components/i18n/locale-navigation";
+import { DashboardNavList } from "@/components/layout/dashboard-nav-list";
 import { ModeSwitcher } from "@/components/layout/mode-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { navForMode, navGroupsForMode } from "@/config/navigation";
-import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
+import { isDashboardNavActive } from "@/config/dashboard-nav";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
-import { navGroupKey, navTitleKey } from "@/lib/i18n/nav-labels";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -34,8 +33,6 @@ export function MobileBottomNav() {
   const t = useT();
   const { mode, homeHref } = useWorkspaceMode();
   const [moreOpen, setMoreOpen] = useState(false);
-  const items = navForMode(mode);
-  const groups = navGroupsForMode(mode);
 
   const primary = useMemo(() => {
     if (mode === "astrology") {
@@ -61,6 +58,13 @@ export function MobileBottomNav() {
       { href: routes.compatibility, labelKey: "navigation.compatibility", icon: Compass },
     ];
   }, [mode, homeHref]);
+
+  const primaryActive = primary.some((item) => isDashboardNavActive(pathname, item.href));
+  const moreActive = moreOpen || !primaryActive;
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -107,71 +111,44 @@ export function MobileBottomNav() {
               type="button"
               className={cn(
                 "relative flex w-full flex-col items-center gap-0.5 rounded-2xl px-1.5 py-2 text-[10px] font-medium transition-colors sm:px-2",
-                moreOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                moreActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
               onClick={() => setMoreOpen(true)}
               aria-label={t("navigation.more")}
+              aria-expanded={moreOpen}
             >
               <span
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
-                  moreOpen ? "bg-primary/14 text-gold" : "bg-transparent",
+                  moreActive ? "bg-primary/14 text-gold" : "bg-transparent",
                 )}
               >
                 <MoreHorizontal className="h-[1.15rem] w-[1.15rem]" aria-hidden />
               </span>
-              {t("navigation.more")}
+              <span className="max-w-full truncate px-0.5 text-center">{t("navigation.more")}</span>
+              {moreActive ? (
+                <span className="bg-gold absolute bottom-0.5 h-1 w-1 rounded-full" aria-hidden />
+              ) : null}
             </button>
           </li>
         </ul>
       </nav>
 
-      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen} shouldScaleBackground={false}>
         <SheetContent
           side="bottom"
-          className="max-h-[min(90dvh,40rem)] overflow-y-auto rounded-t-3xl px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]"
+          className="flex h-[min(92dvh,46rem)] flex-col overflow-hidden rounded-t-3xl px-0 pb-0"
         >
-          <SheetHeader>
+          <SheetHeader className="shrink-0 px-4 text-left">
             <SheetTitle>{t("navigation.more")}</SheetTitle>
           </SheetHeader>
-          <ModeSwitcher className="mt-4 w-full" />
-          <div className="mt-4 space-y-4">
-            {groups.map((group) => (
-              <div key={group}>
-                <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-[0.16em] uppercase">
-                  {t(navGroupKey(group))}
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {items
-                    .filter((item) => (item.group ?? "Menu") === group)
-                    .map((item) => {
-                      const active = isDashboardNavActive(pathname, item.href);
-                      const Icon = dashboardNavIcons[item.href];
-                      return (
-                        <LocaleLink
-                          key={`${item.group}-${item.href}`}
-                          href={item.href}
-                          onClick={() => setMoreOpen(false)}
-                          className={cn(
-                            "flex items-center gap-2.5 rounded-2xl px-3 py-3 text-sm font-medium transition-colors",
-                            active
-                              ? "bg-primary/12 text-foreground dark:bg-primary/18"
-                              : "bg-muted/50 hover:bg-muted text-foreground/90 dark:bg-muted/40",
-                          )}
-                        >
-                          {Icon ? (
-                            <Icon
-                              className={cn("h-4 w-4 shrink-0", active && "text-gold")}
-                              aria-hidden
-                            />
-                          ) : null}
-                          {t(navTitleKey(item.href, item.title))}
-                        </LocaleLink>
-                      );
-                    })}
-                </div>
-              </div>
-            ))}
+          <div className="shrink-0 px-4">
+            <ModeSwitcher className="mt-1 w-full" />
+          </div>
+          <div className="scrollbar-premium mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4">
+            <DashboardNavList onNavigate={() => setMoreOpen(false)} />
+          </div>
+          <div className="border-border/50 shrink-0 border-t px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
             <SignOutButton
               className="w-full"
               label={t("navigation.signOut")}

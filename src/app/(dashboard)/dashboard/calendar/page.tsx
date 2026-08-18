@@ -44,7 +44,7 @@ import {
   SpouseTendencyPanel,
   type SpouseTendenciesView,
 } from "@/features/compatibility/spouse-tendency-panel";
-import { routes } from "@/lib/constants/routes";
+import { northHorizonHref, routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 const CATEGORY_COLORS: Record<
@@ -219,6 +219,7 @@ type CalendarPayload = {
     score: number;
     reason: string;
     phase: LifeEventPhase;
+    startDate?: string | null;
   }>;
   marryNow?: {
     score: number;
@@ -229,6 +230,13 @@ type CalendarPayload = {
   spouseTendencies?: SpouseTendenciesView | null;
   methodology: string;
 };
+
+function formatChapterRange(startIso: string, endIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const opts: Intl.DateTimeFormatOptions = { month: "short", year: "numeric" };
+  return `${start.toLocaleDateString("en-GB", opts)} – ${end.toLocaleDateString("en-GB", opts)}`;
+}
 
 function ChapterTimeline({
   events,
@@ -249,7 +257,7 @@ function ChapterTimeline({
     const ends = events.map((e) => new Date(e.endDate).getTime());
     const min = Math.min(...starts, now);
     const max = Math.max(...ends, now);
-    const pad = (max - min) * 0.04;
+    const pad = (max - min) * 0.05;
     return { min: min - pad, max: max + pad, span: Math.max(1, max - min + pad * 2) };
   }, [events, now]);
 
@@ -257,97 +265,219 @@ function ChapterTimeline({
     if (!range) return [];
     const startY = new Date(range.min).getFullYear();
     const endY = new Date(range.max).getFullYear();
+    const spanYears = Math.max(1, endY - startY);
+    const step = spanYears > 24 ? 5 : spanYears > 12 ? 2 : 1;
     const list: number[] = [];
-    for (let y = startY; y <= endY; y += 1) list.push(y);
+    const first = Math.ceil(startY / step) * step;
+    for (let y = first; y <= endY; y += step) list.push(y);
     return list;
   }, [range]);
 
+  const rows = useMemo(() => {
+    return [...events]
+      .sort((a, b) => {
+        const marriageRank = Number(b.category === "marriage") - Number(a.category === "marriage");
+        if (marriageRank) return marriageRank;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      })
+      .slice(0, 10);
+  }, [events]);
+
+  const legend = useMemo(() => {
+    const seen = new Set<LifeEventCategory>();
+    return rows.filter((e) => {
+      if (seen.has(e.category)) return false;
+      seen.add(e.category);
+      return true;
+    });
+  }, [rows]);
+
   if (!range || events.length === 0 || !now) return null;
 
-  const nowLeft = ((now - range.min) / range.span) * 100;
-  const rows = [...events]
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    .slice(0, 10);
+  const nowLeft = Math.max(0, Math.min(100, ((now - range.min) / range.span) * 100));
+  const nowLabel = new Date(now).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
           <h2 className="font-display text-lg sm:text-xl">Chapter timeline</h2>
           <p className="text-muted-foreground text-xs">
-            Major Antardasha windows on a life scale. Tap a bar to open that chapter.
+            Major Antardasha chapters on a life scale. Tap a bar to open that chapter.
           </p>
         </div>
-        <Badge variant="outline" className="text-[10px]">
-          {rows.length} shown
-        </Badge>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Badge variant="outline" className="border-gold/40 bg-gold/10 text-gold text-[10px]">
+            Now · {nowLabel}
+          </Badge>
+          <Badge variant="outline" className="text-[10px]">
+            {rows.length} chapters
+          </Badge>
+        </div>
       </div>
-      <div className="scrollbar-hidden -mx-1 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch]">
-        <div className="relative min-w-[36rem] space-y-1.5">
-          <div className="text-muted-foreground relative h-6">
-            {years.map((year) => {
-              const ts = new Date(year, 0, 1).getTime();
-              const left = ((ts - range.min) / range.span) * 100;
-              if (left < 0 || left > 100) return null;
-              return (
-                <span
-                  key={year}
-                  className="absolute top-0 -translate-x-1/2 text-[10px] tabular-nums"
-                  style={{ left: `${left}%` }}
-                >
-                  {year}
-                </span>
-              );
-            })}
-          </div>
-          <div className="relative space-y-1.5">
-            <div
-              className="bg-gold/80 pointer-events-none absolute top-0 bottom-0 z-10 w-px"
-              style={{ left: `${Math.max(0, Math.min(100, nowLeft))}%` }}
-              title="Now"
-            />
-            {rows.map((e) => {
-              const start = new Date(e.startDate).getTime();
-              const end = new Date(e.endDate).getTime();
-              const left = ((start - range.min) / range.span) * 100;
-              const width = Math.max(2.2, ((end - start) / range.span) * 100);
-              const colors = CATEGORY_COLORS[e.category];
-              const active = activeId === e.id;
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => onSelect(e.id)}
-                  className={cn(
-                    "relative h-8 w-full rounded-md text-left transition-colors",
-                    "hover:bg-muted/40 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
-                  )}
-                  title={`${e.title} · ${e.window}`}
-                >
+
+      {legend.length > 1 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {legend.map((e) => {
+            const Icon = CATEGORY_ICONS[e.category];
+            const colors = CATEGORY_COLORS[e.category];
+            return (
+              <span
+                key={e.category}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                  colors.bg,
+                  colors.text,
+                  colors.border,
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {CATEGORY_LABELS[e.category]}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
+
+      <div className="bg-muted/15 scrollbar-hidden -mx-1 overflow-x-auto rounded-2xl border px-1 py-3 [-webkit-overflow-scrolling:touch] sm:px-2">
+        <div className="min-w-[46rem]">
+          <div className="flex">
+            <div className="text-muted-foreground w-[8.75rem] shrink-0 px-2 pt-1 text-[10px] font-medium tracking-wider uppercase">
+              Theme
+            </div>
+            <div className="text-muted-foreground relative h-7 min-w-0 flex-1">
+              {years.map((year) => {
+                const ts = new Date(year, 0, 1).getTime();
+                const left = ((ts - range.min) / range.span) * 100;
+                if (left < 0 || left > 100) return null;
+                return (
                   <span
-                    className={cn(
-                      "absolute top-1 bottom-1 flex items-center overflow-hidden rounded-full px-2 text-[10px] font-medium whitespace-nowrap",
-                      colors.bar,
-                      "text-white/95",
-                      active && "ring-gold ring-offset-background ring-2 ring-offset-1",
-                      e.phase === "present" && "shadow-[0_0_12px_-2px_rgba(234,179,8,0.45)]",
-                    )}
-                    style={{
-                      left: `${Math.max(0, left)}%`,
-                      width: `${Math.min(100 - Math.max(0, left), width)}%`,
-                    }}
+                    key={year}
+                    className="absolute top-0 -translate-x-1/2 text-[10px] tabular-nums"
+                    style={{ left: `${left}%` }}
                   >
-                    {CATEGORY_LABELS[e.category]}
+                    {year}
                   </span>
-                </button>
-              );
-            })}
+                );
+              })}
+              <span
+                className="text-gold bg-gold/15 absolute top-0 z-20 -translate-x-1/2 rounded-full px-1.5 text-[9px] font-semibold tracking-wide uppercase"
+                style={{ left: `${nowLeft}%` }}
+              >
+                Now
+              </span>
+            </div>
           </div>
-          <p className="text-muted-foreground text-[10px]">
-            Gold line is today. Colours match life themes.
-          </p>
+
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 right-0 left-[8.75rem] z-10">
+              {years.map((year) => {
+                const ts = new Date(year, 0, 1).getTime();
+                const left = ((ts - range.min) / range.span) * 100;
+                if (left < 0 || left > 100) return null;
+                return (
+                  <span
+                    key={`grid-${year}`}
+                    className="border-border/50 absolute top-0 bottom-0 border-l border-dashed"
+                    style={{ left: `${left}%` }}
+                  />
+                );
+              })}
+              <span
+                className="bg-gold absolute top-0 bottom-0 w-px"
+                style={{ left: `${nowLeft}%` }}
+              />
+            </div>
+
+            <div className="space-y-1">
+              {rows.map((e) => {
+                const start = new Date(e.startDate).getTime();
+                const end = new Date(e.endDate).getTime();
+                const left = ((start - range.min) / range.span) * 100;
+                const width = Math.max(3, ((end - start) / range.span) * 100);
+                const clampedLeft = Math.max(0, left);
+                const clampedWidth = Math.min(100 - clampedLeft, width);
+                const colors = CATEGORY_COLORS[e.category];
+                const Icon = CATEGORY_ICONS[e.category];
+                const active = activeId === e.id;
+                const isMarriage = e.category === "marriage";
+                const rangeLabel = formatChapterRange(e.startDate, e.endDate);
+                const span = formatSpan(e.spanMonths);
+                const showTitle = clampedWidth >= 16;
+                const showDates = clampedWidth >= 26;
+                return (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => onSelect(e.id)}
+                    className={cn(
+                      "flex w-full rounded-xl text-left transition-colors",
+                      "hover:bg-background/70 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                      active && "bg-gold/10",
+                    )}
+                    title={`${e.title} · ${rangeLabel}`}
+                  >
+                    <span
+                      className={cn(
+                        "bg-card/95 sticky left-0 z-20 flex w-[8.75rem] shrink-0 items-center gap-2 px-2 py-1.5 backdrop-blur-sm",
+                        isMarriage && "text-rose",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
+                          colors.bg,
+                          colors.border,
+                        )}
+                      >
+                        <Icon className={cn("h-3.5 w-3.5", colors.text)} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-[11px] font-medium">
+                          {CATEGORY_LABELS[e.category]}
+                        </span>
+                        <span className="text-muted-foreground block truncate text-[9px] capitalize">
+                          {e.phase === "present" ? "now" : e.phase}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="relative min-h-11 min-w-0 flex-1 py-1.5">
+                      <span
+                        className={cn(
+                          "absolute top-1.5 bottom-1.5 flex items-center gap-1.5 overflow-hidden rounded-full px-2.5 text-[10px] font-medium whitespace-nowrap text-white",
+                          colors.bar,
+                          isMarriage && "ring-gold/80 ring-offset-background ring-1 ring-offset-1",
+                          active && "ring-gold ring-offset-background ring-2 ring-offset-1",
+                          e.phase === "present" && "shadow-[0_0_14px_-2px_rgba(234,179,8,0.5)]",
+                        )}
+                        style={{
+                          left: `${clampedLeft}%`,
+                          width: `${clampedWidth}%`,
+                        }}
+                      >
+                        {showTitle ? (
+                          <span className="truncate">{e.title}</span>
+                        ) : (
+                          <span className="sr-only">{e.title}</span>
+                        )}
+                        {showDates ? (
+                          <span className="shrink-0 text-white/80">
+                            {rangeLabel}
+                            {span ? ` · ${span}` : ""}
+                          </span>
+                        ) : null}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
+      <p className="text-muted-foreground text-[10px]">
+        Gold line is today. Marriage chapters sit first; colours match life themes.
+      </p>
     </div>
   );
 }
@@ -482,6 +612,9 @@ function EventCard({
               <p className="text-muted-foreground text-[10px]">
                 {e.dashaLabel} · ~{pct}% directional likelihood
               </p>
+              <Button asChild size="sm" variant="outline">
+                <Link href={northHorizonHref({ at: e.startDate })}>View sky</Link>
+              </Button>
             </div>
           </motion.div>
         ) : null}
@@ -925,6 +1058,14 @@ export default function CalendarPage() {
                           </span>
                         </div>
                         <p className="text-muted-foreground text-xs">{w.window}</p>
+                        {w.startDate ? (
+                          <Link
+                            href={northHorizonHref({ at: w.startDate, intent: "marriage" })}
+                            className="text-primary mt-1 inline-block text-[11px] underline-offset-2 hover:underline"
+                          >
+                            Marriage sky
+                          </Link>
+                        ) : null}
                       </li>
                     ))}
                   </ul>

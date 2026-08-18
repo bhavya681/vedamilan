@@ -43,6 +43,11 @@ const LIFE_AREAS = [
   },
   { title: "Predictions", href: routes.predictions, hint: "Life-area forecasts from your chart" },
   { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
+  {
+    title: "Horizon",
+    href: routes.astrologyNorthHorizon,
+    hint: "See what is rising, setting, and moving across the sky",
+  },
   { title: "Remedies", href: routes.lalKitab, hint: "Lal Kitab–inspired guidance" },
   {
     title: "Graha Katha",

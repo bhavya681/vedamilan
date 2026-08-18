@@ -33,6 +33,7 @@ export const NAV_HREF_KEYS: Record<string, string> = {
   [routes.predictions]: "navigation.predictions",
   [routes.gochar]: "navigation.gochar",
   [routes.astrologyGochar]: "navigation.gochar",
+  [routes.astrologyNorthHorizon]: "navigation.northHorizon",
   [routes.horoscope]: "navigation.horoscope",
   [routes.numerology]: "navigation.numerology",
   [routes.calendar]: "navigation.calendar",

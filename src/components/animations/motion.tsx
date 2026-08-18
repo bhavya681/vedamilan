@@ -34,11 +34,12 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
-    return <>{children}</>;
+    return <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">{children}</div>;
   }
 
   return (
     <motion.div
+      className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}

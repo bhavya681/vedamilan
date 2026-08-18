@@ -40,14 +40,14 @@ const SheetContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "border-border/60 bg-background fixed z-50 flex h-auto flex-col border",
+        "border-border/60 bg-background fixed z-50 flex flex-col border",
         side === "bottom" &&
-          "inset-x-0 bottom-0 mt-24 max-h-[min(92dvh,44rem)] rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]",
-        side === "top" && "inset-x-0 top-0 mb-24 rounded-b-2xl",
+          "inset-x-0 bottom-0 mt-24 h-auto max-h-[min(92dvh,44rem)] rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)]",
+        side === "top" && "inset-x-0 top-0 mb-24 h-auto rounded-b-2xl",
         side === "left" &&
-          "inset-y-0 left-0 h-full w-[min(100%,19.5rem)] max-w-[85vw] rounded-r-2xl sm:max-w-sm",
+          "inset-y-0 left-0 h-dvh max-h-dvh min-h-0 w-[min(100%,20rem)] max-w-[90vw] overflow-hidden rounded-r-2xl",
         side === "right" &&
-          "inset-y-0 right-0 h-full w-[min(100%,19.5rem)] max-w-[85vw] rounded-l-2xl sm:max-w-sm",
+          "inset-y-0 right-0 h-dvh max-h-dvh min-h-0 w-[min(100%,20rem)] max-w-[90vw] overflow-hidden rounded-l-2xl",
         className,
       )}
       {...props}

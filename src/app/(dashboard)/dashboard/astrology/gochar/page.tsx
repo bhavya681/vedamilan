@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-import { routes } from "@/lib/constants/routes";
+import { northHorizonHref, routes } from "@/lib/constants/routes";
 import {
   isNorthChart,
   NorthIndianKundli,
@@ -114,9 +114,14 @@ export default function AstrologyGocharPage() {
         title="Gochar"
         description="See where each planet moves now — or pick any date to explore transits, nakshatras, and conjunctions."
         actions={
-          <Button asChild variant="secondary">
-            <Link href={routes.astrologyDasha}>Dasha Journey</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href={routes.astrologyDasha}>Dasha Journey</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={northHorizonHref({ at: date })}>View sky</Link>
+            </Button>
+          </div>
         }
       />
 

@@ -25,6 +25,7 @@ export const routes = {
   astrologyNakshatra: "/dashboard/astrology/nakshatra",
   astrologyDasha: "/dashboard/astrology/dasha",
   astrologyDivisionalCharts: "/dashboard/astrology/divisional-charts",
+  astrologyNorthHorizon: "/dashboard/astrology/north-horizon",
   astrologyMuhurta: "/dashboard/astrology/muhurta",
   astrologyRemedies: "/dashboard/astrology/remedies",
   astrologySpiritualJourney: "/dashboard/astrology/spiritual-journey",
@@ -127,6 +128,23 @@ export const routes = {
 } as const;
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
+
+/** Deep-link into North Horizon at a calculated instant. */
+export function northHorizonHref(opts?: {
+  at?: string | Date | number;
+  mode?: "live" | "birth";
+  intent?: "muhurta" | "marriage";
+}) {
+  const q = new URLSearchParams();
+  if (opts?.mode) q.set("mode", opts.mode);
+  if (opts?.at != null) {
+    const d = typeof opts.at === "number" ? new Date(opts.at) : new Date(opts.at);
+    if (!Number.isNaN(d.getTime())) q.set("at", d.toISOString());
+  }
+  if (opts?.intent) q.set("intent", opts.intent);
+  const qs = q.toString();
+  return qs ? `${routes.astrologyNorthHorizon}?${qs}` : routes.astrologyNorthHorizon;
+}
 
 /** Graha Katha detail path */
 export function grahaKathaPlanet(grahaId: string) {

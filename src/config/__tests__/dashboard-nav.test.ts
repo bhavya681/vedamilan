@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { isDashboardNavActive } from "@/config/dashboard-nav";
-import { routes } from "@/lib/constants/routes";
+import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
+import { dashboardNav, navForMode, navGroupsForMode } from "@/config/navigation";
+import { northHorizonHref, routes } from "@/lib/constants/routes";
 
 describe("isDashboardNavActive", () => {
   it("highlights only My Kundli on the kundli hub", () => {
@@ -30,6 +31,15 @@ describe("isDashboardNavActive", () => {
     expect(isDashboardNavActive(routes.gochar, routes.gochar)).toBe(true);
   });
 
+  it("highlights Horizon without selecting Kundli or Gochar", () => {
+    expect(isDashboardNavActive(routes.astrologyNorthHorizon, routes.astrologyNorthHorizon)).toBe(
+      true,
+    );
+    expect(isDashboardNavActive(routes.astrologyNorthHorizon, routes.kundli)).toBe(false);
+    expect(isDashboardNavActive(routes.astrologyNorthHorizon, routes.gochar)).toBe(false);
+    expect(isDashboardNavActive(routes.astrologyNorthHorizon, routes.astrologyGochar)).toBe(false);
+  });
+
   it("keeps My Kundli selected for chart views without their own nav tab", () => {
     expect(isDashboardNavActive(routes.chartNorth, routes.kundli)).toBe(true);
     expect(isDashboardNavActive(routes.planets, routes.kundli)).toBe(true);
@@ -49,5 +59,46 @@ describe("isDashboardNavActive", () => {
       true,
     );
     expect(isDashboardNavActive(routes.situationalAlignment, routes.preferences)).toBe(false);
+  });
+});
+
+describe("dashboard nav icons", () => {
+  it("gives every dashboard destination an icon", () => {
+    const missing = dashboardNav
+      .filter((item) => !dashboardNavIcons[item.href])
+      .map((item) => item.href);
+    expect(missing).toEqual([]);
+  });
+});
+
+describe("astrology sidebar groups", () => {
+  it("lists Chart after Main, then Today, then Analysis", () => {
+    expect(navGroupsForMode("astrology").slice(0, 4)).toEqual([
+      "Main",
+      "Chart",
+      "Today",
+      "Analysis",
+    ]);
+  });
+
+  it("exposes every astrology destination through grouped sidebar sections", () => {
+    const items = navForMode("astrology");
+    const groups = navGroupsForMode("astrology");
+    const listed = groups.flatMap((group) =>
+      items.filter((item) => (item.group ?? "Menu") === group),
+    );
+    expect(listed.map((item) => item.href).sort()).toEqual(items.map((item) => item.href).sort());
+    expect(listed.some((item) => item.title === "Horizon")).toBe(true);
+    expect(listed.some((item) => item.title === "Marriage Intelligence")).toBe(true);
+  });
+});
+
+describe("northHorizonHref", () => {
+  it("encodes a calculated instant for the live sky", () => {
+    const href = northHorizonHref({ at: "2026-08-17T12:00:00.000Z", intent: "muhurta" });
+    expect(href).toContain("/dashboard/astrology/north-horizon?");
+    expect(href).toContain("intent=muhurta");
+    expect(href).toContain("at=2026-08-17T12");
+    expect(northHorizonHref({ mode: "birth" })).toBe(`${routes.astrologyNorthHorizon}?mode=birth`);
   });
 });

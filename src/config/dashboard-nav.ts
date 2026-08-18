@@ -11,6 +11,7 @@ import {
   Clock,
   Compass,
   Crown,
+  Eclipse,
   Flame,
   Gauge,
   GitBranch,
@@ -62,6 +63,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
 
   [routes.horoscope]: Sunrise,
   [routes.astrologyPanchanga]: CalendarDays,
+  [routes.astrologyNorthHorizon]: Eclipse,
   [routes.calendar]: CalendarRange,
   [routes.gochar]: Orbit,
   [routes.astrologyGochar]: Orbit,
@@ -170,6 +172,8 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.astrologySpiritualJourney)
     return matchesPath(pathname, routes.astrologySpiritualJourney);
   if (href === routes.astrologyPanchanga) return matchesPath(pathname, routes.astrologyPanchanga);
+  if (href === routes.astrologyNorthHorizon)
+    return matchesPath(pathname, routes.astrologyNorthHorizon);
   if (href === routes.astrologyPlanetStrength)
     return matchesPath(pathname, routes.astrologyPlanetStrength);
   if (href === routes.astrologyShadbala) return matchesPath(pathname, routes.astrologyShadbala);

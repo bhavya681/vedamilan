@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { DayTimeline, type TimelineBand } from "@/components/astrology/day-timeline";
 import { toLocalDateInput, useBirthPlace } from "@/hooks/use-birth-place";
-import { routes } from "@/lib/constants/routes";
+import { northHorizonHref, routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 type MuhurtaWindow = {
@@ -111,6 +111,16 @@ function WindowCard({ w }: { w: MuhurtaWindow }) {
           ))}
         </ul>
       ) : null}
+      <Button asChild size="sm" variant="outline" className="w-full">
+        <Link
+          href={northHorizonHref({
+            at: w.startTs ?? `${w.date}T${w.startTime}`,
+            intent: w.activity === "marriage" ? "marriage" : "muhurta",
+          })}
+        >
+          View celestial configuration
+        </Link>
+      </Button>
     </GlassCard>
   );
 }

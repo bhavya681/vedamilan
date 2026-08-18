@@ -15,6 +15,7 @@ import {
   NorthIndianKundli,
   SouthIndianKundli,
 } from "@/features/horoscope/components/kundli-charts";
+import { NorthHorizonGalaxy } from "@/features/horoscope/components/north-horizon-galaxy";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -128,6 +129,7 @@ export default function KundliPage() {
       : null;
 
   const links = [
+    { t: "North horizon sky", h: routes.chartNorth },
     { t: "Graha Katha — Stories of the Grahas", h: routes.grahaKatha },
     { t: "Charts (D1–D60 Vargas)", h: routes.divisionalCharts },
     { t: "Ashtakavarga", h: routes.astrologyAshtakavarga },
@@ -228,6 +230,9 @@ export default function KundliPage() {
             <Button asChild>
               <Link href={routes.matrimony}>Find compatible partners</Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.chartNorth}>North horizon sky</Link>
+            </Button>
             <Button type="button" variant="outline" onClick={() => setShowChart((v) => !v)}>
               {showChart ? "Hide chart" : "Show chart"}
             </Button>
@@ -248,7 +253,7 @@ export default function KundliPage() {
         />
       ) : null}
 
-      {showChart && hasChart ? (
+      {showChart && hasChart && h ? (
         <>
           <GlassCard className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -288,6 +293,17 @@ export default function KundliPage() {
               {style === "east" && isEastChart(east) ? <EastIndianKundli chart={east} /> : null}
             </div>
           </GlassCard>
+
+          {style === "north" ? (
+            <NorthHorizonGalaxy
+              lagnaSign={h.lagnaSign}
+              lagnaDegree={h.lagnaDegree}
+              lagnaSignId={isNorthChart(north) ? north.lagnaSignId : null}
+              lagnaNakshatra={h.lagnaNakshatra}
+              lagnaNakshatraPada={h.lagnaNakshatraPada}
+              planets={h.planets}
+            />
+          ) : null}
 
           {h?.planets?.length ? (
             <GlassCard>

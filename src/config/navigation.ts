@@ -62,11 +62,6 @@ export const dashboardNav: NavItem[] = [
     group: "Main",
     modes: ["wisdom"],
   },
-  { title: "Horoscope", href: routes.horoscope, group: "Today", modes: ["astrology"] },
-  { title: "Panchanga", href: routes.astrologyPanchanga, group: "Today", modes: ["astrology"] },
-  { title: "Calendar", href: routes.calendar, group: "Today", modes: ["astrology"] },
-  { title: "Gochar", href: routes.astrologyGochar, group: "Today", modes: ["astrology"] },
-
   { title: "My Kundli", href: routes.kundli, group: "Chart", modes: ["astrology"] },
   { title: "Dashas", href: routes.astrologyDasha, group: "Chart", modes: ["astrology"] },
   {
@@ -78,6 +73,12 @@ export const dashboardNav: NavItem[] = [
   { title: "Predictions", href: routes.predictions, group: "Chart", modes: ["astrology"] },
   { title: "Yogas", href: routes.astrologyYogas, group: "Chart", modes: ["astrology"] },
   { title: "Nakshatra", href: routes.astrologyNakshatra, group: "Chart", modes: ["astrology"] },
+
+  { title: "Horoscope", href: routes.horoscope, group: "Today", modes: ["astrology"] },
+  { title: "Panchanga", href: routes.astrologyPanchanga, group: "Today", modes: ["astrology"] },
+  { title: "Calendar", href: routes.calendar, group: "Today", modes: ["astrology"] },
+  { title: "Gochar", href: routes.astrologyGochar, group: "Today", modes: ["astrology"] },
+  { title: "Horizon", href: routes.astrologyNorthHorizon, group: "Today", modes: ["astrology"] },
 
   {
     title: "Planet Strength",
@@ -180,8 +181,19 @@ export function navForMode(mode: WorkspaceMode): NavItem[] {
   return dashboardNav.filter((item) => !item.modes || item.modes.includes(mode));
 }
 
+const GROUP_ORDER: Record<WorkspaceMode, string[]> = {
+  astrology: ["Main", "Chart", "Today", "Analysis", "Guidance", "Account"],
+  matrimony: ["Main", "Discover", "Connect", "Account"],
+  wisdom: ["Main", "Wisdom", "Account"],
+};
+
 export function navGroupsForMode(mode: WorkspaceMode): string[] {
-  return [...new Set(navForMode(mode).map((item) => item.group ?? "Menu"))];
+  const present = new Set(navForMode(mode).map((item) => item.group ?? "Menu"));
+  const ordered = (GROUP_ORDER[mode] || []).filter((group) => present.has(group));
+  for (const group of present) {
+    if (!ordered.includes(group)) ordered.push(group);
+  }
+  return ordered;
 }
 
 export const adminNav: NavItem[] = [

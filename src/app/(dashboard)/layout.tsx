@@ -28,7 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           id="main-content"
           className="scrollbar-premium dashboard-main-gutter bg-background/50 min-h-0 flex-1 overflow-x-clip overflow-y-auto overscroll-contain py-4 pb-[calc(var(--dashboard-bottom-nav-h)+0.75rem+env(safe-area-inset-bottom,0px))] sm:py-5 md:py-6 md:pb-6 lg:py-8"
         >
-          <div className="mx-auto w-full max-w-6xl min-w-0 overflow-x-clip xl:max-w-7xl 2xl:max-w-[90rem]">
+          <div className="dashboard-content mx-auto w-full max-w-6xl min-w-0 overflow-x-clip xl:max-w-7xl 2xl:max-w-[90rem]">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
