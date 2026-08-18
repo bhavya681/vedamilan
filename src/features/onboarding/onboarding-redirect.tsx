@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 
 import { useAppPathname, useLocaleRouter } from "@/components/i18n/locale-navigation";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
+import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
+import { fetchJsonWhenAuthed, isAbortError } from "@/lib/http/session-fetch";
 
 /** Routes allowed while onboarding is incomplete */
 const ALLOW_WHILE_INCOMPLETE = [
@@ -30,9 +32,11 @@ const ALLOW_WHILE_INCOMPLETE = [
 export function OnboardingRedirect() {
   const pathname = useAppPathname();
   const router = useLocaleRouter();
+  const { isPending } = useSession();
   const checking = useRef(false);
 
   useEffect(() => {
+    if (isPending) return;
     if (ALLOW_WHILE_INCOMPLETE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
       return;
     }
@@ -45,10 +49,25 @@ export function OnboardingRedirect() {
       if (checking.current) return;
       checking.current = true;
       try {
-        const [profileRes, chartRes] = await Promise.all([
-          fetch("/api/profile").then((r) => r.json()),
-          fetch("/api/horoscope").then((r) => r.json()),
+        const [profileResRaw, chartResRaw] = await Promise.all([
+          fetchJsonWhenAuthed("/api/profile"),
+          fetchJsonWhenAuthed("/api/horoscope"),
         ]);
+        const profileRes = profileResRaw as {
+          success?: boolean;
+          data?: {
+            profile?: {
+              gender?: string;
+              city?: string;
+              profession?: string;
+              education?: string;
+              photos?: unknown[];
+              completion?: { score?: number };
+            };
+            birthDetails?: { birthDate?: string };
+          };
+        };
+        const chartRes = chartResRaw as { success?: boolean; data?: { horoscope?: unknown } };
         if (cancelled || !profileRes.success) return;
 
         const profile = profileRes.data?.profile;
@@ -66,7 +85,8 @@ export function OnboardingRedirect() {
         if (!readiness.ready) {
           router.replace(routes.onboarding);
         }
-      } catch {
+      } catch (error) {
+        if (isAbortError(error)) return;
         /* ignore network blips */
       } finally {
         checking.current = false;
@@ -76,7 +96,7 @@ export function OnboardingRedirect() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, router]);
+  }, [isPending, pathname, router]);
 
   return null;
 }

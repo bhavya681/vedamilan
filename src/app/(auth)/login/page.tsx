@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { routes } from "@/lib/constants/routes";
 import { sanitizeInternalPath } from "@/lib/security/safe-redirect";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const safeNext = sanitizeInternalPath(searchParams.get("next"), routes.dashboard);
   const { data: session, isPending } = useSession();
@@ -32,16 +31,17 @@ function LoginForm() {
     const { error: signInError } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: safeNext,
     });
 
-    setLoading(false);
     if (signInError) {
+      setLoading(false);
       setError(signInError.message || "Unable to sign in");
       return;
     }
-    router.push(safeNext);
-    router.refresh();
+    // Full navigation so the session cookie is on the next document request.
+    // Soft `router.push` after sign-in can render the dashboard before APIs
+    // see the cookie, leaving astrology home empty until refresh/mode switch.
+    window.location.assign(safeNext);
   }
 
   async function onGoogle() {

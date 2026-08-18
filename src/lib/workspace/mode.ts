@@ -3,6 +3,7 @@ import { stripLocaleFromPathname } from "@/lib/i18n/path";
 export type WorkspaceMode = "astrology" | "matrimony" | "wisdom";
 
 export const WORKSPACE_MODE_STORAGE_KEY = "vedamilan.workspace-mode.v1";
+export const DEFAULT_WORKSPACE_MODE: WorkspaceMode = "astrology";
 
 export const WORKSPACE_MODE_META: Record<
   WorkspaceMode,
@@ -30,14 +31,14 @@ export function isWorkspaceMode(value: unknown): value is WorkspaceMode {
 }
 
 export function readLocalWorkspaceMode(): WorkspaceMode {
-  if (typeof window === "undefined") return "matrimony";
+  if (typeof window === "undefined") return DEFAULT_WORKSPACE_MODE;
   try {
     const raw = window.localStorage.getItem(WORKSPACE_MODE_STORAGE_KEY);
     if (isWorkspaceMode(raw)) return raw;
   } catch {
     /* ignore */
   }
-  return "matrimony";
+  return DEFAULT_WORKSPACE_MODE;
 }
 
 export function writeLocalWorkspaceMode(mode: WorkspaceMode) {

@@ -11,7 +11,14 @@ import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skele
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
+import {
+  fetchJson,
+  fetchJsonWhenAuthed,
+  isAbortError,
+  isUnauthorizedPayload,
+} from "@/lib/http/session-fetch";
 import { formatPersonName } from "@/lib/utils/person-name";
 
 type AstrologyBundle = {
@@ -108,8 +115,41 @@ const AI_PROMPTS = [
   "What does my chart say about marriage?",
 ] as const;
 
+type ProfilePayload = {
+  success?: boolean;
+  data?: {
+    profile?: {
+      gender?: string;
+      city?: string;
+      profession?: string;
+      education?: string;
+      photos?: unknown[];
+      completion?: { score?: number };
+    };
+    user?: { name?: string };
+    birthDetails?: { birthDate?: string };
+  };
+};
+
+type ChartPayload = {
+  success?: boolean;
+  data?: {
+    horoscope?: {
+      lagnaSign?: string;
+      ascendant?: string;
+      lagna?: string;
+      moonSign?: string;
+      sunSign?: string;
+      moonNakshatra?: string;
+      nakshatra?: string;
+    };
+    dasha?: { currentMaha?: string; currentAntar?: string };
+  };
+};
+
 export default function AstrologyHomePage() {
   const router = useRouter();
+  const { isPending } = useSession();
   const { setMode } = useWorkspaceMode();
   const [bundle, setBundle] = useState<AstrologyBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -125,17 +165,39 @@ export default function AstrologyHomePage() {
   }, []);
 
   useEffect(() => {
+    if (isPending) return;
+
+    const ac = new AbortController();
+    let cancelled = false;
+    let redirecting = false;
+
     async function load() {
       try {
-        const [me, profile, ai, chartRes, gocharRes] = await Promise.all([
-          fetch("/api/auth/me").then((r) => r.json()),
-          fetch("/api/profile").then((r) => r.json()),
-          fetch("/api/ai/insights").then((r) => r.json()),
-          fetch("/api/horoscope").then((r) => r.json()),
-          fetch("/api/gochar").then((r) => r.json()),
-        ]);
+        setLoading(true);
+        setError(null);
 
-        const profileData = profile.success ? profile.data : null;
+        const [meRaw, profileRaw, chartRaw] = await Promise.all([
+          fetchJsonWhenAuthed("/api/auth/me", ac.signal),
+          fetchJsonWhenAuthed("/api/profile", ac.signal),
+          fetchJsonWhenAuthed("/api/horoscope", ac.signal),
+        ]);
+        if (cancelled) return;
+
+        const me = meRaw as { user?: { name?: string } };
+        const profile = profileRaw as ProfilePayload;
+        const chartRes = chartRaw as ChartPayload;
+
+        if (isUnauthorizedPayload(profileRaw) || isUnauthorizedPayload(meRaw)) {
+          setError("Failed to load astrology overview");
+          return;
+        }
+
+        if (!profile.success) {
+          setError("Failed to load astrology overview");
+          return;
+        }
+
+        const profileData = profile.data;
         const profileDoc = profileData?.profile;
         const chart = chartRes.success ? chartRes.data : null;
         const horoscope = chart?.horoscope;
@@ -153,14 +215,10 @@ export default function AstrologyHomePage() {
         });
 
         if (!readiness.ready) {
+          redirecting = true;
           router.replace(routes.onboarding);
           return;
         }
-
-        const insight =
-          ai.success && ai.data.insights?.[0]?.body
-            ? String(ai.data.insights[0].body).slice(0, 360)
-            : null;
 
         setBundle({
           userName: formatPersonName(me.user?.name || profileData?.user?.name, "Friend"),
@@ -170,18 +228,56 @@ export default function AstrologyHomePage() {
           nakshatra: horoscope?.moonNakshatra || horoscope?.nakshatra || null,
           currentMaha: dasha?.currentMaha || null,
           currentAntar: dasha?.currentAntar || null,
-          insight,
-          gocharHighlights: gocharRes.success ? gocharRes.data?.highlights || [] : [],
-          gocharError: !gocharRes.success,
+          insight: null,
+          gocharHighlights: [],
+          gocharError: false,
         });
-      } catch {
+
+        void Promise.all([
+          fetchJson("/api/ai/insights", ac.signal),
+          fetchJson("/api/gochar", ac.signal),
+        ])
+          .then(([aiRaw, gocharRaw]) => {
+            if (cancelled) return;
+            const ai = aiRaw as {
+              success?: boolean;
+              data?: { insights?: Array<{ body?: string }>; openingMessage?: string };
+            };
+            const gocharRes = gocharRaw as {
+              success?: boolean;
+              data?: { highlights?: string[] };
+            };
+            const insightBody = ai.success
+              ? ai.data?.insights?.[0]?.body || ai.data?.openingMessage
+              : null;
+            setBundle((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    insight: insightBody ? String(insightBody).slice(0, 360) : null,
+                    gocharHighlights: gocharRes.success ? gocharRes.data?.highlights || [] : [],
+                    gocharError: !gocharRes.success,
+                  }
+                : prev,
+            );
+          })
+          .catch((error) => {
+            if (cancelled || isAbortError(error)) return;
+            setBundle((prev) => (prev ? { ...prev, gocharError: true } : prev));
+          });
+      } catch (error) {
+        if (cancelled || isAbortError(error)) return;
         setError("Failed to load astrology overview");
       } finally {
-        setLoading(false);
+        if (!cancelled && !redirecting) setLoading(false);
       }
     }
     void load();
-  }, [router]);
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [isPending, router]);
 
   const firstName = bundle?.userName?.split(" ")[0] ?? "friend";
 

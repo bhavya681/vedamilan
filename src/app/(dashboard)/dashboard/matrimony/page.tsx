@@ -16,7 +16,9 @@ import { SpouseTendencyPanel } from "@/features/compatibility/spouse-tendency-pa
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
 import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
+import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
+import { fetchJsonWhenAuthed, isAbortError, isUnauthorizedPayload } from "@/lib/http/session-fetch";
 import { formatPersonName } from "@/lib/utils/person-name";
 
 type Bundle = {
@@ -58,6 +60,7 @@ export default function MatrimonyHomePage() {
   const t = useT();
   const router = useRouter();
   const reduceMotion = useReducedMotion();
+  const { isPending } = useSession();
   const { setMode } = useWorkspaceMode();
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,21 +76,65 @@ export default function MatrimonyHomePage() {
   }, []);
 
   useEffect(() => {
+    if (isPending) return;
+
+    const ac = new AbortController();
+    let cancelled = false;
+    let redirecting = false;
+
     async function load() {
       try {
-        const [me, profile, matches, ai, notes, chartRes, marriageRes] = await Promise.all([
-          fetch("/api/auth/me").then((r) => r.json()),
-          fetch("/api/profile").then((r) => r.json()),
-          fetch("/api/recommendations").then((r) => r.json()),
-          fetch("/api/ai/insights").then((r) => r.json()),
-          fetch("/api/notifications").then((r) => r.json()),
-          fetch("/api/horoscope").then((r) => r.json()),
-          fetch("/api/marriage-timing")
-            .then((r) => r.json())
-            .catch(() => null),
-        ]);
+        setLoading(true);
+        setError(null);
+        const [meRaw, profileRaw, matchesRaw, aiRaw, notesRaw, chartRaw, marriageRaw] =
+          await Promise.all([
+            fetchJsonWhenAuthed("/api/auth/me", ac.signal),
+            fetchJsonWhenAuthed("/api/profile", ac.signal),
+            fetchJsonWhenAuthed("/api/recommendations", ac.signal),
+            fetchJsonWhenAuthed("/api/ai/insights", ac.signal),
+            fetchJsonWhenAuthed("/api/notifications", ac.signal),
+            fetchJsonWhenAuthed("/api/horoscope", ac.signal),
+            fetchJsonWhenAuthed("/api/marriage-timing", ac.signal).catch(() => null),
+          ]);
+        if (cancelled) return;
 
-        const profileData = profile.success ? profile.data : null;
+        const me = meRaw as { user?: { name?: string } };
+        const profile = profileRaw as {
+          success?: boolean;
+          data?: {
+            profile?: {
+              gender?: string;
+              city?: string;
+              profession?: string;
+              education?: string;
+              photos?: unknown[];
+              completion?: { score?: number };
+            };
+            user?: { name?: string };
+            birthDetails?: { birthDate?: string };
+          };
+        };
+        const matches = matchesRaw as { success?: boolean; data?: { data?: Bundle["matches"] } };
+        const ai = aiRaw as { success?: boolean; data?: { insights?: Array<{ body?: string }> } };
+        const notes = notesRaw as { success?: boolean; data?: { unread?: number } };
+        const chartRes = chartRaw as {
+          success?: boolean;
+          data?: {
+            horoscope?: { moonSign?: string };
+            dasha?: { currentMaha?: string };
+          };
+        };
+        const marriageRes = marriageRaw as {
+          success?: boolean;
+          data?: { spouseTendencies?: Bundle["spouseTendencies"] };
+        } | null;
+
+        if (isUnauthorizedPayload(profileRaw) || !profile.success) {
+          setError("Failed to load matrimony home");
+          return;
+        }
+
+        const profileData = profile.data;
         const profileDoc = profileData?.profile;
         const readiness = evaluateOnboardingReadiness({
           gender: profileDoc?.gender,
@@ -101,13 +148,14 @@ export default function MatrimonyHomePage() {
         });
 
         if (!readiness.ready) {
+          redirecting = true;
           router.replace(routes.onboarding);
           return;
         }
 
-        const matchItems = matches.success ? matches.data.data || [] : [];
+        const matchItems = matches.success ? matches.data?.data || [] : [];
         const insight =
-          ai.success && ai.data.insights?.[0]?.body
+          ai.success && ai.data?.insights?.[0]?.body
             ? ai.data.insights[0].body
             : "Open Insights for a plain-language reading of your chart.";
 
@@ -117,19 +165,24 @@ export default function MatrimonyHomePage() {
           currentMaha: chartRes.data?.dasha?.currentMaha || null,
           matches: matchItems.slice(0, 6),
           insight: insight ? String(insight).slice(0, 320) : null,
-          unread: notes.success ? notes.data.unread || 0 : 0,
+          unread: notes.success ? notes.data?.unread || 0 : 0,
           spouseTendencies: marriageRes?.success
             ? marriageRes.data?.spouseTendencies || null
             : null,
         });
-      } catch {
+      } catch (error) {
+        if (cancelled || isAbortError(error)) return;
         setError("Failed to load matrimony home");
       } finally {
-        setLoading(false);
+        if (!cancelled && !redirecting) setLoading(false);
       }
     }
     void load();
-  }, [router]);
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [isPending, router]);
 
   const firstName = bundle?.userName?.split(" ")[0] ?? "friend";
 

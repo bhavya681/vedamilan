@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -8,6 +10,8 @@ import {
   type ReactNode,
   type WheelEvent as ReactWheelEvent,
 } from "react";
+
+import { useReducedMotion } from "framer-motion";
 
 import { NAKSHATRAS, SIGNS } from "@/application/horoscope/vedic-constants";
 import { NAKSHATRA_DETAILS, vimshottariLordOf } from "@/application/horoscope/nakshatra-catalog";
@@ -22,14 +26,30 @@ import {
   PlanetOrbDefs,
   planetOrbRadius,
 } from "@/features/horoscope/components/planet-orbs";
-import { skyStars } from "@/features/horoscope/lib/sky-field";
+import { NakshatraGlyph } from "@/features/horoscope/components/nakshatra-glyph";
+import {
+  asterismFor,
+  asterismHaloStars,
+  clampHoverBox,
+  placeAsterism,
+} from "@/features/horoscope/lib/nakshatra-asterisms";
+import {
+  SKY_PAN,
+  SKY_VIEW_MAX,
+  SKY_VIEW_MIN,
+  skyNebulae,
+  skyStars,
+  viewToFocusPoint,
+  zoomAroundPoint,
+} from "@/features/horoscope/lib/sky-field";
 import { skyLabelAnchor, skyLabelPoint } from "@/features/horoscope/lib/sky-labels";
 import { cn } from "@/lib/utils/cn";
 
 const CX = 50;
 const CY = 50;
 const RH = 38;
-const STARS = skyStars();
+const STARS = skyStars(180, 17);
+const NEBULAE = skyNebulae();
 
 export const RASHI_SA: Record<string, string> = {
   Aries: "Mesha",
@@ -128,6 +148,38 @@ function SkyHaloText({
   );
 }
 
+function nakshatraFigure(name: string, snapshot: CelestialSnapshot, size: number) {
+  const i = NAKSHATRAS.indexOf(name as (typeof NAKSHATRAS)[number]);
+  if (i < 0) return null;
+  const start = i * (360 / 27);
+  const points = [0, 0.25, 0.5, 0.75, 1].map((t) => {
+    const sample = nearestEcliptic(snapshot, start + t * (360 / 27));
+    return stereographicPoint(sample.altitude, sample.azimuth, CX, CY, RH);
+  });
+  const mid = points[2];
+  const end = points[4];
+  const begin = points[0];
+  if (!mid || !end || !begin) return null;
+  const placed = placeAsterism(
+    mid,
+    { x: end.x - begin.x, y: end.y - begin.y },
+    asterismFor(name),
+    size,
+  );
+  const cx = placed.stars.reduce((s, p) => s + p.x, 0) / Math.max(1, placed.stars.length);
+  const cy = placed.stars.reduce((s, p) => s + p.y, 0) / Math.max(1, placed.stars.length);
+  return {
+    d: pathFromPoints(points),
+    placed,
+    halo: asterismHaloStars({ x: cx, y: cy }, size, 11 + Math.max(0, i)),
+    name,
+    symbol: NAKSHATRA_DETAILS[name]?.symbol?.split(" / ")[0] || "",
+    detail: NAKSHATRA_DETAILS[name],
+    cx,
+    cy,
+  };
+}
+
 export function CelestialSkyMap({
   snapshot,
   layers,
@@ -139,6 +191,7 @@ export function CelestialSkyMap({
   onLagna,
   fill = false,
   className,
+  focusNakshatra = null,
 }: {
   snapshot: CelestialSnapshot;
   layers: SkyLayers;
@@ -150,6 +203,7 @@ export function CelestialSkyMap({
   onLagna?: () => void;
   fill?: boolean;
   className?: string;
+  focusNakshatra?: string | null;
 }) {
   const learning = viewMode === "learning";
   const vedic = viewMode === "vedic" || learning;
@@ -171,8 +225,102 @@ export function CelestialSkyMap({
   const pinch = useRef<{ d: number; k: number } | null>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const svgRef = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const restView = useRef({ x: 0, y: 0, k: 1 });
+  const leaveTimer = useRef<number | null>(null);
+  const panRaf = useRef<number | null>(null);
+  const [hoverBox, setHoverBox] = useState({ left: 8, top: 8 });
+  const reduceMotion = useReducedMotion();
+
+  function commitView(next: { x: number; y: number; k: number }) {
+    restView.current = next;
+    setView(next);
+  }
+
+  function setZoom(next: number) {
+    setView((v) => {
+      const updated = { ...v, k: Math.min(SKY_VIEW_MAX, Math.max(SKY_VIEW_MIN, next)) };
+      restView.current = updated;
+      return updated;
+    });
+  }
+
+  function beginInspect(next: HoverState) {
+    if (!next) return;
+    if (leaveTimer.current) {
+      window.clearTimeout(leaveTimer.current);
+      leaveTimer.current = null;
+    }
+    setHover(next);
+  }
+
+  function endInspect() {
+    if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+    leaveTimer.current = window.setTimeout(() => {
+      setHover(null);
+      leaveTimer.current = null;
+    }, 80);
+  }
+
+  function panTo(next: { x: number; y: number; k: number }) {
+    if (panRaf.current) window.cancelAnimationFrame(panRaf.current);
+    if (reduceMotion) {
+      commitView(next);
+      return;
+    }
+    const from = restView.current;
+    const started = performance.now();
+    const dur = 280;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - started) / dur);
+      const e = 1 - (1 - t) ** 3;
+      const frame = {
+        x: from.x + (next.x - from.x) * e,
+        y: from.y + (next.y - from.y) * e,
+        k: from.k + (next.k - from.k) * e,
+      };
+      setView(frame);
+      if (t < 1) {
+        panRaf.current = window.requestAnimationFrame(tick);
+        return;
+      }
+      panRaf.current = null;
+      restView.current = next;
+    };
+    panRaf.current = window.requestAnimationFrame(tick);
+  }
+
+  const snapshotRef = useRef(snapshot);
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+  }, [snapshot]);
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+      if (panRaf.current) window.cancelAnimationFrame(panRaf.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!focusNakshatra) return;
+    const snap = snapshotRef.current;
+    const i = NAKSHATRAS.indexOf(focusNakshatra as (typeof NAKSHATRAS)[number]);
+    if (i < 0) return;
+    const sample = nearestEcliptic(snap, i * (360 / 27) + 360 / 54);
+    const pt = stereographicPoint(sample.altitude, sample.azimuth, CX, CY, RH);
+    panTo(viewToFocusPoint(pt.x, pt.y, restView.current.k));
+    // Keep the user's zoom; only pan the selected nakshatra to centre.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusNakshatra]);
 
   function onPointerDown(e: ReactPointerEvent<SVGSVGElement>) {
+    if (panRaf.current) {
+      window.cancelAnimationFrame(panRaf.current);
+      panRaf.current = null;
+      restView.current = view;
+    }
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
     if (pointers.current.size === 1) {
@@ -201,11 +349,15 @@ export function CelestialSkyMap({
       const b = pts[1];
       if (!a || !b) return;
       const d = Math.hypot(b.x - a.x, b.y - a.y);
-      const next = Math.min(
-        2.6,
-        Math.max(0.8, pinch.current.k * (d / Math.max(1, pinch.current.d))),
+      const nextK = Math.min(
+        SKY_VIEW_MAX,
+        Math.max(SKY_VIEW_MIN, pinch.current.k * (d / Math.max(1, pinch.current.d))),
       );
-      setView((v) => ({ ...v, k: next }));
+      setView((v) => {
+        const updated = { ...v, k: nextK };
+        restView.current = updated;
+        return updated;
+      });
       return;
     }
     const active = drag.current;
@@ -215,11 +367,15 @@ export function CelestialSkyMap({
     const rect = svg.getBoundingClientRect();
     const dx = ((e.clientX - active.x) / rect.width) * 100;
     const dy = ((e.clientY - active.y) / rect.height) * 100;
-    setView((v) => ({
-      ...v,
-      x: Math.max(-28, Math.min(28, active.panX + dx)),
-      y: Math.max(-28, Math.min(28, active.panY + dy)),
-    }));
+    setView(() => {
+      const updated = {
+        x: Math.max(-SKY_PAN, Math.min(SKY_PAN, active.panX + dx)),
+        y: Math.max(-SKY_PAN, Math.min(SKY_PAN, active.panY + dy)),
+        k: view.k,
+      };
+      restView.current = updated;
+      return updated;
+    });
   }
 
   function onPointerUp(e: ReactPointerEvent<SVGSVGElement>) {
@@ -230,8 +386,23 @@ export function CelestialSkyMap({
 
   function onWheel(e: ReactWheelEvent<SVGSVGElement>) {
     e.preventDefault();
-    const factor = e.deltaY > 0 ? 0.92 : 1.08;
-    setView((v) => ({ ...v, k: Math.min(2.6, Math.max(0.8, v.k * factor)) }));
+    if (panRaf.current) {
+      window.cancelAnimationFrame(panRaf.current);
+      panRaf.current = null;
+    }
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const visX = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 100;
+    const visY = ((e.clientY - rect.top) / Math.max(1, rect.height)) * 100;
+    const factor = e.deltaY > 0 ? 0.9 : 1.12;
+    setView((v) => {
+      const px = 50 + (visX - 50 - v.x) / v.k;
+      const py = 50 + (visY - 50 - v.y) / v.k;
+      const next = zoomAroundPoint(v, px, py, v.k * factor);
+      restView.current = next;
+      return next;
+    });
   }
 
   const hoverCard = useMemo(() => {
@@ -246,18 +417,31 @@ export function CelestialSkyMap({
         lines: [
           `${body.degreeInSign} ${body.sign}`,
           `${body.nakshatra} · pada ${body.nakshatraPada}`,
+          `Alt ${body.altitude.toFixed(1)}° · Az ${body.azimuth.toFixed(1)}°`,
+          `House ${body.houseFromCurrentLagna} from lagna`,
+          body.dignity ? `Dignity · ${body.dignity}` : null,
           body.aboveHorizon ? "Above horizon" : "Below horizon",
+          body.status === "rising" || body.status === "near-rising"
+            ? "Near the eastern rise"
+            : null,
           body.isRetrograde ? "Retrograde" : null,
         ].filter(Boolean) as string[],
       };
     }
     if (hover.kind === "nakshatra") {
       const meta = nakshatraHint(hover.id);
+      const extra = NAKSHATRA_DETAILS[hover.id];
       return {
         x: hover.x,
         y: hover.y,
         title: meta.name,
-        lines: [`Ruler ${meta.lord}`, `Deity ${meta.deity || "—"}`, `Symbol ${meta.symbol || "—"}`],
+        lines: [
+          `Ruler ${meta.lord}`,
+          `Deity ${meta.deity || "—"}`,
+          `Symbol ${meta.symbol || "—"}`,
+          extra?.gana ? `${extra.gana} gana · ${extra.element}` : null,
+          extra?.qualities?.length ? extra.qualities.join(" · ") : null,
+        ].filter(Boolean) as string[],
       };
     }
     if (hover.kind === "lagna") {
@@ -284,6 +468,38 @@ export function CelestialSkyMap({
     };
   }, [hover, snapshot]);
 
+  useLayoutEffect(() => {
+    if (!hover) return;
+    const svg = svgRef.current;
+    const wrap = wrapRef.current;
+    const card = cardRef.current;
+    if (!svg || !wrap) return;
+    const visX = (hover.x - 50) * view.k + 50 + view.x;
+    const visY = (hover.y - 50) * view.k + 50 + view.y;
+    const rect = wrap.getBoundingClientRect();
+    const ctm = svg.getScreenCTM();
+    let px = (visX / 100) * rect.width;
+    let py = (visY / 100) * rect.height;
+    if (ctm) {
+      const pt = svg.createSVGPoint();
+      pt.x = visX;
+      pt.y = visY;
+      const screen = pt.matrixTransform(ctm);
+      px = screen.x - rect.left;
+      py = screen.y - rect.top;
+    }
+    setHoverBox(
+      clampHoverBox(
+        px,
+        py,
+        card?.offsetWidth || 196,
+        card?.offsetHeight || 102,
+        wrap.clientWidth,
+        wrap.clientHeight,
+      ),
+    );
+  }, [hover, hoverCard, view.x, view.y, view.k]);
+
   const lagnaPt = stereographicPoint(
     snapshot.ascendant.altitude,
     snapshot.ascendant.azimuth,
@@ -295,10 +511,17 @@ export function CelestialSkyMap({
     ? stereographicPoint(snapshot.midheaven.altitude, snapshot.midheaven.azimuth, CX, CY, RH)
     : null;
 
+  const focusedNak = useMemo(() => {
+    const name = focusNakshatra || (hover?.kind === "nakshatra" ? hover.id : null);
+    if (!name) return null;
+    return nakshatraFigure(name, snapshot, focusNakshatra === name ? 24 : 16.5);
+  }, [focusNakshatra, hover, snapshot]);
+
   return (
     <div
+      ref={wrapRef}
       className={cn(
-        "relative",
+        "relative overflow-visible",
         fill && "flex h-full min-h-0 w-full items-center justify-center",
         className,
       )}
@@ -322,19 +545,50 @@ export function CelestialSkyMap({
         onWheel={onWheel}
       >
         <defs>
-          <radialGradient id="nh-sky" cx="50%" cy="42%" r="62%">
-            <stop
-              offset="0%"
-              className="[stop-color:color-mix(in_srgb,var(--muted)_55%,transparent)] dark:[stop-color:#152038]"
-            />
-            <stop
-              offset="100%"
-              className="[stop-color:color-mix(in_srgb,var(--background)_92%,var(--muted))] dark:[stop-color:#070b14]"
-            />
+          <radialGradient id="nh-sky" cx="48%" cy="38%" r="68%">
+            <stop offset="0%" stopColor="#1c2d52" />
+            <stop offset="42%" stopColor="#10192e" />
+            <stop offset="100%" stopColor="#070b14" />
           </radialGradient>
+          <radialGradient id="nh-glow-core" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#d4af37" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#d4af37" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="nh-milky" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#b9c7ff" stopOpacity="0" />
+            <stop offset="45%" stopColor="#e8dcc0" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#8b6ad4" stopOpacity="0" />
+          </linearGradient>
+          <filter id="nh-star-glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="0.35" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <PlanetOrbDefs />
         </defs>
         <circle cx={CX} cy={CY} r="49" fill="url(#nh-sky)" />
+        <ellipse
+          cx="50"
+          cy="52"
+          rx="38"
+          ry="11"
+          fill="url(#nh-milky)"
+          transform="rotate(-28 50 52)"
+        />
+        {NEBULAE.map((n, i) => (
+          <ellipse
+            key={i}
+            cx={n.cx}
+            cy={n.cy}
+            rx={n.rx}
+            ry={n.ry}
+            fill={n.fill}
+            opacity={n.o}
+            transform={`rotate(${n.rot} ${n.cx} ${n.cy})`}
+          />
+        ))}
         <g
           transform={`translate(${50 + view.x} ${50 + view.y}) scale(${view.k}) translate(-50 -50)`}
         >
@@ -344,8 +598,9 @@ export function CelestialSkyMap({
               cx={s.x}
               cy={s.y}
               r={s.r}
-              className="fill-foreground/40 dark:fill-ivory/70"
+              fill="#f7f1e3"
               opacity={s.o}
+              filter={s.r > 0.28 ? "url(#nh-star-glow)" : undefined}
             />
           ))}
 
@@ -355,9 +610,10 @@ export function CelestialSkyMap({
                 cx={CX}
                 cy={CY}
                 r={RH}
-                className="fill-background/25 stroke-border dark:stroke-gold/40 dark:fill-[#10182a]/80"
-                strokeWidth="0.4"
+                className="stroke-gold/55 fill-[#0b1220]/55"
+                strokeWidth="0.55"
               />
+              <circle cx={CX} cy={CY} r={RH} fill="url(#nh-glow-core)" opacity="0.55" />
               <line
                 x1="12"
                 y1={CY}
@@ -462,8 +718,10 @@ export function CelestialSkyMap({
                     role="button"
                     tabIndex={0}
                     className="cursor-pointer"
-                    onMouseEnter={() => setHover({ kind: "nakshatra", id: name, x: pt.x, y: pt.y })}
-                    onMouseLeave={() => setHover(null)}
+                    onMouseEnter={() =>
+                      beginInspect({ kind: "nakshatra", id: name, x: pt.x, y: pt.y })
+                    }
+                    onMouseLeave={() => endInspect()}
                     onClick={() => onNakshatra?.(name)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -483,14 +741,25 @@ export function CelestialSkyMap({
                         strokeWidth="0.2"
                       />
                     ) : null}
+                    {focusNakshatra === name ? (
+                      <circle
+                        cx={pt.x}
+                        cy={pt.y}
+                        r="3.4"
+                        className="stroke-gold fill-gold/10"
+                        strokeWidth="0.28"
+                      />
+                    ) : null}
                     <SkyHaloText
                       x={pt.x}
                       y={pt.y}
                       inset={2.15}
                       size="sm"
-                      emphasize={isLagna || isMoon}
+                      emphasize={isLagna || isMoon || focusNakshatra === name}
                       className={
-                        isLagna || isMoon ? undefined : "fill-foreground/70 dark:fill-ivory/75"
+                        isLagna || isMoon || focusNakshatra === name
+                          ? undefined
+                          : "fill-foreground/70 dark:fill-ivory/75"
                       }
                     >
                       {name.replace("Purva ", "P.").replace("Uttara ", "U.")}
@@ -499,6 +768,93 @@ export function CelestialSkyMap({
                 );
               })
             : null}
+
+          {focusedNak ? (
+            <g className="pointer-events-none">
+              <circle
+                cx={focusedNak.cx}
+                cy={focusedNak.cy}
+                r="13.5"
+                fill="#d4af37"
+                opacity="0.08"
+              />
+              <NakshatraGlyph
+                name={focusedNak.name}
+                x={focusedNak.cx - 4.8}
+                y={focusedNak.cy - 4.8}
+                width={9.6}
+                height={9.6}
+                className="text-gold/35"
+              />
+              <path
+                d={focusedNak.d}
+                className="stroke-gold/35 fill-none"
+                strokeWidth="0.4"
+                strokeLinecap="round"
+                strokeDasharray="0.8 0.7"
+              />
+              {focusedNak.halo.map((star, idx) => (
+                <circle
+                  key={`halo-${idx}`}
+                  cx={star.x}
+                  cy={star.y}
+                  r={star.r}
+                  fill="#fff6d4"
+                  opacity={star.o}
+                />
+              ))}
+              {focusedNak.placed.lines.map(([a, b], idx) => {
+                const from = focusedNak.placed.stars[a];
+                const to = focusedNak.placed.stars[b];
+                if (!from || !to) return null;
+                return (
+                  <line
+                    key={`link-${idx}`}
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    stroke="#e8c547"
+                    strokeWidth="0.38"
+                    opacity="0.95"
+                  />
+                );
+              })}
+              {focusedNak.placed.stars.map((star, idx) => (
+                <g key={`star-${idx}`}>
+                  <circle cx={star.x} cy={star.y} r={star.r + 0.85} fill="#d4af37" opacity="0.32" />
+                  <circle cx={star.x} cy={star.y} r={Math.max(0.38, star.r)} fill="#fff6d4" />
+                </g>
+              ))}
+              <SkyHaloText
+                x={focusedNak.cx}
+                y={focusedNak.cy}
+                inset={0}
+                size="lg"
+                emphasize
+                dy={-8.4}
+              >
+                {focusedNak.name}
+              </SkyHaloText>
+              {focusedNak.symbol ? (
+                <SkyHaloText
+                  x={focusedNak.cx}
+                  y={focusedNak.cy}
+                  inset={0}
+                  size="sm"
+                  emphasize
+                  dy={-6.1}
+                >
+                  {focusedNak.symbol}
+                </SkyHaloText>
+              ) : null}
+              {hover?.kind === "nakshatra" && focusedNak.detail?.deity ? (
+                <SkyHaloText x={focusedNak.cx} y={focusedNak.cy} inset={0} size="sm" dy={-4.2}>
+                  {focusedNak.detail.deity}
+                </SkyHaloText>
+              ) : null}
+            </g>
+          ) : null}
 
           {layers.zodiac
             ? SIGNS.map((sign, i) => {
@@ -563,8 +919,8 @@ export function CelestialSkyMap({
             role="button"
             tabIndex={0}
             className="cursor-pointer"
-            onMouseEnter={() => setHover({ kind: "lagna", x: lagnaPt.x, y: lagnaPt.y })}
-            onMouseLeave={() => setHover(null)}
+            onMouseEnter={() => beginInspect({ kind: "lagna", x: lagnaPt.x, y: lagnaPt.y })}
+            onMouseLeave={() => endInspect()}
             onClick={() => onLagna?.()}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") e.preventDefault();
@@ -594,8 +950,8 @@ export function CelestialSkyMap({
               role="button"
               tabIndex={0}
               className="cursor-pointer"
-              onMouseEnter={() => setHover({ kind: "mc", x: mcPt.x, y: mcPt.y })}
-              onMouseLeave={() => setHover(null)}
+              onMouseEnter={() => beginInspect({ kind: "mc", x: mcPt.x, y: mcPt.y })}
+              onMouseLeave={() => endInspect()}
             >
               <circle
                 cx={mcPt.x}
@@ -615,8 +971,9 @@ export function CelestialSkyMap({
                   key={p.planet}
                   body={p}
                   selected={selected === p.planet}
+                  inspect={hover?.kind === "planet" && hover.id === p.planet}
                   onSelect={onSelect}
-                  onHover={(next) => setHover(next)}
+                  onHover={(next) => (next ? beginInspect(next) : endInspect())}
                 />
               ))
             : null}
@@ -631,31 +988,53 @@ export function CelestialSkyMap({
 
       {hoverCard ? (
         <div
-          className="border-border/70 bg-background/95 pointer-events-none absolute z-10 hidden min-w-[9.5rem] rounded-lg border px-2.5 py-2 text-left shadow-sm md:block"
-          style={{
-            left: `${Math.min(72, Math.max(4, hoverCard.x))}%`,
-            top: `${Math.min(78, Math.max(4, hoverCard.y))}%`,
-            transform: "translate(-10%, -120%)",
-          }}
+          ref={cardRef}
+          className="border-gold/30 pointer-events-none absolute z-30 w-[min(16.5rem,calc(100%-1rem))] rounded-xl border bg-black/88 px-3 py-2.5 text-left shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
+          style={{ left: hoverBox.left, top: hoverBox.top }}
         >
-          <p className="text-[11px] font-semibold tracking-wide">{hoverCard.title}</p>
+          <p className="text-ivory text-[12px] font-semibold tracking-wide">{hoverCard.title}</p>
           {hoverCard.lines.map((line) => (
-            <p key={line} className="text-muted-foreground text-[10px] leading-snug">
+            <p key={line} className="text-ivory/75 mt-0.5 text-[11px] leading-snug">
               {line}
             </p>
           ))}
+          <p className="text-gold/80 mt-1.5 text-[10px] tracking-[0.14em] uppercase">
+            Click to select · pinch or +/− to zoom
+          </p>
         </div>
       ) : null}
-      <div className="absolute right-2 bottom-2">
+      <div className="absolute right-2 bottom-2 z-10 flex flex-col items-end gap-1">
+        <div className="border-ivory/15 flex overflow-hidden rounded-lg border bg-black/45 backdrop-blur-md">
+          <button
+            type="button"
+            className="text-ivory/80 hover:bg-ivory/10 px-2 py-1 text-sm"
+            aria-label="Zoom out"
+            onClick={() => setZoom(view.k * 0.88)}
+          >
+            −
+          </button>
+          <span className="text-ivory/70 min-w-[2.6rem] self-center text-center text-[10px] tabular-nums">
+            {Math.round(view.k * 100)}%
+          </span>
+          <button
+            type="button"
+            className="text-ivory/80 hover:bg-ivory/10 px-2 py-1 text-sm"
+            aria-label="Zoom in"
+            onClick={() => setZoom(view.k * 1.14)}
+          >
+            +
+          </button>
+        </div>
         <button
           type="button"
-          className="border-border/70 bg-background/80 text-muted-foreground hover:text-foreground rounded-md border px-2 py-1 text-[10px] tracking-wide uppercase"
+          className="border-ivory/15 text-ivory/75 hover:text-ivory rounded-md border bg-black/45 px-2 py-1 text-[10px] tracking-wide uppercase backdrop-blur-md"
           onClick={() => {
-            setView({ x: 0, y: 0, k: 1 });
+            if (panRaf.current) window.cancelAnimationFrame(panRaf.current);
+            commitView({ x: 0, y: 0, k: 1 });
             setHover(null);
           }}
         >
-          Reset sky
+          Reset view
         </button>
       </div>
     </div>
@@ -665,11 +1044,13 @@ export function CelestialSkyMap({
 function PlanetMark({
   body,
   selected,
+  inspect,
   onSelect,
   onHover,
 }: {
   body: CelestialBody;
   selected: boolean;
+  inspect?: boolean;
   onSelect: (planet: string | null) => void;
   onHover: (next: HoverState) => void;
 }) {
@@ -697,6 +1078,18 @@ function PlanetMark({
         }
       }}
     >
+      <circle cx={pt.x} cy={pt.y} r={r + (inspect ? 3.4 : 2.15)} className="fill-transparent" />
+      {inspect ? (
+        <circle
+          cx={pt.x}
+          cy={pt.y}
+          r={r + 2.15}
+          fill="none"
+          stroke="#e8c547"
+          strokeWidth="0.18"
+          opacity="0.85"
+        />
+      ) : null}
       {body.status === "rising" || body.status === "near-rising" ? (
         <circle
           cx={pt.x}
@@ -708,8 +1101,14 @@ function PlanetMark({
           opacity="0.7"
         />
       ) : null}
-      <PlanetOrb planet={body.planet} cx={pt.x} cy={pt.y} selected={selected} />
-      <SkyHaloText x={pt.x} y={pt.y} inset={r + 2.85} size="sm">
+      <PlanetOrb planet={body.planet} cx={pt.x} cy={pt.y} selected={selected || inspect} />
+      <SkyHaloText
+        x={pt.x}
+        y={pt.y}
+        inset={r + 2.85}
+        size={inspect || selected ? "md" : "sm"}
+        emphasize={inspect || selected}
+      >
         {body.planet}
       </SkyHaloText>
     </g>

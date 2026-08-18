@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { inferModeFromPath, isWorkspaceMode, WORKSPACE_MODE_META } from "@/lib/workspace/mode";
+import {
+  DEFAULT_WORKSPACE_MODE,
+  inferModeFromPath,
+  isWorkspaceMode,
+  WORKSPACE_MODE_META,
+} from "@/lib/workspace/mode";
 
 describe("workspace mode", () => {
   it("validates mode values", () => {
@@ -8,6 +13,11 @@ describe("workspace mode", () => {
     expect(isWorkspaceMode("matrimony")).toBe(true);
     expect(isWorkspaceMode("wisdom")).toBe(true);
     expect(isWorkspaceMode("dating")).toBe(false);
+  });
+
+  it("defaults to astrology workspace", () => {
+    expect(DEFAULT_WORKSPACE_MODE).toBe("astrology");
+    expect(WORKSPACE_MODE_META[DEFAULT_WORKSPACE_MODE].homePath).toBe("/dashboard/astrology");
   });
 
   it("exposes mode home paths", () => {

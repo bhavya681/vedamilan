@@ -7,6 +7,7 @@ import { useReducedMotion } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
+  Compass,
   Info,
   Layers,
   MapPin,
@@ -33,6 +34,7 @@ import {
   type SkyLayers,
   type SkyViewMode,
 } from "@/features/horoscope/components/celestial-sky-map";
+import { HorizonNakshatraRail } from "@/features/horoscope/components/horizon-nakshatra-rail";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -175,6 +177,7 @@ export function NorthHorizonExplorer() {
   const [selected, setSelected] = useState<string | null>(null);
   const [nakOpen, setNakOpen] = useState<string | null>(null);
   const [help, setHelp] = useState(false);
+  const [skyNotesOpen, setSkyNotesOpen] = useState(false);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
   const [desktopPanel, setDesktopPanel] = useState(false);
@@ -414,10 +417,16 @@ export function NorthHorizonExplorer() {
               goNow();
             }}
           >
-            <TabsList>
-              <TabsTrigger value="live">Live sky</TabsTrigger>
-              <TabsTrigger value="birth">Birth sky</TabsTrigger>
-              <TabsTrigger value="explore">Explore sky</TabsTrigger>
+            <TabsList className="h-8">
+              <TabsTrigger value="live" className="px-2 text-[11px] sm:px-3">
+                Live sky
+              </TabsTrigger>
+              <TabsTrigger value="birth" className="px-2 text-[11px] sm:px-3">
+                Birth sky
+              </TabsTrigger>
+              <TabsTrigger value="explore" className="px-2 text-[11px] sm:px-3">
+                Explore
+              </TabsTrigger>
             </TabsList>
           </Tabs>
           {mode === "live" ? (
@@ -513,7 +522,15 @@ export function NorthHorizonExplorer() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2">
           <div className="grid min-h-0 flex-1 gap-2 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_21rem]">
-            <section className="border-border/60 bg-card/40 relative flex min-h-[min(70dvh,42rem)] min-w-0 flex-col overflow-hidden rounded-2xl border lg:min-h-0">
+            <section className="border-gold/20 relative flex min-h-[min(72dvh,44rem)] min-w-0 flex-col overflow-hidden rounded-2xl border bg-[#070b14] lg:min-h-0">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-90"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 80% 55% at 50% 18%, rgba(90,70,180,0.28), transparent 58%), radial-gradient(ellipse 55% 40% at 82% 72%, rgba(40,90,160,0.22), transparent 60%), radial-gradient(ellipse 40% 32% at 14% 78%, rgba(212,175,55,0.12), transparent 55%)",
+                }}
+              />
               {loading && !data ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8">
                   <div
@@ -522,117 +539,152 @@ export function NorthHorizonExplorer() {
                       !reduceMotion && "animate-spin",
                     )}
                   />
-                  <p className="text-muted-foreground text-sm">Mapping the sky…</p>
+                  <p className="text-ivory/70 text-sm">Mapping the sky…</p>
                 </div>
               ) : data ? (
                 <>
-                  <div className="relative min-h-0 flex-1 p-1 sm:p-2">
-                    <CelestialSkyMap
-                      snapshot={sky || data}
-                      layers={layers}
-                      viewMode={viewMode}
-                      selected={selected}
-                      filter={filter}
-                      onSelect={setSelected}
-                      onNakshatra={setNakOpen}
-                      onLagna={() => setLagnaOpen(true)}
-                      fill
-                    />
-                    <div className="pointer-events-none absolute inset-0 z-20 p-2 sm:p-3">
-                      <div className="pointer-events-auto flex max-w-[min(100%,22rem)] flex-wrap gap-1">
-                        {(
-                          [
-                            ["sky", "Sky"],
-                            ["vedic", "Vedic"],
-                            ["learning", "Learn"],
-                          ] as const
-                        ).map(([id, label]) => (
-                          <Button
-                            key={id}
-                            type="button"
-                            size="sm"
-                            variant={viewMode === id ? "default" : "outline"}
-                            className="bg-background/80 h-7 px-2 text-[10px] backdrop-blur-sm"
-                            onClick={() => {
-                              setViewMode(id);
-                              if (id === "vedic") {
-                                setLayers((s) => ({ ...s, houses: true, nakshatra: true }));
-                              }
-                            }}
-                          >
-                            {label}
-                          </Button>
-                        ))}
-                      </div>
-                      <div className="pointer-events-auto absolute top-2 right-2 sm:top-3 sm:right-3">
-                        <Popover>
-                          <PopoverTrigger asChild>
+                  <div className="relative flex min-h-0 flex-1 flex-col">
+                    <div className="relative min-h-0 flex-1 p-1 sm:p-2">
+                      <CelestialSkyMap
+                        snapshot={sky || data}
+                        layers={layers}
+                        viewMode={viewMode}
+                        selected={selected}
+                        filter={filter}
+                        onSelect={setSelected}
+                        onNakshatra={setNakOpen}
+                        onLagna={() => setLagnaOpen(true)}
+                        focusNakshatra={nakOpen}
+                        fill
+                      />
+                      <div className="pointer-events-none absolute inset-0 z-20 p-2 sm:p-3">
+                        <div className="pointer-events-auto flex max-w-[min(100%,22rem)] flex-wrap gap-1">
+                          {(
+                            [
+                              ["sky", "Sky"],
+                              ["vedic", "Vedic"],
+                              ["learning", "Learn"],
+                            ] as const
+                          ).map(([id, label]) => (
                             <Button
+                              key={id}
                               type="button"
                               size="sm"
-                              variant="outline"
-                              className="bg-background/80 h-7 gap-1 px-2 text-[10px] backdrop-blur-sm"
+                              variant={viewMode === id ? "default" : "outline"}
+                              className="border-ivory/15 text-ivory h-7 bg-black/45 px-2 text-[10px] backdrop-blur-md"
+                              onClick={() => {
+                                setViewMode(id);
+                                if (id === "vedic") {
+                                  setLayers((s) => ({ ...s, houses: true, nakshatra: true }));
+                                }
+                              }}
                             >
-                              <Layers className="size-3" />
-                              Layers
+                              {label}
                             </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            align="end"
-                            className="w-44 p-2 text-[11px]"
-                            onOpenAutoFocus={(e) => e.preventDefault()}
-                          >
-                            <p className="text-muted-foreground mb-1.5 text-[10px] tracking-[0.14em] uppercase">
-                              Sky layers
-                            </p>
-                            {(
-                              [
-                                ["planets", "Planets"],
-                                ["zodiac", "Rashis"],
-                                ["nakshatra", "Nakshatras"],
-                                ["houses", "Houses"],
-                                ["horizon", "Horizon line"],
-                                ["constellations", "Stars"],
-                              ] as const
-                            ).map(([key, label]) => (
-                              <label key={key} className="flex items-center gap-1.5 py-0.5">
-                                <input
-                                  type="checkbox"
-                                  checked={layers[key]}
-                                  onChange={(e) =>
-                                    setLayers((s) => ({ ...s, [key]: e.target.checked }))
-                                  }
-                                />
-                                {label}
-                              </label>
-                            ))}
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div className="pointer-events-auto absolute bottom-2 left-2 flex flex-wrap gap-1 sm:bottom-3 sm:left-3">
-                        {(
-                          [
-                            ["all", "All"],
-                            ["above", "Above"],
-                            ["below", "Below"],
-                          ] as const
-                        ).map(([id, label]) => (
-                          <Button
-                            key={id}
+                          ))}
+                        </div>
+                        {data ? (
+                          <button
                             type="button"
-                            size="sm"
-                            variant={filter === id ? "default" : "outline"}
-                            className="bg-background/80 h-7 px-2 text-[10px] backdrop-blur-sm"
-                            onClick={() => setFilter(id)}
+                            className="border-gold/25 pointer-events-auto mt-2 max-w-[13.5rem] rounded-xl border bg-black/50 px-2.5 py-2 text-left backdrop-blur-md"
+                            onClick={() => setLagnaOpen(true)}
                           >
-                            {label}
-                          </Button>
-                        ))}
+                            <p className="text-gold/80 text-[9px] tracking-[0.16em] uppercase">
+                              Ascendant
+                            </p>
+                            <p className="font-display text-ivory text-sm">
+                              {data.ascendant.sign} {data.ascendant.degreeInSign}
+                            </p>
+                            <p className="text-ivory/65 text-[10px] leading-snug">
+                              {data.ascendant.nakshatra} · pada {data.ascendant.nakshatraPada}
+                            </p>
+                          </button>
+                        ) : null}
+                        <div className="pointer-events-auto absolute top-2 right-2 sm:top-3 sm:right-3">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-ivory/15 text-ivory h-7 gap-1 bg-black/45 px-2 text-[10px] backdrop-blur-md"
+                              >
+                                <Layers className="size-3" />
+                                Layers
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              align="end"
+                              className="w-44 p-2 text-[11px]"
+                              onOpenAutoFocus={(e) => e.preventDefault()}
+                            >
+                              <p className="text-muted-foreground mb-1.5 text-[10px] tracking-[0.14em] uppercase">
+                                Sky layers
+                              </p>
+                              {(
+                                [
+                                  ["planets", "Planets"],
+                                  ["zodiac", "Rashis"],
+                                  ["nakshatra", "Nakshatras"],
+                                  ["houses", "Houses"],
+                                  ["horizon", "Horizon line"],
+                                  ["constellations", "Stars"],
+                                ] as const
+                              ).map(([key, label]) => (
+                                <label key={key} className="flex items-center gap-1.5 py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={layers[key]}
+                                    onChange={(e) =>
+                                      setLayers((s) => ({ ...s, [key]: e.target.checked }))
+                                    }
+                                  />
+                                  {label}
+                                </label>
+                              ))}
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="pointer-events-auto absolute bottom-14 left-2 flex flex-wrap gap-1 sm:bottom-16 sm:left-3">
+                          {(
+                            [
+                              ["all", "All"],
+                              ["above", "Above"],
+                              ["below", "Below"],
+                            ] as const
+                          ).map(([id, label]) => (
+                            <Button
+                              key={id}
+                              type="button"
+                              size="sm"
+                              variant={filter === id ? "default" : "outline"}
+                              className="border-ivory/15 text-ivory h-7 bg-black/45 px-2 text-[10px] backdrop-blur-md"
+                              onClick={() => setFilter(id)}
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="text-ivory/55 pointer-events-none absolute right-2 bottom-14 hidden items-center gap-1 text-[9px] tracking-[0.2em] uppercase sm:bottom-16 sm:flex">
+                          <Compass className="h-3 w-3" />N zenith · E rising
+                        </div>
                       </div>
                     </div>
+                    <div className="border-ivory/10 relative z-10 shrink-0 border-t bg-black/35 px-2 pt-2 pb-2 backdrop-blur-md sm:px-3">
+                      <HorizonNakshatraRail
+                        selected={nakOpen}
+                        lagna={data.ascendant.nakshatra}
+                        moon={data.moonNakshatra}
+                        onSelect={(name) => {
+                          setLayers((s) => ({ ...s, nakshatra: true }));
+                          setNakOpen(name);
+                        }}
+                      />
+                    </div>
                   </div>
-                  <p className="text-muted-foreground px-3 pb-2 text-center text-[10px]">
-                    Calculated by VedaMilan astrology engine · Lahiri sidereal
+                  <p className="text-ivory/40 relative z-10 px-3 pb-2 text-center text-[10px]">
+                    Calculated by VedaMilan astrology engine · Lahiri sidereal · pinch or +/− to
+                    zoom
                   </p>
                 </>
               ) : null}
@@ -892,10 +944,19 @@ export function NorthHorizonExplorer() {
                   </span>
                 </div>
               ) : null}
-              <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-[11px] lg:hidden">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] lg:hidden">
                 <span>Rising · {data.snapshot.risingSign}</span>
                 <span>Moon · {data.moonNakshatra || "—"}</span>
                 <span>Strongest · {data.snapshot.strongestVisible || "—"}</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-[10px]"
+                  onClick={() => setSkyNotesOpen(true)}
+                >
+                  Sky notes
+                </Button>
               </div>
             </div>
           ) : null}
@@ -1069,7 +1130,43 @@ export function NorthHorizonExplorer() {
               <span className="text-foreground font-medium">Nakshatra / Zodiac</span> — sidereal
               Lahiri divisions from the same engine as your kundli.
             </li>
+            <li>
+              <span className="text-foreground font-medium">Nakshatra rail</span> — scroll the 27
+              star groups, tap one to zoom to its place on the ecliptic and read its symbol.
+            </li>
+            <li>
+              <span className="text-foreground font-medium">Zoom</span> — pinch, mouse wheel, or the
+              + / − controls. Reset view returns to the full disc.
+            </li>
           </ul>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={skyNotesOpen} onOpenChange={setSkyNotesOpen}>
+        <SheetContent side="bottom" className="max-h-[min(88dvh,36rem)]">
+          <SheetHeader>
+            <SheetTitle>Sky notes</SheetTitle>
+          </SheetHeader>
+          {data ? (
+            <div className="space-y-3 overflow-y-auto px-4 pb-6 text-sm">
+              <p>Rising sign · {data.snapshot.risingSign}</p>
+              <p>
+                Moon · {data.moonSign || "—"} · {data.moonNakshatra || "—"}
+              </p>
+              <p>Current nakshatra · {data.snapshot.currentNakshatra}</p>
+              <p>Closest to horizon · {data.snapshot.closestToHorizon || "—"}</p>
+              <p>Strongest visible · {data.snapshot.strongestVisible || "—"}</p>
+              {data.midheaven ? (
+                <p>
+                  Midheaven · {data.midheaven.sign} {data.midheaven.degreeInSign}
+                </p>
+              ) : null}
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                This is a calculated local sky from the VedaMilan engine, not a live telescope
+                image. Use the nakshatra strip to walk the ecliptic.
+              </p>
+            </div>
+          ) : null}
         </SheetContent>
       </Sheet>
     </div>

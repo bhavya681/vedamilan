@@ -12,6 +12,7 @@ import {
 import { useAppPathname, useLocaleRouter } from "@/components/i18n/locale-navigation";
 
 import {
+  DEFAULT_WORKSPACE_MODE,
   inferModeFromPath,
   readLocalWorkspaceMode,
   writeLocalWorkspaceMode,
@@ -31,7 +32,9 @@ const WorkspaceModeContext = createContext<WorkspaceModeContextValue | null>(nul
 export function WorkspaceModeProvider({ children }: { children: ReactNode }) {
   const pathname = useAppPathname();
   const router = useLocaleRouter();
-  const [mode, setModeState] = useState<WorkspaceMode>("matrimony");
+  const [mode, setModeState] = useState<WorkspaceMode>(
+    () => inferModeFromPath(pathname) || DEFAULT_WORKSPACE_MODE,
+  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
