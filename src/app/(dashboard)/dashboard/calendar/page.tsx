@@ -49,56 +49,70 @@ import { cn } from "@/lib/utils/cn";
 
 const CATEGORY_COLORS: Record<
   LifeEventCategory,
-  { bg: string; text: string; border: string; bar: string }
+  { bg: string; text: string; border: string; bar: string; fill: string }
 > = {
-  marriage: { bg: "bg-rose/10", text: "text-rose", border: "border-rose/30", bar: "bg-rose" },
+  marriage: {
+    bg: "bg-rose/10",
+    text: "text-rose",
+    border: "border-rose/30",
+    bar: "bg-rose",
+    fill: "bg-rose/25",
+  },
   career: {
-    bg: "bg-blue-500/10",
-    text: "text-blue-500",
-    border: "border-blue-500/30",
-    bar: "bg-blue-500",
+    bg: "bg-secondary/10",
+    text: "text-secondary dark:text-cosmic",
+    border: "border-secondary/25",
+    bar: "bg-secondary",
+    fill: "bg-secondary/20",
   },
   job: {
-    bg: "bg-cyan-500/10",
-    text: "text-cyan-500",
-    border: "border-cyan-500/30",
-    bar: "bg-cyan-500",
+    bg: "bg-cosmic/10",
+    text: "text-cosmic",
+    border: "border-cosmic/25",
+    bar: "bg-cosmic",
+    fill: "bg-cosmic/20",
   },
   education: {
-    bg: "bg-amber-500/10",
-    text: "text-amber-500",
-    border: "border-amber-500/30",
-    bar: "bg-amber-500",
+    bg: "bg-saffron/10",
+    text: "text-saffron",
+    border: "border-saffron/30",
+    bar: "bg-saffron",
+    fill: "bg-saffron/25",
   },
   wealth: {
-    bg: "bg-emerald-500/10",
-    text: "text-emerald-500",
-    border: "border-emerald-500/30",
-    bar: "bg-emerald-500",
+    bg: "bg-emerald/10",
+    text: "text-emerald",
+    border: "border-emerald/25",
+    bar: "bg-emerald",
+    fill: "bg-emerald/20",
   },
   property: {
-    bg: "bg-orange-500/10",
-    text: "text-orange-500",
-    border: "border-orange-500/30",
-    bar: "bg-orange-500",
+    bg: "bg-primary/10",
+    text: "text-primary",
+    border: "border-primary/25",
+    bar: "bg-primary",
+    fill: "bg-primary/20",
   },
   travel: {
-    bg: "bg-sky-500/10",
-    text: "text-sky-500",
-    border: "border-sky-500/30",
-    bar: "bg-sky-500",
+    bg: "bg-secondary/10",
+    text: "text-secondary dark:text-ivory/80",
+    border: "border-secondary/20",
+    bar: "bg-secondary",
+    fill: "bg-secondary/15",
   },
   health: {
-    bg: "bg-red-500/10",
-    text: "text-red-500",
-    border: "border-red-500/30",
-    bar: "bg-red-500",
+    bg: "bg-destructive/10",
+    text: "text-destructive",
+    border: "border-destructive/25",
+    bar: "bg-destructive",
+    fill: "bg-destructive/15",
   },
   spiritual: {
-    bg: "bg-purple-500/10",
-    text: "text-purple-500",
-    border: "border-purple-500/30",
-    bar: "bg-purple-500",
+    bg: "bg-gold/10",
+    text: "text-gold",
+    border: "border-gold/35",
+    bar: "bg-gold",
+    fill: "bg-gold/25",
   },
 };
 
@@ -238,6 +252,10 @@ function formatChapterRange(startIso: string, endIso: string) {
   return `${start.toLocaleDateString("en-GB", opts)} – ${end.toLocaleDateString("en-GB", opts)}`;
 }
 
+function axisPct(ts: number, range: { min: number; span: number }) {
+  return ((ts - range.min) / range.span) * 100;
+}
+
 function ChapterTimeline({
   events,
   activeId,
@@ -257,7 +275,7 @@ function ChapterTimeline({
     const ends = events.map((e) => new Date(e.endDate).getTime());
     const min = Math.min(...starts, now);
     const max = Math.max(...ends, now);
-    const pad = (max - min) * 0.05;
+    const pad = (max - min) * 0.06;
     return { min: min - pad, max: max + pad, span: Math.max(1, max - min + pad * 2) };
   }, [events, now]);
 
@@ -294,189 +312,190 @@ function ChapterTimeline({
 
   if (!range || events.length === 0 || !now) return null;
 
-  const nowLeft = Math.max(0, Math.min(100, ((now - range.min) / range.span) * 100));
+  const nowLeft = Math.max(0, Math.min(100, axisPct(now, range)));
   const nowLabel = new Date(now).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  const labelCol = "w-[9.25rem] sm:w-[11.5rem]";
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-display text-lg sm:text-xl">Chapter timeline</h2>
-          <p className="text-muted-foreground text-xs">
-            Major Antardasha chapters on a life scale. Tap a bar to open that chapter.
+          <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+            Major Antardasha chapters on a shared time scale. Select a bar to open that chapter.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="border-gold/40 bg-gold/10 text-gold text-[10px]">
-            Now · {nowLabel}
-          </Badge>
-          <Badge variant="outline" className="text-[10px]">
-            {rows.length} chapters
-          </Badge>
-        </div>
+        <p className="text-muted-foreground text-[11px] tabular-nums">
+          {rows.length} chapters · today {nowLabel}
+        </p>
       </div>
 
       {legend.length > 1 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <ul className="flex flex-wrap gap-x-3 gap-y-1.5">
           {legend.map((e) => {
-            const Icon = CATEGORY_ICONS[e.category];
             const colors = CATEGORY_COLORS[e.category];
             return (
-              <span
+              <li
                 key={e.category}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                  colors.bg,
-                  colors.text,
-                  colors.border,
-                )}
+                className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px]"
               >
-                <Icon className="h-3 w-3" />
+                <span className={cn("h-2 w-2 rounded-[2px]", colors.bar)} aria-hidden />
                 {CATEGORY_LABELS[e.category]}
-              </span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       ) : null}
 
-      <div className="bg-muted/15 scrollbar-hidden -mx-1 overflow-x-auto rounded-2xl border px-1 py-3 [-webkit-overflow-scrolling:touch] sm:px-2">
-        <div className="min-w-[46rem]">
-          <div className="flex">
-            <div className="text-muted-foreground w-[8.75rem] shrink-0 px-2 pt-1 text-[10px] font-medium tracking-wider uppercase">
-              Theme
-            </div>
-            <div className="text-muted-foreground relative h-7 min-w-0 flex-1">
-              {years.map((year) => {
-                const ts = new Date(year, 0, 1).getTime();
-                const left = ((ts - range.min) / range.span) * 100;
-                if (left < 0 || left > 100) return null;
-                return (
-                  <span
-                    key={year}
-                    className="absolute top-0 -translate-x-1/2 text-[10px] tabular-nums"
-                    style={{ left: `${left}%` }}
-                  >
-                    {year}
-                  </span>
-                );
-              })}
-              <span
-                className="text-gold bg-gold/15 absolute top-0 z-20 -translate-x-1/2 rounded-full px-1.5 text-[9px] font-semibold tracking-wide uppercase"
-                style={{ left: `${nowLeft}%` }}
+      <div className="border-border/70 bg-background overflow-hidden rounded-xl border">
+        <div className="scrollbar-premium overflow-x-auto [-webkit-overflow-scrolling:touch]">
+          <div className="min-w-[38rem] sm:min-w-[44rem]">
+            <div className="border-border/50 flex border-b">
+              <div
+                className={cn(
+                  "text-muted-foreground shrink-0 px-3 py-2.5 text-[10px] font-semibold tracking-[0.14em] uppercase",
+                  labelCol,
+                )}
               >
-                Now
-              </span>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 right-0 left-[8.75rem] z-10">
-              {years.map((year) => {
-                const ts = new Date(year, 0, 1).getTime();
-                const left = ((ts - range.min) / range.span) * 100;
-                if (left < 0 || left > 100) return null;
-                return (
-                  <span
-                    key={`grid-${year}`}
-                    className="border-border/50 absolute top-0 bottom-0 border-l border-dashed"
-                    style={{ left: `${left}%` }}
-                  />
-                );
-              })}
-              <span
-                className="bg-gold absolute top-0 bottom-0 w-px"
-                style={{ left: `${nowLeft}%` }}
-              />
-            </div>
-
-            <div className="space-y-1">
-              {rows.map((e) => {
-                const start = new Date(e.startDate).getTime();
-                const end = new Date(e.endDate).getTime();
-                const left = ((start - range.min) / range.span) * 100;
-                const width = Math.max(3, ((end - start) / range.span) * 100);
-                const clampedLeft = Math.max(0, left);
-                const clampedWidth = Math.min(100 - clampedLeft, width);
-                const colors = CATEGORY_COLORS[e.category];
-                const Icon = CATEGORY_ICONS[e.category];
-                const active = activeId === e.id;
-                const isMarriage = e.category === "marriage";
-                const rangeLabel = formatChapterRange(e.startDate, e.endDate);
-                const span = formatSpan(e.spanMonths);
-                const showTitle = clampedWidth >= 16;
-                const showDates = clampedWidth >= 26;
-                return (
-                  <button
-                    key={e.id}
-                    type="button"
-                    onClick={() => onSelect(e.id)}
-                    className={cn(
-                      "flex w-full rounded-xl text-left transition-colors",
-                      "hover:bg-background/70 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
-                      active && "bg-gold/10",
-                    )}
-                    title={`${e.title} · ${rangeLabel}`}
-                  >
+                Chapter
+              </div>
+              <div className="relative min-h-9 min-w-0 flex-1">
+                {years.map((year) => {
+                  const left = axisPct(new Date(year, 0, 1).getTime(), range);
+                  if (left < 1 || left > 99) return null;
+                  if (Math.abs(left - nowLeft) < 6) return null;
+                  return (
                     <span
-                      className={cn(
-                        "bg-card/95 sticky left-0 z-20 flex w-[8.75rem] shrink-0 items-center gap-2 px-2 py-1.5 backdrop-blur-sm",
-                        isMarriage && "text-rose",
-                      )}
+                      key={year}
+                      className="text-muted-foreground absolute top-2 -translate-x-1/2 text-[10px] tabular-nums"
+                      style={{ left: `${left}%` }}
                     >
-                      <span
-                        className={cn(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border",
-                          colors.bg,
-                          colors.border,
-                        )}
-                      >
-                        <Icon className={cn("h-3.5 w-3.5", colors.text)} />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-[11px] font-medium">
-                          {CATEGORY_LABELS[e.category]}
-                        </span>
-                        <span className="text-muted-foreground block truncate text-[9px] capitalize">
-                          {e.phase === "present" ? "now" : e.phase}
-                        </span>
-                      </span>
+                      {year}
                     </span>
-                    <span className="relative min-h-11 min-w-0 flex-1 py-1.5">
-                      <span
+                  );
+                })}
+                <span
+                  className="text-gold absolute top-1.5 z-10 -translate-x-1/2 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                  style={{ left: `${nowLeft}%` }}
+                >
+                  Today
+                </span>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 right-0 left-[9.25rem] z-[1] sm:left-[11.5rem]">
+                {years.map((year) => {
+                  const left = axisPct(new Date(year, 0, 1).getTime(), range);
+                  if (left < 0 || left > 100) return null;
+                  return (
+                    <span
+                      key={`grid-${year}`}
+                      className="border-border/40 absolute top-0 bottom-0 border-l"
+                      style={{ left: `${left}%` }}
+                    />
+                  );
+                })}
+                <span
+                  className="bg-gold absolute top-0 bottom-0 z-[2] w-px"
+                  style={{ left: `${nowLeft}%` }}
+                />
+              </div>
+
+              <ul>
+                {rows.map((e, index) => {
+                  const start = new Date(e.startDate).getTime();
+                  const end = new Date(e.endDate).getTime();
+                  const left = axisPct(start, range);
+                  const width = Math.max(2.4, ((end - start) / range.span) * 100);
+                  const clampedLeft = Math.max(0, left);
+                  const clampedWidth = Math.min(100 - clampedLeft, width);
+                  const colors = CATEGORY_COLORS[e.category];
+                  const Icon = CATEGORY_ICONS[e.category];
+                  const active = activeId === e.id;
+                  const rangeLabel = formatChapterRange(e.startDate, e.endDate);
+                  const span = formatSpan(e.spanMonths);
+                  const showInBar = clampedWidth >= 18;
+                  return (
+                    <li key={e.id} className={index > 0 ? "border-border/40 border-t" : undefined}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(e.id)}
+                        aria-pressed={active}
+                        title={`${e.title} · ${rangeLabel}`}
                         className={cn(
-                          "absolute top-1.5 bottom-1.5 flex items-center gap-1.5 overflow-hidden rounded-full px-2.5 text-[10px] font-medium whitespace-nowrap text-white",
-                          colors.bar,
-                          isMarriage && "ring-gold/80 ring-offset-background ring-1 ring-offset-1",
-                          active && "ring-gold ring-offset-background ring-2 ring-offset-1",
-                          e.phase === "present" && "shadow-[0_0_14px_-2px_rgba(234,179,8,0.5)]",
+                          "flex w-full text-left transition-colors duration-200",
+                          "hover:bg-muted/40 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
+                          active && "bg-gold/8",
                         )}
-                        style={{
-                          left: `${clampedLeft}%`,
-                          width: `${clampedWidth}%`,
-                        }}
                       >
-                        {showTitle ? (
-                          <span className="truncate">{e.title}</span>
-                        ) : (
-                          <span className="sr-only">{e.title}</span>
-                        )}
-                        {showDates ? (
-                          <span className="shrink-0 text-white/80">
-                            {rangeLabel}
-                            {span ? ` · ${span}` : ""}
+                        <span
+                          className={cn(
+                            "bg-background/95 sticky left-0 z-[3] flex shrink-0 items-center gap-2.5 border-r px-3 py-2.5 backdrop-blur-sm",
+                            labelCol,
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                              colors.bg,
+                              colors.border,
+                            )}
+                          >
+                            <Icon className={cn("h-3.5 w-3.5", colors.text)} />
                           </span>
-                        ) : null}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
+                          <span className="min-w-0">
+                            <span className="block truncate text-[12px] leading-tight font-medium">
+                              {e.title}
+                            </span>
+                            <span className="text-muted-foreground mt-0.5 block truncate text-[10px]">
+                              {CATEGORY_LABELS[e.category]}
+                              <span className="capitalize">
+                                {" "}
+                                · {e.phase === "present" ? "current" : e.phase}
+                              </span>
+                            </span>
+                          </span>
+                        </span>
+                        <span className="relative min-h-12 min-w-0 flex-1 px-0 py-3.5">
+                          <span className="bg-muted/35 absolute inset-y-3.5 right-3 left-0 rounded-sm" />
+                          <span
+                            className={cn(
+                              "absolute inset-y-3.5 flex items-center overflow-hidden rounded-sm border-l-2 pr-2 pl-2",
+                              colors.fill,
+                              colors.border,
+                              colors.text,
+                              e.phase === "past" && "opacity-55",
+                              e.phase === "future" && "opacity-90",
+                              active && "ring-gold/50 ring-1",
+                            )}
+                            style={{
+                              left: `${clampedLeft}%`,
+                              width: `${clampedWidth}%`,
+                            }}
+                          >
+                            {showInBar ? (
+                              <span className="truncate text-[10px] font-medium tabular-nums">
+                                {rangeLabel}
+                                {span ? ` · ${span}` : ""}
+                              </span>
+                            ) : (
+                              <span className="sr-only">{rangeLabel}</span>
+                            )}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
         </div>
       </div>
-      <p className="text-muted-foreground text-[10px]">
-        Gold line is today. Marriage chapters sit first; colours match life themes.
+      <p className="text-muted-foreground text-[11px] leading-relaxed">
+        The gold line is today. Past chapters sit quieter; current chapters are full strength.
+        Colours are life themes, not scores.
       </p>
     </div>
   );
