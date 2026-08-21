@@ -113,7 +113,6 @@ function latLngToVector3(
 interface MarkerProps {
   marker: GlobeMarker;
   radius: number;
-  defaultSize: number;
   onClick?: (marker: GlobeMarker) => void;
   onHover?: (marker: GlobeMarker | null) => void;
 }
@@ -121,7 +120,6 @@ interface MarkerProps {
 function Marker({
   marker,
   radius,
-  defaultSize,
   onClick,
   onHover,
 }: MarkerProps) {
@@ -234,11 +232,10 @@ function Marker({
             onMouseLeave={handlePointerLeave}
             onClick={handleClick}
           >
-            <img
-              src={marker.src}
-              alt=""
-              className="h-full w-full object-cover"
-              draggable={false}
+            <span
+              aria-hidden
+              className="block h-full w-full bg-cover bg-center"
+              style={{ backgroundImage: `url("${marker.src}")` }}
             />
           </div>
         </Html>
@@ -266,22 +263,20 @@ function RotatingGlobe({
 }: RotatingGlobeProps) {
   const groupRef = useRef<THREE.Group>(null);
 
-  // Load Earth textures
-  const [earthTexture, bumpTexture] = useTexture([
-    config.textureUrl,
-    config.bumpMapUrl,
-  ]);
-
-  // Configure textures
-  useMemo(() => {
-    if (earthTexture) {
-      earthTexture.colorSpace = THREE.SRGBColorSpace;
-      earthTexture.anisotropy = 16;
-    }
-    if (bumpTexture) {
-      bumpTexture.anisotropy = 8;
-    }
-  }, [earthTexture, bumpTexture]);
+  const [earthTexture, bumpTexture] = useTexture(
+    [config.textureUrl, config.bumpMapUrl],
+    (textures) => {
+      const earth = textures[0];
+      const bump = textures[1];
+      if (earth) {
+        earth.colorSpace = THREE.SRGBColorSpace;
+        earth.anisotropy = 16;
+      }
+      if (bump) {
+        bump.anisotropy = 8;
+      }
+    },
+  );
 
   // Create geometries
   const geometry = useMemo(() => {
@@ -323,7 +318,6 @@ function RotatingGlobe({
           key={`marker-${index}-${marker.lat}-${marker.lng}`}
           marker={marker}
           radius={config.radius}
-          defaultSize={config.markerSize}
           onClick={onMarkerClick}
           onHover={onMarkerHover}
         />
