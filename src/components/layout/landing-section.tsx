@@ -26,10 +26,10 @@ export function LandingSection({
   }[tone];
 
   return (
-    <section id={id} className={cn("relative", toneClass, className)} {...props}>
+    <section id={id} className={cn("relative overflow-x-clip", toneClass, className)} {...props}>
       <div
         className={cn(
-          "mx-auto w-full max-w-7xl px-[max(1rem,env(safe-area-inset-left,0px))] py-14 pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-6 sm:py-16 md:py-20 lg:px-8 lg:py-24",
+          "mx-auto w-full max-w-7xl px-[max(1rem,env(safe-area-inset-left,0px))] py-10 pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-6 sm:py-12 md:py-14 lg:px-8 lg:py-16",
           innerClassName,
         )}
       >
@@ -66,7 +66,7 @@ export function SectionIntro({
       ) : null}
       <h2
         className={cn(
-          "font-display mt-3 text-[1.65rem] tracking-tight text-balance sm:text-3xl md:text-4xl lg:text-[2.65rem] lg:leading-[1.15]",
+          "font-display mt-3 text-[1.75rem] tracking-tight text-balance sm:text-4xl md:text-[2.35rem] lg:text-5xl lg:leading-[1.12]",
           light ? "text-ivory" : "text-foreground",
         )}
       >

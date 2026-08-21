@@ -61,7 +61,7 @@ export const StickyScroll = ({
   return (
     <div
       ref={ref}
-      className="border-border/60 bg-muted/40 dark:bg-muted/50 relative flex h-[32rem] justify-center gap-8 overflow-y-auto rounded-xl border p-6 sm:gap-10 sm:p-10"
+      className="border-border/60 bg-muted/40 dark:bg-muted/50 relative flex h-[28rem] justify-center gap-6 overflow-y-auto rounded-xl border p-4 sm:h-[32rem] sm:gap-10 sm:p-8 md:p-10"
     >
       <div className="relative flex items-start px-2 sm:px-4">
         <div className="max-w-xl">
@@ -71,22 +71,27 @@ export const StickyScroll = ({
               ref={(el) => {
                 itemRefs.current[index] = el;
               }}
-              className="py-16 sm:py-20"
+              className="py-10 sm:py-16 md:py-20"
             >
               <motion.h3
                 animate={{ opacity: activeCard === index ? 1 : 0.34 }}
                 transition={{ duration: 0.35, ease }}
-                className="font-display text-foreground text-2xl tracking-tight"
+                className="font-display text-foreground text-xl tracking-tight sm:text-2xl"
               >
                 {item.title}
               </motion.h3>
               <motion.p
                 animate={{ opacity: activeCard === index ? 1 : 0.34 }}
                 transition={{ duration: 0.35, ease }}
-                className="text-muted-foreground mt-5 max-w-sm text-sm leading-relaxed sm:text-base"
+                className="text-muted-foreground mt-4 max-w-sm text-sm leading-relaxed sm:mt-5 sm:text-base"
               >
                 {item.description}
               </motion.p>
+              {item.content ? (
+                <div className="border-border mt-5 h-44 overflow-hidden rounded-xl border md:hidden">
+                  {item.content}
+                </div>
+              ) : null}
             </div>
           ))}
           <div className="h-56 sm:h-64" aria-hidden />
@@ -94,7 +99,7 @@ export const StickyScroll = ({
       </div>
       <div
         className={cn(
-          "border-border bg-card relative sticky top-8 hidden h-72 w-80 overflow-hidden rounded-xl border lg:block",
+          "border-border bg-card relative sticky top-6 hidden h-56 w-56 overflow-hidden rounded-xl border md:block lg:top-8 lg:h-72 lg:w-80",
           contentClassName,
         )}
       >

@@ -54,14 +54,14 @@ export function LandingFinalCta() {
         <line x1="92" y1="8" x2="8" y2="92" stroke="currentColor" opacity="0.35" />
       </svg>
 
-      <div className="relative mx-auto grid max-w-7xl items-end gap-10 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:px-8 lg:py-32">
+      <div className="relative mx-auto grid max-w-7xl items-end gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:px-8 lg:py-24">
         <div className="max-w-xl">
           <p className="text-ivory/55 text-[11px] font-semibold tracking-[0.2em] uppercase">
             Begin
           </p>
           <h2
             id="final-cta-heading"
-            className="font-display text-ivory mt-3 text-3xl leading-[1.08] tracking-tight text-balance sm:text-5xl lg:text-[3.25rem]"
+            className="font-display text-ivory mt-3 text-[1.75rem] leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl lg:text-[3.25rem]"
           >
             Your story does not have to begin with a swipe.
           </h2>
@@ -217,7 +217,7 @@ export function LandingFooter() {
       </div>
 
       <div className="relative border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 py-5 sm:flex-row sm:items-center sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 py-5 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:flex-row sm:items-center sm:px-6 sm:pb-5 lg:px-8">
           <p className="text-xs text-[#F7F1E3]/45">
             © {year} {brand.legalName}. All rights reserved.
           </p>

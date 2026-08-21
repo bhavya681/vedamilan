@@ -92,12 +92,14 @@ export function HomeGuideChat() {
         aria-expanded={open}
         aria-controls="home-guide-chat"
         className={cn(
-          "border-gold/30 bg-navy text-ivory hover:bg-navy/95 shadow-elevated fixed right-4 bottom-4 z-40 h-12 gap-2 rounded-full border px-4 transition-opacity sm:right-6 sm:bottom-6",
+          "border-gold/30 bg-navy text-ivory hover:bg-navy/95 shadow-elevated fixed z-40 h-12 gap-2 rounded-full border px-3 transition-opacity sm:px-4",
+          "right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))]",
           open && "pointer-events-none opacity-0",
         )}
       >
         <AiGuruAvatar size="sm" className="border-gold/40" />
-        <span className="text-sm font-medium">Ask {AI_GURU_NAME}</span>
+        <span className="hidden text-sm font-medium min-[380px]:inline">Ask {AI_GURU_NAME}</span>
+        <span className="text-sm font-medium min-[380px]:hidden">Ask</span>
       </Button>
 
       <button
@@ -118,7 +120,8 @@ export function HomeGuideChat() {
         aria-modal="true"
         aria-labelledby="home-guide-title"
         className={cn(
-          "border-border/50 bg-background shadow-elevated fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l transition-transform duration-300 ease-out",
+          "border-border/50 bg-background shadow-elevated fixed z-50 flex flex-col border-l transition-transform duration-300 ease-out",
+          "inset-0 max-w-none sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-md",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >

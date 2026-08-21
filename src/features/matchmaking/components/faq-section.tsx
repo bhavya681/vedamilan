@@ -11,12 +11,12 @@ import { mockFaqs } from "@/lib/mock/vedamilan";
 export function FaqSection() {
   return (
     <LandingSection id="faq" className="scroll-mt-24" tone="muted">
-      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
+      <div className="grid min-w-0 items-start gap-8 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-10 lg:gap-12">
         <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             FAQ
           </p>
-          <h2 className="font-display mt-3 max-w-md text-3xl tracking-tight text-balance sm:text-4xl md:text-5xl">
+          <h2 className="font-display mt-3 max-w-md text-[1.75rem] tracking-tight text-balance sm:text-4xl md:text-5xl">
             Questions, answered clearly
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base">

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { FadeIn } from "@/components/animations/motion";
@@ -42,41 +42,76 @@ const STEPS = [
   },
 ] as const;
 
-function Face({ src, dimmed = false }: { src: string; dimmed?: boolean }) {
+function PortraitCard({
+  src,
+  name,
+  dimmed = false,
+  className,
+}: {
+  src: string;
+  name?: string;
+  dimmed?: boolean;
+  className?: string;
+}) {
   return (
-    <div
-      className={cn(
-        "relative h-20 w-20 overflow-hidden rounded-full ring-1 ring-white/20 sm:h-24 sm:w-24",
-        dimmed && "opacity-35 grayscale",
-      )}
-    >
-      <Image src={src} alt="" fill sizes="96px" className="object-cover" />
-    </div>
+    <figure className={cn("relative w-[6.5rem] sm:w-[8.25rem]", className)}>
+      <div
+        className={cn(
+          "relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/18 shadow-[0_18px_40px_rgba(0,0,0,0.35)]",
+          dimmed && "opacity-40 grayscale",
+        )}
+      >
+        <Image src={src} alt="" fill sizes="140px" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#14110E]/55 to-transparent" />
+        {name ? (
+          <figcaption className="font-display text-ivory absolute inset-x-0 bottom-2 text-center text-sm">
+            {name}
+          </figcaption>
+        ) : null}
+      </div>
+    </figure>
+  );
+}
+
+function StageBackdrop({ src, alt }: { src: string; alt: string }) {
+  return (
+    <>
+      <Image src={src} alt={alt} fill sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.35)_0%,rgba(20,17,14,0.72)_100%)]" />
+    </>
   );
 }
 
 function StageVisual({ index }: { index: number }) {
   if (index === 0) {
     return (
-      <div className="flex h-full items-center justify-center gap-6 sm:gap-10">
-        <Face src={editorial.you.src} />
-        <span className="bg-gold/80 h-px w-8 sm:w-12" aria-hidden />
-        <Face src={editorial.partner.src} />
+      <div className="relative h-full">
+        <StageBackdrop src={editorial.city.src} alt={editorial.city.alt} />
+        <div className="absolute inset-0 flex items-end justify-center px-4 pb-10 sm:pb-12">
+          <PortraitCard src={editorial.you.src} name="Adrian" className="-translate-x-2 -rotate-6 translate-y-3" />
+          <PortraitCard src={editorial.partner.src} name="Elena" className="translate-x-2 rotate-6 translate-y-3" />
+        </div>
       </div>
     );
   }
 
   if (index === 1) {
     return (
-      <div className="flex h-full items-center justify-center gap-6 sm:gap-10">
-        <div className="flex flex-col items-center">
-          <Face src={editorial.you.src} />
-          <p className="text-ivory mt-3 text-[10px] tracking-[0.16em] uppercase">Interested</p>
-        </div>
-        <span className="from-gold/80 h-px w-10 bg-gradient-to-r to-transparent sm:w-16" aria-hidden />
-        <div className="flex flex-col items-center">
-          <Face src={editorial.partner.src} dimmed />
-          <p className="text-ivory/40 mt-3 text-[10px] tracking-[0.16em] uppercase">Private</p>
+      <div className="relative h-full">
+        <StageBackdrop src={editorial.you.src} alt="" />
+        <div className="absolute inset-0 bg-[#14110E]/35" />
+        <div className="absolute inset-0 flex items-center justify-center gap-5 px-4 sm:gap-8">
+          <div className="flex flex-col items-center">
+            <PortraitCard src={editorial.you.src} name="Adrian" />
+            <p className="border-ivory/20 bg-ivory/10 text-ivory mt-3 rounded-full border px-2.5 py-1 text-[10px] tracking-[0.16em] uppercase backdrop-blur-md">
+              Interested
+            </p>
+          </div>
+          <span className="from-[#D4AF37]/80 h-px w-8 bg-gradient-to-r to-transparent sm:w-12" aria-hidden />
+          <div className="flex flex-col items-center">
+            <PortraitCard src={editorial.partner.src} name="Elena" dimmed />
+            <p className="text-ivory/45 mt-3 text-[10px] tracking-[0.16em] uppercase">Private</p>
+          </div>
         </div>
       </div>
     );
@@ -84,35 +119,48 @@ function StageVisual({ index }: { index: number }) {
 
   if (index === 2) {
     return (
-      <div className="flex h-full items-center justify-center gap-4 sm:gap-6">
-        <Face src={editorial.you.src} />
-        <span className="relative flex h-9 w-9 items-center justify-center">
-          <span className="border-gold/70 absolute inset-0 rounded-full border" />
-          <span className="bg-gold h-2 w-2 rounded-full" />
-        </span>
-        <Face src={editorial.partner.src} />
+      <div className="relative h-full">
+        <StageBackdrop src={editorial.conversation.src} alt={editorial.conversation.alt} />
+        <div className="absolute inset-0 flex items-center justify-center px-4">
+          <div className="relative flex items-center">
+            <PortraitCard src={editorial.you.src} name="Adrian" className="-translate-x-2 -rotate-3" />
+            <span className="relative z-10 -mx-3 flex h-12 w-12 items-center justify-center">
+              <span className="absolute inset-0 rounded-full border border-[#D4AF37]/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#D4AF37]" />
+            </span>
+            <PortraitCard src={editorial.partner.src} name="Elena" className="translate-x-2 rotate-3" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (index === 3) {
     return (
-      <div className="flex h-full items-center justify-center px-6">
-        <div className="border-ivory/15 bg-[#14110E]/50 w-full max-w-xs rounded-2xl border p-5 text-[#F7F1E3] backdrop-blur-md">
-          <p className="text-ivory/50 text-[10px] tracking-[0.18em] uppercase">Compatibility</p>
-          <p className="font-display mt-2 text-5xl leading-none tabular-nums">92%</p>
-          <dl className="mt-4 space-y-1.5 text-sm">
-            {[
-              ["Vedic", "94"],
-              ["Life goals", "89"],
-              ["Values", "93"],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between border-t border-white/10 pt-1.5">
-                <dt className="text-ivory/65">{k}</dt>
-                <dd className="tabular-nums">{v}</dd>
-              </div>
-            ))}
-          </dl>
+      <div className="relative h-full">
+        <StageBackdrop src={editorial.quiet.src} alt={editorial.quiet.alt} />
+        <div className="absolute inset-0 flex items-center justify-center px-5">
+          <div className="border-ivory/15 w-full max-w-[18rem] rounded-2xl border bg-[#14110E]/75 p-5 text-[#F7F1E3] shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-md">
+            <div className="flex items-center justify-between">
+              <p className="text-ivory/50 text-[10px] tracking-[0.18em] uppercase">Compatibility</p>
+              <p className="text-ivory/60 rounded-full border border-white/10 px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase">
+                Guidance
+              </p>
+            </div>
+            <p className="font-display mt-3 text-5xl leading-none tabular-nums">92%</p>
+            <dl className="mt-4 space-y-2 text-sm">
+              {[
+                ["Vedic", "94"],
+                ["Life goals", "89"],
+                ["Values", "93"],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between border-t border-white/10 pt-2">
+                  <dt className="text-ivory/65">{k}</dt>
+                  <dd className="tabular-nums">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </div>
     );
@@ -124,10 +172,10 @@ function StageVisual({ index }: { index: number }) {
         src={editorial.quiet.src}
         alt={editorial.quiet.alt}
         fill
-        sizes="(max-width: 1024px) 100vw, 50vw"
+        sizes="(max-width: 1024px) 100vw, 55vw"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.15)_0%,rgba(20,17,14,0.72)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.12)_0%,rgba(20,17,14,0.78)_100%)]" />
       <p className="font-display absolute right-6 bottom-6 left-6 text-2xl text-[#F7F1E3] sm:text-3xl">
         A household, not a match
       </p>
@@ -137,116 +185,120 @@ function StageVisual({ index }: { index: number }) {
 
 export function ConnectionJourney() {
   const [active, setActive] = useState(0);
+  const [held, setHeld] = useState(false);
   const reduceMotion = useReducedMotion();
-  const step = STEPS[active];
+
+  useEffect(() => {
+    if (reduceMotion || held) return;
+    const id = window.setInterval(() => {
+      setActive((current) => (current + 1) % STEPS.length);
+    }, 3400);
+    return () => window.clearInterval(id);
+  }, [reduceMotion, held]);
 
   return (
     <LandingSection id="how" className="scroll-mt-24" tone="muted">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             From match to connection
           </p>
-          <h2 className="font-display mt-3 max-w-xl text-3xl tracking-tight sm:text-5xl">
+          <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
             Discovery is the beginning, not the product.
           </h2>
         </FadeIn>
         <FadeIn delay={0.08}>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href={landingCta.match.href}>{landingCta.match.label}</Link>
           </Button>
         </FadeIn>
       </div>
 
-      <div className="mt-12">
-        <ol className="flex items-center" aria-label="Connection steps">
-          {STEPS.map((item, i) => (
-            <li key={item.title} className="flex min-w-0 flex-1 items-center last:flex-none">
-              <button
-                type="button"
-                onClick={() => setActive(i)}
-                aria-current={active === i ? "step" : undefined}
-                className="group flex shrink-0 flex-col items-center"
+      <div
+        className="mt-8 grid min-w-0 items-stretch gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10"
+        onMouseEnter={() => setHeld(true)}
+        onMouseLeave={() => setHeld(false)}
+      >
+        <nav className="order-2 flex flex-col justify-center lg:order-1">
+          <ol aria-label="Connection steps">
+            {STEPS.map((item, i) => {
+              const selected = active === i;
+              return (
+                <li key={item.title}>
+                  <button
+                    type="button"
+                    onClick={() => setActive(i)}
+                    onMouseEnter={() => setActive(i)}
+                    aria-current={selected ? "step" : undefined}
+                    className={cn(
+                      "group flex w-full items-start gap-4 border-b py-3.5 text-left transition-colors duration-500 sm:py-4",
+                      selected ? "border-[#D4AF37]/40" : "border-border/50",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mt-0.5 w-8 shrink-0 text-[11px] tabular-nums tracking-[0.16em]",
+                        selected ? "text-[#C47A1A]" : "text-muted-foreground",
+                      )}
+                    >
+                      0{i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          "font-display block text-xl tracking-tight sm:text-2xl",
+                          selected ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {item.title}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-muted-foreground grid overflow-hidden text-sm leading-relaxed transition-[grid-template-rows,opacity] duration-500",
+                          selected ? "mt-1.5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                        )}
+                      >
+                        <span className="min-h-0">{item.body}</span>
+                      </span>
+                    </span>
+                    <span className="bg-border relative mt-3 hidden h-px w-12 overflow-hidden sm:block">
+                      <motion.span
+                        className="absolute inset-y-0 left-0 bg-[#D4AF37]"
+                        initial={false}
+                        animate={{ width: selected ? "100%" : "0%" }}
+                        transition={{ duration: reduceMotion ? 0 : 0.45, ease }}
+                      />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+
+        <FadeIn delay={0.08} className="order-1 lg:order-2">
+          <div className="bg-navy relative aspect-[4/5] overflow-hidden rounded-2xl sm:aspect-[5/3] lg:aspect-auto lg:min-h-[32rem]">
+            {STEPS.map((item, i) => (
+              <motion.div
+                key={item.title}
+                className="absolute inset-0"
+                initial={false}
+                animate={{
+                  opacity: active === i ? 1 : 0,
+                  scale: active === i || reduceMotion ? 1 : 1.03,
+                }}
+                transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
+                style={{ pointerEvents: active === i ? "auto" : "none" }}
+                aria-hidden={active !== i}
               >
-                <span
-                  className={cn(
-                    "flex h-11 w-11 items-center justify-center rounded-full border text-xs tabular-nums transition-colors duration-500",
-                    i === active && "border-[#D4AF37] bg-navy text-[#F7F1E3]",
-                    i < active && "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-foreground",
-                    i > active && "border-border bg-background text-muted-foreground",
-                  )}
-                >
-                  0{i + 1}
-                </span>
-                <span
-                  className={cn(
-                    "mt-3 hidden max-w-[7.5rem] text-center text-[11px] tracking-[0.08em] sm:block",
-                    i === active ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {item.title}
-                </span>
-              </button>
-              {i < STEPS.length - 1 ? (
-                <div className="bg-border/70 mx-2 h-px min-w-4 flex-1 overflow-hidden sm:mx-3">
-                  <motion.div
-                    className="h-px origin-left bg-[#D4AF37]"
-                    initial={false}
-                    animate={{ scaleX: i < active ? 1 : 0 }}
-                    transition={{ duration: reduceMotion ? 0 : 0.55, ease }}
-                  />
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10">
-        <div className="bg-navy relative aspect-[16/10] overflow-hidden rounded-2xl sm:aspect-[5/3]">
-          {STEPS.map((item, i) => (
-            <motion.div
-              key={item.title}
-              className="absolute inset-0"
-              initial={false}
-              animate={{
-                opacity: active === i ? 1 : 0,
-                scale: active === i || reduceMotion ? 1 : 1.03,
-              }}
-              transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
-              style={{ pointerEvents: active === i ? "auto" : "none" }}
-              aria-hidden={active !== i}
-            >
-              <StageVisual index={i} />
-              <p className="text-ivory/45 absolute top-5 left-5 text-[10px] tracking-[0.18em] uppercase">
-                {item.caption}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="flex flex-col justify-center">
-          <p className="text-muted-foreground text-xs tabular-nums">0{active + 1} / 05</p>
-          <motion.h3
-            key={step.title}
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease }}
-            className="font-display mt-3 text-3xl tracking-tight sm:text-4xl"
-          >
-            {step.title}
-          </motion.h3>
-          <motion.p
-            key={step.body}
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: reduceMotion ? 0 : 0.05, ease }}
-            className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base"
-          >
-            {step.body}
-          </motion.p>
-          <p className="text-muted-foreground mt-8 text-xs sm:hidden">{step.title}</p>
-        </div>
+                <StageVisual index={i} />
+                <p className="text-ivory/55 absolute top-5 left-5 text-[10px] tracking-[0.18em] uppercase">
+                  {item.caption}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </FadeIn>
       </div>
     </LandingSection>
   );

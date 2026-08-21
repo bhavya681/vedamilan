@@ -38,7 +38,7 @@ export const editorial = {
       score: 94,
     },
     {
-      src: u("photo-1579451742069-2df7ad133328", 900),
+      src: u("photo-1487412720507-e7ab37603c6f", 900),
       name: "Meera",
       age: 27,
       city: "Pune",

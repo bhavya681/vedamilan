@@ -124,12 +124,12 @@ export function AstrologyExplained() {
 
   return (
     <LandingSection id="vedic" className="scroll-mt-24">
-      <div className="mb-10 grid items-end gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <div className="mb-8 grid min-w-0 items-end gap-8 md:grid-cols-2 lg:mb-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <div className="max-w-2xl">
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             Vedic intelligence
           </p>
-          <h2 className="font-display text-foreground mt-3 text-3xl tracking-tight sm:text-5xl">
+          <h2 className="font-display text-foreground mt-3 text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
             Ancient wisdom. Clearly explained.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-lg text-sm leading-relaxed sm:text-base">
@@ -167,7 +167,7 @@ export function CompatibilityStudio() {
       <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
         Compatibility studio
       </p>
-      <h2 className="font-display mt-3 max-w-xl text-3xl tracking-tight sm:text-5xl">
+      <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
         One connection. Deeper understanding.
       </h2>
       <Tabs defaultValue="compatibility" className="mt-10">
@@ -220,7 +220,7 @@ export function CompatibilityStudio() {
 
 function StudioPanel({ score, title, body }: { score: string; title: string; body: string }) {
   return (
-    <div className="grid gap-8 lg:grid-cols-[0.4fr_1fr] lg:items-start">
+    <div className="grid gap-6 md:grid-cols-[0.4fr_1fr] md:items-start lg:gap-8">
       <p className="font-display text-5xl">{score}</p>
       <div>
         <h3 className="font-display text-2xl">{title}</h3>
@@ -274,16 +274,17 @@ const SPACE_PANES = [
 export function CoupleSpacePreview() {
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
-  const pane = SPACE_PANES[active];
+  const pane = SPACE_PANES[active] ?? SPACE_PANES[0];
+  if (!pane) return null;
 
   return (
     <LandingSection>
-      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-14">
+      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
         <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             Couple space
           </p>
-          <h2 className="font-display mt-3 text-3xl tracking-tight sm:text-5xl">
+          <h2 className="font-display mt-3 text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
             Once you connect, the journey continues.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base">
@@ -294,14 +295,14 @@ export function CoupleSpacePreview() {
             <Lock className="text-secondary h-3.5 w-3.5" aria-hidden />
             Mutual · private
           </p>
-          <Button asChild className="mt-7">
+          <Button asChild className="mt-7 w-full sm:w-auto">
             <Link href={routes.yourConnection}>See Your Connection</Link>
           </Button>
         </FadeIn>
 
         <FadeIn delay={0.08}>
           <div className="relative overflow-hidden rounded-2xl">
-            <div className="relative aspect-[5/4] min-h-[22rem] sm:min-h-[26rem]">
+            <div className="relative aspect-[5/4] min-h-[18rem] sm:min-h-[22rem] md:min-h-[24rem] lg:min-h-[26rem]">
               <motion.div
                 className="absolute inset-0"
                 initial={reduceMotion ? false : { scale: 1.06 }}
@@ -333,7 +334,7 @@ export function CoupleSpacePreview() {
                     ))}
                   </div>
                   <div className="text-[#F7F1E3]">
-                    <p className="text-sm">Bhavya · Aarohi</p>
+                    <p className="text-sm">Adrian · Elena</p>
                     <p className="text-ivory/55 text-[10px] tracking-[0.16em] uppercase">
                       Illustrative
                     </p>
@@ -457,7 +458,8 @@ const KNOWLEDGE = [
 export function VedicKnowledge() {
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
-  const topic = KNOWLEDGE[active];
+  const topic = KNOWLEDGE[active] ?? KNOWLEDGE[0];
+  if (!topic) return null;
 
   return (
     <LandingSection>
@@ -465,16 +467,16 @@ export function VedicKnowledge() {
         <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
           Vedic knowledge
         </p>
-        <h2 className="font-display mt-3 max-w-xl text-3xl tracking-tight sm:text-5xl">
+        <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
           Explore the wisdom behind the chart.
         </h2>
       </FadeIn>
 
-      <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-10">
+      <div className="mt-8 grid min-w-0 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-10">
         <FadeIn>
           <Link
             href={topic.href}
-            className="bg-navy group relative block aspect-[5/4] overflow-hidden rounded-2xl sm:min-h-[28rem]"
+            className="bg-navy group relative block aspect-[5/4] overflow-hidden rounded-2xl sm:min-h-[22rem] lg:min-h-[28rem]"
           >
             {KNOWLEDGE.map((item, i) => (
               <motion.div
@@ -568,67 +570,148 @@ export function VedicKnowledge() {
   );
 }
 
+const GUIDE_MODES = ["Text", "Voice", "Follow-up"] as const;
+
 export function AiGuidance() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <LandingSection id="gurus" className="scroll-mt-24" tone="muted">
-      <div className="grid items-start gap-10 lg:grid-cols-2">
-        <div>
+      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
+        <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             AI Vedic guidance
           </p>
-          <h2 className="font-display mt-3 text-3xl tracking-tight sm:text-5xl">
+          <h2 className="font-display mt-3 text-[1.75rem] tracking-tight text-balance sm:text-4xl lg:text-5xl">
             Ask deeper questions.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed">
             AI explains calculated Vedic information. It does not replace professional advice.
           </p>
-          <Button asChild className="mt-7">
+          <Button asChild className="mt-7 w-full sm:w-auto">
             <Link href={routes.aiInsights}>Ask a question</Link>
           </Button>
-        </div>
-        <div className="bg-card space-y-4 rounded-2xl border p-5 sm:p-6">
-          <p className="text-muted-foreground text-sm">You</p>
-          <p className="text-sm leading-relaxed">
-            What does my 7th house suggest about partnership?
-          </p>
-          <p className="text-muted-foreground text-sm">AI Guru</p>
-          <p className="text-sm leading-relaxed">
-            Your 7th house is traditionally associated with partnership and marriage. Based on your
-            calculated chart, I can explain the planets placed there — not invent new ones.
-          </p>
-          <p className="text-muted-foreground text-[11px] tracking-wide uppercase">
-            Text · Voice · Follow-up
-          </p>
-        </div>
+        </FadeIn>
+
+        <FadeIn delay={0.08}>
+          <div className="border-border/60 bg-background relative overflow-hidden rounded-2xl border p-5 shadow-[0_20px_50px_rgba(20,17,14,0.05)] sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-muted-foreground text-[10px] tracking-[0.18em] uppercase">Guidance</p>
+                <p className="font-display mt-0.5 text-lg tracking-tight">AI Guru</p>
+              </div>
+              <p className="border-border/70 text-muted-foreground hidden rounded-full border px-2.5 py-1 text-[10px] tracking-[0.14em] uppercase sm:block">
+                Calculated chart
+              </p>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.12, ease }}
+                className="flex justify-end gap-3"
+              >
+                <div className="bg-muted min-w-0 max-w-[min(22rem,calc(100%-2.5rem))] rounded-2xl rounded-tr-md px-3 py-3 sm:px-4">
+                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">You</p>
+                  <p className="text-sm leading-relaxed">
+                    What does my 7th house suggest about partnership?
+                  </p>
+                </div>
+                <span className="relative mt-1 h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5">
+                  <Image src={editorial.you.src} alt="" fill sizes="32px" className="object-cover" />
+                </span>
+              </motion.div>
+
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: 0.28, ease }}
+                className="flex gap-3"
+              >
+                <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14110E] text-[#D4AF37] ring-1 ring-[#D4AF37]/30">
+                  <span className="font-display text-[11px]">G</span>
+                </span>
+                <div className="bg-gold/10 min-w-0 max-w-[min(24rem,calc(100%-2.5rem))] rounded-2xl rounded-tl-md px-3 py-3 ring-1 ring-[#D4AF37]/15 sm:px-4">
+                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">AI Guru</p>
+                  <p className="text-sm leading-relaxed">
+                    Your 7th house is traditionally associated with partnership and marriage. Based
+                    on your calculated chart, I can explain the planets placed there — not invent
+                    new ones.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="border-border/50 mt-6 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground truncate text-sm">Ask about the 7th house...</p>
+              <div className="flex flex-wrap gap-2">
+                {GUIDE_MODES.map((mode) => (
+                  <span
+                    key={mode}
+                    className="border-border/70 text-muted-foreground rounded-full border px-2.5 py-1 text-[10px] tracking-[0.14em] uppercase"
+                  >
+                    {mode}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </FadeIn>
       </div>
     </LandingSection>
   );
 }
 
 const SAFETY = [
-  { title: "Verified profiles", body: "Profiles can carry a verification mark in the product.", icon: ShieldCheck },
-  { title: "Privacy controls", body: "You choose what of the chart and profile is visible.", icon: SlidersHorizontal },
-  { title: "Block", body: "Blocked members stay out of your search and messages.", icon: Ban },
-  { title: "Secure messaging", body: "Conversation opens when interest is mutual.", icon: MessageCircle },
-  { title: "Photo and chart privacy", body: "Birth details and photos stay in a private workspace.", icon: EyeOff },
-  { title: "Profile controls", body: "Visibility, interests, and online status are yours to set.", icon: Lock },
-];
+  { n: "01", title: "Verified profiles", body: "Profiles can carry a verification mark in the product.", icon: ShieldCheck },
+  { n: "02", title: "Privacy controls", body: "You choose what of the chart and profile is visible.", icon: SlidersHorizontal },
+  { n: "03", title: "Block", body: "Blocked members stay out of your search and messages.", icon: Ban },
+  { n: "04", title: "Secure messaging", body: "Conversation opens when interest is mutual.", icon: MessageCircle },
+  { n: "05", title: "Photo and chart privacy", body: "Birth details and photos stay in a private workspace.", icon: EyeOff },
+  { n: "06", title: "Profile controls", body: "Visibility, interests, and online status are yours to set.", icon: Lock },
+] as const;
 
 export function SafetyTrust() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <LandingSection>
-      <h2 className="font-display max-w-xl text-3xl tracking-tight sm:text-5xl">
-        Built for meaningful connections, with your privacy in mind.
-      </h2>
-      <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {SAFETY.map((item) => (
-          <div key={item.title}>
-            <item.icon className="text-secondary h-5 w-5" aria-hidden />
-            <h3 className="font-display mt-3 text-xl">{item.title}</h3>
+      <FadeIn>
+        <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">Trust</p>
+        <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight text-balance sm:text-4xl lg:text-5xl">
+          Built for meaningful connections, with your privacy in mind.
+        </h2>
+      </FadeIn>
+      <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {SAFETY.map((item, i) => (
+          <motion.li
+            key={item.title}
+            initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.05 * i, ease }}
+            className="group border-border/60 bg-card/60 relative overflow-hidden rounded-2xl border p-5"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-xl">
+                <item.icon className="text-secondary h-4 w-4" aria-hidden />
+              </div>
+              <span className="text-muted-foreground text-[11px] tabular-nums tracking-[0.16em]">
+                {item.n}
+              </span>
+            </div>
+            <h3 className="font-display mt-4 text-xl tracking-tight">{item.title}</h3>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{item.body}</p>
-          </div>
+            <span
+              aria-hidden
+              className="absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-[#D4AF37] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
+            />
+          </motion.li>
         ))}
-      </div>
+      </ul>
     </LandingSection>
   );
 }
@@ -642,11 +725,11 @@ export function International() {
         <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
           International
         </p>
-        <h2 className="font-display mt-3 max-w-xl text-3xl tracking-tight sm:text-5xl">
+        <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
           Wherever life takes you, find someone aligned with your journey.
         </h2>
       </FadeIn>
-      <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:gap-12">
+      <div className="mt-8 grid min-w-0 items-center gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-8">
         <FadeIn>
           <InternationalGlobe active={active} onActive={setActive} />
         </FadeIn>

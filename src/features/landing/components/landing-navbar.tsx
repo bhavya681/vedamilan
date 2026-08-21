@@ -128,9 +128,9 @@ export function LandingNavbar() {
               variant="outline"
               size="icon"
               className={cn(
-                "lg:hidden",
+                "lg:hidden h-11 w-11",
                 overHero && "border-ivory/30 text-ivory hover:bg-ivory/10 bg-transparent",
-                compact && "h-9 w-9 rounded-full",
+                compact && "rounded-full",
               )}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
@@ -150,7 +150,7 @@ export function LandingNavbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="font-display hover:text-secondary border-border/40 border-b py-4 text-3xl"
+                className="font-display hover:text-secondary border-border/40 border-b py-3.5 text-2xl sm:py-4 sm:text-3xl"
               >
                 {item.title}
               </Link>

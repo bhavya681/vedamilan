@@ -1,29 +1,35 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import WorldMap from "@/components/ui/world-map";
+import { Globe3D, type GlobeMarker } from "@/components/ui/3d-globe";
+import { editorial } from "@/features/landing/lib/images";
 import { cn } from "@/lib/utils/cn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export const PLACES = [
-  { name: "India", lat: 21.0, lng: 78.0 },
-  { name: "United Kingdom", lat: 51.5, lng: -0.12 },
-  { name: "United States", lat: 40.7, lng: -74.0 },
-  { name: "Canada", lat: 43.7, lng: -79.4 },
-  { name: "Australia", lat: -33.9, lng: 151.2 },
-  { name: "UAE", lat: 25.2, lng: 55.3 },
-  { name: "Singapore", lat: 1.35, lng: 103.8 },
-  { name: "Europe", lat: 48.9, lng: 2.35 },
+  { name: "India", lat: 28.6139, lng: 77.209 },
+  { name: "United Kingdom", lat: 51.5074, lng: -0.1278 },
+  { name: "United States", lat: 40.7128, lng: -74.006 },
+  { name: "Canada", lat: 43.6532, lng: -79.3832 },
+  { name: "Australia", lat: -33.8688, lng: 151.2093 },
+  { name: "UAE", lat: 25.2048, lng: 55.2708 },
+  { name: "Singapore", lat: 1.3521, lng: 103.8198 },
+  { name: "Europe", lat: 48.8566, lng: 2.3522 },
 ] as const;
 
-const HUB = PLACES[0];
-
-const ROUTES = PLACES.slice(1).map((place) => ({
-  start: { lat: HUB.lat, lng: HUB.lng, label: HUB.name },
-  end: { lat: place.lat, lng: place.lng, label: place.name },
-}));
+const PORTRAITS = [
+  editorial.you.src,
+  editorial.partner.src,
+  editorial.profiles[0].src,
+  editorial.profiles[1].src,
+  editorial.profiles[2].src,
+  editorial.profiles[3].src,
+  editorial.you.src,
+  editorial.partner.src,
+] as const;
 
 export function InternationalGlobe({
   active,
@@ -32,16 +38,46 @@ export function InternationalGlobe({
   active: number;
   onActive: (index: number) => void;
 }) {
-  const highlightIndex = active === 0 ? undefined : active - 1;
+  const reduceMotion = useReducedMotion();
+
+  const markers: GlobeMarker[] = useMemo(
+    () =>
+      PLACES.map((place, i) => ({
+        lat: place.lat,
+        lng: place.lng,
+        src: PORTRAITS[i] ?? editorial.you.src,
+      })),
+    [],
+  );
+
+  function selectMarker(marker: GlobeMarker) {
+    const index = PLACES.findIndex(
+      (place) => place.lat === marker.lat && place.lng === marker.lng,
+    );
+    if (index >= 0) onActive(index);
+  }
 
   return (
-    <div className="w-full">
-      <WorldMap
-        dots={ROUTES}
-        lineColor="#D4AF37"
-        highlightIndex={highlightIndex}
-        onSelect={(routeIndex) => onActive(routeIndex + 1)}
+    <div className="relative mx-auto w-full max-w-[36rem]">
+      <Globe3D
+        className="h-[min(70vw,16rem)] sm:h-[18rem] md:h-[20rem] lg:h-[22rem]"
+        markers={markers}
+        config={{
+          showAtmosphere: true,
+          atmosphereColor: "#d7e3ef",
+          atmosphereIntensity: 0.4,
+          atmosphereBlur: 3,
+          bumpScale: 4,
+          autoRotateSpeed: reduceMotion ? 0 : 0.3,
+          enableZoom: false,
+          enablePan: false,
+        }}
+        onMarkerClick={selectMarker}
+        onMarkerHover={(marker) => {
+          if (marker) selectMarker(marker);
+        }}
       />
+      <p className="text-muted-foreground sr-only">{PLACES[active]?.name}</p>
     </div>
   );
 }
@@ -63,7 +99,7 @@ export function PlaceIndex({
             type="button"
             onClick={() => onActive(i)}
             onMouseEnter={() => onActive(i)}
-            className="flex w-full items-baseline gap-4 py-3 text-left sm:py-3.5"
+            className="flex w-full min-w-0 items-baseline gap-4 py-2.5 text-left sm:py-3"
           >
             <span
               className={cn(
@@ -75,7 +111,7 @@ export function PlaceIndex({
             </span>
             <span
               className={cn(
-                "font-display text-xl tracking-tight sm:text-2xl",
+                "font-display min-w-0 flex-1 text-xl tracking-tight sm:text-2xl",
                 i === active ? "text-foreground" : "text-muted-foreground",
               )}
             >
