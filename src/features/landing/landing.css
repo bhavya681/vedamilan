@@ -1,0 +1,29 @@
+:root {
+  --landing-notice: 0px;
+}
+
+.landing-orbit {
+  animation: landing-orbit 64s linear infinite;
+  transform-origin: center;
+}
+
+.landing-orbit-rev {
+  animation: landing-orbit 90s linear infinite reverse;
+  transform-origin: center;
+}
+
+@keyframes landing-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-orbit,
+  .landing-orbit-rev {
+    animation: none;
+  }
+}

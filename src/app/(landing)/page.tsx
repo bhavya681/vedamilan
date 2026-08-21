@@ -1,35 +1,76 @@
-import { HeroSection } from "@/features/matchmaking/components/hero-section";
-import {
-  LandingSearchSection,
-  CompatibilityPreviewSection,
-  SuccessStoriesStrip,
-} from "@/features/matchmaking/components/landing-extras";
-import { HowItWorksSection } from "@/features/matchmaking/components/how-it-works";
-import { FeaturesGridSection } from "@/features/matchmaking/components/features-grid";
-import { TestimonialsSection } from "@/features/matchmaking/components/testimonials-section";
-import { PricingSection } from "@/features/payments/components/pricing-section";
-import { FaqSection } from "@/features/matchmaking/components/faq-section";
-import { FinalCtaSection } from "@/features/matchmaking/components/final-cta";
-import { HomeGuideChat } from "@/features/ai/components/home-guide-chat";
+import dynamic from "next/dynamic";
 
-/**
- * Narrative landing — problem → approach → discovery → compatibility → trust → CTA.
- * Stats counters and AI demo kits intentionally omitted (vibe-code landing pattern).
- */
-export default function LandingPage() {
+import { HomeGuideChat } from "@/features/ai/components/home-guide-chat";
+import { TrustStrip } from "@/features/landing/components/editorial-sections";
+import { LandingHero } from "@/features/landing/components/hero-section";
+
+const NotJustAMatch = dynamic(() =>
+  import("@/features/landing/components/editorial-sections").then((m) => m.NotJustAMatch),
+);
+const DiscoverMatches = dynamic(() =>
+  import("@/features/landing/components/editorial-sections").then((m) => m.DiscoverMatches),
+);
+const CompatibilityVisual = dynamic(() =>
+  import("@/features/landing/components/editorial-sections").then((m) => m.CompatibilityVisual),
+);
+const LifePathAlignment = dynamic(() =>
+  import("@/features/landing/components/editorial-sections").then((m) => m.LifePathAlignment),
+);
+const ConnectionJourney = dynamic(() =>
+  import("@/features/landing/components/editorial-sections").then((m) => m.ConnectionJourney),
+);
+const AstrologyExplained = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.AstrologyExplained),
+);
+const CompatibilityStudio = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.CompatibilityStudio),
+);
+const CoupleSpacePreview = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.CoupleSpacePreview),
+);
+const VedicKnowledge = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.VedicKnowledge),
+);
+const AiGuidance = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.AiGuidance),
+);
+const SafetyTrust = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.SafetyTrust),
+);
+const International = dynamic(() =>
+  import("@/features/landing/components/product-narrative").then((m) => m.International),
+);
+const PricingSection = dynamic(() =>
+  import("@/features/payments/components/pricing-section").then((m) => m.PricingSection),
+);
+const FaqSection = dynamic(() =>
+  import("@/features/matchmaking/components/faq-section").then((m) => m.FaqSection),
+);
+const LandingFinalCta = dynamic(() =>
+  import("@/features/landing/components/close-sections").then((m) => m.LandingFinalCta),
+);
+
+export default function HomePage() {
   return (
     <>
       <main id="main-content">
-        <HeroSection />
-        <HowItWorksSection />
-        <FeaturesGridSection />
-        <CompatibilityPreviewSection />
-        <LandingSearchSection />
-        <SuccessStoriesStrip />
-        <TestimonialsSection />
+        <LandingHero />
+        <TrustStrip />
+        <NotJustAMatch />
+        <DiscoverMatches />
+        <CompatibilityVisual />
+        <AstrologyExplained />
+        <LifePathAlignment />
+        <CompatibilityStudio />
+        <ConnectionJourney />
+        <CoupleSpacePreview />
+        <VedicKnowledge />
+        <AiGuidance />
+        <SafetyTrust />
+        <International />
         <PricingSection />
         <FaqSection />
-        <FinalCtaSection />
+        <LandingFinalCta />
       </main>
       <HomeGuideChat />
     </>
