@@ -636,6 +636,7 @@
 
   .dashboard-content {
     min-width: 0;
+    max-width: 100%;
   }
 
   .dashboard-main-gutter:has([data-dashboard-bleed]) {

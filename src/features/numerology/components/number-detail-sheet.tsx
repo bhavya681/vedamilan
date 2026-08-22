@@ -58,11 +58,11 @@ export function NumberDetailSheet({
         className="border-border/50 flex h-[85vh] max-h-[85vh] flex-col overflow-hidden rounded-t-3xl p-0 md:m-6 md:ml-auto md:h-auto md:max-w-2xl md:rounded-2xl"
       >
         <SheetHeader className="border-border/50 relative shrink-0 border-b px-5 py-4 sm:px-6 sm:py-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between gap-3 sm:items-center">
+            <div className="flex min-w-0 items-center gap-3">
               <NumberPlanetIcon number={profile.number} planet={planet} size="md" />
-              <div>
-                <SheetTitle className="font-display text-2xl">
+              <div className="min-w-0">
+                <SheetTitle className="font-display text-xl sm:text-2xl">
                   {planet} · Number {profile.number}
                 </SheetTitle>
                 <SheetDescription className="text-muted-foreground mt-1 text-sm">

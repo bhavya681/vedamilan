@@ -19,7 +19,7 @@ export function NumberPlanetIcon({
     sm: "h-9 w-9 text-base",
     md: "h-12 w-12 text-lg",
     lg: "h-16 w-16 text-2xl",
-    xl: "h-24 w-24 text-4xl sm:h-28 sm:w-28 sm:text-5xl",
+    xl: "h-16 w-16 text-2xl sm:h-24 sm:w-24 sm:text-4xl lg:h-28 lg:w-28 lg:text-5xl",
   }[size];
 
   return (

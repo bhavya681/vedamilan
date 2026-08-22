@@ -28,7 +28,7 @@ export function Surface({ children, className, glass = false }: SurfaceProps) {
   return (
     <div
       className={cn(
-        "rounded-xl p-4 sm:p-5 lg:p-6",
+        "min-w-0 rounded-xl p-4 sm:p-5 lg:p-6",
         glass ? "glass-panel" : "border-border/70 bg-card border",
         className,
       )}

@@ -26,7 +26,7 @@ export function PageHeader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "mb-6 flex min-w-0 flex-col gap-4 sm:mb-8 md:flex-row md:items-end md:justify-between",
+        "mb-5 flex w-full min-w-0 flex-col gap-3 sm:mb-7 sm:gap-4 md:mb-8 md:flex-row md:items-end md:justify-between",
         className,
       )}
     >

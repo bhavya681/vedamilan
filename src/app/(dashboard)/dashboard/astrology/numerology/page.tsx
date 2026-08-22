@@ -94,17 +94,17 @@ function NumberHero({
   profile: NumberProfile;
 }) {
   return (
-    <GlassCard className="space-y-4">
+    <GlassCard className="flex h-full min-w-0 flex-col space-y-3 sm:space-y-4">
       <div className="flex items-start justify-between gap-3">
         <NumberPlanetIcon number={number} planet={profile.planet} size="xl" active />
         <Badge variant="outline">{profile.planet}</Badge>
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
           {label}
         </p>
-        <h2 className="font-display mt-1 text-3xl">{profile.keyword}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">{profile.coreEnergy}</p>
+        <h2 className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">{profile.keyword}</h2>
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{profile.coreEnergy}</p>
       </div>
       {compound !== number ? (
         <p className="text-muted-foreground text-xs">
@@ -153,7 +153,11 @@ export default function NumerologyPage() {
   const [error, setError] = useState<string | null>(null);
   const [override, setOverride] = useState<DateParts | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<NumberProfile | null>(null);
-  const calendarYear = new Date().getFullYear();
+  const [calendarYear, setCalendarYear] = useState(2026);
+
+  useEffect(() => {
+    setCalendarYear(new Date().getFullYear());
+  }, []);
 
   useEffect(() => {
     void fetch("/api/numerology")
@@ -245,11 +249,11 @@ export default function NumerologyPage() {
         title={t("numerology.pageTitle")}
         description={t("numerology.pageDescription")}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="secondary" size="sm">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+            <Button asChild variant="secondary" className="min-h-11">
               <Link href={routes.birthDetails}>Birth details</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" className="min-h-11">
               <Link href={routes.kundli}>{t("numerology.kundliConnection.openKundli")}</Link>
             </Button>
           </div>
@@ -277,7 +281,7 @@ export default function NumerologyPage() {
 
       {reading && reading.mulankProfile && reading.bhagyankProfile ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2">
             <NumberHero
               label={t("numerology.driver")}
               number={reading.mulank}
@@ -290,7 +294,10 @@ export default function NumerologyPage() {
               compound={reading.compoundBhagyank}
               profile={reading.bhagyankProfile}
             />
-            <GlassCard className="space-y-2 p-4">
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <GlassCard className="space-y-2">
               <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
                 {t("numerology.personalYear.title")}
               </p>
@@ -300,7 +307,7 @@ export default function NumerologyPage() {
                   planet={planetForNumber(reading.personalYear)}
                   size="lg"
                 />
-                <div>
+                <div className="min-w-0">
                   <p className="font-display text-2xl">{calendarYear}</p>
                   <p className="text-muted-foreground text-xs">
                     {planetForNumber(reading.personalYear)} ·{" "}
@@ -309,17 +316,17 @@ export default function NumerologyPage() {
                 </div>
               </div>
             </GlassCard>
-            <GlassCard className="space-y-2 p-4">
+            <GlassCard className="space-y-2">
               <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
                 {t("numerology.dobSection.title")}
               </p>
-              <p className="font-display text-2xl">{reading.trace.dateDisplay}</p>
+              <p className="font-display text-xl sm:text-2xl">{reading.trace.dateDisplay}</p>
               {override ? (
                 <Badge variant="outline">Trying another date</Badge>
               ) : (
                 <Badge variant="outline">Saved birth date</Badge>
               )}
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-xs break-words">
                 {reading.trace.mulank.steps} · {reading.trace.bhagyank.steps}
               </p>
             </GlassCard>
@@ -339,7 +346,7 @@ export default function NumerologyPage() {
             </GlassCard>
           ) : null}
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <GlassCard className="space-y-1 p-4">
               <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
                 {t("numerology.lucky.color")}
@@ -379,7 +386,7 @@ export default function NumerologyPage() {
 
             <TabsContent value="overview" className="space-y-4">
               <GlassCard className="space-y-4">
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                   <NumberPlanetIcon
                     number={reading.mulank}
                     planet={reading.mulankProfile.planet}
@@ -466,14 +473,14 @@ export default function NumerologyPage() {
             <TabsContent value="numbers">
               <div className="grid gap-4 lg:grid-cols-2">
                 <GlassCard className="space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                     <NumberPlanetIcon
                       number={reading.mulank}
                       planet={reading.mulankProfile.planet}
                       size="md"
                     />
-                    <div>
-                      <h2 className="font-display text-xl">
+                    <div className="min-w-0">
+                      <h2 className="font-display text-lg sm:text-xl">
                         {t("numerology.mulank.nameFull")} — {reading.mulank}
                       </h2>
                       <p className="text-muted-foreground text-xs">
@@ -484,14 +491,14 @@ export default function NumerologyPage() {
                   <ProfileAspects profile={reading.mulankProfile} />
                 </GlassCard>
                 <GlassCard className="space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3 sm:items-center">
                     <NumberPlanetIcon
                       number={reading.bhagyank}
                       planet={reading.bhagyankProfile.planet}
                       size="md"
                     />
-                    <div>
-                      <h2 className="font-display text-xl">
+                    <div className="min-w-0">
+                      <h2 className="font-display text-lg sm:text-xl">
                         {t("numerology.bhagyank.nameFull")} — {reading.bhagyank}
                       </h2>
                       <p className="text-muted-foreground text-xs">
@@ -510,7 +517,7 @@ export default function NumerologyPage() {
                   <h2 className="font-display text-xl">{t("numerology.grid.title")}</h2>
                   <p className="text-muted-foreground text-xs">{t("numerology.grid.subtitle")}</p>
                 </div>
-                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                <div className="grid gap-6 md:grid-cols-[minmax(0,16.5rem)_minmax(0,1fr)] lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
                   <LoshuGridView grid={reading.loshu} />
                   <div className="space-y-3">
                     <div>
@@ -617,14 +624,14 @@ export default function NumerologyPage() {
                   {t("numerology.numberCards.subtitle")}
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-9">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
                 {listNumberProfiles().map((p) => (
                   <button
                     key={p.number}
                     type="button"
                     onClick={() => setSelectedProfile(p)}
                     className={cn(
-                      "hover:border-gold/40 rounded-xl border p-3 text-center transition-colors",
+                      "hover:border-gold/40 min-h-[5.5rem] rounded-xl border p-2.5 text-center transition-colors sm:min-h-0 sm:p-3",
                       (p.number === reading.mulank || p.number === reading.bhagyank) &&
                         "border-gold/50 bg-gold/10",
                     )}
@@ -769,7 +776,7 @@ function CalculatorBar({
           </Button>
         ) : null}
       </div>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="space-y-1">
           <Label htmlFor="num-day">{t("numerology.calculator.day")}</Label>
           <Input
@@ -777,6 +784,8 @@ function CalculatorBar({
             type="number"
             min={1}
             max={31}
+            inputMode="numeric"
+            className="min-h-11"
             value={day}
             onChange={(e) => setDay(Number(e.target.value))}
           />
@@ -788,24 +797,28 @@ function CalculatorBar({
             type="number"
             min={1}
             max={12}
+            inputMode="numeric"
+            className="min-h-11"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           />
         </div>
-        <div className="space-y-1">
+        <div className="col-span-2 space-y-1 md:col-span-1">
           <Label htmlFor="num-year">{t("numerology.calculator.year")}</Label>
           <Input
             id="num-year"
             type="number"
             min={1900}
             max={2100}
+            inputMode="numeric"
+            className="min-h-11"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           />
         </div>
-        <div className="flex items-end">
+        <div className="col-span-2 flex items-end md:col-span-1">
           <Button
-            className="w-full"
+            className="min-h-11 w-full"
             onClick={() => {
               try {
                 calculationTrace(day, month, year);
