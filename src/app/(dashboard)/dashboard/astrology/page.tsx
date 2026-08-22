@@ -90,14 +90,9 @@ const ADVANCED_AREAS = [
     hint: "Bhrigu Nandi Nadi planetary patterns",
   },
   {
-    title: "Panchanga",
+    title: "Panchanga & Muhurta",
     href: routes.astrologyPanchanga,
-    hint: "Daily Tithi, Nakshatra, Yoga, Karana",
-  },
-  {
-    title: "Muhurta",
-    href: routes.astrologyMuhurta,
-    hint: "Auspicious windows for important activities",
+    hint: "Daily five limbs and auspicious windows",
   },
   { title: "Varna & Gana", href: routes.natalProfile, hint: "Your Moon-based guna profile" },
   {

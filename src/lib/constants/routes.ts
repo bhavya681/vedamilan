@@ -129,6 +129,20 @@ export const routes = {
 
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
+/** Unified Panchanga + Muhurta studio. */
+export function panchangaHref(opts?: {
+  tab?: "almanac" | "muhurta" | "guide";
+  date?: string;
+  activity?: string;
+}) {
+  const q = new URLSearchParams();
+  if (opts?.tab && opts.tab !== "almanac") q.set("tab", opts.tab);
+  if (opts?.date) q.set("date", opts.date);
+  if (opts?.activity) q.set("activity", opts.activity);
+  const qs = q.toString();
+  return qs ? `${routes.astrologyPanchanga}?${qs}` : routes.astrologyPanchanga;
+}
+
 /** Deep-link into North Horizon at a calculated instant. */
 export function northHorizonHref(opts?: {
   at?: string | Date | number;

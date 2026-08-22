@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { dashboardNavIcons, isDashboardNavActive } from "@/config/dashboard-nav";
 import { dashboardNav, navForMode, navGroupsForMode } from "@/config/navigation";
-import { northHorizonHref, routes } from "@/lib/constants/routes";
+import { northHorizonHref, panchangaHref, routes } from "@/lib/constants/routes";
 
 describe("isDashboardNavActive", () => {
   it("highlights only My Kundli on the kundli hub", () => {
@@ -90,6 +90,30 @@ describe("astrology sidebar groups", () => {
     expect(listed.map((item) => item.href).sort()).toEqual(items.map((item) => item.href).sort());
     expect(listed.some((item) => item.title === "Horizon")).toBe(true);
     expect(listed.some((item) => item.title === "Marriage Intelligence")).toBe(true);
+    expect(listed.some((item) => item.title === "Panchanga")).toBe(true);
+    expect(listed.some((item) => item.title === "Muhurta")).toBe(false);
+    expect(items.filter((item) => item.group === "Chart").map((item) => item.title)).toEqual([
+      "My Kundli",
+      "Charts",
+      "Dashas",
+      "Nakshatra",
+      "Varna & Gana",
+      "Numerology",
+      "Yogas",
+      "Predictions",
+    ]);
+  });
+
+  it("keeps Panchanga selected on the former Muhurta route", () => {
+    expect(isDashboardNavActive(routes.astrologyPanchanga, routes.astrologyPanchanga)).toBe(true);
+    expect(isDashboardNavActive(routes.astrologyMuhurta, routes.astrologyPanchanga)).toBe(true);
+  });
+});
+
+describe("panchangaHref", () => {
+  it("opens muhurta inside the unified studio", () => {
+    expect(panchangaHref({ tab: "muhurta" })).toBe(`${routes.astrologyPanchanga}?tab=muhurta`);
+    expect(panchangaHref({ tab: "almanac" })).toBe(routes.astrologyPanchanga);
   });
 });
 

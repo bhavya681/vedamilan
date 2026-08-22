@@ -4,14 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { useState, type ReactNode } from "react";
-import {
-  Ban,
-  EyeOff,
-  Lock,
-  MessageCircle,
-  ShieldCheck,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Ban, EyeOff, Lock, MessageCircle, ShieldCheck, SlidersHorizontal } from "lucide-react";
 
 import { FadeIn } from "@/components/animations/motion";
 import { LandingSection } from "@/components/layout/landing-section";
@@ -61,7 +54,9 @@ function VedicStill({
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.15)_0%,rgba(20,17,14,0.72)_100%)]" />
       {children}
       {caption ? (
-        <p className="font-display absolute right-4 bottom-4 left-4 text-2xl text-[#F7F1E3]">{caption}</p>
+        <p className="font-display absolute right-4 bottom-4 left-4 text-2xl text-[#F7F1E3]">
+          {caption}
+        </p>
       ) : null}
     </div>
   );
@@ -74,7 +69,11 @@ export function AstrologyExplained() {
       description:
         "A Lahiri sidereal chart from Swiss Ephemeris. Engine calculated — the same positions used everywhere in VedaMilan.",
       content: (
-        <VedicStill src={editorial.vedic.sky.src} alt={editorial.vedic.sky.alt} caption="North Indian chart">
+        <VedicStill
+          src={editorial.vedic.sky.src}
+          alt={editorial.vedic.sky.alt}
+          caption="North Indian chart"
+        >
           <div className="text-ivory absolute inset-0 flex items-center justify-center p-10">
             <KundliMini />
           </div>
@@ -111,7 +110,11 @@ export function AstrologyExplained() {
       title: "Dasha, yogas, transits",
       description: "Life chapters and combinations, translated into language you can sit with.",
       content: (
-        <VedicStill src={editorial.vedic.horizon.src} alt={editorial.vedic.horizon.alt} caption="Mahadasha">
+        <VedicStill
+          src={editorial.vedic.horizon.src}
+          alt={editorial.vedic.horizon.alt}
+          caption="Mahadasha"
+        >
           <div className="absolute inset-x-5 top-8 space-y-2">
             <div className="h-1 w-4/5 bg-[#D4AF37]/80" />
             <div className="h-1 w-3/5 bg-[#D4AF37]/50" />
@@ -319,7 +322,7 @@ export function CoupleSpacePreview() {
                 />
               </motion.div>
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.2)_0%,rgba(20,17,14,0.28)_38%,rgba(20,17,14,0.82)_100%)]" />
-              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/12" />
+              <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/12 ring-inset" />
 
               <div className="absolute top-4 right-4 left-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -340,13 +343,13 @@ export function CoupleSpacePreview() {
                     </p>
                   </div>
                 </div>
-                <p className="border-ivory/20 bg-[#14110E]/50 text-ivory hidden rounded-full border px-3 py-1 text-[10px] tracking-[0.16em] uppercase backdrop-blur-md sm:block">
+                <p className="border-ivory/20 text-ivory hidden rounded-full border bg-[#14110E]/50 px-3 py-1 text-[10px] tracking-[0.16em] uppercase backdrop-blur-md sm:block">
                   Private
                 </p>
               </div>
 
               <div className="absolute inset-x-4 bottom-4 sm:inset-x-5 sm:bottom-5">
-                <div className="border-ivory/15 bg-[#14110E]/70 rounded-xl border p-4 text-[#F7F1E3] shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-5">
+                <div className="border-ivory/15 rounded-xl border bg-[#14110E]/70 p-4 text-[#F7F1E3] shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-5">
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {SPACE_PANES.map((item, i) => (
                       <button
@@ -383,7 +386,9 @@ export function CoupleSpacePreview() {
                     <p className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">
                       {pane.display}
                     </p>
-                    <p className="text-ivory/80 mt-2 max-w-md text-sm leading-relaxed">{pane.body}</p>
+                    <p className="text-ivory/80 mt-2 max-w-md text-sm leading-relaxed">
+                      {pane.body}
+                    </p>
                   </motion.div>
                 </div>
               </div>
@@ -427,7 +432,7 @@ const KNOWLEDGE = [
   {
     title: "Panchanga",
     kicker: "The day",
-    body: "Tithi, yoga, karana — the day as a five-limbed clock.",
+    body: "Tithi, yoga, karana — and the muhurta windows that follow from them.",
     href: routes.astrologyPanchanga,
     img: editorial.vedic.lake,
   },
@@ -502,10 +507,12 @@ export function VedicKnowledge() {
               </motion.div>
             ))}
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.12)_0%,rgba(20,17,14,0.2)_40%,rgba(20,17,14,0.82)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/12" />
+            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/12 ring-inset" />
 
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-              <p className="text-ivory/55 text-[10px] tracking-[0.18em] uppercase">{topic.kicker}</p>
+              <p className="text-ivory/55 text-[10px] tracking-[0.18em] uppercase">
+                {topic.kicker}
+              </p>
               <p className="font-display mt-2 text-3xl text-[#F7F1E3] sm:text-4xl">{topic.title}</p>
               <p className="text-ivory/80 mt-3 max-w-md text-sm leading-relaxed">{topic.body}</p>
               <span className="text-ivory mt-5 inline-flex items-center gap-2 text-[11px] tracking-[0.16em] uppercase">
@@ -597,7 +604,9 @@ export function AiGuidance() {
           <div className="border-border/60 bg-background relative overflow-hidden rounded-2xl border p-5 shadow-[0_20px_50px_rgba(20,17,14,0.05)] sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-muted-foreground text-[10px] tracking-[0.18em] uppercase">Guidance</p>
+                <p className="text-muted-foreground text-[10px] tracking-[0.18em] uppercase">
+                  Guidance
+                </p>
                 <p className="font-display mt-0.5 text-lg tracking-tight">AI Guru</p>
               </div>
               <p className="border-border/70 text-muted-foreground hidden rounded-full border px-2.5 py-1 text-[10px] tracking-[0.14em] uppercase sm:block">
@@ -613,14 +622,22 @@ export function AiGuidance() {
                 transition={{ duration: 0.5, delay: 0.12, ease }}
                 className="flex justify-end gap-3"
               >
-                <div className="bg-muted min-w-0 max-w-[min(22rem,calc(100%-2.5rem))] rounded-2xl rounded-tr-md px-3 py-3 sm:px-4">
-                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">You</p>
+                <div className="bg-muted max-w-[min(22rem,calc(100%-2.5rem))] min-w-0 rounded-2xl rounded-tr-md px-3 py-3 sm:px-4">
+                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">
+                    You
+                  </p>
                   <p className="text-sm leading-relaxed">
                     What does my 7th house suggest about partnership?
                   </p>
                 </div>
                 <span className="relative mt-1 h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5">
-                  <Image src={editorial.you.src} alt="" fill sizes="32px" className="object-cover" />
+                  <Image
+                    src={editorial.you.src}
+                    alt=""
+                    fill
+                    sizes="32px"
+                    className="object-cover"
+                  />
                 </span>
               </motion.div>
 
@@ -634,8 +651,10 @@ export function AiGuidance() {
                 <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14110E] text-[#D4AF37] ring-1 ring-[#D4AF37]/30">
                   <span className="font-display text-[11px]">G</span>
                 </span>
-                <div className="bg-gold/10 min-w-0 max-w-[min(24rem,calc(100%-2.5rem))] rounded-2xl rounded-tl-md px-3 py-3 ring-1 ring-[#D4AF37]/15 sm:px-4">
-                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">AI Guru</p>
+                <div className="bg-gold/10 max-w-[min(24rem,calc(100%-2.5rem))] min-w-0 rounded-2xl rounded-tl-md px-3 py-3 ring-1 ring-[#D4AF37]/15 sm:px-4">
+                  <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">
+                    AI Guru
+                  </p>
                   <p className="text-sm leading-relaxed">
                     Your 7th house is traditionally associated with partnership and marriage. Based
                     on your calculated chart, I can explain the planets placed there — not invent
@@ -666,12 +685,42 @@ export function AiGuidance() {
 }
 
 const SAFETY = [
-  { n: "01", title: "Verified profiles", body: "Profiles can carry a verification mark in the product.", icon: ShieldCheck },
-  { n: "02", title: "Privacy controls", body: "You choose what of the chart and profile is visible.", icon: SlidersHorizontal },
-  { n: "03", title: "Block", body: "Blocked members stay out of your search and messages.", icon: Ban },
-  { n: "04", title: "Secure messaging", body: "Conversation opens when interest is mutual.", icon: MessageCircle },
-  { n: "05", title: "Photo and chart privacy", body: "Birth details and photos stay in a private workspace.", icon: EyeOff },
-  { n: "06", title: "Profile controls", body: "Visibility, interests, and online status are yours to set.", icon: Lock },
+  {
+    n: "01",
+    title: "Verified profiles",
+    body: "Profiles can carry a verification mark in the product.",
+    icon: ShieldCheck,
+  },
+  {
+    n: "02",
+    title: "Privacy controls",
+    body: "You choose what of the chart and profile is visible.",
+    icon: SlidersHorizontal,
+  },
+  {
+    n: "03",
+    title: "Block",
+    body: "Blocked members stay out of your search and messages.",
+    icon: Ban,
+  },
+  {
+    n: "04",
+    title: "Secure messaging",
+    body: "Conversation opens when interest is mutual.",
+    icon: MessageCircle,
+  },
+  {
+    n: "05",
+    title: "Photo and chart privacy",
+    body: "Birth details and photos stay in a private workspace.",
+    icon: EyeOff,
+  },
+  {
+    n: "06",
+    title: "Profile controls",
+    body: "Visibility, interests, and online status are yours to set.",
+    icon: Lock,
+  },
 ] as const;
 
 export function SafetyTrust() {
@@ -699,7 +748,7 @@ export function SafetyTrust() {
               <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-xl">
                 <item.icon className="text-secondary h-4 w-4" aria-hidden />
               </div>
-              <span className="text-muted-foreground text-[11px] tabular-nums tracking-[0.16em]">
+              <span className="text-muted-foreground text-[11px] tracking-[0.16em] tabular-nums">
                 {item.n}
               </span>
             </div>

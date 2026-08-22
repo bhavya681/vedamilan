@@ -37,7 +37,7 @@ import {
 } from "@/features/horoscope/components/celestial-sky-map";
 import { HorizonNakshatraRail } from "@/features/horoscope/components/horizon-nakshatra-rail";
 import { NakshatraStarFigure } from "@/features/horoscope/components/nakshatra-star-figure";
-import { routes } from "@/lib/constants/routes";
+import { panchangaHref, routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 const TIME_PRESETS = [
@@ -521,7 +521,7 @@ export function NorthHorizonExplorer() {
         <p className="text-muted-foreground shrink-0 text-xs">
           {marriageSky ? "Marriage sky" : "Muhurta sky"} for the selected window.{" "}
           <Link
-            href={muhurta ? routes.astrologyMuhurta : routes.marriageTiming}
+            href={muhurta ? panchangaHref({ tab: "muhurta" }) : routes.marriageTiming}
             className="underline"
           >
             Why this time?

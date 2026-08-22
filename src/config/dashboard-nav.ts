@@ -167,11 +167,15 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.astrologyDasha) return matchesPath(pathname, routes.astrologyDasha);
   if (href === routes.astrologyDivisionalCharts)
     return matchesPath(pathname, routes.astrologyDivisionalCharts);
-  if (href === routes.astrologyMuhurta) return matchesPath(pathname, routes.astrologyMuhurta);
   if (href === routes.astrologyRemedies) return matchesPath(pathname, routes.astrologyRemedies);
   if (href === routes.astrologySpiritualJourney)
     return matchesPath(pathname, routes.astrologySpiritualJourney);
-  if (href === routes.astrologyPanchanga) return matchesPath(pathname, routes.astrologyPanchanga);
+  if (href === routes.astrologyPanchanga) {
+    return (
+      matchesPath(pathname, routes.astrologyPanchanga) ||
+      matchesPath(pathname, routes.astrologyMuhurta)
+    );
+  }
   if (href === routes.astrologyNorthHorizon)
     return matchesPath(pathname, routes.astrologyNorthHorizon);
   if (href === routes.astrologyPlanetStrength)
