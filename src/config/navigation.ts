@@ -150,6 +150,13 @@ export const dashboardNav: NavItem[] = [
     modes: ["matrimony"],
   },
   {
+    title: "Precautions",
+    href: routes.matrimonyPrecautions,
+    description: "Chart cautions for marriage",
+    group: "Discover",
+    modes: ["matrimony"],
+  },
+  {
     title: "Partner preferences",
     href: routes.preferences,
     group: "Discover",

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth/session";
 import { wisdomService } from "@/application/wisdom/wisdom.service";
 import { hasActiveSubscription } from "@/application/billing/entitlements";
+import { sageAlignmentService } from "@/application/wisdom/sage-alignment.service";
 import {
   WISDOM_CATEGORIES,
   getWisdomGuide,
@@ -10,6 +11,7 @@ import {
   listRelationshipGuides,
   listWisdomGuides,
 } from "@/domain/wisdom/guides";
+import { LIFE_NEEDS, type LifeNeedId } from "@/domain/wisdom/sage-alignment";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import { successResponse } from "@/lib/utils/api-response";
 import { handleRouteError, UnauthorizedError, ValidationError } from "@/lib/utils/error-handler";
@@ -19,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    await requireSession().catch(() => {
+    const session = await requireSession().catch(() => {
       throw new UnauthorizedError();
     });
     const { searchParams } = new URL(request.url);
@@ -29,12 +31,19 @@ export async function GET(request: Request) {
       if (!guide) throw new ValidationError("Unknown guide");
       return successResponse({ guide, disclaimer: WISDOM_AI_DISCLAIMER });
     }
+    const needParam = searchParams.get("need");
+    const need = LIFE_NEEDS.some((item) => item.id === needParam)
+      ? (needParam as LifeNeedId)
+      : undefined;
+    const alignment = await sageAlignmentService.forUser(session.user.id, need);
     return successResponse({
       categories: WISDOM_CATEGORIES,
       guides: listWisdomGuides(),
       featuredSages: listFeaturedSages(),
       relationshipGuides: listRelationshipGuides(),
       daily: wisdomService.dailyReflection(),
+      needs: LIFE_NEEDS,
+      alignment,
       disclaimer: WISDOM_AI_DISCLAIMER,
     });
   } catch (error) {

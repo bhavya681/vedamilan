@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
+import { SuggestedSages } from "@/features/wisdom/components/suggested-sages";
 import { RishiSageTile, WisdomPortrait } from "@/features/wisdom/components/wisdom-portrait";
 import { SageOrnamentLine, SageYantraMark } from "@/features/wisdom/components/sage-discourse";
 import {
@@ -17,6 +18,7 @@ import {
   listFeaturedSages,
   wisdomDailyReflection,
   type WisdomCategoryId,
+  type WisdomGuide,
 } from "@/domain/wisdom/guides";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
 import { routes } from "@/lib/constants/routes";
@@ -47,7 +49,18 @@ export default function RishiSageHomePage() {
   const reduceMotion = useReducedMotion();
   const [category, setCategory] = useState<WisdomCategoryId | "all">("all");
   const featured = useMemo(() => listFeaturedSages(), []);
-  const spotlight = featured.slice(0, 7);
+  const [spotlightIds, setSpotlightIds] = useState<string[]>([]);
+  const spotlight = useMemo(() => {
+    const preferred = spotlightIds
+      .map(
+        (id) =>
+          featured.find((guide) => guide.id === id) ||
+          listWisdomGuides().find((guide) => guide.id === id),
+      )
+      .filter((guide): guide is WisdomGuide => Boolean(guide));
+    const rest = featured.filter((guide) => !preferred.some((row) => row.id === guide.id));
+    return [...preferred, ...rest].slice(0, 7);
+  }, [featured, spotlightIds]);
   const guides = useMemo(() => {
     if (category === "all") return listWisdomGuides();
     return listWisdomGuides().filter((g) => g.categoryIds.includes(category));
@@ -162,6 +175,8 @@ export default function RishiSageHomePage() {
             <p className="text-muted-foreground text-xs leading-relaxed">{daily.label}</p>
           </div>
         </section>
+
+        <SuggestedSages onSpotlight={setSpotlightIds} />
 
         {/* Pathways */}
         <section className="grid gap-3 sm:grid-cols-2">

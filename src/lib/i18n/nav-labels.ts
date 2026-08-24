@@ -18,6 +18,7 @@ export const NAV_HREF_KEYS: Record<string, string> = {
   [routes.astrologyBnn]: "navigation.bnn",
   [routes.astrologyMarriageIntelligence]: "navigation.marriageIntelligence",
   [routes.marriageGuru]: "navigation.marriageGuru",
+  [routes.matrimonyPrecautions]: "navigation.precautions",
   [routes.preferences]: "navigation.partnerPreferences",
   [routes.situationalAlignment]: "navigation.situationalQuiz",
   [routes.natalProfile]: "navigation.varnaGana",

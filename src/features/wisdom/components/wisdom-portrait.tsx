@@ -98,7 +98,7 @@ export function WisdomPortrait({
 }
 
 /** Compact tile: portrait + chat / speak actions for the Rishi Sage home. */
-export function RishiSageTile({ guide }: { guide: WisdomGuide }) {
+export function RishiSageTile({ guide, reason }: { guide: WisdomGuide; reason?: string }) {
   const accentBar: Record<WisdomGuide["accent"], string> = {
     gold: "from-gold/80 via-gold/40 to-transparent",
     saffron: "from-primary/80 via-primary/40 to-transparent",
@@ -135,6 +135,9 @@ export function RishiSageTile({ guide }: { guide: WisdomGuide }) {
           <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-relaxed">
             {guide.domain}
           </p>
+          {reason ? (
+            <p className="text-gold/80 mt-2 line-clamp-2 text-[11px] leading-relaxed">{reason}</p>
+          ) : null}
         </div>
       </div>
       <p className="font-display text-foreground/85 line-clamp-2 pl-1 text-sm leading-snug">

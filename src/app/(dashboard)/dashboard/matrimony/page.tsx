@@ -269,6 +269,25 @@ export default function MatrimonyHomePage() {
             <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="min-w-0 space-y-1">
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
+                  Chart caution
+                </p>
+                <h2 className="font-display text-xl sm:text-2xl">Marriage precautions</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Restlessness, delay, and conflict flags from your Kundli — plus what you can live
+                  with, and what you must refuse.
+                </p>
+              </div>
+              <Button asChild className="w-full shrink-0 sm:w-auto" variant="outline">
+                <Link href={routes.matrimonyPrecautions}>
+                  Open precautions
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </GlassCard>
+
+            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0 space-y-1">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
                   <ListChecks className="h-3.5 w-3.5" />
                   Optional
                 </p>

@@ -37,6 +37,7 @@ import {
   ScrollText,
   Search,
   Settings,
+  ShieldAlert,
   SlidersHorizontal,
   Sparkles,
   Star,
@@ -99,6 +100,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.search]: Search,
   [routes.compatibility]: Compass,
   [routes.marriageGuru]: BotMessageSquare,
+  [routes.matrimonyPrecautions]: ShieldAlert,
   [routes.preferences]: SlidersHorizontal,
   [routes.situationalAlignment]: ClipboardCheck,
   [routes.chat]: MessageCircle,
@@ -154,6 +156,8 @@ export function isDashboardNavActive(pathname: string, href: string) {
   }
   if (href === routes.aiInsights) return matchesPath(pathname, routes.aiInsights);
   if (href === routes.compatibility) return matchesPath(pathname, routes.compatibility);
+  if (href === routes.matrimonyPrecautions)
+    return matchesPath(pathname, routes.matrimonyPrecautions);
   if (href === routes.settings) return matchesPath(pathname, routes.settings);
   if (href === routes.profile) return matchesPath(pathname, routes.profile);
   if (href === routes.consultation) return matchesPath(pathname, routes.consultation);

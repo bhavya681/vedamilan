@@ -107,6 +107,7 @@ export const routes = {
   astrologer: "/dashboard/consultation/astrologer",
   calendar: "/dashboard/calendar",
   marriageGuru: "/dashboard/matrimony/marriage-guru",
+  matrimonyPrecautions: "/dashboard/matrimony/precautions",
 
   settings: "/dashboard/settings",
   security: "/dashboard/settings/security",
