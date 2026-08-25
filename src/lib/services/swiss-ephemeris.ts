@@ -73,19 +73,33 @@ const requireSweph = createRequire(
 );
 
 let swephCached: SwephModule | null = null;
-let swephLoadError: AppError | null = null;
+
+function clearSwephRequireCache() {
+  try {
+    const resolved = requireSweph.resolve("sweph");
+    delete requireSweph.cache[resolved];
+  } catch {
+    // Native load may fail before the JS wrapper is cached.
+  }
+  for (const key of Object.keys(requireSweph.cache ?? {})) {
+    if (key.replace(/\\/g, "/").includes("/sweph/")) {
+      delete requireSweph.cache[key];
+    }
+  }
+}
 
 function loadSweph(): SwephModule {
   if (swephCached) return swephCached;
-  if (swephLoadError) throw swephLoadError;
 
   try {
     swephCached = requireSweph("sweph") as SwephModule;
     return swephCached;
   } catch (error) {
+    clearSwephRequireCache();
     const message = error instanceof Error ? error.message : String(error);
     const blocked = /Application Control|blocked this file|EPERM|access is denied/i.test(message);
-    swephLoadError = new AppError(
+    logger.error({ err: error, blocked }, "Swiss Ephemeris native module failed to load");
+    throw new AppError(
       blocked ? "SWISS_EPHEMERIS_BLOCKED" : "SWISS_EPHEMERIS_LOAD_FAILED",
       blocked
         ? "Swiss Ephemeris is blocked by Windows Application Control (sweph.node). Allow the file or run outside the restricted policy, then restart the server."
@@ -93,8 +107,6 @@ function loadSweph(): SwephModule {
       blocked ? 503 : 500,
       error,
     );
-    logger.error({ err: error, blocked }, "Swiss Ephemeris native module failed to load");
-    throw swephLoadError;
   }
 }
 

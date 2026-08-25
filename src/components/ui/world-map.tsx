@@ -19,6 +19,8 @@ interface MapProps {
   /** Index into `dots` to emphasize. Omit to draw every route equally. */
   highlightIndex?: number;
   onSelect?: (index: number) => void;
+  /** Single location marker with a floating label (used on Contact). */
+  pin?: { lat: number; lng: number; label: string };
 }
 
 export default function WorldMap({
@@ -27,6 +29,7 @@ export default function WorldMap({
   className,
   highlightIndex,
   onSelect,
+  pin,
 }: MapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const reduceMotion = useReducedMotion();
@@ -41,7 +44,7 @@ export default function WorldMap({
       radius: 0.22,
       color: isDark ? "#F7F1E366" : "#14110E55",
       shape: "circle",
-      backgroundColor: isDark ? "#0c0a08" : "#F7F1E3",
+      backgroundColor: "transparent",
     });
   }, [isDark]);
 
@@ -57,11 +60,13 @@ export default function WorldMap({
     return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
   };
 
+  const pinPoint = pin ? projectPoint(pin.lat, pin.lng) : null;
+
   return (
-    <div className={cn("relative w-full font-sans aspect-[2/1]", className)}>
+    <div className={cn("relative aspect-[2/1] w-full font-sans", className)}>
       <img
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
-        className="pointer-events-none h-full w-full select-none [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)]"
+        className="pointer-events-none h-full w-full [mask-image:linear-gradient(to_bottom,transparent,white_10%,white_90%,transparent)] select-none"
         alt=""
         height="495"
         width="1056"
@@ -117,10 +122,7 @@ export default function WorldMap({
                 color={lineColor}
                 pulse={!reduceMotion && emphasized}
               />
-              <g
-                className={onSelect ? "cursor-pointer" : undefined}
-                onClick={() => onSelect?.(i)}
-              >
+              <g className={onSelect ? "cursor-pointer" : undefined} onClick={() => onSelect?.(i)}>
                 <HubPoint
                   x={end.x}
                   y={end.y}
@@ -131,28 +133,45 @@ export default function WorldMap({
             </g>
           );
         })}
+
+        {pinPoint ? (
+          <HubPoint x={pinPoint.x} y={pinPoint.y} color={lineColor} pulse={!reduceMotion} />
+        ) : null}
       </svg>
+      {pin && pinPoint ? (
+        <div
+          className="pointer-events-none absolute z-10"
+          style={{
+            left: `${(pinPoint.x / 800) * 100}%`,
+            top: `${(pinPoint.y / 400) * 100}%`,
+          }}
+        >
+          <div className="relative flex -translate-x-1/2 -translate-y-full flex-col items-center">
+            <span className="bg-foreground text-background dark:text-ivory rounded-full px-3 py-1 text-[11px] font-medium whitespace-nowrap shadow-[0_8px_20px_rgba(0,0,0,0.28)] dark:bg-black">
+              {pin.label}
+            </span>
+            <span className="from-gold to-gold/20 mt-1 h-7 w-px bg-gradient-to-b" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function HubPoint({
-  x,
-  y,
-  color,
-  pulse,
-}: {
-  x: number;
-  y: number;
-  color: string;
-  pulse: boolean;
-}) {
+function HubPoint({ x, y, color, pulse }: { x: number; y: number; color: string; pulse: boolean }) {
   return (
     <g>
       <circle cx={x} cy={y} r="2" fill={color} />
       {pulse ? (
         <circle cx={x} cy={y} r="2" fill={color} opacity="0.5">
-          <animate attributeName="r" from="2" to="8" dur="1.5s" begin="0s" repeatCount="indefinite" />
+          <animate
+            attributeName="r"
+            from="2"
+            to="8"
+            dur="1.5s"
+            begin="0s"
+            repeatCount="indefinite"
+          />
           <animate
             attributeName="opacity"
             from="0.5"

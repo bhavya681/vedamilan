@@ -6,6 +6,15 @@ export type EmailTemplate = {
   text: string;
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function wrapHtml(title: string, body: string, lang = "en"): string {
   return `<!DOCTYPE html>
 <html lang="${lang}">
@@ -80,6 +89,40 @@ export function emailVerificationEmail(name: string, verifyUrl: string): EmailTe
     <a href="${verifyUrl}" style="display:inline-block;margin-top:8px;padding:12px 20px;background:#1F4E68;color:#FAF6F0;text-decoration:none;border-radius:999px;font-weight:700;">
       Verify email
     </a>`,
+  );
+  return { subject, html, text };
+}
+
+export function contactInquiryEmail(input: {
+  name: string;
+  email: string;
+  company?: string;
+  message: string;
+}): EmailTemplate {
+  const name = escapeHtml(input.name);
+  const email = escapeHtml(input.email);
+  const company = input.company ? escapeHtml(input.company) : "";
+  const message = escapeHtml(input.message).replace(/\n/g, "<br />");
+  const subject = `Contact inquiry from ${input.name}`;
+  const text = [
+    `New contact inquiry from ${input.name} <${input.email}>`,
+    input.company ? `Company: ${input.company}` : null,
+    "",
+    input.message,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+  const html = wrapHtml(
+    "New contact inquiry",
+    `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:rgba(250,246,240,0.9);">
+      <strong>${name}</strong> (${email}) wrote in from the contact page.
+    </p>
+    ${
+      company
+        ? `<p style="margin:0 0 16px;font-size:14px;color:rgba(250,246,240,0.75);">Company: ${company}</p>`
+        : ""
+    }
+    <p style="margin:0;font-size:16px;line-height:1.7;color:rgba(250,246,240,0.9);">${message}</p>`,
   );
   return { subject, html, text };
 }

@@ -75,7 +75,15 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "framer-motion"],
   },
-  serverExternalPackages: ["sweph", "pino", "pino-pretty", "ioredis", "mongoose", "mongodb"],
+  serverExternalPackages: [
+    "sweph",
+    "node-gyp-build",
+    "pino",
+    "pino-pretty",
+    "ioredis",
+    "mongoose",
+    "mongodb",
+  ],
   async headers() {
     return [
       {
