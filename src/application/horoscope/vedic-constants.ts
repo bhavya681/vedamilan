@@ -110,6 +110,53 @@ export function longitudeToNakshatra(longitude: number) {
   };
 }
 
+/** Vimshottari lord of a named nakshatra (Ashwini = Ketu). */
+export function nakshatraLord(nakshatra: string): (typeof VIMSHOTTARI_LORDS)[number] {
+  const index = NAKSHATRAS.indexOf(nakshatra as (typeof NAKSHATRAS)[number]);
+  const safe = index >= 0 ? index : 0;
+  return VIMSHOTTARI_LORDS[safe % 9] ?? "Ketu";
+}
+
+/** Shortest arc in degrees between two longitudes (0–180). */
+export function angularDistance(a: number, b: number): number {
+  const d = Math.abs((((a - b) % 360) + 360) % 360);
+  return d > 180 ? 360 - d : d;
+}
+
+/**
+ * Classical exaltation longitudes (sidereal, start of Aries = 0).
+ * Sun 10° Ari, Moon 3° Tau, Mars 28° Cap, Mercury 15° Vir,
+ * Jupiter 5° Can, Venus 27° Pis, Saturn 20° Lib.
+ */
+export const EXALTATION_LONGITUDE: Record<string, number> = {
+  Sun: 10,
+  Moon: 33,
+  Mars: 298,
+  Mercury: 165,
+  Jupiter: 95,
+  Venus: 357,
+  Saturn: 200,
+};
+
+/** Dig Bala peak house from lagna (BPHS): Su/Ma 10, Mo/Ve 4, Me/Ju 1, Sa 7. */
+export const DIG_POWER_HOUSE: Record<string, number> = {
+  Sun: 10,
+  Moon: 4,
+  Mars: 10,
+  Mercury: 1,
+  Jupiter: 1,
+  Venus: 4,
+  Saturn: 7,
+};
+
+/** Uchcha Bala 0–60 from natal longitude vs the exaltation degree. */
+export function uchchaVirupas(planet: string, longitude: number): number {
+  const exalt = EXALTATION_LONGITUDE[planet];
+  if (exalt == null) return 30;
+  const dist = angularDistance(longitude, exalt);
+  return Math.max(0, Math.min(60, 60 * (1 - dist / 180)));
+}
+
 /** Equal-house bhava from exact Lagna degree (Chalit-style span). */
 export function houseFromLongitude(longitude: number, lagnaLongitude: number): number {
   const norm = (longitude - lagnaLongitude + 360) % 360;

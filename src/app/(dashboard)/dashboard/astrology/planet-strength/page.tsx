@@ -18,6 +18,7 @@ type PlanetStrength = {
   sign: string;
   house: number;
   nakshatra: string;
+  nakshatraLord?: string | null;
   dignity: string | null;
   isRetrograde: boolean;
   strength: "strong" | "moderate" | "needs-attention";
@@ -26,6 +27,15 @@ type PlanetStrength = {
   houseKinds?: string[];
   interpretation?: string;
   isClassical?: boolean;
+  breakdown?: {
+    dignity: number;
+    house: number;
+    nakshatra: number;
+    retrograde: number;
+  };
+  degreeInSign?: number | null;
+  avastha?: string;
+  combust?: boolean;
 };
 
 type StrengthLab = {
@@ -33,6 +43,8 @@ type StrengthLab = {
   strongest: PlanetStrength | null;
   weakest: PlanetStrength | null;
   overallTheme: string;
+  methodology?: string;
+  source?: string;
 };
 
 const CLASSICAL_ORDER = [
@@ -70,6 +82,9 @@ export default function AstrologyPlanetStrengthPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null);
+  const [shadbalaByPlanet, setShadbalaByPlanet] = useState<
+    Record<string, { virupas: number; ratio: number; grade: string }>
+  >({});
 
   useEffect(() => {
     void fetch("/api/astrology/planet-strength")
@@ -87,6 +102,24 @@ export default function AstrologyPlanetStrengthPage() {
       })
       .catch(() => setError("Unable to load planet strength"))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/astrology/shadbala")
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled || !json.success) return;
+        const map: Record<string, { virupas: number; ratio: number; grade: string }> = {};
+        for (const row of json.data?.planets || []) {
+          map[row.planet] = { virupas: row.virupas, ratio: row.ratio, grade: row.grade };
+        }
+        setShadbalaByPlanet(map);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const classical = useMemo(() => {
@@ -114,14 +147,14 @@ export default function AstrologyPlanetStrengthPage() {
       <PageHeader
         eyebrow="Dignity · house · nakshatra"
         title="Planet Strength"
-        description="A readable ranking of the nine grahas from dignity, house kind, nakshatra, and retrograde status. For virupas against BPHS minima, open Shadbala."
+        description="Calculated from your stored natal kundli: dignity from longitude vs exaltation, house from lagna, nakshatra lord from Vimshottari, combustion from the Sun. Open Shadbala for virupas against BPHS minima."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
               <Link href={routes.astrologyShadbala}>Shadbala</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routes.kundli}>Kundli</Link>
+              <Link href={routes.astrologyAshtakavarga}>Ashtakavarga</Link>
             </Button>
           </div>
         }
@@ -142,6 +175,18 @@ export default function AstrologyPlanetStrengthPage() {
 
       {data ? (
         <div className="space-y-5">
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            <Badge variant="outline" className="border-gold/40 bg-gold/10">
+              From natal kundli
+            </Badge>
+            <Badge variant="outline">Dignity from longitude</Badge>
+            <Badge variant="outline">Nakshatra lord · Vimshottari</Badge>
+            <Badge variant="outline">Combust from Sun orb</Badge>
+          </div>
+          {data.source ? (
+            <p className="text-muted-foreground text-xs leading-relaxed">{data.source}</p>
+          ) : null}
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <GlassCard className="space-y-1 p-3 sm:p-4">
               <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
@@ -207,9 +252,11 @@ export default function AstrologyPlanetStrengthPage() {
                           "Dignity",
                           "House",
                           "Kind",
+                          "Avastha",
                           "Nakshatra",
                           "Rx",
                           "Score",
+                          "Shadbala",
                           "Grade",
                         ].map((h) => (
                           <th
@@ -242,8 +289,11 @@ export default function AstrologyPlanetStrengthPage() {
                           <td className="py-2.5 pr-3 text-xs">
                             {(p.houseKinds || []).join(" · ") || "—"}
                           </td>
+                          <td className="py-2.5 pr-3 text-xs">{p.avastha || "—"}</td>
                           <td className="py-2.5 pr-3">{p.nakshatra}</td>
-                          <td className="py-2.5 pr-3">{p.isRetrograde ? "Rx" : "—"}</td>
+                          <td className="py-2.5 pr-3">
+                            {p.isRetrograde ? "Rx" : p.combust ? "Combust" : "—"}
+                          </td>
                           <td className="py-2.5 pr-3">
                             <div className="flex items-center gap-2">
                               <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
@@ -254,6 +304,12 @@ export default function AstrologyPlanetStrengthPage() {
                               </div>
                               <span className="tabular-nums">{p.score}</span>
                             </div>
+                          </td>
+                          <td className="py-2.5 pr-3 text-xs tabular-nums">
+                            {(() => {
+                              const sb = shadbalaByPlanet[p.planet];
+                              return sb ? `${sb.virupas} · ${sb.ratio.toFixed(2)}` : "—";
+                            })()}
                           </td>
                           <td className="py-2.5 pr-3">
                             <Badge className={cn("border text-[10px]", STRENGTH_STYLE[p.strength])}>
@@ -283,13 +339,62 @@ export default function AstrologyPlanetStrengthPage() {
                         {selected.sign} · House {selected.house}
                       </p>
                       <h2 className="font-display text-2xl">{selected.planet}</h2>
-                      <p className="text-muted-foreground text-xs">{selected.nakshatra}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {selected.nakshatra}
+                        {selected.nakshatraLord ? ` · lord ${selected.nakshatraLord}` : ""}
+                      </p>
                     </div>
                     <Badge className={cn("border", STRENGTH_STYLE[selected.strength])}>
                       {selected.score}/100 · {selected.strength.replace("-", " ")}
                     </Badge>
                   </div>
                   <Progress value={selected.score} />
+                  {selected.breakdown ? (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {(
+                        [
+                          ["Dignity", selected.breakdown.dignity],
+                          ["House", selected.breakdown.house],
+                          ["Nakshatra lord", selected.breakdown.nakshatra],
+                          ["Motion / combust", selected.breakdown.retrograde],
+                        ] as const
+                      ).map(([label, value]) => (
+                        <div key={label} className="border-border/60 rounded-xl border p-2">
+                          <p className="text-muted-foreground text-[10px] uppercase">{label}</p>
+                          <p className="font-display text-lg tabular-nums">
+                            {value > 0 ? `+${value}` : value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="border-border/60 rounded-xl border p-2">
+                      <p className="text-muted-foreground text-[10px] uppercase">Avastha</p>
+                      <p className="text-sm font-medium">{selected.avastha || "—"}</p>
+                    </div>
+                    <div className="border-border/60 rounded-xl border p-2">
+                      <p className="text-muted-foreground text-[10px] uppercase">Degree</p>
+                      <p className="text-sm font-medium tabular-nums">
+                        {selected.degreeInSign != null
+                          ? `${selected.degreeInSign.toFixed(1)}°`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="border-border/60 rounded-xl border p-2">
+                      <p className="text-muted-foreground text-[10px] uppercase">Combust</p>
+                      <p className="text-sm font-medium">{selected.combust ? "Yes" : "No"}</p>
+                    </div>
+                    <div className="border-border/60 rounded-xl border p-2">
+                      <p className="text-muted-foreground text-[10px] uppercase">Shadbala</p>
+                      <p className="text-sm font-medium tabular-nums">
+                        {(() => {
+                          const sb = shadbalaByPlanet[selected.planet];
+                          return sb ? `${sb.virupas} vp` : "—";
+                        })()}
+                      </p>
+                    </div>
+                  </div>
                   <p className="text-sm leading-relaxed">
                     {selected.interpretation ||
                       `${selected.planet} scores ${selected.score} from dignity, house, and nakshatra factors.`}
@@ -318,13 +423,18 @@ export default function AstrologyPlanetStrengthPage() {
               <GlassCard className="space-y-3 text-sm leading-relaxed">
                 <h2 className="font-display text-xl">What this lab measures</h2>
                 <p>
-                  This is a teaching score from dignity (exaltation, own sign, debilitation), house
-                  kind, nakshatra affinity, and retrograde status. It is not Shadbala.
+                  Scores come from your stored kundli rows — not a static list. Dignity uses
+                  longitude versus the exaltation degree. House kind uses the whole-sign house from
+                  lagna. Nakshatra uses the Vimshottari lord of that nakshatra. Combustion uses the
+                  natal Sun orb.
                 </p>
+                {data.methodology ? (
+                  <p className="text-muted-foreground text-xs">{data.methodology}</p>
+                ) : null}
                 <p>
-                  Shadbala measures six-fold strength in virupas and rupas against Parashara minima.
-                  Use this page to scan dignity and house condition; use Shadbala when you need the
-                  quantitative table.
+                  Shadbala is the six-fold virupa table against Parashara minima, also computed from
+                  this kundli. Ashtakavarga is bindu support by rashi and house from the same planet
+                  signs.
                 </p>
                 <p>
                   Kendra (1, 4, 7, 10) supports action. Trikona (1, 5, 9) supports dharma. Dusthana

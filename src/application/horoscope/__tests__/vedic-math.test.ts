@@ -7,6 +7,8 @@ import {
   houseFromLongitude,
   longitudeToNakshatra,
   longitudeToSign,
+  nakshatraLord,
+  uchchaVirupas,
   wholeSignHouse,
 } from "@/application/horoscope/vedic-constants";
 import {
@@ -24,6 +26,18 @@ describe("Module 4 — Vedic math", () => {
     expect(longitudeToSign(35).sign).toBe("Taurus");
     expect(longitudeToNakshatra(0).nakshatra).toBe("Ashwini");
     expect(longitudeToNakshatra(0).nakshatraPada).toBe(1);
+  });
+
+  it("maps nakshatra to vimshottari lord", () => {
+    expect(nakshatraLord("Ashwini")).toBe("Ketu");
+    expect(nakshatraLord("Bharani")).toBe("Venus");
+    expect(nakshatraLord("Pushya")).toBe("Saturn");
+  });
+
+  it("scores uchcha from exaltation longitude, not a sign guess", () => {
+    expect(uchchaVirupas("Sun", 10)).toBe(60);
+    expect(uchchaVirupas("Sun", 190)).toBe(0);
+    expect(uchchaVirupas("Sun", 100)).toBeGreaterThan(uchchaVirupas("Sun", 160));
   });
 
   it("computes equal and whole-sign houses", () => {

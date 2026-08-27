@@ -37,11 +37,33 @@ type PlanetShadbala = {
     note: string;
   }>;
   interpretation: string;
+  sthanaParts?: Array<{
+    name: string;
+    sanskrit: string;
+    score: number;
+    max: number;
+    virupas: number;
+    virupaMax: number;
+    note: string;
+  }>;
+  professionalNote?: string;
+};
+
+type BhavBalaRow = {
+  house: number;
+  sign: string;
+  lord: string;
+  virupas: number;
+  rank: number;
+  occupants: string[];
+  note: string;
 };
 
 type ShadbalaLab = {
   methodology: string;
+  source?: string;
   planets: PlanetShadbala[];
+  bhavas?: BhavBalaRow[];
   strongest: PlanetShadbala | null;
   weakest: PlanetShadbala | null;
   overallTheme: string;
@@ -68,36 +90,81 @@ const BALA_ORDER = ["Sthana", "Dig", "Kala", "Chesta", "Naisargika", "Drik"] as 
 
 const BALA_EDUCATION: Record<string, { what: string; how: string; why: string }> = {
   Sthana: {
-    what: "Positional strength based on house and sign placement.",
-    how: "Kendra, Trikona, own sign and exaltation add weight. Debilitation and dusthana houses reduce it.",
+    what: "Positional strength from the natal house, sign, and degree.",
+    how: "Uchcha uses longitude vs the exaltation degree. Kendradi uses house from lagna. Drekkana uses degree in sign.",
     why: "A planet in a strong position can express its nature more freely.",
   },
   Dig: {
-    what: "Directional strength from the sign the planet occupies.",
-    how: "Each graha has a preferred direction. Placement in that direction raises Dig Bala.",
+    what: "Directional strength from the natal house, not the sign name.",
+    how: "Sun and Mars peak in the 10th, Moon and Venus in the 4th, Mercury and Jupiter in the 1st, Saturn in the 7th. Strength falls as the house moves away from that peak.",
     why: "Directional alignment affects how easily a planet can act.",
   },
   Kala: {
-    what: "Temporal strength from time-related factors.",
-    how: "Day/night nature, retrograde motion, and angularity from the lagna contribute.",
+    what: "Temporal strength from day/night and paksha.",
+    how: "Sun in houses 7–12 counts as day birth. Paksha uses the Moon–Sun arc from the kundli. Kendra houses add a hora remainder.",
     why: "Even a well-placed planet may be weaker if its time conditions are adverse.",
   },
   Chesta: {
-    what: "Motional strength from the planet's movement.",
-    how: "Retrograde motion increases Chesta Bala. Malefics gain more intensity when retrograde.",
-    why: "Retrograde planets often operate with greater internal focus.",
+    what: "Motional strength from stored natal speed.",
+    how: "Retrograde or slow planets use the kundli speed. Moon Chesta uses elongation from the Sun.",
+    why: "Motion shows how much effort the graha is applying in this chart.",
   },
   Naisargika: {
     what: "Inherent natural strength of the planet.",
-    how: "Fixed values: Sun and Jupiter are naturally strong; Saturn is naturally weaker.",
+    how: "Parashara constants: Sun 60, Moon 51.43, Venus 42.85, Jupiter 34.28, Mercury 25.71, Mars 17.14, Saturn 8.57. This limb is the same in every chart.",
     why: "Some planets are innately more potent regardless of placement.",
   },
   Drik: {
-    what: "Aspectual strength from other planets.",
-    how: "Benefic aspects raise Drik Bala; malefic aspects reduce it.",
+    what: "Aspectual strength from natal graha drishti.",
+    how: "Every graha aspects the 7th. Mars also 4 and 8, Jupiter 5 and 9, Saturn 3 and 10. Benefic aspects add; malefic aspects subtract.",
     why: "No planet acts in isolation — the chart environment modifies its strength.",
   },
 };
+
+const PLANET_ABBR: Record<string, string> = {
+  Sun: "SU",
+  Moon: "MO",
+  Mars: "MA",
+  Mercury: "ME",
+  Jupiter: "JU",
+  Venus: "VE",
+  Saturn: "SA",
+};
+
+function RankBars({
+  title,
+  items,
+}: {
+  title: string;
+  items: Array<{ key: string; label: string; rank: number }>;
+}) {
+  const count = Math.max(1, items.length);
+  return (
+    <div className="bg-navy text-ivory overflow-hidden rounded-2xl border border-white/10 p-4 sm:p-5">
+      <h2 className="font-display text-gold mb-4 text-lg tracking-wide">{title}</h2>
+      <div className="space-y-2.5">
+        {items.map((item) => {
+          const width = ((count + 1 - item.rank) / count) * 100;
+          return (
+            <div key={item.key} className="flex items-center gap-3">
+              <span className="text-ivory/80 w-8 shrink-0 text-[11px] font-semibold tracking-wide">
+                {item.label}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div
+                  className="text-ivory flex h-8 items-center rounded-sm bg-white/18 pl-3 text-xs font-semibold"
+                  style={{ width: `${Math.max(16, width)}%` }}
+                >
+                  {item.rank}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function ratioTone(ratio: number): string {
   if (ratio >= 1.25) return "text-emerald-700 dark:text-emerald-300";
@@ -137,6 +204,24 @@ export default function AstrologyShadbalaPage() {
     );
   }, [data]);
 
+  const shadRankItems = useMemo(() => {
+    const ranked = [...ordered].sort((a, b) => b.virupas - a.virupas);
+    return ordered.map((p) => ({
+      key: p.planet,
+      label: PLANET_ABBR[p.planet] ?? p.planet.slice(0, 2).toUpperCase(),
+      rank: ranked.findIndex((r) => r.planet === p.planet) + 1,
+    }));
+  }, [ordered]);
+
+  const bhavItems = useMemo(() => {
+    const rows = data?.bhavas || [];
+    return rows.map((b) => ({
+      key: String(b.house),
+      label: String(b.house),
+      rank: b.rank,
+    }));
+  }, [data]);
+
   const selected = data?.planets.find((p) => p.planet === selectedPlanet) || null;
   const aboveRequired = data?.planets.filter((p) => p.meetsMinimum).length ?? 0;
   const rank =
@@ -151,7 +236,7 @@ export default function AstrologyShadbalaPage() {
       <PageHeader
         eyebrow="Shadbala — six-fold strength"
         title="Shadbala"
-        description="Virupas and rupas against classical BPHS minima — the same table layout used in Jagannatha Hora and AstroSage. Ratio ≥ 1.00 means the graha meets required strength."
+        description="Calculated from your stored natal kundli: house, longitude, speed, and lagna. Ranked Shad Bala and Bhav Bala first, then virupas against BPHS minima. Ratio ≥ 1.00 means the graha meets required strength."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
@@ -180,10 +265,16 @@ export default function AstrologyShadbalaPage() {
       {data ? (
         <div className="space-y-5">
           <div className="flex flex-wrap gap-2 text-[11px]">
+            <Badge variant="outline" className="border-gold/40 bg-gold/10">
+              From natal kundli
+            </Badge>
             <Badge variant="outline">60 virupas = 1 rupa</Badge>
             <Badge variant="outline">Ratio ≥ 1.00 meets required</Badge>
             <Badge variant="outline">Ishta / Kashta from uccha × chesta</Badge>
           </div>
+          {data.source ? (
+            <p className="text-muted-foreground text-xs leading-relaxed">{data.source}</p>
+          ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <GlassCard className="space-y-1 p-3 sm:p-4">
@@ -224,9 +315,20 @@ export default function AstrologyShadbalaPage() {
             </GlassCard>
           </div>
 
+          <div className="grid gap-4 lg:grid-cols-2">
+            <RankBars title="Shad Bala" items={shadRankItems} />
+            <RankBars title="Bhav Bala" items={bhavItems} />
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Rank 1 is strongest (longest bar). Shad Bala ranks the seven grahas by total virupas.
+            Bhav Bala ranks the twelve houses from house-lord strength, occupants, and bhava
+            digbala.
+          </p>
+
           <Tabs defaultValue="table">
-            <TabsList>
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
               <TabsTrigger value="table">Strength table</TabsTrigger>
+              <TabsTrigger value="sthana">Sthana parts</TabsTrigger>
               <TabsTrigger value="detail">Planet detail</TabsTrigger>
               <TabsTrigger value="houses">By house</TabsTrigger>
             </TabsList>
@@ -330,6 +432,77 @@ export default function AstrologyShadbalaPage() {
                 <p className="text-muted-foreground text-[10px] leading-relaxed">
                   {data.methodology}
                 </p>
+              </GlassCard>
+            </TabsContent>
+
+            <TabsContent value="sthana">
+              <GlassCard className="space-y-3">
+                <div>
+                  <h2 className="font-display text-xl">Sthana Bala limbs</h2>
+                  <p className="text-muted-foreground text-xs">
+                    Uchcha, Kendradi, Saptavargaja, Ojhagugma, and Drekkana — the same limbs
+                    professional software lists under positional strength. These are a teaching
+                    breakdown and do not change the six-fold total above.
+                  </p>
+                </div>
+                <div className="table-scroll -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[780px] text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-muted-foreground pb-2 text-left text-[10px] font-medium tracking-wider uppercase">
+                          Graha
+                        </th>
+                        {["Uchcha", "Kendradi", "Saptavargaja", "Ojhayugma", "Drekkana"].map(
+                          (name) => (
+                            <th
+                              key={name}
+                              className="text-muted-foreground pb-2 text-right text-[10px] font-medium tracking-wider uppercase"
+                            >
+                              {name}
+                            </th>
+                          ),
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordered.map((p) => (
+                        <tr key={p.planet} className="border-b last:border-0">
+                          <td className="py-2.5 font-medium">{p.planet}</td>
+                          {["Uchcha", "Kendradi", "Saptavargaja", "Ojhayugma", "Drekkana"].map(
+                            (name) => {
+                              const part = p.sthanaParts?.find((item) => item.name === name);
+                              return (
+                                <td key={name} className="py-2.5 text-right tabular-nums">
+                                  {part?.virupas ?? "—"}
+                                  <span className="text-muted-foreground">
+                                    /{part?.virupaMax ?? "—"}
+                                  </span>
+                                </td>
+                              );
+                            },
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {selected?.sthanaParts?.length ? (
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                    {selected.sthanaParts.map((part) => (
+                      <div key={part.name} className="border-border/60 rounded-xl border p-3">
+                        <p className="text-xs font-medium">{part.name}</p>
+                        <p className="text-muted-foreground text-[10px]">{part.sanskrit}</p>
+                        <p className="font-display mt-1 text-lg">
+                          {part.virupas}
+                          <span className="text-muted-foreground text-xs">/{part.virupaMax}</span>
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-[10px] leading-relaxed">
+                          {part.note}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </GlassCard>
             </TabsContent>
 
@@ -448,6 +621,11 @@ export default function AstrologyShadbalaPage() {
                       </div>
 
                       <p className="text-xs leading-relaxed">{selected.interpretation}</p>
+                      {selected.professionalNote ? (
+                        <p className="text-muted-foreground text-xs leading-relaxed">
+                          {selected.professionalNote}
+                        </p>
+                      ) : null}
                     </div>
 
                     <div className="space-y-3">
@@ -516,33 +694,43 @@ export default function AstrologyShadbalaPage() {
             <TabsContent value="houses">
               <GlassCard className="space-y-3">
                 <div>
-                  <h2 className="font-display text-xl">House-wise planet strength</h2>
+                  <h2 className="font-display text-xl">House-wise Bhav Bala</h2>
                   <p className="text-muted-foreground text-xs">
-                    Grahas in each bhava with virupas and ratio vs required.
+                    Rank 1 is the strongest bhava. Score combines the house lord Shadbala, planets
+                    sitting in the house, and directional bhava strength.
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((house) => {
-                    const planetsInHouse = data.planets.filter((p) => p.house === house);
-                    const lagnaPlanet = data.planets.find((p) => p.house === 1);
-                    const lagnaSign = lagnaPlanet?.sign || "Aries";
-                    const lagnaIndex = SIGNS.indexOf(lagnaSign as (typeof SIGNS)[number]);
-                    const houseSign = SIGNS[(lagnaIndex + house - 1) % 12];
+                  {(data.bhavas && data.bhavas.length > 0
+                    ? data.bhavas
+                    : Array.from({ length: 12 }, (_, i) => ({
+                        house: i + 1,
+                        sign: SIGNS[i] ?? "Aries",
+                        lord: "—",
+                        virupas: 0,
+                        rank: i + 1,
+                        occupants: data.planets
+                          .filter((p) => p.house === i + 1)
+                          .map((p) => p.planet),
+                        note: "",
+                      }))
+                  ).map((bhava) => {
+                    const planetsInHouse = data.planets.filter((p) => p.house === bhava.house);
                     return (
                       <div
-                        key={house}
+                        key={bhava.house}
                         className="border-border/60 bg-muted/20 rounded-xl border p-3"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium">House {house}</p>
-                          {planetsInHouse.length > 0 && (
-                            <Badge variant="outline" className="text-[10px]">
-                              {planetsInHouse.length} graha
-                              {planetsInHouse.length === 1 ? "" : "s"}
-                            </Badge>
-                          )}
+                          <p className="text-sm font-medium">House {bhava.house}</p>
+                          <Badge variant="outline" className="text-[10px]">
+                            Rank {bhava.rank}
+                          </Badge>
                         </div>
-                        <p className="text-muted-foreground text-[10px]">{houseSign}</p>
+                        <p className="text-muted-foreground text-[10px]">
+                          {bhava.sign} · lord {bhava.lord}
+                        </p>
+                        <p className="font-display mt-1 text-lg tabular-nums">{bhava.virupas} vp</p>
                         <div className="mt-2 space-y-1">
                           {planetsInHouse.length === 0 ? (
                             <p className="text-muted-foreground text-[10px]">No planets</p>
@@ -606,8 +794,8 @@ export default function AstrologyShadbalaPage() {
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
               Sun 390, Moon 360, Mars 300, Mercury 420, Jupiter 390, Venus 330, Saturn 300 virupas.
-              This is a teaching approximation scaled to Parashara maxima — consult a professional
-              for full degree-based Shadbala.
+              Dig, Uchcha, Drik, Chesta, and Kala are computed from this kundli. Naisargika is the
+              classical constant. Saptavargaja uses Rasi dignity only (D2–D12 are not scored).
             </p>
           </GlassCard>
         </div>

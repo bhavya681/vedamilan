@@ -25,12 +25,32 @@ import { cn } from "@/lib/utils/cn";
 
 type SavRow = { house: number; sign: string; bindus: number; note: string };
 type BavRow = { house: number; sign: string; bindus: number };
+type PrashtaraRow = {
+  rn: number;
+  sign: string;
+  house: number;
+  from: Record<string, 0 | 1>;
+  bindus: number;
+  rekhas: number;
+};
+type SignSavRow = {
+  rn: number;
+  sign: string;
+  house: number;
+  planets: Record<string, number>;
+  tot: number;
+  note: string;
+};
 type Ashtaka = {
   methodology: string;
+  source?: string;
   lagnaSign: string;
   sarva: SavRow[];
   bhinna: Record<string, BavRow[]>;
+  signSav?: SignSavRow[];
+  prashtara?: Record<string, PrashtaraRow[]>;
   planetTotals?: Record<string, number>;
+  classicalQuota?: Record<string, number>;
   totalBindus?: number;
   highlights: string[];
 };
@@ -66,6 +86,26 @@ const SIGNS = [
 ] as const;
 
 const PLANET_ORDER = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"] as const;
+const PLANET_ABBR: Record<string, string> = {
+  Sun: "Su",
+  Moon: "Mo",
+  Mars: "Ma",
+  Mercury: "Me",
+  Jupiter: "Ju",
+  Venus: "Ve",
+  Saturn: "Sa",
+  Lagna: "La",
+};
+const PRASHTARA_FROM = [
+  "Sun",
+  "Moon",
+  "Mars",
+  "Mercury",
+  "Jupiter",
+  "Venus",
+  "Saturn",
+  "Lagna",
+] as const;
 
 function savLabel(bindus: number): string {
   if (bindus >= 30) return "Strong";
@@ -239,14 +279,14 @@ export default function AstrologyAshtakavargaPage() {
       <PageHeader
         eyebrow="Sarvashtakavarga · Bhinnashtakavarga"
         title="Ashtakavarga"
-        description="SAV house bindus (classical total ≈ 337) and BAV 0–8 matrix — the same two views Jagannatha Hora and AstroSage lead with. SAV ≥ 30 is strong; BAV ≥ 5 supports that planet's transit."
+        description="Bindus from your natal kundli signs and lagna, using BPHS contributor tables — not a guess. SAV ≥ 30 is strong; BAV ≥ 5 supports that planet in transit."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
               <Link href={routes.astrologyShadbala}>Shadbala</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routes.kundli}>Kundli</Link>
+              <Link href={routes.astrologyPlanetStrength}>Planet Strength</Link>
             </Button>
           </div>
         }
@@ -268,6 +308,9 @@ export default function AstrologyAshtakavargaPage() {
       {data ? (
         <div className="space-y-5">
           <div className="flex flex-wrap gap-2 text-[11px]">
+            <Badge variant="outline" className="border-gold/40 bg-gold/10">
+              From natal kundli
+            </Badge>
             <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10">
               SAV ≥ 30 strong
             </Badge>
@@ -279,6 +322,9 @@ export default function AstrologyAshtakavargaPage() {
             </Badge>
             <Badge variant="outline">8 contributors · 0–8 bindus</Badge>
           </div>
+          {data.source ? (
+            <p className="text-muted-foreground text-xs leading-relaxed">{data.source}</p>
+          ) : null}
 
           {metrics && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -322,13 +368,111 @@ export default function AstrologyAshtakavargaPage() {
           )}
 
           <Tabs defaultValue="sav">
-            <TabsList>
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
               <TabsTrigger value="sav">Sarvashtakavarga</TabsTrigger>
               <TabsTrigger value="bav">Bhinnashtakavarga</TabsTrigger>
+              <TabsTrigger value="prashtara">Prashtara</TabsTrigger>
               <TabsTrigger value="transit">Transit kakshya</TabsTrigger>
             </TabsList>
 
             <TabsContent value="sav" className="space-y-4">
+              <GlassCard className="space-y-3">
+                <div>
+                  <h2 className="font-display text-xl">SAV bindu table</h2>
+                  <p className="text-muted-foreground text-xs">
+                    RN is the rashi number (1 Aries … 12 Pisces). Tot is Sarvashtakavarga for that
+                    sign — the same grid professional apps open first.
+                  </p>
+                </div>
+                <div className="table-scroll -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[640px] text-xs">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-muted-foreground pb-2 text-left font-medium">RN</th>
+                        <th className="text-muted-foreground pb-2 text-left font-medium">Sign</th>
+                        <th className="text-muted-foreground pb-2 text-left font-medium">H</th>
+                        {PLANET_ORDER.map((name) => (
+                          <th
+                            key={name}
+                            className="text-muted-foreground pb-2 text-center font-medium"
+                          >
+                            {PLANET_ABBR[name]}
+                          </th>
+                        ))}
+                        <th className="text-muted-foreground pb-2 text-center font-medium">Tot</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.signSav && data.signSav.length > 0
+                        ? data.signSav
+                        : data.sarva.map((row) => ({
+                            rn: SIGNS.indexOf(row.sign as (typeof SIGNS)[number]) + 1,
+                            sign: row.sign,
+                            house: row.house,
+                            planets: Object.fromEntries(
+                              PLANET_ORDER.map((name) => [
+                                name,
+                                data.bhinna[name]?.find((c) => c.sign === row.sign)?.bindus ?? 0,
+                              ]),
+                            ),
+                            tot: row.bindus,
+                            note: row.note,
+                          }))
+                      ).map((row) => (
+                        <tr key={row.rn} className="border-b last:border-0">
+                          <td className="py-1.5 font-medium tabular-nums">{row.rn}</td>
+                          <td className="py-1.5">{row.sign}</td>
+                          <td className="text-muted-foreground py-1.5 tabular-nums">{row.house}</td>
+                          {PLANET_ORDER.map((name) => {
+                            const val = row.planets[name] ?? 0;
+                            return (
+                              <td key={name} className="py-1.5 text-center">
+                                <span
+                                  className={cn(
+                                    "inline-flex h-7 w-7 items-center justify-center rounded-md tabular-nums",
+                                    bavTone(val),
+                                  )}
+                                >
+                                  {val}
+                                </span>
+                              </td>
+                            );
+                          })}
+                          <td className="py-1.5 text-center">
+                            <span
+                              className={cn(
+                                "inline-flex min-w-[2.25rem] items-center justify-center rounded-md px-1.5 py-1 font-medium tabular-nums",
+                                savTone(row.tot),
+                              )}
+                            >
+                              {row.tot}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className="py-2 font-medium" colSpan={3}>
+                          Total
+                        </td>
+                        {PLANET_ORDER.map((name) => (
+                          <td key={name} className="py-2 text-center font-medium tabular-nums">
+                            {data.planetTotals?.[name] ?? "—"}
+                            {data.classicalQuota?.[name] ? (
+                              <span className="text-muted-foreground block text-[9px]">
+                                /{data.classicalQuota[name]}
+                              </span>
+                            ) : null}
+                          </td>
+                        ))}
+                        <td className="py-2 text-center font-medium tabular-nums">
+                          {metrics?.total}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </GlassCard>
+
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
                 <GlassCard className="space-y-3">
                   <div>
@@ -600,6 +744,113 @@ export default function AstrologyAshtakavargaPage() {
               </GlassCard>
             </TabsContent>
 
+            <TabsContent value="prashtara" className="space-y-4">
+              <GlassCard className="space-y-3">
+                <div>
+                  <h2 className="font-display text-xl">{planet} Prashtara Ashtakavarga</h2>
+                  <p className="text-muted-foreground text-xs">
+                    Each 1 is a bindu gifted by that contributor. Rekhas = 8 − bindus. BAV ≥ 5 in a
+                    rashi is the classical supportive kakshya for this graha.
+                  </p>
+                </div>
+                <div className="scrollbar-hidden -mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5">
+                  {PLANET_ORDER.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPlanet(p)}
+                      className={cn(
+                        "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium",
+                        planet === p
+                          ? "border-gold/40 bg-primary/12 text-foreground"
+                          : "border-border/60 text-muted-foreground",
+                      )}
+                    >
+                      {p}
+                      <span className="ml-1 tabular-nums opacity-70">
+                        {data.planetTotals?.[p] ?? ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="table-scroll -mx-4 sm:mx-0">
+                  <table className="w-full min-w-[720px] text-xs">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-muted-foreground pb-2 text-left font-medium">RN</th>
+                        <th className="text-muted-foreground pb-2 text-left font-medium">Sign</th>
+                        <th className="text-muted-foreground pb-2 text-left font-medium">H</th>
+                        {PRASHTARA_FROM.map((name) => (
+                          <th
+                            key={name}
+                            className="text-muted-foreground pb-2 text-center font-medium"
+                          >
+                            {PLANET_ABBR[name]}
+                          </th>
+                        ))}
+                        <th className="text-muted-foreground pb-2 text-center font-medium">
+                          Bindus
+                        </th>
+                        <th className="text-muted-foreground pb-2 text-center font-medium">
+                          Rekhas
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.prashtara?.[planet] || []).map((row) => (
+                        <tr key={row.rn} className="border-b last:border-0">
+                          <td className="py-1.5 tabular-nums">{row.rn}</td>
+                          <td className="py-1.5">{row.sign}</td>
+                          <td className="text-muted-foreground py-1.5">{row.house}</td>
+                          {PRASHTARA_FROM.map((name) => (
+                            <td key={name} className="py-1.5 text-center tabular-nums">
+                              <span
+                                className={cn(
+                                  "inline-flex h-6 w-6 items-center justify-center rounded",
+                                  row.from[name]
+                                    ? "bg-emerald-500/20"
+                                    : "bg-muted/40 text-muted-foreground",
+                                )}
+                              >
+                                {row.from[name] ?? 0}
+                              </span>
+                            </td>
+                          ))}
+                          <td className="py-1.5 text-center">
+                            <span
+                              className={cn(
+                                "inline-flex h-7 w-7 items-center justify-center rounded-md font-medium tabular-nums",
+                                bavTone(row.bindus),
+                              )}
+                            >
+                              {row.bindus}
+                            </span>
+                          </td>
+                          <td className="text-muted-foreground py-1.5 text-center tabular-nums">
+                            {row.rekhas}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {planetStats ? (
+                  <p className="text-muted-foreground text-xs">
+                    {planet} BAV total {planetStats.total}
+                    {data.classicalQuota?.[planet]
+                      ? ` (classical quota ${data.classicalQuota[planet]})`
+                      : ""}
+                    . Best H{planetStats.best?.house} ({planetStats.best?.bindus} bindus). Sensitive
+                    H{planetStats.worst?.house} ({planetStats.worst?.bindus} bindus).
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    Generate kundli to populate Prashtara rows.
+                  </p>
+                )}
+              </GlassCard>
+            </TabsContent>
+
             <TabsContent value="transit" className="space-y-4">
               <GlassCard className="space-y-3">
                 <div>
@@ -677,9 +928,15 @@ export default function AstrologyAshtakavargaPage() {
             <h2 className="font-display text-lg">How to read this</h2>
             <p className="text-muted-foreground text-xs leading-relaxed">{data.methodology}</p>
             <ul className="text-muted-foreground list-disc space-y-1 pl-4 text-xs">
-              <li>SAV is the sum of the seven BAV rows — not a separate 8-contributor chart.</li>
-              <li>BAV 5–8 in a house supports that planet when it transits there.</li>
-              <li>SAV 30+ houses are traditionally chosen for important activity.</li>
+              <li>
+                SAV Tot is the sum of the seven BAV columns for that rashi — not a separate chart.
+              </li>
+              <li>BAV 5–8 in a rashi supports that planet when it transits there.</li>
+              <li>SAV 30+ rashis and houses are traditionally chosen for important activity.</li>
+              <li>
+                Prashtara shows which of the eight contributors gifted each bindu. Rekhas = 8 −
+                bindus.
+              </li>
             </ul>
           </GlassCard>
 
@@ -691,7 +948,7 @@ export default function AstrologyAshtakavargaPage() {
               {[
                 "Which houses have stronger Ashtakavarga support?",
                 "How should I read my BAV matrix?",
-                "Is Jupiter's current kakshya supportive?",
+                "Is the current Jupiter kakshya supportive?",
               ].map((q) => (
                 <Button key={q} asChild variant="outline" size="sm" className="text-xs">
                   <Link href={routes.aiInsights}>{q}</Link>
