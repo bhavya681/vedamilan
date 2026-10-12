@@ -20,10 +20,7 @@ export function LandingFinalCta() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section
-      className="relative isolate overflow-hidden"
-      aria-labelledby="final-cta-heading"
-    >
+    <section className="relative isolate overflow-hidden" aria-labelledby="final-cta-heading">
       <motion.div
         className="absolute inset-0 -z-20"
         initial={reduceMotion ? false : { scale: 1.06 }}
@@ -89,14 +86,19 @@ export function LandingFinalCta() {
         </div>
 
         <aside
-          className="border-ivory/15 bg-[#14110E]/70 w-full max-w-sm justify-self-end rounded-2xl border p-5 text-[#F7F1E3] shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-6"
+          className="border-ivory/15 w-full max-w-sm justify-self-end rounded-2xl border bg-[#14110E]/70 p-5 text-[#F7F1E3] shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-6"
           aria-label="How VedaMilan begins"
         >
-          <p className="text-ivory/50 text-[10px] tracking-[0.18em] uppercase">Understanding first</p>
+          <p className="text-ivory/50 text-[10px] tracking-[0.18em] uppercase">
+            Understanding first
+          </p>
           <div className="mt-4 flex items-center gap-3">
             <div className="flex -space-x-3">
               {[editorial.you.src, editorial.partner.src].map((src) => (
-                <span key={src} className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-[#14110E]">
+                <span
+                  key={src}
+                  className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-[#14110E]"
+                >
                   <Image src={src} alt="" fill sizes="48px" className="object-cover" />
                 </span>
               ))}
@@ -109,7 +111,10 @@ export function LandingFinalCta() {
               ["Charts", "Engine, not invention"],
               ["Guidance", "Calm, not a verdict"],
             ].map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between border-t border-white/10 pt-2">
+              <div
+                key={k}
+                className="flex items-center justify-between border-t border-white/10 pt-2"
+              >
                 <dt className="text-ivory/65">{k}</dt>
                 <dd>{v}</dd>
               </div>
@@ -156,7 +161,7 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-[#0c0a08] text-[#F7F1E3] pb-[env(safe-area-inset-bottom,0px)]">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-[#0c0a08] pb-[env(safe-area-inset-bottom,0px)] text-[#F7F1E3]">
       <p
         aria-hidden
         className="font-display pointer-events-none absolute -bottom-8 left-0 hidden text-[18vw] leading-none text-white/[0.035] select-none lg:block"
@@ -218,9 +223,25 @@ export function LandingFooter() {
 
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-4 py-5 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:flex-row sm:items-center sm:px-6 sm:pb-5 lg:px-8">
-          <p className="text-xs text-[#F7F1E3]/45">
-            © {year} {brand.legalName}. All rights reserved.
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-[#F7F1E3]/45">
+              © {year} {brand.legalName}. All rights reserved.
+            </p>
+
+            <p className="text-xs text-[#F7F1E3]/45">
+              Developed by{" "}
+              <a
+                href="https://bhavyawade.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[#F7F1E3]/70 underline-offset-4 transition-colors hover:text-[#F7F1E3] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F7F1E3]/50"
+              >
+                Bhavya Wade
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </p>
+          </div>
+
           <div className="flex items-center gap-1">
             <ThemeToggle className="text-ivory hover:bg-ivory/10 hover:text-ivory" />
             <LanguageSelector
