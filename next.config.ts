@@ -75,6 +75,9 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "framer-motion"],
   },
+  outputFileTracingIncludes: {
+    "*": ["./ephe/**/*", "./node_modules/sweph/**/*"],
+  },
   serverExternalPackages: [
     "sweph",
     "node-gyp-build",

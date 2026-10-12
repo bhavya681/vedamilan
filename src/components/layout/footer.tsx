@@ -72,6 +72,17 @@ export function Footer() {
       </div>
       <div className="border-ivory/10 text-ivory/50 border-t px-4 py-6 text-center text-xs sm:px-6 lg:px-8">
         © {year} {brand.legalName}. {t("marketing.footerRights")}
+        <p className="text-ivory/40 mt-2">
+          Developed by{" "}
+          <a
+            href="https://bhavyawade.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-gold underline transition-colors"
+          >
+            Bhavyawade.dev
+          </a>
+        </p>
       </div>
     </footer>
   );

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/config/site";
@@ -20,14 +20,6 @@ const display = Cormorant_Garamond({
 const body = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-body",
-  display: "swap",
-});
-
-/** Required for Sanskrit / Hindi / Marathi UI — Latin-only body fonts omit Devanagari glyphs. */
-const indic = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  variable: "--font-indic",
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -134,7 +126,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
       data-locale={locale}
       data-script={DEVANAGARI_LOCALES.has(locale) ? "devanagari" : "latin"}
-      className={`${display.variable} ${body.variable} ${indic.variable}`}
+      className={`${display.variable} ${body.variable}`}
     >
       <head>
         <script
