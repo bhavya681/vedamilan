@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/config/site";
@@ -9,19 +8,6 @@ import { getRequestLocale } from "@/lib/i18n/request-locale";
 import { withLocalePrefix } from "@/lib/i18n/path";
 
 import "./globals.css";
-
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const body = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
 
 const DEVANAGARI_LOCALES = new Set<AppLocale>(["sa", "hi", "mr"]);
 
@@ -126,7 +112,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
       data-locale={locale}
       data-script={DEVANAGARI_LOCALES.has(locale) ? "devanagari" : "latin"}
-      className={`${display.variable} ${body.variable}`}
     >
       <head>
         <script
