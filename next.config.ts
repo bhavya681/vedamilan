@@ -1,3 +1,104 @@
+// import type { NextConfig } from "next";
+
+// const securityHeaders = [
+//   { key: "X-Content-Type-Options", value: "nosniff" },
+//   { key: "X-Frame-Options", value: "DENY" },
+//   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+//   {
+//     key: "Permissions-Policy",
+//     value: "camera=(), microphone=(self), geolocation=()",
+//   },
+//   {
+//     key: "Strict-Transport-Security",
+//     value: "max-age=63072000; includeSubDomains; preload",
+//   },
+//   // Intentionally permissive enough for Stripe/Razorpay/Pusher/Cloudinary/AI assets.
+//   // Tighten further once a full CSP inventory is completed in staging.
+//   {
+//     key: "Content-Security-Policy",
+//     value: [
+//       "default-src 'self'",
+//       "base-uri 'self'",
+//       "frame-ancestors 'none'",
+//       "object-src 'none'",
+//       "img-src 'self' data: blob: https:",
+//       "media-src 'self' blob: https://res.cloudinary.com",
+//       "font-src 'self' data:",
+//       "style-src 'self' 'unsafe-inline'",
+//       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://js.stripe.com",
+//       "connect-src 'self' https: wss:",
+//       "frame-src https://checkout.razorpay.com https://js.stripe.com https://hooks.stripe.com",
+//       "form-action 'self'",
+//     ].join("; "),
+//   },
+// ];
+
+// const nextConfig: NextConfig = {
+//   output: "standalone",
+//   reactStrictMode: true,
+//   poweredByHeader: false,
+//   async redirects() {
+//     return [
+//       // Legacy deep path that 404'd under locale rewrite + Turbopack route discovery.
+//       {
+//         source: "/:locale/dashboard/kundli/yogas/raja",
+//         destination: "/:locale/dashboard/kundli/raja-yogas",
+//         permanent: false,
+//       },
+//       {
+//         source: "/dashboard/kundli/yogas/raja",
+//         destination: "/dashboard/kundli/raja-yogas",
+//         permanent: false,
+//       },
+//     ];
+//   },
+//   images: {
+//     remotePatterns: [
+//       {
+//         protocol: "https",
+//         hostname: "res.cloudinary.com",
+//       },
+//       {
+//         protocol: "https",
+//         hostname: "images.unsplash.com",
+//       },
+//       {
+//         protocol: "https",
+//         hostname: "upload.wikimedia.org",
+//       },
+//       {
+//         protocol: "https",
+//         hostname: "commons.wikimedia.org",
+//       },
+//     ],
+//   },
+//   experimental: {
+//     optimizePackageImports: ["lucide-react", "date-fns", "framer-motion"],
+//   },
+//   outputFileTracingIncludes: {
+//     "*": ["./ephe/**/*", "./node_modules/sweph/**/*"],
+//   },
+//   serverExternalPackages: [
+//     "sweph",
+//     "node-gyp-build",
+//     "pino",
+//     "pino-pretty",
+//     "ioredis",
+//     "mongoose",
+//     "mongodb",
+//   ],
+//   async headers() {
+//     return [
+//       {
+//         source: "/:path*",
+//         headers: securityHeaders,
+//       },
+//     ];
+//   },
+// };
+
+// export default nextConfig;
+
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -37,9 +138,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false,
+
   async redirects() {
     return [
-      // Legacy deep path that 404'd under locale rewrite + Turbopack route discovery.
       {
         source: "/:locale/dashboard/kundli/yogas/raja",
         destination: "/:locale/dashboard/kundli/raja-yogas",
@@ -52,6 +153,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
   images: {
     remotePatterns: [
       {
@@ -72,12 +174,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "framer-motion"],
   },
+
+  // Explicitly include Swiss Ephemeris files and its native-loader dependency.
   outputFileTracingIncludes: {
-    "*": ["./ephe/**/*", "./node_modules/sweph/**/*"],
+    "/api/*": ["./ephe/**/*", "./node_modules/sweph/**/*", "./node_modules/node-gyp-build/**/*"],
   },
+
+  // Load these server-side packages through Node.js instead of bundling them.
   serverExternalPackages: [
     "sweph",
     "node-gyp-build",
@@ -87,6 +194,7 @@ const nextConfig: NextConfig = {
     "mongoose",
     "mongodb",
   ],
+
   async headers() {
     return [
       {
