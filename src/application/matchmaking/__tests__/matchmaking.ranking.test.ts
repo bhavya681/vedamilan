@@ -10,6 +10,7 @@ import {
   rankingScore,
   recommendationTier,
   selectRecommendedMatches,
+  PREFERENCE_FIT_FILTER_MIN,
 } from "@/application/matchmaking/recommendation-tiers";
 
 describe("Module 6 — matchmaking ranking", () => {
@@ -139,6 +140,17 @@ describe("Module 6 — matchmaking ranking", () => {
     expect(fit).toBe(100);
     expect(miss).toBe(0);
     expect(preferenceFitScore(null, { age: 28 })).toBe(50);
+  });
+
+  it("hides recommendations that do not fit saved partner preferences", () => {
+    const pool = [
+      { id: "fit", compatibilityScore: 70, totalGuna: 24, preferenceFit: 100 },
+      { id: "partial", compatibilityScore: 75, totalGuna: 24, preferenceFit: 70 },
+      { id: "miss", compatibilityScore: 80, totalGuna: 24, preferenceFit: 69 },
+      { id: "neutral", compatibilityScore: 60, totalGuna: 24, preferenceFit: 50 },
+    ];
+    const kept = pool.filter((m) => (m.preferenceFit ?? 50) >= PREFERENCE_FIT_FILTER_MIN);
+    expect(kept.map((m) => m.id)).toEqual(["fit", "partial"]);
   });
 });
 

@@ -1,50 +1,184 @@
 /**
- * Extra realistic Wikimedia gallery shots keyed by demo member id.
- * Primary `photo` stays the main portrait; these append to the profile gallery.
+ * Extra demo gallery photos — uses Unsplash stock images.
+ * All photos are licensed stock imagery.
  */
 export const DEMO_EXTRA_PHOTOS: Record<string, string[]> = {
-  i_mcgregor: [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Conor_McGregor_2015.jpg/960px-Conor_McGregor_2015.jpg",
+  f_core_001: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
   ],
-  i_therock: [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2014_%28cropped%29.jpg/960px-Dwayne_Johnson_2014_%28cropped%29.jpg",
+  f_core_003: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
   ],
-  i_zendaya: [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Zendaya_-_2019_by_Glenn_Francis.jpg/960px-Zendaya_-_2019_by_Glenn_Francis.jpg",
+  f_core_004: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
   ],
-  i_taylorswift: [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png/960px-191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png",
+  f_core_005: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
   ],
-  i_galgadot: [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Gal_Gadot_at_the_2018_Comic-Con_International_9.jpg/960px-Gal_Gadot_at_the_2018_Comic-Con_International_9.jpg",
+  f_core_012: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_core_013: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_core_023: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_core_027: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_003: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_006: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_012: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_015: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_016: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_019: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_020: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_021: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_022: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_025: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_032: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_034: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_035: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_037: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_038: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_040: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_042: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_047: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_050: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_052: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_055: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_056: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_057: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_062: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_063: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_064: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_068: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_074: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_075: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_077: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_081: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_084: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_087: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_088: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_089: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_091: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_094: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_096: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_097: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_099: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_101: [
+    "https://images.unsplash.com/photo-1534080564583?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_107: [
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_int_110: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_001: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_006: [
+    "https://images.unsplash.com/photo-1506744038136?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_007: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_009: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_011: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_012: [
+    "https://images.unsplash.com/photo-1503607879285?auto=format&fit=crop&w=800&h=1000&q=80",
+  ],
+  f_real_013: [
+    "https://images.unsplash.com/photo-1520259760067?auto=format&fit=crop&w=800&h=1000&q=80",
   ],
 };
 
-function fileKey(url: string): string {
-  try {
-    const parts = new URL(url).pathname.split("/").filter(Boolean);
-    const thumbIdx = parts.indexOf("thumb");
-    if (thumbIdx >= 0 && parts[thumbIdx + 3]) return decodeURIComponent(parts[thumbIdx + 3]!);
-    return decodeURIComponent(parts[parts.length - 1] || url);
-  } catch {
-    return url;
-  }
-}
-
-export function allDemoPhotoUrls(member: {
-  id: string;
-  photo: string;
-  extraPhotos?: string[];
-}): string[] {
-  const extras = [...(member.extraPhotos ?? []), ...(DEMO_EXTRA_PHOTOS[member.id] ?? [])];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const url of [member.photo, ...extras]) {
-    if (!url) continue;
-    const key = fileKey(url);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(url);
-  }
-  return out;
-}
+/** Resolve extra gallery photos for a demo member by id. */
+export const allDemoPhotoUrls = (member: { id: string }): string[] =>
+  DEMO_EXTRA_PHOTOS[member.id] ?? [];

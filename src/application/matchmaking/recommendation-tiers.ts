@@ -30,6 +30,7 @@ export const MAX_RECOMMENDATIONS = 80;
  * A clearly better chart still ranks first (e.g. 80% always beats 76% even with a perfect pref match).
  */
 export const PREFERENCE_RANK_MAX_BOOST = 4;
+export const PREFERENCE_FIT_FILTER_MIN = 70;
 
 export type PreferenceSnapshot = {
   ageMin?: number | null;
@@ -159,6 +160,26 @@ export function preferenceFitScore(
 
   if (!checks.length) return 50;
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+/** True when the viewer has actually set at least one comparable partner preference. */
+export function hasPreferenceCriteria(prefs: PreferenceSnapshot | null | undefined): boolean {
+  if (!prefs) return false;
+  if (prefs.ageMin != null || prefs.ageMax != null) return true;
+  if (prefs.heightMinCm != null || prefs.heightMaxCm != null) return true;
+  if (prefs.religions?.length) return true;
+  if (prefs.communities?.length) return true;
+  if (prefs.motherTongues?.length) return true;
+  if (prefs.countries?.length) return true;
+  if (prefs.cities?.length) return true;
+  if (prefs.educations?.length) return true;
+  if (prefs.professions?.length) return true;
+  if (prefs.maritalStatuses?.length) return true;
+  if (prefs.diet?.length) return true;
+  if (prefs.preferredLanguages?.length) return true;
+  if (prefs.manglikPreference && prefs.manglikPreference !== "ANY") return true;
+  if (prefs.minCompatibilityScore != null) return true;
+  return false;
 }
 
 /** Kundli score with a small preference probability boost — never enough to bury a clearly better chart. */

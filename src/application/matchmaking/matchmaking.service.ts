@@ -15,6 +15,8 @@ import {
   recommendationTier,
   selectRecommendedMatches,
   type RecommendationTier,
+  PREFERENCE_FIT_FILTER_MIN,
+  hasPreferenceCriteria,
 } from "@/application/matchmaking/recommendation-tiers";
 import { scoreMatchBlend, toPlanetsLite } from "@/application/rules/match-blend";
 import { scoreNumerologyCompatibility } from "@/application/rules/numerology-compatibility";
@@ -917,7 +919,12 @@ export class MatchmakingService {
       })
       .sort(compareRecommendedMatches);
 
-    const selected = selectRecommendedMatches(withPriority);
+    const eligible =
+      prefs && hasPreferenceCriteria(prefs)
+        ? withPriority.filter((m) => (m.preferenceFit ?? 50) >= PREFERENCE_FIT_FILTER_MIN)
+        : withPriority;
+
+    const selected = selectRecommendedMatches(eligible);
     const top = selected.map((m, index) => {
       const tier = recommendationTier(m.compatibilityScore, m.totalGuna);
       const kundliReason =
