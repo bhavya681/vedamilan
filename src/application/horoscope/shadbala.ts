@@ -224,7 +224,7 @@ export function digVirupas(planet: string, house: number): number {
   return clamp(60 * (1 - dist / 6), 0, 60);
 }
 
-function housesAspectedBy(fromHouse: number, planet: string): number[] {
+export function housesAspectedBy(fromHouse: number, planet: string): number[] {
   const at = (steps: number) => ((fromHouse - 1 + steps) % 12) + 1;
   const houses = [at(6)];
   if (planet === "Mars") {

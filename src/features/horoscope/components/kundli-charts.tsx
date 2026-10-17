@@ -12,6 +12,15 @@ import {
   type ChartPlanetView,
 } from "@/features/horoscope/components/planet-symbols";
 import { cn } from "@/lib/utils/cn";
+function housesAspectedBy(fromHouse: number, planet: string): number[] {
+  const at = (steps: number) => ((fromHouse - 1 + steps) % 12) + 1;
+  const houses = [at(6)];
+  if (planet === "Mars") houses.push(at(3), at(7));
+  else if (planet === "Jupiter") houses.push(at(4), at(8));
+  else if (planet === "Saturn") houses.push(at(2), at(9));
+  else if (planet === "Rahu" || planet === "Ketu") houses.push(at(4), at(8));
+  return [...new Set(houses)];
+}
 
 const SIGN_ABBR = ["Ar", "Ta", "Ge", "Cn", "Le", "Vi", "Li", "Sc", "Sg", "Cp", "Aq", "Pi"] as const;
 
@@ -217,6 +226,7 @@ function HousePlanets({
   glyphs,
   highlight,
   activePlanet,
+  onPlanetClick,
   view = "labels",
 }: {
   x: number;
@@ -224,6 +234,7 @@ function HousePlanets({
   glyphs: ChartPlanetGlyph[];
   highlight?: boolean;
   activePlanet?: string | null;
+  onPlanetClick?: (planet: string) => void;
   view?: ChartPlanetView;
 }) {
   if (!glyphs.length) return null;
@@ -233,7 +244,7 @@ function HousePlanets({
   const startY = y - ((glyphs.length - 1) * lineH) / 2;
 
   return (
-    <g style={{ pointerEvents: "none" }}>
+    <g style={{ pointerEvents: "auto" }}>
       {glyphs.map((g, index) => {
         const cy = startY + index * lineH;
         const active = activePlanet === g.planet;
@@ -245,7 +256,11 @@ function HousePlanets({
               : "text-foreground fill-foreground";
 
         return (
-          <g key={`${g.planet}-${index}`}>
+          <g
+            key={`${g.planet}-${index}`}
+            onClick={() => onPlanetClick?.(g.planet)}
+            style={{ cursor: "pointer" }}
+          >
             {symbols ? (
               <>
                 <PlanetSymbolSvg
@@ -352,6 +367,7 @@ export function NorthIndianKundli({
 }) {
   const [story, setStory] = useState<PlanetVoiceMessage | null>(null);
   const [view, setView] = useState<ChartPlanetView>("labels");
+  const [activeDr, setActiveDr] = useState<string | null>(null);
   const planets = collectChartPlanets(chart);
 
   const selectPlanet = (glyph: ChartPlanetGlyph) => {
@@ -372,6 +388,36 @@ export function NorthIndianKundli({
         }
       >
         <DiamondFrame />
+        {activeDr &&
+          (() => {
+            const p = planets.find((pl) => pl.planet === activeDr);
+            if (!p?.house) return null;
+            const fromPos = NORTH_POS[p.house];
+            if (!fromPos) return null;
+            const targets = housesAspectedBy(p.house, p.planet);
+            return (
+              <g key="drishti">
+                {targets.map((h) => {
+                  const toPos = NORTH_POS[h];
+                  if (!toPos || h === p.house) return null;
+                  return (
+                    <line
+                      key={h}
+                      x1={fromPos.x}
+                      y1={fromPos.y}
+                      x2={toPos.x}
+                      y2={toPos.y}
+                      className="stroke-primary"
+                      strokeWidth="0.5"
+                      strokeDasharray="2 1.5"
+                      markerEnd="url(#drishti-arrow)"
+                      style={{ animation: "kundli-dash 1.4s linear infinite" }}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })()}
         {Array.from({ length: 12 }, (_, i) => i + 1).map((house) => {
           const pos = NORTH_POS[house]!;
           const glyphs = normalizeGlyphs(chart.houses[String(house)]).map((g) => ({
@@ -408,7 +454,8 @@ export function NorthIndianKundli({
                 y={pos.y + (house === 1 ? 1.2 : 0)}
                 glyphs={glyphs}
                 highlight={house === 1}
-                activePlanet={story?.planet}
+                activePlanet={activeDr}
+                onPlanetClick={(pl) => setActiveDr((cur) => (cur === pl ? null : pl))}
                 view={view}
               />
             </g>
@@ -579,6 +626,19 @@ export function EastIndianKundli({
           }
         >
           <DiamondFrame />
+          <defs>
+            <marker
+              id="drishti-arrow"
+              markerWidth="3"
+              markerHeight="3"
+              refX="2"
+              refY="1.5"
+              orient="auto"
+            >
+              <path d="M0,0 L3,1.5 L0,3 z" className="fill-primary" />
+            </marker>
+          </defs>
+          <style>{`@keyframes kundli-dash{to{stroke-dashoffset:-7}}`}</style>
           {Array.from({ length: 12 }, (_, signId) => {
             const slot = EAST_SIGN_SLOT[signId]!;
             const pos = NORTH_POS[slot]!;
