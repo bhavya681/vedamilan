@@ -138,7 +138,17 @@ type ChartPayload = {
       moonNakshatra?: string;
       nakshatra?: string;
     };
-    dasha?: { currentMaha?: string; currentAntar?: string };
+    dasha?: {
+      currentMaha?: string;
+      currentAntar?: string;
+      periods?: Array<{
+        level?: string;
+        parentLord?: string | null;
+        lord: string;
+        startDate: string;
+        endDate: string;
+      }>;
+    };
   };
 };
 
@@ -197,6 +207,25 @@ export default function AstrologyHomePage() {
         const chart = chartRes.success ? chartRes.data : null;
         const horoscope = chart?.horoscope;
         const dasha = chart?.dasha;
+        const now = Date.now();
+        const periods = dasha?.periods || [];
+        const mahaPeriods = periods.filter((p) => p.level === "MAHA");
+        const currentMahaPeriod =
+          mahaPeriods.find(
+            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
+          ) ||
+          mahaPeriods.find(
+            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
+          );
+        const currentMahaLord = currentMahaPeriod?.lord || dasha?.currentMaha || null;
+        const antarPeriods = periods.filter(
+          (p) => p.level === "ANTAR" && (!p.parentLord || p.parentLord === currentMahaLord),
+        );
+        const currentAntarPeriod =
+          antarPeriods.find(
+            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
+          ) || antarPeriods[0];
+        const currentAntarLord = currentAntarPeriod?.lord || dasha?.currentAntar || null;
 
         const readiness = evaluateOnboardingReadiness({
           gender: profileDoc?.gender,
@@ -221,8 +250,8 @@ export default function AstrologyHomePage() {
           moonSign: horoscope?.moonSign || null,
           sunSign: horoscope?.sunSign || null,
           nakshatra: horoscope?.moonNakshatra || horoscope?.nakshatra || null,
-          currentMaha: dasha?.currentMaha || null,
-          currentAntar: dasha?.currentAntar || null,
+          currentMaha: currentMahaLord,
+          currentAntar: currentAntarLord,
           insight: null,
           gocharHighlights: [],
           gocharError: false,

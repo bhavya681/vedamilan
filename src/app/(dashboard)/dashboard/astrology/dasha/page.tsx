@@ -161,7 +161,7 @@ export default function AstrologyDashaPage() {
                 </p>
               </div>
               <p className="font-display text-3xl sm:text-4xl">
-                {data?.dasha?.currentAntar || currentAntar?.lord || "—"}
+                {currentAntar?.lord || data?.dasha?.currentAntar || "—"}
               </p>
               {currentAntar ? (
                 <>
