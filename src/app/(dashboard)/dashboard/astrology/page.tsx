@@ -370,10 +370,15 @@ export default function AstrologyHomePage() {
                     <dd className="text-right font-medium break-words">{bundle.sunSign || "—"}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground shrink-0">Nakshatra</dt>
-                    <dd className="text-right font-medium break-words">
-                      {bundle.nakshatra || "—"}
-                    </dd>
+                    {bundle.nakshatra && (
+                      <>
+                        {" "}
+                        <dt className="text-muted-foreground shrink-0">Nakshatra</dt>
+                        <dd className="text-right font-medium break-words">
+                          {bundle.nakshatra || "—"}
+                        </dd>
+                      </>
+                    )}
                   </div>
                 </dl>
               </div>
