@@ -20,6 +20,7 @@ import {
   isUnauthorizedPayload,
 } from "@/lib/http/session-fetch";
 import { formatPersonName } from "@/lib/utils/person-name";
+import Markdown from "react-markdown";
 
 type AstrologyBundle = {
   userName: string;
@@ -449,7 +450,7 @@ export default function AstrologyHomePage() {
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
+                  <Markdown>{bundle.insight}</Markdown>
                   <Button asChild variant="outline" size="sm">
                     <Link href={routes.aiInsights}>Continue the conversation</Link>
                   </Button>
