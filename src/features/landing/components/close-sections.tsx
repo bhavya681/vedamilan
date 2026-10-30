@@ -227,19 +227,6 @@ export function LandingFooter() {
             <p className="text-xs text-[#F7F1E3]/45">
               © {year} {brand.legalName}. All rights reserved.
             </p>
-
-            <p className="text-xs text-[#F7F1E3]/45">
-              Developed by{" "}
-              <a
-                href="https://bhavyawade.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-[#F7F1E3]/70 underline-offset-4 transition-colors hover:text-[#F7F1E3] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F7F1E3]/50"
-              >
-                Bhavya Wade
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            </p>
           </div>
 
           <div className="flex items-center gap-1">
