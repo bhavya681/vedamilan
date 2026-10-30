@@ -94,7 +94,7 @@ export function Sidebar({ className }: { className?: string }) {
           )}
         >
           <BrandLogo
-            href={homeHref}
+            href={routes.home}
             size="sm"
             showWordmark={!collapsed}
             className={collapsed ? "justify-center" : "min-w-0"}
