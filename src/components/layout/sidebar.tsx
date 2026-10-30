@@ -24,7 +24,7 @@ export function Sidebar({ className }: { className?: string }) {
   const pathname = useAppPathname();
   const router = useRouter();
   const t = useT();
-  const { mode, homeHref } = useWorkspaceMode();
+  const { mode } = useWorkspaceMode();
   const items = navForMode(mode);
   const groups = navGroupsForMode(mode);
   const [collapsed, setCollapsed] = useState(false);
