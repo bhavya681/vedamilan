@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { dashaLevelLabel, dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { cn } from "@/lib/utils/cn";
 
 export type YogaItem = {
@@ -209,8 +210,7 @@ export function GuruChartPanels({
               <h3 className="font-display text-lg">Vimshottari Dasha</h3>
               {data.dasha?.currentMaha ? (
                 <Badge className="bg-gold/20 text-foreground hover:bg-gold/20">
-                  {data.dasha.currentMaha}
-                  {data.dasha.currentAntar ? ` / ${data.dasha.currentAntar}` : ""}
+                  {dashaPeriodText(data.dasha.currentMaha, data.dasha.currentAntar)}
                 </Badge>
               ) : null}
             </div>
@@ -224,7 +224,7 @@ export function GuruChartPanels({
                     <div>
                       <p className="text-sm font-medium">{p.lord}</p>
                       <p className="text-muted-foreground text-[11px]">
-                        {p.level}
+                        {dashaLevelLabel(p.level)}
                         {p.parentLord ? ` · under ${p.parentLord}` : ""}
                       </p>
                     </div>

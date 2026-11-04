@@ -16,6 +16,7 @@ import {
   SouthIndianKundli,
 } from "@/features/horoscope/components/kundli-charts";
 import { NorthHorizonGalaxy } from "@/features/horoscope/components/north-horizon-galaxy";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -216,10 +217,9 @@ export default function KundliPage() {
           </div>
           {data?.dasha?.currentMaha ? (
             <p className="text-sm">
-              <span className="text-muted-foreground">Current Dasha · </span>
+              <span className="text-muted-foreground">Current period · </span>
               <span className="font-medium">
-                {data.dasha.currentMaha}
-                {data.dasha.currentAntar ? ` / ${data.dasha.currentAntar}` : ""}
+                {dashaPeriodText(data.dasha.currentMaha, data.dasha.currentAntar)}
               </span>
             </p>
           ) : null}

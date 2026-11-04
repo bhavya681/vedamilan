@@ -13,6 +13,7 @@ import {
   AiGuruAvatar,
 } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -147,7 +148,7 @@ export function MarriageGuruChat({ bundle }: { bundle: Bundle | null }) {
               <h2 className="font-display text-xl leading-none">{MARRIAGE_GURU_NAME}</h2>
               <p className="text-muted-foreground mt-1 truncate text-xs">
                 {bundle?.currentMaha
-                  ? `Dasha · ${bundle.currentMaha}${bundle.currentAntar ? ` / ${bundle.currentAntar}` : ""}`
+                  ? dashaPeriodText(bundle.currentMaha, bundle.currentAntar)
                   : MARRIAGE_GURU_TAGLINE}
               </p>
             </div>

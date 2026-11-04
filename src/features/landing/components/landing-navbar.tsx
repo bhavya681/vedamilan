@@ -20,12 +20,17 @@ export function LandingNavbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [bannerVisible, setBannerVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = useAppPathname();
   const { data: session, isPending } = useSession();
   const isHome = pathname === "/";
   const isAuthed = Boolean(session?.user);
   const compact = scrolled || !isHome;
   const overHero = isHome && !compact;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -105,10 +110,24 @@ export function LandingNavbar() {
               variant="ghost"
               className={cn("hidden sm:inline-flex", overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
             />
-            {isPending ? null : isAuthed ? (
+            {mounted && !isPending && isAuthed ? (
               <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link href={routes.dashboard}>Dashboard</Link>
               </Button>
+            ) : mounted && !isPending && !isAuthed ? (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className={cn("hidden sm:inline-flex", overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
+                >
+                  <Link href={landingCta.login.href}>{landingCta.login.label}</Link>
+                </Button>
+                <Button asChild size="sm" className="hidden sm:inline-flex">
+                  <Link href={landingCta.match.href}>{landingCta.match.label}</Link>
+                </Button>
+              </>
             ) : (
               <>
                 <Button

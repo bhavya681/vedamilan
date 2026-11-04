@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/auth/session";
-import { Horoscope } from "@/infrastructure/database/models";
+import { Dasha, Horoscope } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { buildLalKitabReport, LAL_KITAB_DISCLAIMER } from "@/application/horoscope/lal-kitab";
 import { successResponse } from "@/lib/utils/api-response";
@@ -26,6 +26,10 @@ export async function GET() {
       sign: p.sign ? String(p.sign) : undefined,
     }));
 
+    const dasha = await Dasha.findOne({ userId: session.user.id })
+      .sort({ calculatedAt: -1 })
+      .lean();
+
     const report = buildLalKitabReport({
       planets,
       doshas: (chart.doshas || []).map((d) => ({
@@ -39,6 +43,8 @@ export async function GET() {
 
     return successResponse({
       ...report,
+      currentMaha: dasha?.currentMaha ? String(dasha.currentMaha) : null,
+      currentAntar: dasha?.currentAntar ? String(dasha.currentAntar) : null,
       disclaimer: LAL_KITAB_DISCLAIMER,
     });
   } catch (error) {

@@ -13,7 +13,7 @@ import {
   detectManglik,
   detectYogas,
 } from "./chart-builder";
-import { computeVimshottari } from "./dasha-engine";
+import { computeVimshottari, hydrateStoredDasha } from "./dasha-engine";
 
 /**
  * Convert local civil birth date+time in an IANA timezone to a UTC Date.
@@ -87,25 +87,28 @@ function resolveAyanamsha(raw?: string | null): AyanamshaMode {
   return "LAHIRI";
 }
 
-export class HoroscopeService {
-  async generateForUser(userId: string) {
-    await connectMongo();
-    const birth = await BirthDetails.findOne({ userId });
-    if (!birth) {
-      throw new NotFoundError("Birth details required before generating kundli");
-    }
+export type NatalComputeInput = {
+  birthDate: Date;
+  birthTime: string;
+  timezone: string;
+  latitude: number;
+  longitude: number;
+  ayanamsha?: string | null;
+};
 
+export class HoroscopeService {
+  computeNatal(input: NatalComputeInput) {
     swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
-    const ayanamsha = resolveAyanamsha(birth.ayanamsha);
+    const ayanamsha = resolveAyanamsha(input.ayanamsha);
     swissEphemerisService.setAyanamsha(ayanamsha);
 
-    const birthUtc = parseBirthDateTime(birth.birthDate, birth.birthTime, birth.timezone);
+    const birthUtc = parseBirthDateTime(input.birthDate, input.birthTime, input.timezone);
     const jd = swissEphemerisService.julDay(birthUtc);
     const ayanamsaDeg = swissEphemerisService.getAyanamsa(jd);
 
     // Whole-sign rasi charts in Vedic apps still need accurate sidereal ASC;
     // Placidus ASC longitude is standard for Lagna degree (AstroSage-compatible).
-    const houses = swissEphemerisService.calculateHouses(jd, birth.latitude, birth.longitude, "P");
+    const houses = swissEphemerisService.calculateHouses(jd, input.latitude, input.longitude, "P");
     const lagnaLongitude = houses.ascmc[0] ?? 0;
     const lagna = longitudeToSign(lagnaLongitude);
     const lagnaNak = longitudeToNakshatra(lagnaLongitude);
@@ -117,42 +120,85 @@ export class HoroscopeService {
     const yogas = detectYogas(planets, lagna.sign ?? "Aries");
     const doshas = detectDoshas(planets, manglik.status);
     const houseLords = buildHouseLords(lagna.signId);
+    const dasha = computeVimshottari(moon?.longitude ?? 0, birthUtc);
+    const moonNak = moon ? longitudeToNakshatra(moon.longitude) : null;
 
-    const chartDoc = await Horoscope.create({
-      userId,
-      birthDetailsId: String(birth._id),
+    return {
       ayanamsha,
       julianDay: jd,
+      ayanamsaDeg,
+      lagnaLongitude,
       lagnaSign: lagna.sign,
       lagnaDegree: lagna.degreeInSign,
       lagnaNakshatra: lagnaNak.nakshatra,
       lagnaNakshatraPada: lagnaNak.nakshatraPada,
       moonSign: moon?.sign || "",
       sunSign: sun?.sign || "",
+      moonNakshatra: moonNak?.nakshatra || null,
       planets,
       houseLords,
-      navamsa: null,
-      dashamsa: null,
-      shadbala: { ayanamsaDeg, lagnaLongitude },
       yogas,
       doshas,
       manglikStatus: manglik.status,
+      manglikNote: manglik.notes,
       chartNorth: buildNorthChart(planets, lagna.signId, lagna.degreeInSign),
       chartSouth: buildSouthChart(planets, lagna.signId, lagna.degreeInSign),
       chartEast: buildEastChart(planets, lagna.signId, lagna.degreeInSign),
+      dasha,
+      birthUtc,
+    };
+  }
+
+  async generateForUser(userId: string) {
+    await connectMongo();
+    const birth = await BirthDetails.findOne({ userId });
+    if (!birth) {
+      throw new NotFoundError("Birth details required before generating kundli");
+    }
+
+    const natal = this.computeNatal({
+      birthDate: birth.birthDate,
+      birthTime: birth.birthTime,
+      timezone: birth.timezone,
+      latitude: birth.latitude,
+      longitude: birth.longitude,
+      ayanamsha: birth.ayanamsha,
+    });
+
+    const chartDoc = await Horoscope.create({
+      userId,
+      birthDetailsId: String(birth._id),
+      ayanamsha: natal.ayanamsha,
+      julianDay: natal.julianDay,
+      lagnaSign: natal.lagnaSign,
+      lagnaDegree: natal.lagnaDegree,
+      lagnaNakshatra: natal.lagnaNakshatra,
+      lagnaNakshatraPada: natal.lagnaNakshatraPada,
+      moonSign: natal.moonSign,
+      sunSign: natal.sunSign,
+      planets: natal.planets,
+      houseLords: natal.houseLords,
+      navamsa: null,
+      dashamsa: null,
+      shadbala: { ayanamsaDeg: natal.ayanamsaDeg, lagnaLongitude: natal.lagnaLongitude },
+      yogas: natal.yogas,
+      doshas: natal.doshas,
+      manglikStatus: natal.manglikStatus,
+      chartNorth: natal.chartNorth,
+      chartSouth: natal.chartSouth,
+      chartEast: natal.chartEast,
       engineVersion: ENGINE_VERSION,
       calculatedAt: new Date(),
     });
 
-    const dashaCalc = computeVimshottari(moon?.longitude ?? 0, birthUtc);
     const dashaDoc = await Dasha.create({
       userId,
       horoscopeId: String(chartDoc._id),
       system: "VIMSHOTTARI",
-      balanceAtBirth: dashaCalc.balanceAtBirth,
-      periods: dashaCalc.periods,
-      currentMaha: dashaCalc.currentMaha,
-      currentAntar: dashaCalc.currentAntar,
+      balanceAtBirth: natal.dasha.balanceAtBirth,
+      periods: natal.dasha.periods,
+      currentMaha: natal.dasha.currentMaha,
+      currentAntar: natal.dasha.currentAntar,
       engineVersion: ENGINE_VERSION,
       calculatedAt: new Date(),
     });
@@ -160,12 +206,12 @@ export class HoroscopeService {
     return {
       horoscope: chartDoc.toObject(),
       dasha: dashaDoc.toObject(),
-      manglikNote: manglik.notes,
+      manglikNote: natal.manglikNote,
       meta: {
         zodiac: "sidereal",
-        ayanamsha,
-        ayanamsaDeg,
-        birthUtc: birthUtc.toISOString(),
+        ayanamsha: natal.ayanamsha,
+        ayanamsaDeg: natal.ayanamsaDeg,
+        birthUtc: natal.birthUtc.toISOString(),
         engineVersion: ENGINE_VERSION,
       },
     };
@@ -178,7 +224,7 @@ export class HoroscopeService {
     const dasha = await Dasha.findOne({ horoscopeId: String(horoscope._id) })
       .sort({ calculatedAt: -1 })
       .lean();
-    return { horoscope, dasha };
+    return { horoscope, dasha: dasha ? hydrateStoredDasha(dasha) : dasha };
   }
 }
 

@@ -142,7 +142,7 @@ export function TimingPredictionPanel({
           value={timing.dashaSnapshot?.you?.currentMaha || "—"}
           hint={
             timing.dashaSnapshot?.you?.currentAntar
-              ? `Antar · ${timing.dashaSnapshot.you.currentAntar}`
+              ? `Antardasha · ${timing.dashaSnapshot.you.currentAntar}`
               : undefined
           }
         />
@@ -152,7 +152,7 @@ export function TimingPredictionPanel({
             value={timing.dashaSnapshot?.them?.currentMaha || "—"}
             hint={
               timing.dashaSnapshot?.them?.currentAntar
-                ? `Antar · ${timing.dashaSnapshot.them.currentAntar}`
+                ? `Antardasha · ${timing.dashaSnapshot.them.currentAntar}`
                 : undefined
             }
           />

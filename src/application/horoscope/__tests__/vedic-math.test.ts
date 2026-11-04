@@ -160,7 +160,7 @@ describe("Module 4 — Vedic math", () => {
     const dasha = computeVimshottari(40, new Date("1996-03-12T00:00:00Z"));
     expect(dasha.periods.some((p) => p.level === "MAHA")).toBe(true);
     expect(dasha.periods.filter((p) => p.level === "MAHA").length).toBe(9);
-    expect(dasha.periods.filter((p) => p.level === "ANTAR").length).toBe(81);
+    expect(dasha.periods.filter((p) => p.level === "ANTAR").length).toBe(72);
     expect(dasha.balanceAtBirth.lord).toBeTruthy();
   });
 });

@@ -2,7 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Heart, Hourglass, MapPin, UserRound } from "lucide-react";
+import {
+  BookOpen,
+  CalendarRange,
+  CheckCircle2,
+  GitBranch,
+  GitCompare,
+  Heart,
+  Hourglass,
+  LayoutGrid,
+  MapPin,
+  Orbit,
+  Scale,
+  UserRound,
+  Waypoints,
+  type LucideIcon,
+} from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -61,6 +76,50 @@ const LIKELIHOOD_LABEL: Record<string, string> = {
   "already-settled": "Already married",
 };
 
+const SECTION_ICON: Record<string, LucideIcon> = {
+  parashari: Scale,
+  jaimini: Waypoints,
+  darakaraka: Heart,
+  navamsa: LayoutGrid,
+  transit: Orbit,
+  bnn: GitBranch,
+};
+
+const LIKELIHOOD_TONE: Record<string, string> = {
+  likely: "border-emerald-500/40 bg-emerald-500/10",
+  possible: "border-gold/40 bg-gold/10",
+  later: "border-border/60 bg-muted/20",
+  "not-yet": "border-amber-500/40 bg-amber-500/10",
+  "already-settled": "border-sky-500/40 bg-sky-500/10",
+};
+
+function Pillar({
+  sanskrit,
+  english,
+  Icon,
+  body,
+}: {
+  sanskrit: string;
+  english: string;
+  Icon: LucideIcon;
+  body: string;
+}) {
+  return (
+    <div className="border-border/50 bg-muted/10 rounded-xl border p-3">
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="bg-gold/10 text-gold grid h-8 w-8 place-items-center rounded-lg">
+          <Icon className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="font-display text-sm leading-none">{sanskrit}</p>
+          <p className="text-muted-foreground text-[10px] uppercase">{english}</p>
+        </div>
+      </div>
+      <p className="text-muted-foreground text-xs leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
 export default function AstrologyMarriageIntelligencePage() {
   const [data, setData] = useState<Lab | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,13 +142,14 @@ export default function AstrologyMarriageIntelligencePage() {
 
   const windows = data?.windows?.length ? data.windows : [];
   const dkp = data?.deshKaal;
+  const evidence = data?.sections.filter((section) => section.id !== "synthesis") ?? [];
 
   return (
     <div className="relative min-w-0 space-y-5 sm:space-y-6">
       <PageHeader
-        eyebrow="Multi-system partnership read"
+        eyebrow="Marriage Intelligence · multi-system read"
         title="Marriage Intelligence"
-        description="Desh, Kaala, and Patra first — country, age, and marital situation decide whether a dasha season is practical for marriage. Chart layers stay independent. No wedding day is invented."
+        description="Desh, Kaala, and Patra first — place, age, and marital situation decide whether a dasha season is practical. Parashari, Jaimini, D9, gochar, and BNN are read as independent layers. No wedding day is invented."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
@@ -97,6 +157,9 @@ export default function AstrologyMarriageIntelligencePage() {
             </Button>
             <Button asChild variant="outline">
               <Link href={routes.astrologyJaimini}>Jaimini</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={routes.astrologyBnn}>BNN</Link>
             </Button>
           </div>
         }
@@ -118,78 +181,63 @@ export default function AstrologyMarriageIntelligencePage() {
       {data ? (
         <div className="space-y-5">
           {dkp ? (
-            <GlassCard className="space-y-4 p-4 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl">Desh, Kaala, Patra</h2>
-                  <p className="text-muted-foreground text-xs">
-                    Place, age, and the person — before any dasha is treated as a marriage season.
-                  </p>
+            <GlassCard className="border-gold/25 from-gold/[0.06] space-y-4 bg-gradient-to-br to-transparent p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="border-gold/25 bg-gold/10 text-gold grid h-10 w-10 shrink-0 place-items-center rounded-xl border">
+                    <CalendarRange className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-xl">Desh · Kaala · Patra</h2>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      The practical frame for marriage — before any dasha is treated as a season.
+                    </p>
+                  </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[10px]",
-                    dkp.verdict === "likely" && "border-gold/50 bg-gold/10",
-                    dkp.verdict === "not-yet" && "border-border",
-                  )}
-                >
+                <Badge variant="outline" className="shrink-0">
                   {dkp.verdictTitle}
                 </Badge>
               </div>
+
               <p className="text-sm leading-relaxed">{dkp.verdictReason}</p>
+
               <div className="grid gap-3 sm:grid-cols-3">
-                {(
-                  [
-                    {
-                      sanskrit: "Desha",
-                      english: "Place",
-                      Icon: MapPin,
-                      body: dkp.placeNote.replace(/^Desha?\s*[—–-]\s*/i, ""),
-                    },
-                    {
-                      sanskrit: "Kaala",
-                      english: "Time",
-                      Icon: Hourglass,
-                      body: dkp.timeNote.replace(/^Kaala?\s*[—–-]\s*/i, ""),
-                    },
-                    {
-                      sanskrit: "Patra",
-                      english: "Vessel",
-                      Icon: UserRound,
-                      body: dkp.vesselNote.replace(/^Patra\s*[—–-]\s*/i, ""),
-                    },
-                  ] as const
-                ).map((pillar) => (
-                  <div key={pillar.sanskrit} className="rounded-xl border p-3">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <span className="bg-gold/10 text-gold flex h-8 w-8 items-center justify-center rounded-lg">
-                        <pillar.Icon className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="font-display text-sm leading-none">{pillar.sanskrit}</p>
-                        <p className="text-muted-foreground text-[10px] uppercase">
-                          {pillar.english}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground text-xs leading-relaxed">{pillar.body}</p>
-                  </div>
-                ))}
+                <Pillar
+                  sanskrit="Desha"
+                  english="Place"
+                  Icon={MapPin}
+                  body={dkp.placeNote.replace(/^Desha?\s*[—–-]\s*/i, "")}
+                />
+                <Pillar
+                  sanskrit="Kaala"
+                  english="Time"
+                  Icon={Hourglass}
+                  body={dkp.timeNote.replace(/^Kaala?\s*[—–-]\s*/i, "")}
+                />
+                <Pillar
+                  sanskrit="Patra"
+                  english="Vessel"
+                  Icon={UserRound}
+                  body={dkp.vesselNote.replace(/^Patra\s*[—–-]\s*/i, "")}
+                />
               </div>
-              <p className="text-muted-foreground text-[11px]">
-                {dkp.placeLabel}
-                {dkp.ageYears != null ? ` · about ${dkp.ageYears}` : ""}
-                {` · typical first-marriage band ${dkp.typicalMin}–${dkp.typicalMax} (${dkp.region})`}
-              </p>
+
+              <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+                <span>{dkp.placeLabel}</span>
+                {dkp.ageYears != null ? <span>About age {dkp.ageYears}</span> : null}
+                <span>
+                  Typical first-marriage band {dkp.typicalMin}–{dkp.typicalMax} ({dkp.region})
+                </span>
+                {dkp.maritalStatus ? <span>Status: {dkp.maritalStatus}</span> : null}
+              </div>
             </GlassCard>
           ) : null}
 
           {windows.length ? (
-            <GlassCard className="border-gold/30 space-y-4 p-4 sm:p-5">
+            <GlassCard className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex items-start gap-3">
-                  <span className="bg-gold/10 text-gold border-gold/30 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+                  <span className="bg-gold/10 text-gold border-gold/30 grid h-10 w-10 shrink-0 place-items-center rounded-xl border">
                     <Hourglass className="h-4 w-4" />
                   </span>
                   <div>
@@ -200,15 +248,26 @@ export default function AstrologyMarriageIntelligencePage() {
                     </p>
                   </div>
                 </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={routes.astrologyDasha}>Open dashas</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {windows.length} season{windows.length === 1 ? "" : "s"}
+                  </Badge>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={routes.astrologyDasha}>Open dashas</Link>
+                  </Button>
+                </div>
               </div>
+
               <ul className="grid gap-2 sm:grid-cols-2">
                 {windows.map((w) => (
                   <li
                     key={`${w.label}-${w.range}`}
-                    className="border-gold/20 bg-gold/5 rounded-xl border p-3"
+                    className={cn(
+                      "rounded-xl border p-3",
+                      w.likelihood
+                        ? LIKELIHOOD_TONE[w.likelihood] || "border-border/60 bg-muted/10"
+                        : "border-border/60 bg-muted/10",
+                    )}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="flex items-center gap-1.5 text-sm font-medium">
@@ -217,77 +276,147 @@ export default function AstrologyMarriageIntelligencePage() {
                       </p>
                       <Badge
                         variant="outline"
-                        className="shrink-0 text-[9px] tracking-wide uppercase"
+                        className="bg-background/40 shrink-0 text-[9px] tracking-wide uppercase"
                       >
                         {w.likelihood
                           ? LIKELIHOOD_LABEL[w.likelihood] || w.likelihood
                           : w.role.replace(/ Mahadasha| Antardasha/g, "")}
                       </Badge>
                     </div>
-                    <p className="mt-1 text-xs tabular-nums">{w.range}</p>
+                    <p className="mt-1 text-xs font-medium tabular-nums">{w.range}</p>
                     {w.dashaRange && w.dashaRange !== w.range ? (
                       <p className="text-muted-foreground text-[11px]">Full dasha {w.dashaRange}</p>
                     ) : null}
                     {w.ageYears != null ? (
                       <p className="text-muted-foreground text-[11px]">About age {w.ageYears}</p>
                     ) : null}
-                    {w.note ? (
-                      <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed">
-                        {w.note}
-                      </p>
-                    ) : (
-                      <p className="text-muted-foreground mt-0.5 text-[11px]">{w.role}</p>
-                    )}
+                    <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed">
+                      {w.note || w.role}
+                    </p>
                   </li>
                 ))}
               </ul>
             </GlassCard>
           ) : null}
 
-          <GlassCard className="space-y-2 p-4 sm:p-5">
-            <h2 className="font-display text-xl">Where systems agree or differ</h2>
-            <ul className="list-disc space-y-1 pl-4 text-sm">
-              {data.agreements.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-            {data.differences.length ? (
-              <ul className="text-muted-foreground mt-2 list-disc space-y-1 pl-4 text-xs">
-                {data.differences.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            ) : null}
-            <p className="text-muted-foreground text-xs leading-relaxed">{data.synthesis}</p>
-          </GlassCard>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.sections.map((section) => (
-              <GlassCard key={section.id} className="space-y-2 p-4 sm:p-5">
-                <h2 className="font-display text-lg">{section.title}</h2>
-                <ul className="list-disc space-y-1 pl-4 text-xs leading-relaxed">
-                  {section.points.map((t) => (
-                    <li key={t}>{t}</li>
+          <GlassCard className="space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="border-gold/25 bg-gold/8 text-gold grid h-10 w-10 shrink-0 place-items-center rounded-xl border">
+                <GitCompare className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="font-display text-xl">Cross-system read</h2>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Where the layers agree, and where they describe partnership from different angles.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3">
+                <p className="flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] text-emerald-700 uppercase dark:text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Agreements
+                </p>
+                <ul className="mt-2 space-y-1.5 text-xs leading-relaxed">
+                  {data.agreements.map((t) => (
+                    <li key={t} className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                      {t}
+                    </li>
                   ))}
                 </ul>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto px-0 text-xs"
-                  onClick={() => setOpenCalc(openCalc === section.id ? null : section.id)}
-                >
-                  {openCalc === section.id ? "Hide calculation" : "Show calculation"}
-                </Button>
-                {openCalc === section.id ? (
-                  <ul className="text-muted-foreground list-disc space-y-0.5 pl-4 text-[11px]">
-                    {section.calculation.map((t) => (
-                      <li key={t}>{t}</li>
+              </div>
+              <div className="border-border/50 bg-muted/10 rounded-xl border p-3">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                  <GitCompare className="h-3.5 w-3.5" />
+                  Differences
+                </p>
+                {data.differences.length ? (
+                  <ul className="mt-2 space-y-1.5 text-xs leading-relaxed">
+                    {data.differences.map((t) => (
+                      <li key={t} className="flex gap-2">
+                        <span className="bg-gold/70 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
+                        {t}
+                      </li>
                     ))}
                   </ul>
-                ) : null}
-              </GlassCard>
-            ))}
-          </div>
+                ) : (
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    No material contradiction between the layers on this chart.
+                  </p>
+                )}
+              </div>
+            </div>
+            <p className="border-gold/20 bg-gold/[0.04] rounded-xl border p-3 text-xs leading-relaxed">
+              {data.synthesis}
+            </p>
+          </GlassCard>
+
+          <section className="space-y-3">
+            <div className="flex items-end justify-between gap-2">
+              <div>
+                <h2 className="font-display text-xl">Chart evidence</h2>
+                <p className="text-muted-foreground text-xs">
+                  The calculated layers behind the read. Open any card for its exact basis.
+                </p>
+              </div>
+              <Badge variant="outline">{evidence.length} layers</Badge>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {evidence.map((section) => {
+                const Icon = SECTION_ICON[section.id] ?? BookOpen;
+                return (
+                  <GlassCard key={section.id} className="flex min-w-0 flex-col gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <span className="border-border/60 bg-muted/20 text-muted-foreground grid h-9 w-9 shrink-0 place-items-center rounded-lg border">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <h3 className="font-display text-lg leading-tight">{section.title}</h3>
+                    </div>
+                    <ul className="space-y-1.5 text-xs leading-relaxed">
+                      {section.points.map((point) => (
+                        <li key={point} className="flex gap-2">
+                          <span className="bg-gold/70 mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                    {section.calculation.length ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto justify-start px-0 text-xs"
+                          onClick={() => setOpenCalc(openCalc === section.id ? null : section.id)}
+                        >
+                          {openCalc === section.id ? "Hide calculation" : "Show calculation"}
+                        </Button>
+                        {openCalc === section.id ? (
+                          <ul className="text-muted-foreground border-border/50 bg-muted/10 list-disc space-y-0.5 rounded-lg border p-2.5 pl-6 text-[11px]">
+                            {section.calculation.map((line) => (
+                              <li key={line}>{line}</li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </GlassCard>
+                );
+              })}
+            </div>
+          </section>
+
+          <GlassCard className="space-y-2">
+            <p className="text-gold/85 flex items-center gap-1.5 text-[11px] font-medium tracking-[0.16em] uppercase">
+              <BookOpen className="h-3.5 w-3.5" />
+              Professional note
+            </p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Marriage seasons are read from Vimshottari periods and cross-checked against the D1,
+              D9, Jaimini, gochar, and BNN layers. Country and age determine whether a season is
+              practical. If a layer is unavailable, it is not invented to fill the gap.
+            </p>
+          </GlassCard>
         </div>
       ) : null}
     </div>

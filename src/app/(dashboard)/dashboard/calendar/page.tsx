@@ -44,6 +44,7 @@ import {
   SpouseTendencyPanel,
   type SpouseTendenciesView,
 } from "@/features/compatibility/spouse-tendency-panel";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { northHorizonHref, routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
@@ -850,9 +851,8 @@ export default function CalendarPage() {
                   Snapshot
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {data.snapshot.currentMaha
-                    ? `${data.snapshot.currentMaha}${data.snapshot.currentAntar ? ` / ${data.snapshot.currentAntar}` : ""} dasha`
-                    : "Vimshottari chapters"}
+                  {dashaPeriodText(data.snapshot.currentMaha, data.snapshot.currentAntar) ||
+                    "Vimshottari chapters"}
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">

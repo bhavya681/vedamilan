@@ -7,6 +7,7 @@ import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DashaPeriodBadges } from "@/features/horoscope/components/dasha-period-display";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 
@@ -100,10 +101,13 @@ export default function AstrologySpiritualJourneyPage() {
             <p className="font-display text-xl leading-snug sm:text-2xl">
               {PHASE_DESCRIPTIONS[data.journeyPhase] || "Continue exploring your chart."}
             </p>
-            <div className="text-muted-foreground flex flex-wrap gap-4 text-xs">
-              <span>Dasha: {data.currentDasha || "—"}</span>
-              <span>Antar: {data.currentAntar || "—"}</span>
-            </div>
+            {data.currentDasha || data.currentAntar ? (
+              <DashaPeriodBadges maha={data.currentDasha} antar={data.currentAntar} />
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                Dasha data will appear after kundli generation.
+              </p>
+            )}
           </GlassCard>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

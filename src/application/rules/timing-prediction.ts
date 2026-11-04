@@ -1,3 +1,5 @@
+import { rebuildDashaFromMahas } from "@/application/horoscope/dasha-engine";
+
 /**
  * Multi-factor Vedic timing predictions.
  * Combines Vimshottari Mahadasha / Antardasha with live Gochar (transits)
@@ -111,57 +113,16 @@ function ageAt(date: Date, birth: Date) {
  * stored ANTAR under the first MAHA). Pure Vimshottari proportions — no AI.
  */
 export function ensureAntardashaCoverage(periods: DashaPeriod[]): DashaPeriod[] {
-  const maha = periods.filter((p) => p.level === "MAHA");
-  const antar = periods.filter((p) => p.level === "ANTAR");
-  const covered = new Set(antar.map((a) => a.parentLord).filter(Boolean) as string[]);
-  const MS_PER_YEAR = 365.2425 * 24 * 60 * 60 * 1000;
-  const LORDS = [
-    "Ketu",
-    "Venus",
-    "Sun",
-    "Moon",
-    "Mars",
-    "Rahu",
-    "Jupiter",
-    "Saturn",
-    "Mercury",
-  ] as const;
-  const YEARS: Record<(typeof LORDS)[number], number> = {
-    Ketu: 7,
-    Venus: 20,
-    Sun: 6,
-    Moon: 10,
-    Mars: 7,
-    Rahu: 18,
-    Jupiter: 16,
-    Saturn: 19,
-    Mercury: 17,
-  };
-
-  const expanded: DashaPeriod[] = [...periods];
-  for (const m of maha) {
-    if (covered.has(m.lord)) continue;
-    const start = new Date(m.startDate);
-    const end = new Date(m.endDate);
-    const mahaYears = (end.getTime() - start.getTime()) / MS_PER_YEAR;
-    let cursor = new Date(start);
-    const startIdx = LORDS.indexOf(m.lord as (typeof LORDS)[number]);
-    if (startIdx < 0) continue;
-    for (let i = 0; i < 9; i += 1) {
-      const aLord = LORDS[(startIdx + i) % 9]!;
-      const portion = (YEARS[aLord] / 120) * mahaYears;
-      const aEnd = new Date(cursor.getTime() + portion * MS_PER_YEAR);
-      expanded.push({
-        lord: aLord,
-        startDate: new Date(cursor),
-        endDate: aEnd,
-        level: "ANTAR",
-        parentLord: m.lord,
-      });
-      cursor = aEnd;
-    }
-  }
-  return expanded;
+  const covered = new Set(
+    periods
+      .filter((p) => p.level === "ANTAR")
+      .map((p) => p.parentLord)
+      .filter(Boolean) as string[],
+  );
+  const missing = rebuildDashaFromMahas(periods).periods.filter(
+    (p) => p.level === "ANTAR" && p.parentLord && !covered.has(p.parentLord),
+  );
+  return [...periods, ...missing];
 }
 
 function scoreAntarWindow(

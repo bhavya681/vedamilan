@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, ChevronDown } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Sparkles,
+} from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { GlassCard } from "@/components/ui/premium-cards";
@@ -16,7 +24,8 @@ import type {
   LalKitabRemedyCard,
   LalKitabSutraHit,
 } from "@/application/horoscope/lal-kitab";
-import { routes } from "@/lib/constants/routes";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
+import { grahaKathaPlanet, routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 type Report = {
@@ -26,6 +35,8 @@ type Report = {
   remedies: LalKitabRemedyCard[];
   summary: string;
   methodology: string;
+  currentMaha: string | null;
+  currentAntar: string | null;
   disclaimer: string;
 };
 
@@ -40,6 +51,35 @@ const GRAHA_ORDER = [
   "Rahu",
   "Ketu",
 ] as const;
+
+const GRAHA_ID: Record<string, string> = {
+  Sun: "surya",
+  Moon: "chandra",
+  Mars: "mangal",
+  Mercury: "budha",
+  Jupiter: "guru",
+  Venus: "shukra",
+  Saturn: "shani",
+  Rahu: "rahu",
+  Ketu: "ketu",
+};
+
+function planetIn(text: string) {
+  return GRAHA_ORDER.find((planet) => text.includes(planet)) ?? null;
+}
+
+function remedyPriority(
+  remedy: LalKitabRemedyCard,
+  currentMaha: string | null,
+  currentAntar: string | null,
+) {
+  let score = 0;
+  if (currentMaha && remedy.planetaryFactor.includes(currentMaha)) score += 5;
+  if (currentAntar && remedy.planetaryFactor.includes(currentAntar)) score += 3;
+  if (remedy.source === "sutra") score += 2;
+  if (remedy.source === "dosha") score += 2;
+  return score;
+}
 
 const HOUSE_THEME: Record<number, string> = {
   1: "Self, vitality, image",
@@ -166,6 +206,7 @@ export default function RemediesPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [tab, setTab] = useState("overview");
 
   useEffect(() => {
     void fetch("/api/lal-kitab")
@@ -191,6 +232,21 @@ export default function RemediesPage() {
   const challenging = placements.filter((p) => p.rating === "challenging");
   const cautionSutras = (data?.sutras || []).filter((s) => s.severity === "caution");
   const supportSutras = (data?.sutras || []).filter((s) => s.severity === "supportive");
+
+  const focusPlanets = useMemo(() => {
+    const found = new Set<string>();
+    for (const placement of challenging) found.add(placement.planet);
+    for (const sutra of cautionSutras) for (const planet of sutra.planets) found.add(planet);
+    return GRAHA_ORDER.filter((planet) => found.has(planet));
+  }, [challenging, cautionSutras]);
+
+  const prioritizedRemedies = useMemo(() => {
+    return [...(data?.remedies || [])].sort(
+      (a, b) =>
+        remedyPriority(b, data?.currentMaha ?? null, data?.currentAntar ?? null) -
+        remedyPriority(a, data?.currentMaha ?? null, data?.currentAntar ?? null),
+    );
+  }, [data?.remedies, data?.currentMaha, data?.currentAntar]);
 
   return (
     <div className="relative min-w-0 space-y-5 sm:space-y-6">
@@ -260,7 +316,65 @@ export default function RemediesPage() {
             </GlassCard>
           </div>
 
-          <Tabs defaultValue="overview">
+          <GlassCard className="border-gold/25 from-gold/8 space-y-4 bg-gradient-to-br to-transparent">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-gold flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Personal chart focus
+                </p>
+                <h2 className="font-display mt-1 text-xl leading-snug sm:text-2xl">
+                  Remedies weighted to your live chart
+                </h2>
+                <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-relaxed">
+                  These grahas stand out because of challenging house seats or live combination
+                  sutras in your Kundli. Remedies that match your running dasha are prioritised
+                  first.
+                </p>
+              </div>
+              {data.currentMaha ? (
+                <Badge variant="outline" className="border-gold/30 bg-background/60 gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  {dashaPeriodText(data.currentMaha, data.currentAntar)}
+                </Badge>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {focusPlanets.length ? (
+                focusPlanets.map((planet) => {
+                  const grahaId = GRAHA_ID[planet];
+                  if (!grahaId) return null;
+                  return (
+                    <Link
+                      key={planet}
+                      href={grahaKathaPlanet(grahaId)}
+                      className="border-border/60 bg-background/60 hover:border-gold/40 hover:text-gold inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+                    >
+                      {planet}
+                      <ArrowUpRight className="h-3 w-3" aria-hidden />
+                    </Link>
+                  );
+                })
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No single graha dominates the care list — review supportive placements below.
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setTab("upayas")} className="gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                View my upaya plan
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={routes.astrologyYogas}>Check supportive yogas</Link>
+              </Button>
+            </div>
+          </GlassCard>
+
+          <Tabs value={tab} onValueChange={setTab}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="houses">Houses</TabsTrigger>
@@ -423,52 +537,141 @@ export default function RemediesPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="upayas" className="space-y-3">
-              {data.remedies.length === 0 ? (
+            <TabsContent value="upayas" className="space-y-4">
+              <section className="border-border/50 from-muted/35 relative overflow-hidden rounded-2xl border bg-gradient-to-br to-transparent p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-gold flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Your remedy plan
+                    </p>
+                    <h2 className="font-display mt-1 text-xl leading-snug sm:text-2xl">
+                      {prioritizedRemedies.length} chart-based upayas, in priority order
+                    </h2>
+                    <p className="text-muted-foreground mt-2 max-w-3xl text-sm leading-relaxed">
+                      Ranked by your running dasha and the strongest caution patterns in your
+                      Kundli. Start at the top, keep one practice steady, and review after a full
+                      cycle.
+                    </p>
+                  </div>
+                  {data.currentMaha ? (
+                    <Badge variant="outline" className="border-gold/30 bg-background/60 gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      {data.currentMaha}
+                      {data.currentAntar ? ` / ${data.currentAntar}` : ""}
+                    </Badge>
+                  ) : null}
+                </div>
+              </section>
+
+              {prioritizedRemedies.length === 0 ? (
                 <EmptyState
                   title="No priority upayas"
                   description="No challenging placements or caution sutras required a priority remedy card. Review Houses for supportive practices."
                 />
               ) : (
-                data.remedies.map((theme) => (
-                  <GlassCard key={theme.id} className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">{theme.source}</Badge>
-                      <Badge variant="outline">Not medical advice</Badge>
-                    </div>
-                    <h2 className="font-display text-xl">{theme.title}</h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                          Planetary factor
-                        </p>
-                        <p className="mt-1 text-sm font-medium">{theme.planetaryFactor}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                          Observed theme
-                        </p>
-                        <p className="mt-1 text-sm leading-relaxed">{theme.observedTheme}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                          Possible remedy
-                        </p>
-                        <p className="mt-1 text-sm leading-relaxed">{theme.possibleRemedy}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                          Reason
-                        </p>
-                        <p className="mt-1 text-sm leading-relaxed">{theme.reason}</p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      Duration / practice · {theme.durationPractice}
-                    </p>
-                  </GlassCard>
-                ))
+                <div className="grid gap-3 xl:grid-cols-2">
+                  {prioritizedRemedies.map((theme, index) => {
+                    const planet = planetIn(theme.planetaryFactor);
+                    const grahaId = planet ? GRAHA_ID[planet] : null;
+                    const isTop = index === 0;
+                    return (
+                      <GlassCard
+                        key={theme.id}
+                        className={cn(
+                          "space-y-4",
+                          isTop && "border-gold/40 from-gold/8 bg-gradient-to-br to-transparent",
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={cn(
+                              "font-display flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm",
+                              isTop
+                                ? "border-gold/40 bg-gold/15 text-gold"
+                                : "border-border/60 bg-muted/40 text-muted-foreground",
+                            )}
+                          >
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Badge
+                                variant={isTop ? "default" : "secondary"}
+                                className="text-[10px] capitalize"
+                              >
+                                {theme.source}
+                              </Badge>
+                              {isTop ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-gold/40 bg-gold/10 text-[10px]"
+                                >
+                                  Start here
+                                </Badge>
+                              ) : null}
+                              <Badge variant="outline" className="text-[10px]">
+                                Not medical advice
+                              </Badge>
+                            </div>
+                            <h2 className="font-display mt-1.5 text-lg leading-snug sm:text-xl">
+                              {theme.title}
+                            </h2>
+                          </div>
+                        </div>
+
+                        <div className="border-border/50 bg-background/60 rounded-xl border p-3">
+                          <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            <BookOpen className="h-3 w-3" />
+                            Because in your chart
+                          </p>
+                          <p className="mt-1 text-sm font-medium">{theme.planetaryFactor}</p>
+                          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                            {theme.observedTheme}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            <Sparkles className="h-3 w-3" />
+                            What to practice
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed">{theme.possibleRemedy}</p>
+                        </div>
+
+                        <div className="border-border/40 bg-muted/20 rounded-xl border p-3">
+                          <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            Why this is relevant
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed">{theme.reason}</p>
+                        </div>
+
+                        <div className="border-border/50 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+                          <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            {theme.durationPractice}
+                          </span>
+                          {grahaId ? (
+                            <Button
+                              asChild
+                              variant="ghost"
+                              size="sm"
+                              className="-mr-2 shrink-0 gap-1.5"
+                            >
+                              <Link href={grahaKathaPlanet(grahaId)}>
+                                Read {planet}&apos;s story
+                                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                              </Link>
+                            </Button>
+                          ) : null}
+                        </div>
+                      </GlassCard>
+                    );
+                  })}
+                </div>
               )}
+
+              <p className="text-muted-foreground text-xs leading-relaxed">{data.disclaimer}</p>
             </TabsContent>
 
             <TabsContent value="guide">

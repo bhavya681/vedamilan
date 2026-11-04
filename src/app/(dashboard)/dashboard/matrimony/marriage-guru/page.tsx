@@ -18,6 +18,7 @@ import {
 } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
 import { GuruChartPanels, type ChartPanelsData } from "@/features/ai/components/guru-chart-panels";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { MarriageWindowsPanel } from "@/features/marriage-guru/components/marriage-windows-panel";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 
@@ -346,7 +347,7 @@ export default function MarriageGuruPage() {
               bundle?.hasChart && bundle?.chartSummary
                 ? `Lagna ${bundle.chartSummary.lagnaSign} · Moon ${bundle.chartSummary.moonSign} · Sun ${bundle.chartSummary.sunSign}`
                 : bundle?.currentMaha
-                  ? `Dasha · ${bundle.currentMaha}${bundle.currentAntar ? ` / ${bundle.currentAntar}` : ""}`
+                  ? dashaPeriodText(bundle.currentMaha, bundle.currentAntar)
                   : MARRIAGE_GURU_TAGLINE
             }
           />

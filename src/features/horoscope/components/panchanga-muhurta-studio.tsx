@@ -23,7 +23,7 @@ import { fromLocalDateInput, toLocalDateInput, useBirthPlace } from "@/hooks/use
 import { northHorizonHref, panchangaHref } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
-type StudioTab = "almanac" | "muhurta" | "guide";
+type StudioTab = "almanac" | "muhurta";
 
 type Panchanga = {
   tithi: {
@@ -93,7 +93,7 @@ const RATING_TONE: Record<MuhurtaWindow["rating"], TimelineBand["tone"]> = {
 };
 
 function parseTab(value: string | null): StudioTab {
-  if (value === "muhurta" || value === "guide") return value;
+  if (value === "muhurta") return value;
   return "almanac";
 }
 
@@ -352,12 +352,10 @@ export function PanchangaMuhurtaStudio() {
   const tithiPct = Math.round((panchanga?.tithi.progress || 0) * 100);
   const activityLabel =
     ACTIVITIES.find((item) => item.value === activity)?.label || "this activity";
-  const pick =
-    windows.find((window) => window.rating === "excellent") ??
-    windows.find((window) => window.rating === "good") ??
-    windows[0];
   const excellent = windows.filter((window) => window.rating === "excellent");
   const good = windows.filter((window) => window.rating === "good");
+  const pick = excellent[0] ?? good[0];
+  const strong = [...excellent, ...good].filter((window) => window !== pick);
   const moderate = windows.filter((window) => window.rating === "moderate");
   const avoid = windows.filter((window) => window.rating === "avoid");
 
@@ -489,7 +487,6 @@ export function PanchangaMuhurtaStudio() {
           <TabsList>
             <TabsTrigger value="almanac">Almanac</TabsTrigger>
             <TabsTrigger value="muhurta">Muhurta</TabsTrigger>
-            <TabsTrigger value="guide">How to read</TabsTrigger>
           </TabsList>
 
           <TabsContent value="almanac" className="space-y-4">
@@ -497,10 +494,7 @@ export function PanchangaMuhurtaStudio() {
               <LimbCard
                 label="Tithi"
                 value={`${panchanga.tithi.paksha || ""} ${panchanga.tithi.name}`.trim()}
-                note={
-                  panchanga.tithi.meaning ||
-                  `${tithiPct}% elapsed · Tithi ${panchanga.tithi.number}`
-                }
+                note={`${panchanga.tithi.meaning ? `${panchanga.tithi.meaning} · ` : ""}${tithiPct}% elapsed · Tithi ${panchanga.tithi.number}`}
               />
               <LimbCard
                 label="Vara"
@@ -546,26 +540,23 @@ export function PanchangaMuhurtaStudio() {
               </GlassCard>
             </div>
 
-            <GlassCard className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <GlassCard className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h2 className="font-display text-xl">Tithi progress</h2>
+                  <h2 className="font-display text-xl">Day kalam</h2>
                   <p className="text-muted-foreground text-xs">
-                    {panchanga.tithi.paksha || "Paksha"} · {tithiPct}% of this lunar day elapsed
+                    Sunrise to sunset. Green is Abhijit; red is Rahu Kalam; amber is Yamaganda and
+                    Gulika.
                   </p>
                 </div>
-                <Badge variant="outline">Tithi {panchanga.tithi.number} / 30</Badge>
-              </div>
-              <Progress value={tithiPct} />
-            </GlassCard>
-
-            <GlassCard className="space-y-4">
-              <div>
-                <h2 className="font-display text-xl">Day kalam</h2>
-                <p className="text-muted-foreground text-xs">
-                  Sunrise to sunset. Green is Abhijit; red is Rahu Kalam; amber is Yamaganda and
-                  Gulika.
-                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => changeTab("muhurta")}
+                >
+                  Open muhurta
+                </Button>
               </div>
               <DayTimeline
                 sunriseTs={panchanga.sunrise.timestamp}
@@ -574,65 +565,11 @@ export function PanchangaMuhurtaStudio() {
                 sunsetLabel={panchanga.sunset.time}
                 bands={kalamBands}
               />
+              <p className="text-muted-foreground border-border/50 bg-muted/10 rounded-lg border px-3 py-2 text-[11px] leading-relaxed">
+                Abhijit is the 24-minute window around local midday. Avoid new starts in Rahu Kalam,
+                journeys and contracts in Yamaganda, and auspicious rites in Gulika.
+              </p>
             </GlassCard>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <GlassCard className="space-y-1 border-emerald-500/30 p-4">
-                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                  Abhijit Muhurta
-                </p>
-                <p className="font-medium">
-                  {panchanga.abhijit
-                    ? `${panchanga.abhijit.start} – ${panchanga.abhijit.end}`
-                    : "—"}
-                </p>
-                <p className="text-muted-foreground text-xs">24 minutes around local midday</p>
-              </GlassCard>
-              <GlassCard className="border-rose/30 space-y-1 p-4">
-                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                  Rahu Kalam
-                </p>
-                <p className="font-medium">
-                  {panchanga.rahuKalam.start} – {panchanga.rahuKalam.end}
-                </p>
-                <p className="text-muted-foreground text-xs">Avoid new starts</p>
-              </GlassCard>
-              <GlassCard className="space-y-1 border-amber-500/30 p-4">
-                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                  Yamaganda
-                </p>
-                <p className="font-medium">
-                  {panchanga.yamaganda.start} – {panchanga.yamaganda.end}
-                </p>
-                <p className="text-muted-foreground text-xs">Avoid journeys and contracts</p>
-              </GlassCard>
-              <GlassCard className="space-y-1 border-amber-500/30 p-4">
-                <p className="text-muted-foreground text-[10px] tracking-wider uppercase">Gulika</p>
-                <p className="font-medium">
-                  {panchanga.gulika.start} – {panchanga.gulika.end}
-                </p>
-                <p className="text-muted-foreground text-xs">Avoid auspicious rites</p>
-              </GlassCard>
-            </div>
-
-            {pick ? (
-              <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-muted-foreground text-[10px] tracking-[0.16em] uppercase">
-                    Best window · {activityLabel}
-                  </p>
-                  <p className="font-display mt-1 text-xl">
-                    {pick.startTime} – {pick.endTime}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {pick.rating} · {pick.score}/100
-                  </p>
-                </div>
-                <Button type="button" onClick={() => changeTab("muhurta")}>
-                  Open muhurta
-                </Button>
-              </GlassCard>
-            ) : null}
           </TabsContent>
 
           <TabsContent value="muhurta" className="space-y-4">
@@ -659,34 +596,8 @@ export function PanchangaMuhurtaStudio() {
               </div>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {[
-                {
-                  label: "Tithi",
-                  value: `${panchanga.tithi.paksha || ""} ${panchanga.tithi.name}`.trim(),
-                },
-                { label: "Vara", value: panchanga.vara.sanskrit || panchanga.vara.name },
-                {
-                  label: "Nakshatra",
-                  value: `${panchanga.nakshatra.name} · ${panchanga.nakshatra.lord}`,
-                },
-                {
-                  label: "Yoga",
-                  value: `${panchanga.yoga.name}${panchanga.yoga.nature ? ` · ${panchanga.yoga.nature}` : ""}`,
-                },
-                { label: "Karana", value: panchanga.karana.name },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border p-3">
-                  <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                    {item.label}
-                  </p>
-                  <p className="mt-0.5 text-sm font-medium">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
             {pick ? (
-              <GlassCard className="space-y-3 border-[#D4AF37]/30">
+              <GlassCard className="border-gold/30 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-muted-foreground text-[10px] tracking-[0.16em] uppercase">
@@ -694,6 +605,10 @@ export function PanchangaMuhurtaStudio() {
                     </p>
                     <p className="font-display mt-1 text-2xl sm:text-3xl">
                       {pick.startTime} – {pick.endTime}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {`${panchanga.tithi.paksha || ""} ${panchanga.tithi.name}`.trim()} ·{" "}
+                      {panchanga.nakshatra.name} nakshatra · {panchanga.yoga.name} yoga
                     </p>
                   </div>
                   <Badge className={cn("border", RATING_STYLE[pick.rating])}>
@@ -741,36 +656,9 @@ export function PanchangaMuhurtaStudio() {
               />
             ) : null}
 
-            <WindowSection title="Recommended" windows={excellent} />
-            <WindowSection title="Good windows" windows={good} />
+            <WindowSection title="Other strong windows" windows={strong} />
             <WindowSection title="Moderate" windows={moderate} />
             <WindowSection title="Avoid" windows={avoid} destructive />
-          </TabsContent>
-
-          <TabsContent value="guide">
-            <GlassCard className="space-y-3 text-sm leading-relaxed">
-              <h2 className="font-display text-xl">How the day is read</h2>
-              <p>
-                Panchanga means five limbs: Tithi (lunar day), Vara (weekday), Nakshatra (the
-                Moon&apos;s star), Yoga (Sun and Moon combined), and Karana (half-tithi). Location
-                changes sunrise, so every kalam is place-specific.
-              </p>
-              <p>
-                Shukla paksha is the waxing fortnight; Krishna is waning. Purnima is tithi 15;
-                Amavasya is tithi 30. Vishti/Bhadra karana and several yogas (Vyatipata, Vaidhrti,
-                and others) are traditionally avoided for major starts.
-              </p>
-              <p>
-                Muhurta uses that same day. Abhijit is a short midday window treated as generally
-                auspicious. Rahu Kalam, Yamaganda, and Gulika are the three inauspicious eighths of
-                daylight. Choose an activity, then start in a recommended window — not during a
-                kalam the almanac marks to avoid.
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Showing {formatLongDate(date)}
-                {place.placeName ? ` · ${place.placeName}` : ""}.
-              </p>
-            </GlassCard>
           </TabsContent>
         </Tabs>
       ) : null}

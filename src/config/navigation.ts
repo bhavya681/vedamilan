@@ -69,6 +69,12 @@ export const dashboardNav: NavItem[] = [
     group: "Chart",
     modes: ["astrology"],
   },
+  {
+    title: "Celebrities",
+    href: routes.astrologyCelebrities,
+    group: "Chart",
+    modes: ["astrology"],
+  },
   { title: "Dashas", href: routes.astrologyDasha, group: "Chart", modes: ["astrology"] },
   { title: "Nakshatra", href: routes.astrologyNakshatra, group: "Chart", modes: ["astrology"] },
   { title: "Varna & Gana", href: routes.natalProfile, group: "Chart", modes: ["astrology"] },

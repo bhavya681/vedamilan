@@ -20,6 +20,7 @@ import {
   isUnauthorizedPayload,
 } from "@/lib/http/session-fetch";
 import { formatPersonName } from "@/lib/utils/person-name";
+import { resolveCurrentDasha } from "@/application/horoscope/dasha-engine";
 import Markdown from "react-markdown";
 
 type AstrologyBundle = {
@@ -48,6 +49,11 @@ const LIFE_AREAS = [
     title: "Charts",
     href: routes.astrologyDivisionalCharts,
     hint: "Moon, Sun, D9, D10, D7, D12 & more Vargas",
+  },
+  {
+    title: "Celebrities",
+    href: routes.astrologyCelebrities,
+    hint: "Browse famous kundalis and chart patterns",
   },
   { title: "Predictions", href: routes.predictions, hint: "Life-area forecasts from your chart" },
   { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
@@ -143,7 +149,7 @@ type ChartPayload = {
       currentMaha?: string;
       currentAntar?: string;
       periods?: Array<{
-        level?: string;
+        level: string;
         parentLord?: string | null;
         lord: string;
         startDate: string;
@@ -208,25 +214,10 @@ export default function AstrologyHomePage() {
         const chart = chartRes.success ? chartRes.data : null;
         const horoscope = chart?.horoscope;
         const dasha = chart?.dasha;
-        const now = Date.now();
         const periods = dasha?.periods || [];
-        const mahaPeriods = periods.filter((p) => p.level === "MAHA");
-        const currentMahaPeriod =
-          mahaPeriods.find(
-            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
-          ) ||
-          mahaPeriods.find(
-            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
-          );
-        const currentMahaLord = currentMahaPeriod?.lord || dasha?.currentMaha || null;
-        const antarPeriods = periods.filter(
-          (p) => p.level === "ANTAR" && (!p.parentLord || p.parentLord === currentMahaLord),
-        );
-        const currentAntarPeriod =
-          antarPeriods.find(
-            (p) => new Date(p.startDate).getTime() <= now && now < new Date(p.endDate).getTime(),
-          ) || antarPeriods[0];
-        const currentAntarLord = currentAntarPeriod?.lord || dasha?.currentAntar || null;
+        const resolved = resolveCurrentDasha(periods);
+        const currentMahaLord = resolved.currentMaha || dasha?.currentMaha || null;
+        const currentAntarLord = resolved.currentAntar || dasha?.currentAntar || null;
 
         const readiness = evaluateOnboardingReadiness({
           gender: profileDoc?.gender,
@@ -338,16 +329,19 @@ export default function AstrologyHomePage() {
             <section className="border-border/60 grid min-w-0 gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
               <div className="min-w-0">
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  <Stars className="h-3.5 w-3.5 shrink-0" /> Current Dasha
+                  <Stars className="h-3.5 w-3.5 shrink-0" /> Current period
                 </p>
-                <p className="font-display mt-2 text-2xl break-words sm:text-3xl">
+                <p className="text-muted-foreground mt-2 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                  Mahadasha
+                </p>
+                <p className="font-display mt-0.5 text-2xl break-words sm:text-3xl">
                   {bundle.currentMaha || "—"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm break-words">
                   Antardasha: {bundle.currentAntar || "—"}
                 </p>
                 <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
-                  <Link href={routes.dasha}>Open full Dashas</Link>
+                  <Link href={routes.astrologyDasha}>Open full Dashas</Link>
                 </Button>
               </div>
               <div className="min-w-0">
@@ -420,7 +414,7 @@ export default function AstrologyHomePage() {
                   </p>
                 </div>
                 <Button asChild className="w-full sm:w-auto">
-                  <Link href={routes.dasha}>
+                  <Link href={routes.astrologyDasha}>
                     Explore Dashas
                     <ArrowRight className="h-4 w-4" />
                   </Link>

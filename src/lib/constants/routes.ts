@@ -31,6 +31,7 @@ export const routes = {
   astrologySpiritualJourney: "/dashboard/astrology/spiritual-journey",
   astrologyPanchanga: "/dashboard/astrology/panchanga",
   astrologyPlanetStrength: "/dashboard/astrology/planet-strength",
+  astrologyCelebrities: "/dashboard/astrology/celebrities",
   astrologyChartComparison: "/dashboard/astrology/chart-comparison",
   matrimony: "/dashboard/matrimony",
   onboarding: "/dashboard/onboarding",
@@ -132,7 +133,7 @@ export type AppRoute = (typeof routes)[keyof typeof routes];
 
 /** Unified Panchanga + Muhurta studio. */
 export function panchangaHref(opts?: {
-  tab?: "almanac" | "muhurta" | "guide";
+  tab?: "almanac" | "muhurta";
   date?: string;
   activity?: string;
 }) {

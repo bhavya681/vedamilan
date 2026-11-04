@@ -11,32 +11,13 @@ import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { useHoroscope } from "@/hooks/use-horoscope";
 import { cn } from "@/lib/utils/cn";
-
-function formatDay(value: string | Date) {
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function yearsBetween(start: string, end: string) {
-  const a = new Date(start).getTime();
-  const b = new Date(end).getTime();
-  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return null;
-  return (b - a) / (365.2425 * 24 * 60 * 60 * 1000);
-}
-
-function progressInRange(start: string, end: string, now = Date.now()) {
-  const a = new Date(start).getTime();
-  const b = new Date(end).getTime();
-  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return 0;
-  return Math.min(1, Math.max(0, (now - a) / (b - a)));
-}
-
-function isCurrent(start: string, end: string, now = Date.now()) {
-  const a = new Date(start).getTime();
-  const b = new Date(end).getTime();
-  return Number.isFinite(a) && Number.isFinite(b) && a <= now && now < b;
-}
+import { isDashaCurrent } from "@/application/horoscope/dasha-engine";
+import {
+  buildDashaView,
+  dashaProgress,
+  dashaYearsBetween,
+  formatDashaDay,
+} from "@/features/horoscope/dasha-view";
 
 const DASHA_THEMES: Record<string, string> = {
   Sun: "Authority, vitality, father, government, and self-expression",
@@ -53,34 +34,19 @@ const DASHA_THEMES: Record<string, string> = {
 export default function AstrologyDashaPage() {
   const { data, error, loading } = useHoroscope();
   const periods = useMemo(() => data?.dasha?.periods || [], [data?.dasha?.periods]);
-  const maha = useMemo(() => periods.filter((p) => p.level === "MAHA"), [periods]);
-  const antarByParent = useMemo(() => {
-    const map = new Map<string, typeof periods>();
-    for (const p of periods) {
-      if (p.level !== "ANTAR" || !p.parentLord) continue;
-      const list = map.get(p.parentLord) || [];
-      list.push(p);
-      map.set(p.parentLord, list);
-    }
-    return map;
-  }, [periods]);
-
-  const currentMaha = maha.find((p) => isCurrent(p.startDate, p.endDate));
-  const currentAntar = periods.find(
-    (p) =>
-      p.level === "ANTAR" &&
-      p.parentLord === (currentMaha?.lord || data?.dasha?.currentMaha) &&
-      isCurrent(p.startDate, p.endDate),
+  const { maha, antarsByMaha, currentMaha, currentAntar } = useMemo(
+    () => buildDashaView(periods),
+    [periods],
   );
 
   const [openLord, setOpenLord] = useState<string | null>(null);
   const [userToggled, setUserToggled] = useState(false);
 
   const mahaProgress = currentMaha
-    ? progressInRange(currentMaha.startDate, currentMaha.endDate)
+    ? dashaProgress(currentMaha.startDate, currentMaha.endDate)
     : 0;
   const antarProgress = currentAntar
-    ? progressInRange(currentAntar.startDate, currentAntar.endDate)
+    ? dashaProgress(currentAntar.startDate, currentAntar.endDate)
     : 0;
 
   return (
@@ -125,16 +91,16 @@ export default function AstrologyDashaPage() {
                 </p>
               </div>
               <p className="font-display text-3xl sm:text-4xl">
-                {data?.dasha?.currentMaha || currentMaha?.lord || "—"}
+                {currentMaha?.lord || data?.dasha?.currentMaha || "—"}
               </p>
               {currentMaha ? (
                 <>
                   <p className="text-muted-foreground text-sm">
-                    {formatDay(currentMaha.startDate)} – {formatDay(currentMaha.endDate)}
-                    {yearsBetween(currentMaha.startDate, currentMaha.endDate) != null ? (
+                    {formatDashaDay(currentMaha.startDate)} – {formatDashaDay(currentMaha.endDate)}
+                    {dashaYearsBetween(currentMaha.startDate, currentMaha.endDate) != null ? (
                       <span>
                         {" "}
-                        · {yearsBetween(currentMaha.startDate, currentMaha.endDate)!.toFixed(1)} yrs
+                        · {dashaYearsBetween(currentMaha.startDate, currentMaha.endDate)!.toFixed(1)} yrs
                       </span>
                     ) : null}
                   </p>
@@ -166,7 +132,7 @@ export default function AstrologyDashaPage() {
               {currentAntar ? (
                 <>
                   <p className="text-muted-foreground text-sm">
-                    {formatDay(currentAntar.startDate)} – {formatDay(currentAntar.endDate)}
+                    {formatDashaDay(currentAntar.startDate)} – {formatDashaDay(currentAntar.endDate)}
                   </p>
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
@@ -199,10 +165,11 @@ export default function AstrologyDashaPage() {
 
             <div className="divide-border/60 border-border/60 divide-y rounded-2xl border">
               {maha.map((p, idx) => {
-                const active = isCurrent(p.startDate, p.endDate);
-                const open = openLord === p.lord || (!userToggled && openLord === null && active);
-                const antars = antarByParent.get(p.lord) || [];
-                const yrs = yearsBetween(p.startDate, p.endDate);
+                const mahaKey = `${p.lord}::${p.startDate}`;
+                const active = isDashaCurrent(p.startDate, p.endDate);
+                const open = openLord === mahaKey || (!userToggled && openLord === null && active);
+                const antars = antarsByMaha.get(mahaKey) || [];
+                const yrs = dashaYearsBetween(p.startDate, p.endDate);
                 return (
                   <div key={`${p.lord}-${idx}`} className={cn(active && "bg-gold/5")}>
                     <button
@@ -210,7 +177,7 @@ export default function AstrologyDashaPage() {
                       className="hover:bg-muted/40 flex w-full items-start justify-between gap-3 px-4 py-4 text-left transition-colors sm:px-5"
                       onClick={() => {
                         setUserToggled(true);
-                        setOpenLord(open ? null : p.lord);
+                        setOpenLord(open ? null : mahaKey);
                       }}
                       aria-expanded={open}
                     >
@@ -224,7 +191,7 @@ export default function AstrologyDashaPage() {
                           ) : null}
                         </div>
                         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-                          {formatDay(p.startDate)} – {formatDay(p.endDate)}
+                          {formatDashaDay(p.startDate)} – {formatDashaDay(p.endDate)}
                           {yrs != null ? ` · ${yrs.toFixed(1)} years` : ""}
                         </p>
                         <p className="text-muted-foreground mt-1 text-xs">
@@ -249,7 +216,7 @@ export default function AstrologyDashaPage() {
                         ) : (
                           <ul className="mt-2 space-y-1">
                             {antars.map((a, i) => {
-                              const antarActive = isCurrent(a.startDate, a.endDate);
+                              const antarActive = isDashaCurrent(a.startDate, a.endDate);
                               return (
                                 <li
                                   key={`${a.lord}-${i}`}
@@ -273,9 +240,9 @@ export default function AstrologyDashaPage() {
                                     </p>
                                   </div>
                                   <p className="text-muted-foreground shrink-0 text-right text-[11px]">
-                                    {formatDay(a.startDate)}
+                                    {formatDashaDay(a.startDate)}
                                     <br />
-                                    {formatDay(a.endDate)}
+                                    {formatDashaDay(a.endDate)}
                                   </p>
                                 </li>
                               );

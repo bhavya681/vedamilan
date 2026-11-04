@@ -95,6 +95,7 @@ describe("astrology sidebar groups", () => {
     expect(items.filter((item) => item.group === "Chart").map((item) => item.title)).toEqual([
       "My Kundli",
       "Charts",
+      "Celebrities",
       "Dashas",
       "Nakshatra",
       "Varna & Gana",

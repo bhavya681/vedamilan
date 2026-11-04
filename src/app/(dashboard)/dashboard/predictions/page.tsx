@@ -9,14 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AI_GURU_NAME, AiGuruAvatar, AiGuruLabel } from "@/features/ai/components/ai-guru-identity";
 import { GuruMarkdown } from "@/features/ai/components/guru-markdown";
+import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
-type Period = "today" | "week" | "month";
+type Period = "week" | "month";
 
 export default function PredictionsPage() {
-  const [period, setPeriod] = useState<Period>("today");
+  const [period, setPeriod] = useState<Period>("week");
   const [dasha, setDasha] = useState<string | null>(null);
   const [moonSign, setMoonSign] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<string[]>([]);
@@ -46,16 +47,14 @@ export default function PredictionsPage() {
         const antar = chartRes.data.dasha?.currentAntar;
         if (!cancelled) {
           setMoonSign(h.moonSign || null);
-          setDasha(maha ? `${maha}${antar ? ` / ${antar}` : ""}` : null);
+          setDasha(dashaPeriodText(maha, antar) || null);
           setHighlights(gocharRes.success ? gocharRes.data?.highlights || [] : []);
         }
 
         const prompt =
-          period === "today"
-            ? "Give a gentle daily focus based on my stored chart, current dasha, and live gochar highlights. Do not invent planet positions."
-            : period === "week"
-              ? "Summarize the week ahead using my current mahadasha/antardasha and the live gochar highlights provided by tools. Focus on themes, not absolute predictions."
-              : "Summarize the month ahead using my current dasha period and major transit themes from gochar tools. Stay interpretive and calm.";
+          period === "week"
+            ? "Summarize the week ahead using my current mahadasha/antardasha and the live gochar highlights provided by tools. Focus on themes, not absolute predictions."
+            : "Summarize the month ahead using my current mahadasha/antardasha and major transit themes from gochar tools. Stay interpretive and calm.";
 
         const aiRes = await fetch("/api/ai/chat", {
           method: "POST",
@@ -86,15 +85,15 @@ export default function PredictionsPage() {
     <div className="relative space-y-6">
       <PageHeader
         eyebrow="Personalized · chart + dasha + gochar"
-        title="Predictions"
-        description="Period guidance grounded in deterministic astrology data. AI explains — it does not calculate."
+        title="Period predictions"
+        description="Weekly and monthly guidance grounded in your Vimshottari period and live Gochar. For the day itself, use Daily horoscope."
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="secondary">
-              <Link href={routes.gochar}>Live Gochar</Link>
+              <Link href={routes.horoscope}>Daily horoscope</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={routes.aiInsights}>AI Guru</Link>
+              <Link href={routes.gochar}>Live Gochar</Link>
             </Button>
           </div>
         }
@@ -103,7 +102,6 @@ export default function PredictionsPage() {
       <div className="flex flex-wrap gap-2">
         {(
           [
-            ["today", "Today"],
             ["week", "This week"],
             ["month", "This month"],
           ] as const
@@ -140,7 +138,7 @@ export default function PredictionsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Calculated from your Kundli</Badge>
               {moonSign ? <Badge variant="outline">Moon · {moonSign}</Badge> : null}
-              {dasha ? <Badge variant="outline">Dasha · {dasha}</Badge> : null}
+              {dasha ? <Badge variant="outline">Vimshottari · {dasha}</Badge> : null}
             </div>
             {highlights.length ? (
               <div>
@@ -169,8 +167,7 @@ export default function PredictionsPage() {
                     <AiGuruLabel />
                   </div>
                   <h2 className="font-display mt-2 text-2xl tracking-tight sm:text-3xl">
-                    AI Guru Interpretation ·{" "}
-                    {period === "today" ? "Today" : period === "week" ? "This week" : "This month"}
+                    AI Guru Interpretation · {period === "week" ? "Week ahead" : "Month ahead"}
                   </h2>
                 </div>
                 <Badge className="bg-primary/12 text-foreground hover:bg-primary/12 border-0">

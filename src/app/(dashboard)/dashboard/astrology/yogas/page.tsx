@@ -164,13 +164,13 @@ export default function AstrologyYogasPage() {
             </GlassCard>
             <GlassCard className="space-y-1 p-3 sm:p-4">
               <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                Current dasha
+                Current Mahadasha
               </p>
               <p className="font-display text-lg leading-snug sm:text-xl">
                 {data.currentMaha || "—"}
               </p>
               <p className="text-muted-foreground text-xs">
-                {data.currentAntar ? `Antar · ${data.currentAntar}` : "Open Dashas for timing"}
+                {data.currentAntar ? `Antardasha · ${data.currentAntar}` : "Open Dashas for timing"}
               </p>
             </GlassCard>
           </div>
