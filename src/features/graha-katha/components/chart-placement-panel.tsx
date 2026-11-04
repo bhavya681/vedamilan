@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Orbit } from "lucide-react";
 import Link from "next/link";
 
 import { useT } from "@/components/i18n/i18n-provider";
@@ -42,6 +43,7 @@ export function ChartPlacementPanel({
   return (
     <section id={id} ref={ref} className="scroll-mt-28 space-y-5">
       <SectionHeader
+        icon={Orbit}
         eyebrow={t("grahaKatha.labels.chart")}
         title={t("grahaKatha.chart.title")}
         description={t("grahaKatha.chart.engineNote")}

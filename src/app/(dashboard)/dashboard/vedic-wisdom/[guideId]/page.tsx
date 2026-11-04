@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { MessageCircle, Mic, Sparkles } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
-import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { WisdomPortrait } from "@/features/wisdom/components/wisdom-portrait";
 import { getWisdomGuide } from "@/domain/wisdom/guides";
 import { WISDOM_AI_DISCLAIMER } from "@/lib/constants/wisdom-disclaimer";
@@ -17,11 +15,6 @@ import { routes } from "@/lib/constants/routes";
 export default function WisdomGuideProfilePage() {
   const params = useParams<{ guideId: string }>();
   const guide = getWisdomGuide(params.guideId);
-  const { setMode } = useWorkspaceMode();
-
-  useEffect(() => {
-    setMode("wisdom", { navigate: false });
-  }, [setMode]);
 
   if (!guide) {
     return (
@@ -35,8 +28,8 @@ export default function WisdomGuideProfilePage() {
   }
 
   return (
-    <div className="space-y-10">
-      <ContentReveal className="space-y-10">
+    <div className="w-full min-w-0 space-y-6 sm:space-y-8">
+      <ContentReveal className="space-y-6 sm:space-y-8">
         <PageHeader
           title={guide.displayName}
           description={guide.domain}
@@ -87,16 +80,6 @@ export default function WisdomGuideProfilePage() {
                 not the historical figure speaking.
               </p>
               <p className="text-muted-foreground text-sm leading-relaxed">{guide.biography}</p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Button asChild>
-                  <Link href={`${routes.vedicWisdom}/${guide.id}/chat`}>Begin conversation</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href={`${routes.vedicWisdom}/${guide.id}/voice`}>
-                    Speak with {guide.displayName}
-                  </Link>
-                </Button>
-              </div>
             </div>
           </div>
         </section>

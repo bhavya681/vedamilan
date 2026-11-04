@@ -25,7 +25,12 @@ import {
 } from "@/features/compatibility/timing-prediction-panel";
 import { AdvancedMarriageDynamicsPanel } from "@/features/compatibility/advanced-marriage-dynamics-panel";
 import { WisdomCompatibilityBridge } from "@/features/wisdom/components/wisdom-compatibility-bridge";
-import { CompatibilitySkeleton } from "@/components/ui/page-skeletons";
+import {
+  CompatibilityPickerSkeleton,
+  CompatibilityReportSkeleton,
+  ContentReveal,
+  RecentReportsSkeleton,
+} from "@/components/ui/page-skeletons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { formatPersonName } from "@/lib/utils/person-name";
@@ -167,6 +172,7 @@ export default function CompatibilityPage() {
   const [pair, setPair] = useState<PairInfo | null>(null);
   const [selfUserId, setSelfUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState("why");
   const autoRanCandidate = useRef<string | null>(null);
@@ -222,30 +228,40 @@ export default function CompatibilityPage() {
     setCandidateUserId(target);
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/compatibility", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ candidateUserId: target }),
-    });
-    const json = await res.json();
-    setLoading(false);
-    if (!json.success) {
-      setError(json.error?.message || "Compatibility needs both Vedic charts");
-      return;
+    try {
+      const res = await fetch("/api/compatibility", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateUserId: target }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error?.message || "Compatibility needs both Vedic charts");
+        return;
+      }
+      setActive(json.data.report);
+      setView("why");
+      void loadReports();
+    } catch {
+      setError("Could not compare charts right now. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setActive(json.data.report);
-    setView("why");
-    await loadReports();
   }
 
   useEffect(() => {
+    let cancelled = false;
     const candidate = new URLSearchParams(window.location.search).get("candidate")?.trim() || "";
-    void loadReports().catch(() => setError("Failed to load compatibility"));
+
+    const reportsTask = loadReports().catch(() => {
+      if (!cancelled) setError("Failed to load compatibility");
+    });
+
     // Same preferred suggestions as Matches — not the full unfiltered roster
-    void fetch("/api/recommendations")
+    const recommendationsTask = fetch("/api/recommendations")
       .then((r) => r.json())
       .then((json) => {
-        if (!json.success) return;
+        if (cancelled || !json.success) return;
         const rows = (json.data?.data || []) as RecMatch[];
         setCandidates(rows);
         if (
@@ -259,6 +275,14 @@ export default function CompatibilityPage() {
         }
       })
       .catch(() => undefined);
+
+    void Promise.allSettled([reportsTask, recommendationsTask]).then(() => {
+      if (!cancelled) setInitialLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -321,7 +345,9 @@ export default function CompatibilityPage() {
         }
       />
 
-      {!active && !loading ? (
+      {initialLoading ? <CompatibilityPickerSkeleton /> : null}
+
+      {!initialLoading && !active && !loading ? (
         <div className="border-border/70 bg-card shadow-soft space-y-5 rounded-2xl border p-4 sm:p-6">
           <div>
             <h2 className="font-display text-xl sm:text-2xl">Who would you like to understand?</h2>
@@ -388,10 +414,10 @@ export default function CompatibilityPage() {
         </div>
       ) : null}
 
-      {loading && !active ? <CompatibilitySkeleton /> : null}
+      {loading ? <CompatibilityReportSkeleton /> : null}
 
-      {active ? (
-        <>
+      {active && !loading ? (
+        <ContentReveal className="space-y-6 sm:space-y-8">
           {/* Emotion */}
           <CompatibilityPairMood
             you={{ name: pair?.youName || "You", photo: pair?.youPhoto, label: "You" }}
@@ -821,7 +847,7 @@ export default function CompatibilityPage() {
               </div>
             </TabsContent>
           </Tabs>
-        </>
+        </ContentReveal>
       ) : null}
 
       <section className="space-y-3">
@@ -837,7 +863,9 @@ export default function CompatibilityPage() {
           ) : null}
         </div>
 
-        {reports.length === 0 ? (
+        {initialLoading ? (
+          <RecentReportsSkeleton />
+        ) : reports.length === 0 ? (
           <div className="border-border/70 bg-card shadow-soft overflow-hidden rounded-2xl border px-4 py-10">
             <EmptyState
               title="No reports yet"

@@ -256,6 +256,129 @@ export function CompatibilitySkeleton() {
   );
 }
 
+export function CompatibilityPickerSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <SkeletonScope label="Loading compatibility profiles" className="space-y-4">
+      <div className="border-border/70 bg-card shadow-soft space-y-5 rounded-2xl border p-4 sm:p-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-64 max-w-full rounded-xl" />
+          <Skeleton className="h-4 w-full max-w-xl rounded-full" />
+          <Skeleton className="h-4 w-4/5 max-w-lg rounded-full" />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: rows }).map((_, i) => (
+            <div
+              key={i}
+              className="border-border/60 flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-3 py-2.5"
+            >
+              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-32 max-w-full rounded-full" />
+                <Skeleton className="h-3 w-44 max-w-full rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <Skeleton className="h-3 w-3/4 max-w-md rounded-full" />
+      </div>
+    </SkeletonScope>
+  );
+}
+
+export function CompatibilityReportSkeleton() {
+  return (
+    <SkeletonScope label="Comparing your charts" className="space-y-4 sm:space-y-6">
+      <div className="border-border/70 bg-card shadow-soft rounded-2xl border p-5 sm:p-6">
+        <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-14 rounded-full" />
+              <Skeleton className="h-5 w-28 rounded-full" />
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-12 w-24 rounded-2xl" />
+            <Skeleton className="h-3 w-20 rounded-full" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="space-y-2 text-right">
+              <Skeleton className="ml-auto h-3 w-14 rounded-full" />
+              <Skeleton className="h-5 w-28 rounded-full" />
+            </div>
+            <Skeleton className="h-16 w-16 rounded-full" />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Skeleton className="h-10 w-full rounded-xl sm:w-40" />
+        <Skeleton className="h-10 w-full rounded-xl sm:w-32" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <PanelSkeleton lines={3} />
+        <PanelSkeleton lines={3} />
+      </div>
+      <StatStripSkeleton count={4} />
+      <PanelSkeleton lines={6} />
+    </SkeletonScope>
+  );
+}
+
+export function KundliPageSkeleton() {
+  return (
+    <SkeletonScope label="Loading your kundli">
+      <PageHeaderSkeleton />
+      <div className="border-border/60 bg-card shadow-soft space-y-5 rounded-2xl border p-5 sm:p-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-muted/30 space-y-2 rounded-xl px-3 py-3">
+              <Skeleton className="h-3 w-20 max-w-full rounded-full" />
+              <Skeleton className="h-6 w-24 max-w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-48 max-w-full rounded-full" />
+          <Skeleton className="h-3.5 w-full max-w-2xl rounded-full" />
+          <Skeleton className="h-3.5 w-4/5 max-w-xl rounded-full" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-10 w-40 rounded-xl" />
+          <Skeleton className="h-10 w-32 rounded-xl" />
+          <Skeleton className="h-10 w-28 rounded-xl" />
+        </div>
+      </div>
+      <ChartSkeleton />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-2xl" />
+        ))}
+      </div>
+    </SkeletonScope>
+  );
+}
+
+export function RecentReportsSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="border-border/60 bg-card space-y-3 rounded-2xl border p-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3.5 w-28 max-w-full rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-14 rounded-lg" />
+          </div>
+          <Skeleton className="h-3 w-full rounded-full" />
+          <Skeleton className="h-3 w-4/5 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Soft reveal when content replaces a skeleton — keeps transitions calm */
 export function ContentReveal({
   children,

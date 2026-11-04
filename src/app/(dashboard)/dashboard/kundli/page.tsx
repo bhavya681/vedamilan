@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
+import { ContentReveal, KundliPageSkeleton } from "@/components/ui/page-skeletons";
 import { GlassCard } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,7 @@ export default function KundliPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [genPhase, setGenPhase] = useState(0);
   const [style, setStyle] = useState<"north" | "south" | "east">("north");
   const [showChart, setShowChart] = useState(true);
@@ -88,7 +90,9 @@ export default function KundliPage() {
   }
 
   useEffect(() => {
-    void load().catch(() => setError("Failed to load kundli"));
+    void load()
+      .catch(() => setError("Failed to load kundli"))
+      .finally(() => setInitialLoading(false));
   }, []);
 
   async function generate() {
@@ -141,8 +145,12 @@ export default function KundliPage() {
     { t: "Predictions", h: routes.predictions },
   ];
 
+  if (initialLoading) {
+    return <KundliPageSkeleton />;
+  }
+
   return (
-    <div className="relative space-y-6">
+    <ContentReveal className="relative space-y-6">
       <PageHeader
         eyebrow="My Kundli"
         title="Your Vedic profile"
@@ -241,7 +249,7 @@ export default function KundliPage() {
             </Button>
           </div>
         </GlassCard>
-      ) : !loading ? (
+      ) : !loading && !error ? (
         <EmptyState
           title="No kundli yet"
           description="Add your birth details, then generate your chart to unlock matches and compatibility."
@@ -351,6 +359,6 @@ export default function KundliPage() {
           Regenerate your chart to view diagram and planet tables.
         </p>
       ) : null}
-    </div>
+    </ContentReveal>
   );
 }

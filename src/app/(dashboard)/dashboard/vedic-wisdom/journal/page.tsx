@@ -35,8 +35,8 @@ export default function WisdomJournalPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      <ContentReveal className="space-y-8">
+    <div data-dashboard-bleed className="w-full min-w-0 space-y-6 sm:space-y-8">
+      <ContentReveal className="space-y-6 sm:space-y-8">
         <PageHeader
           title="Wisdom Journal"
           description="Private reflections you chose to save — never shared publicly."

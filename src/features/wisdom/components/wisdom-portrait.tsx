@@ -62,20 +62,31 @@ export function WisdomPortrait({
     return (
       <div
         className={cn(
-          "ring-border/60 relative overflow-hidden rounded-full ring-1",
+          "ring-border/60 bg-muted relative overflow-hidden rounded-full ring-1",
           sizeClass,
           className,
         )}
       >
-        {/* Wikimedia / Wikipedia portraits — native img for host flexibility */}
+        {/* Local curated portrait — square attention crop keeps the sage centred */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={portrait}
           alt={`Portrait depiction of ${guide.displayName}`}
-          className="h-full w-full object-cover"
+          width={512}
+          height={512}
+          className="h-full w-full object-cover object-center"
           loading="lazy"
-          referrerPolicy="no-referrer"
+          decoding="async"
+          draggable={false}
           onError={() => setFailed(true)}
+        />
+        <span
+          className="ring-foreground/10 pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset"
+          aria-hidden
+        />
+        <span
+          className="from-background/25 pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t to-transparent"
+          aria-hidden
         />
       </div>
     );

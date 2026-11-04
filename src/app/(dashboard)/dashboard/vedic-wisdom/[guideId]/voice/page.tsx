@@ -52,7 +52,7 @@ export default function WisdomVoicePage() {
       <div className="space-y-4 py-10">
         <p>Guide not found.</p>
         <Button asChild variant="outline">
-          <Link href={routes.vedicWisdom}>Back to Vedic Wisdom</Link>
+          <Link href={routes.vedicWisdom}>Back to Rishi Sage</Link>
         </Button>
       </div>
     );
@@ -83,8 +83,8 @@ export default function WisdomVoicePage() {
     voice.state === "ended";
 
   return (
-    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-8">
-      <aside className="border-border/50 shrink-0 space-y-3 lg:w-72 lg:space-y-4 lg:border-r lg:pr-7">
+    <div className="dashboard-fill-h flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-6">
+      <aside className="border-border/50 shrink-0 space-y-3 lg:w-72 lg:space-y-4 lg:border-r lg:pr-6">
         <Link
           href={`${routes.vedicWisdom}/${guide.id}`}
           className="text-muted-foreground hover:text-foreground text-xs transition-colors"
@@ -119,14 +119,14 @@ export default function WisdomVoicePage() {
           <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
             Voice language
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="scrollbar-hidden -mx-0.5 flex gap-1.5 overflow-x-auto px-0.5 pb-1 lg:flex-wrap lg:overflow-visible">
             {LANGS.map((l) => (
               <button
                 key={l.code}
                 type="button"
                 onClick={() => voice.setLanguage(l.code)}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                  "shrink-0 rounded-md border px-2.5 py-1 text-xs transition-colors",
                   voice.language === l.code
                     ? "border-foreground/30 bg-foreground text-background"
                     : "border-border/60 hover:border-foreground/25",
@@ -172,8 +172,8 @@ export default function WisdomVoicePage() {
         </Button>
       </aside>
 
-      <SageDiscourseShell className="border-border/50 shadow-soft dashboard-fill-h flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem] lg:h-full lg:max-h-none">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-3 py-4 text-center sm:px-6 sm:py-6">
+      <SageDiscourseShell className="border-border/50 shadow-soft flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem]">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-start overflow-y-auto px-3 py-4 text-center sm:justify-center sm:px-6 sm:py-6">
           <WisdomPortrait
             guide={guide}
             size="xl"
@@ -286,7 +286,7 @@ export default function WisdomVoicePage() {
           ) : null}
         </div>
 
-        {(voice.showTranscript || voice.messages.length > 0) && voice.showTranscript ? (
+        {voice.showTranscript ? (
           <div className="border-border/40 max-h-64 space-y-1 overflow-y-auto border-t px-4 pt-4 pb-2 sm:px-5 lg:max-h-[40vh]">
             <p className="text-gold/80 mb-2 text-[10px] font-medium tracking-[0.18em] uppercase">
               Live discourse
@@ -312,7 +312,7 @@ export default function WisdomVoicePage() {
             value={textDraft}
             onChange={(e) => setTextDraft(e.target.value)}
             placeholder="Or offer a written reflection…"
-            className="border-border/60 bg-background/80 focus-visible:border-gold/45 focus-visible:ring-gold/20 min-h-11 flex-1 rounded-2xl border px-3.5 text-sm outline-none focus-visible:ring-2"
+            className="border-border/60 bg-background/80 focus-visible:border-gold/45 focus-visible:ring-gold/20 min-h-11 flex-1 rounded-2xl border px-3.5 text-base outline-none focus-visible:ring-2 sm:text-sm"
           />
           <Button
             type="submit"

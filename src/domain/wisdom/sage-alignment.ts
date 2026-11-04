@@ -34,7 +34,7 @@ export const LIFE_NEEDS: Array<{ id: LifeNeedId; label: string; hint: string }> 
   { id: "inner", label: "Inner calm", hint: "Peace, fear, the mind" },
   { id: "duty", label: "Family duty", hint: "Parents, vows, responsibility" },
   { id: "inquiry", label: "Self-inquiry", hint: "Meaning, witness, knowledge" },
-  { id: "astrology", label: "Jyotisha reflection", hint: "Time, alignment, self-knowledge" },
+  { id: "astrology", label: "Timing & seasons", hint: "Patience, change, perspective" },
 ];
 
 const NEED_GUIDES: Record<LifeNeedId, string[]> = {

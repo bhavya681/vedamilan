@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { House } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { SectionHeader } from "@/components/ui/vedic";
@@ -16,6 +17,7 @@ export function HouseExplorer({ houses }: { houses: HouseInterpretation[] }) {
   return (
     <section className="min-w-0 space-y-5 sm:space-y-6">
       <SectionHeader
+        icon={House}
         eyebrow={t("grahaKatha.houses")}
         title={t("grahaKatha.houses")}
         description={t("grahaKatha.housesHint")}

@@ -97,7 +97,7 @@ export default function ConsultationVoicePage() {
     voice.state === "ended";
 
   return (
-    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-8">
+    <div className="lg:dashboard-fill-h flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-8">
       <aside className="border-border/50 shrink-0 space-y-3 lg:w-72 lg:space-y-4 lg:border-r lg:pr-7">
         <Link
           href={consultationPaths.astrologer(astrologer.id)}

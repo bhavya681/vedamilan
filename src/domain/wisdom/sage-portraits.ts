@@ -1,53 +1,43 @@
 /**
- * Curated portrait URLs for Wisdom Council guides.
- * Sources: Wikimedia Commons / Wikipedia (public historical art & photographs).
+ * Curated portrait assets for Wisdom Council guides.
+ * Sources: Wikimedia Commons / Wikipedia lead images (public historical art).
+ * Each asset is localized, square-cropped, and optimized so every sage keeps a
+ * stable, relevant portrait instead of relying on remote image availability.
  * Artistic depictions — not claimed historical photographs of ancient figures.
  * Guides without an entry here must not appear in the product catalog.
  */
 
 export const SAGE_PORTRAIT_URLS: Record<string, string> = {
-  vasistha:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Vasi%E1%B9%A3%E1%B9%ADha_Greets_Shiva_and_Parvati.jpg?width=640",
-  vishwamitra:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Varma_-_Vishvamitra_Meditation.jpg?width=640",
-  vyasa: "/images/sages/vyasa.png",
-  valmiki: "https://commons.wikimedia.org/wiki/Special:FilePath/Valmiki_Ramayana.jpg?width=640",
-  yajnavalkya:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Yajnavalkya_and_Janaka.jpg?width=640",
-  atri: "https://commons.wikimedia.org/wiki/Special:FilePath/Rama_visits_Atri.jpg?width=640",
-  kashyapa:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Kashyapa_muni_statue_in_Andhra_Pradesh.JPG?width=640",
-  gautama: "/images/sages/gautama.png",
-  bhrigu: "https://commons.wikimedia.org/wiki/Special:FilePath/Maharishi_Bhrighuji.jpg?width=640",
-  parashara: "https://upload.wikimedia.org/wikipedia/commons/8/89/Parasara-kl.jpg",
-  agastya: "https://upload.wikimedia.org/wikipedia/commons/0/0b/AgasthiyarG.jpg",
-  narada: "https://upload.wikimedia.org/wikipedia/commons/c/c0/Narad_-_Vintage_Print.jpg",
-  kapila: "https://upload.wikimedia.org/wikipedia/commons/0/09/Kapila_muni.jpg",
-  ashtavakra: "https://commons.wikimedia.org/wiki/Special:FilePath/Ashtavakra.jpg?width=640",
-  brihaspati: "https://upload.wikimedia.org/wikipedia/commons/8/84/Sculpture_of_Brihaspati.jpg",
-  tulsidas:
-    "https://upload.wikimedia.org/wikipedia/commons/a/a4/Tulsidas_composing_his_famous_Avadhi_Ramcharitmanas.jpg",
-  kabir: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Kabir004.jpg",
-  mirabai:
-    "https://upload.wikimedia.org/wikipedia/commons/a/a8/Kangra_painting_of_Mirabai%2C_the_female_Bhakti_saint.jpg",
-  thiruvalluvar:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Thiruvalluvar_Statue.jpg?width=640",
-  "sri-aurobindo": "https://upload.wikimedia.org/wikipedia/commons/7/71/Sri_aurobindo.jpg",
-  "paramahansa-yogananda":
-    "https://upload.wikimedia.org/wikipedia/commons/3/3f/Paramahansa_Yogananda_Standard_Pose.jpg",
-  chanakya: "/images/sages/chanakya.png",
-  vidura: "/images/sages/vidura.png",
-  krishna:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Krishna_holding_flute.jpg?width=640",
-  bhishma: "/images/sages/bhishma.png",
-  dronacharya: "/images/sages/dronacharya.png",
-  patanjali: "https://commons.wikimedia.org/wiki/Special:FilePath/Patanjali.jpg?width=640",
-  "adi-shankaracharya":
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Shankaracharya.jpg?width=640",
-  "swami-vivekananda":
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Swami_Vivekananda-1893-09-signed.jpg?width=640",
-  "ramana-maharshi":
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Ramana_Maharshi.jpg?width=640",
+  vasistha: "/images/sages/vasistha.webp",
+  vishwamitra: "/images/sages/vishwamitra.webp",
+  vyasa: "/images/sages/vyasa.webp",
+  valmiki: "/images/sages/valmiki.webp",
+  yajnavalkya: "/images/sages/yajnavalkya.webp",
+  atri: "/images/sages/atri.webp",
+  kashyapa: "/images/sages/kashyapa.webp",
+  gautama: "/images/sages/gautama.webp",
+  bhrigu: "/images/sages/bhrigu.webp",
+  parashara: "/images/sages/parashara.webp",
+  agastya: "/images/sages/agastya.webp",
+  narada: "/images/sages/narada.webp",
+  kapila: "/images/sages/kapila.webp",
+  ashtavakra: "/images/sages/ashtavakra.webp",
+  brihaspati: "/images/sages/brihaspati.webp",
+  tulsidas: "/images/sages/tulsidas.webp",
+  kabir: "/images/sages/kabir.webp",
+  mirabai: "/images/sages/mirabai.webp",
+  thiruvalluvar: "/images/sages/thiruvalluvar.webp",
+  "sri-aurobindo": "/images/sages/sri-aurobindo.webp",
+  "paramahansa-yogananda": "/images/sages/paramahansa-yogananda.webp",
+  chanakya: "/images/sages/chanakya.webp",
+  vidura: "/images/sages/vidura.webp",
+  krishna: "/images/sages/krishna.webp",
+  bhishma: "/images/sages/bhishma.webp",
+  dronacharya: "/images/sages/dronacharya.webp",
+  patanjali: "/images/sages/patanjali.webp",
+  "adi-shankaracharya": "/images/sages/adi-shankaracharya.webp",
+  "swami-vivekananda": "/images/sages/swami-vivekananda.webp",
+  "ramana-maharshi": "/images/sages/ramana-maharshi.webp",
 };
 
 export function sagePortraitUrl(guideId: string): string | null {

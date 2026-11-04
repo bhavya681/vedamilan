@@ -69,20 +69,20 @@ export const dashboardNav: NavItem[] = [
     group: "Chart",
     modes: ["astrology"],
   },
+  { title: "Dashas", href: routes.astrologyDasha, group: "Chart", modes: ["astrology"] },
+  { title: "Yogas", href: routes.astrologyYogas, group: "Chart", modes: ["astrology"] },
+  { title: "Nakshatra", href: routes.astrologyNakshatra, group: "Chart", modes: ["astrology"] },
   {
     title: "Celebrities",
     href: routes.astrologyCelebrities,
     group: "Chart",
     modes: ["astrology"],
   },
-  { title: "Dashas", href: routes.astrologyDasha, group: "Chart", modes: ["astrology"] },
-  { title: "Nakshatra", href: routes.astrologyNakshatra, group: "Chart", modes: ["astrology"] },
   { title: "Varna & Gana", href: routes.natalProfile, group: "Chart", modes: ["astrology"] },
   { title: "Numerology", href: routes.numerology, group: "Chart", modes: ["astrology"] },
-  { title: "Yogas", href: routes.astrologyYogas, group: "Chart", modes: ["astrology"] },
-  { title: "Predictions", href: routes.predictions, group: "Chart", modes: ["astrology"] },
 
   { title: "Horoscope", href: routes.horoscope, group: "Today", modes: ["astrology"] },
+  { title: "Predictions", href: routes.predictions, group: "Today", modes: ["astrology"] },
   {
     title: "Panchanga",
     href: routes.astrologyPanchanga,
@@ -90,8 +90,8 @@ export const dashboardNav: NavItem[] = [
     group: "Today",
     modes: ["astrology"],
   },
-  { title: "Calendar", href: routes.calendar, group: "Today", modes: ["astrology"] },
   { title: "Gochar", href: routes.astrologyGochar, group: "Today", modes: ["astrology"] },
+  { title: "Calendar", href: routes.calendar, group: "Today", modes: ["astrology"] },
   { title: "Horizon", href: routes.astrologyNorthHorizon, group: "Today", modes: ["astrology"] },
 
   {

@@ -4,7 +4,19 @@ import { use, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bookmark, BookmarkCheck, ChevronLeft, MessageCircle } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChevronLeft,
+  Flame,
+  House,
+  MessageCircle,
+  Orbit,
+  Quote,
+  ScrollText,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -45,6 +57,30 @@ const ChartPlacementPanel = dynamic(
 function SectionSkeleton() {
   return (
     <div className="skeleton-shimmer border-border/40 h-48 rounded-[1.35rem] border" aria-hidden />
+  );
+}
+
+function JourneyNav({
+  items,
+}: {
+  items: Array<{ href: string; label: string; icon: LucideIcon }>;
+}) {
+  return (
+    <nav
+      aria-label="Sections on this page"
+      className="scrollbar-hidden -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 py-1"
+    >
+      {items.map(({ href, label, icon: Icon }) => (
+        <a
+          key={href}
+          href={href}
+          className="border-border/50 bg-card/75 hover:border-gold/40 hover:bg-gold/5 inline-flex min-h-10 shrink-0 snap-start items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors"
+        >
+          <Icon className="text-gold h-4 w-4" aria-hidden />
+          {label}
+        </a>
+      ))}
+    </nav>
   );
 }
 
@@ -115,10 +151,25 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
         }
       />
 
+      <JourneyNav
+        items={[
+          { href: "#story", label: t("grahaKatha.story"), icon: ScrollText },
+          { href: "#understand", label: t("grahaKatha.understand"), icon: Orbit },
+          { href: "#houses", label: t("grahaKatha.houses"), icon: House },
+          { href: "#remedies", label: t("grahaKatha.remedies"), icon: Flame },
+          { href: "#reflections", label: t("grahaKatha.reflections"), icon: Quote },
+          { href: "#my-chart", label: t("grahaKatha.myChart"), icon: Sparkles },
+        ]}
+      />
+
       <div className="katha-section-rule" />
 
       <section ref={storyRef} id="story" className="scroll-mt-24 space-y-4">
-        <SectionHeader eyebrow={t("grahaKatha.story")} title={t("grahaKatha.story")} />
+        <SectionHeader
+          icon={ScrollText}
+          eyebrow={t("grahaKatha.labels.story")}
+          title={t("grahaKatha.story")}
+        />
         <StoryChapters
           chapters={graha.chapters}
           onChapterView={(chapterId) => completeChapter(graha.id, chapterId)}
@@ -127,14 +178,21 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
 
       <div className="katha-section-rule" />
 
-      <GrahaNaturePanels nature={graha.nature} />
+      <div id="understand" className="scroll-mt-24">
+        <GrahaNaturePanels nature={graha.nature} />
+      </div>
 
       {graha.specialSections?.map((s) => (
         <section
           key={s.id}
           className="border-border/50 from-card to-rose/5 shadow-soft relative overflow-hidden rounded-[1.35rem] border bg-gradient-to-br p-5 sm:p-7"
         >
-          <ContentLabelBadge label={s.label} />
+          <div className="flex flex-wrap items-center gap-2">
+            <ContentLabelBadge label={s.label} />
+            <span className="bg-gold/10 text-gold inline-flex h-7 w-7 items-center justify-center rounded-lg">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            </span>
+          </div>
           <h2 className="font-display mt-3 text-2xl">{s.title}</h2>
           <p className="text-muted-foreground mt-2 leading-relaxed">{s.body}</p>
         </section>
@@ -142,17 +200,28 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
 
       <div className="katha-section-rule" />
 
-      <HouseExplorer houses={graha.houses} />
+      <div id="houses" className="scroll-mt-24">
+        <HouseExplorer houses={graha.houses} />
+      </div>
 
-      <section className="space-y-4">
-        <SectionHeader eyebrow={t("grahaKatha.remedies")} title={t("grahaKatha.remedies")} />
+      <section id="remedies" className="scroll-mt-24 space-y-4">
+        <SectionHeader
+          icon={Flame}
+          eyebrow={t("grahaKatha.labels.remedy")}
+          title={t("grahaKatha.remedies")}
+        />
         <ul className="grid gap-3 md:grid-cols-2">
           {graha.remedies.map((r) => (
             <li
               key={r.id}
-              className="katha-panel border-border/50 bg-card/80 shadow-soft rounded-[1.25rem] border p-5"
+              className="katha-panel border-border/50 bg-card/80 shadow-soft group hover:border-gold/35 rounded-[1.25rem] border p-5 transition-colors"
             >
-              <ContentLabelBadge label="remedy" className="mb-2" />
+              <div className="flex items-start justify-between gap-3">
+                <ContentLabelBadge label="remedy" className="mb-2" />
+                <span className="bg-gold/10 text-gold inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+                  <Flame className="h-4 w-4" aria-hidden />
+                </span>
+              </div>
               <h3 className="font-display text-lg">{r.title}</h3>
               <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{r.body}</p>
             </li>
@@ -160,15 +229,20 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
         </ul>
       </section>
 
-      <section className="space-y-4">
-        <SectionHeader eyebrow={t("grahaKatha.reflections")} title={t("grahaKatha.reflections")} />
-        <ul className="space-y-3">
+      <section id="reflections" className="scroll-mt-24 space-y-4">
+        <SectionHeader
+          icon={Quote}
+          eyebrow={t("grahaKatha.labels.reflection")}
+          title={t("grahaKatha.reflections")}
+        />
+        <ul className="grid gap-3 sm:grid-cols-2">
           {graha.reflections.map((r) => (
             <li
               key={r.id}
-              className="border-gold/25 bg-gold/5 font-display rounded-xl border-l-[3px] px-4 py-3 text-lg italic sm:text-xl"
+              className="border-gold/25 bg-gold/5 flex items-start gap-3 rounded-xl border-l-[3px] px-4 py-3"
             >
-              {r.prompt}
+              <Quote className="text-gold/60 mt-1 h-4 w-4 shrink-0" aria-hidden />
+              <p className="font-display text-lg leading-snug italic sm:text-xl">{r.prompt}</p>
             </li>
           ))}
         </ul>
@@ -201,8 +275,11 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
 
       {/* Sit above mobile bottom nav — avoid stacking two fixed bars at bottom-0 */}
       <div className="border-border/60 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky-above-bottom-nav fixed inset-x-0 z-30 border-t px-3 py-2.5 backdrop-blur-md md:hidden">
-        <Button asChild className="w-full">
-          <a href="#my-chart">{t("grahaKatha.stickyChart")}</a>
+        <Button asChild className="w-full gap-2">
+          <a href="#my-chart">
+            <Sparkles className="h-4 w-4" aria-hidden />
+            {t("grahaKatha.stickyChart")}
+          </a>
         </Button>
       </div>
     </div>

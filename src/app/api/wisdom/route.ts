@@ -63,6 +63,7 @@ const councilSchema = z.object({
   mode: z.literal("council"),
   message: z.string().min(1).max(4000),
   guideIds: z.array(z.string()).min(2).max(3),
+  need: z.string().max(40).optional(),
 });
 
 export async function POST(request: Request) {
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         message: parsed.message,
         guideIds: parsed.guideIds,
+        need: parsed.need,
       });
       return successResponse(result);
     }

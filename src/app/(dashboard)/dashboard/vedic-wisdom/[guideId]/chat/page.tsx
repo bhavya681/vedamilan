@@ -50,7 +50,7 @@ export default function WisdomChatPage() {
       <div className="space-y-4 py-10">
         <p>Guide not found.</p>
         <Button asChild variant="outline">
-          <Link href={routes.vedicWisdom}>Back to Vedic Wisdom</Link>
+          <Link href={routes.vedicWisdom}>Back to Rishi Sage</Link>
         </Button>
       </div>
     );
@@ -136,8 +136,8 @@ export default function WisdomChatPage() {
       ];
 
   return (
-    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 md:gap-5 lg:flex-row lg:gap-8">
-      <aside className="border-border/50 from-card/60 via-muted/20 relative shrink-0 space-y-3 overflow-hidden rounded-2xl border bg-gradient-to-b to-transparent p-3 sm:space-y-4 sm:rounded-3xl sm:p-4 lg:w-[17.5rem] lg:space-y-5 lg:border-0 lg:border-r lg:bg-transparent lg:p-0 lg:pr-7">
+    <div className="dashboard-fill-h flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:gap-6">
+      <aside className="border-border/50 from-card/60 via-muted/20 relative shrink-0 space-y-3 overflow-hidden rounded-2xl border bg-gradient-to-b to-transparent p-3 sm:space-y-4 sm:rounded-3xl sm:p-4 lg:w-72 lg:space-y-5 lg:border-0 lg:border-r lg:bg-transparent lg:p-0 lg:pr-6">
         <div className="pointer-events-none absolute inset-0 opacity-30 lg:hidden" aria-hidden>
           <div className="sage-discourse-wash absolute inset-0" />
         </div>
@@ -242,7 +242,7 @@ export default function WisdomChatPage() {
         </div>
       </aside>
 
-      <SageDiscourseShell className="border-border/50 shadow-soft dashboard-fill-h flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem] lg:h-full lg:max-h-none">
+      <SageDiscourseShell className="border-border/50 shadow-soft flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border sm:rounded-[1.75rem]">
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 pt-3 pb-2 sm:px-6 sm:pt-5">
           {messages.length === 0 ? (
             <SageEmptyInvite
@@ -324,7 +324,7 @@ export default function WisdomChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Offer your question with sincerity…"
-                className="placeholder:text-muted-foreground/70 min-h-[2.75rem] flex-1 resize-none bg-transparent px-3.5 py-2.5 text-sm outline-none"
+                className="placeholder:text-muted-foreground/70 min-h-[2.75rem] flex-1 resize-none bg-transparent px-3.5 py-2.5 text-base outline-none sm:text-sm"
                 disabled={busy}
               />
             </div>

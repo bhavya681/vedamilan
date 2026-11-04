@@ -1,5 +1,7 @@
 "use client";
 
+import { Orbit } from "lucide-react";
+
 import { useT } from "@/components/i18n/i18n-provider";
 import { SectionHeader } from "@/components/ui/vedic";
 import type { GrahaNature, LifeDomain } from "@/domain/graha-katha/types";
@@ -21,6 +23,7 @@ export function GrahaNaturePanels({ nature }: { nature: GrahaNature }) {
   return (
     <section className="min-w-0 space-y-5 sm:space-y-6">
       <SectionHeader
+        icon={Orbit}
         eyebrow={t("grahaKatha.understand")}
         title={t("grahaKatha.understand")}
         description={t("grahaKatha.labels.traditional")}

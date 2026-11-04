@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Heart, ListChecks, Stars } from "lucide-react";
+import {
+  ArrowRight,
+  Bell,
+  Heart,
+  Hourglass,
+  ListChecks,
+  MoonStar,
+  ShieldAlert,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
@@ -19,6 +29,7 @@ import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider
 import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 import { fetchJsonWhenAuthed, isAbortError, isUnauthorizedPayload } from "@/lib/http/session-fetch";
+import { cn } from "@/lib/utils/cn";
 import { formatPersonName } from "@/lib/utils/person-name";
 
 type Bundle = {
@@ -54,6 +65,84 @@ function greetingForHour(hour: number) {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function SnapshotStat({
+  icon: Icon,
+  label,
+  value,
+  href,
+  action,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <div className="border-border/55 bg-background/45 min-w-0 rounded-xl border p-4">
+      <p className="text-muted-foreground flex items-center gap-2 text-[10px] font-semibold tracking-[0.16em] uppercase">
+        <span className="bg-gold/10 text-gold grid h-7 w-7 place-items-center rounded-lg">
+          <Icon className="h-3.5 w-3.5" aria-hidden />
+        </span>
+        {label}
+      </p>
+      <p className="font-display mt-3 truncate text-2xl leading-tight sm:text-3xl">{value}</p>
+      <Link
+        href={href}
+        className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs transition-colors"
+      >
+        {action}
+        <ArrowRight className="h-3 w-3" aria-hidden />
+      </Link>
+    </div>
+  );
+}
+
+function GuidanceCard({
+  icon: Icon,
+  kicker,
+  title,
+  description,
+  href,
+  cta,
+  tone,
+  buttonVariant = "outline",
+}: {
+  icon: LucideIcon;
+  kicker: string;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+  tone: "ai" | "rose" | "gold";
+  buttonVariant?: "default" | "outline" | "ai" | "secondary";
+}) {
+  const toneClass = {
+    ai: "bg-ai/10 text-ai border-ai/25",
+    rose: "bg-rose/10 text-rose border-rose/25",
+    gold: "bg-gold/10 text-gold border-gold/25",
+  }[tone];
+
+  return (
+    <GlassCard className="flex min-w-0 flex-col p-4 sm:p-5">
+      <span className={cn("grid h-11 w-11 place-items-center rounded-xl border", toneClass)}>
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <p className="text-muted-foreground mt-4 text-[10px] font-semibold tracking-[0.16em] uppercase">
+        {kicker}
+      </p>
+      <h2 className="font-display mt-1.5 text-xl leading-tight tracking-tight">{title}</h2>
+      <p className="text-muted-foreground mt-2 flex-1 text-sm leading-relaxed">{description}</p>
+      <Button asChild variant={buttonVariant} className="mt-5 w-full gap-1.5 sm:w-auto">
+        <Link href={href}>
+          {cta}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
+    </GlassCard>
+  );
 }
 
 export default function MatrimonyHomePage() {
@@ -215,96 +304,80 @@ export default function MatrimonyHomePage() {
 
         {bundle ? (
           <>
-            <section className="border-border/60 grid gap-5 border-y py-5 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 md:gap-8">
-              <div>
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  <Stars className="h-3.5 w-3.5" /> Moon
-                </p>
-                <p className="font-display mt-2 text-3xl">{bundle.moonSign || "—"}</p>
-                <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
-                  <Link href={routes.kundli}>Open Kundli</Link>
-                </Button>
+            <GlassCard className="relative overflow-hidden">
+              <div
+                className="bg-rose/10 pointer-events-none absolute -top-24 -right-20 h-56 w-56 rounded-full blur-3xl"
+                aria-hidden
+              />
+              <div className="relative grid gap-3 sm:grid-cols-3">
+                <SnapshotStat
+                  icon={MoonStar}
+                  label="Moon sign"
+                  value={bundle.moonSign || "—"}
+                  href={routes.kundli}
+                  action="Open Kundli"
+                />
+                <SnapshotStat
+                  icon={Hourglass}
+                  label="Mahadasha"
+                  value={bundle.currentMaha || "—"}
+                  href={routes.dasha}
+                  action="Timing windows"
+                />
+                <SnapshotStat
+                  icon={Bell}
+                  label="Activity"
+                  value={String(bundle.unread)}
+                  href={routes.notifications}
+                  action="Notifications"
+                />
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">Mahadasha</p>
-                <p className="font-display mt-2 text-3xl">{bundle.currentMaha || "—"}</p>
-                <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
-                  <Link href={routes.dasha}>Timing windows</Link>
-                </Button>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs tracking-wide uppercase">Activity</p>
-                <p className="font-display mt-2 text-3xl">{bundle.unread}</p>
-                <Button asChild variant="link" className="mt-1 h-auto px-0 text-sm">
-                  <Link href={routes.notifications}>Notifications</Link>
-                </Button>
-              </div>
-            </section>
+            </GlassCard>
 
             {bundle.spouseTendencies ? (
               <SpouseTendencyPanel tendencies={bundle.spouseTendencies} />
             ) : null}
 
-            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="min-w-0 space-y-1">
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  <Heart className="text-rose h-3.5 w-3.5" />
-                  Matrimony AI · Marriage specialist
-                </p>
-                <h2 className="font-display text-xl sm:text-2xl">Marriage AI Guru</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Your vivaha-only specialist — marriage timing, spouse themes, love vs arranged
-                  cues, manglik, and when to progress with a match. Available only in Matrimony
-                  mode.
+            <section className="space-y-3">
+              <div>
+                <h2 className="font-display text-xl tracking-tight sm:text-2xl">
+                  Marriage guidance
+                </h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Go deeper with specialist readings, chart cautions, and everyday alignment.
                 </p>
               </div>
-              <Button asChild className="w-full shrink-0 sm:w-auto" variant="ai">
-                <Link href={routes.marriageGuru}>
-                  Ask Marriage AI Guru
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </GlassCard>
-
-            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="min-w-0 space-y-1">
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  Chart caution
-                </p>
-                <h2 className="font-display text-xl sm:text-2xl">Marriage precautions</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Restlessness, delay, and conflict flags from your Kundli — plus what you can live
-                  with, and what you must refuse.
-                </p>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                <GuidanceCard
+                  icon={Heart}
+                  kicker="Matrimony AI · Marriage specialist"
+                  title="Marriage AI Guru"
+                  description="Your vivaha-only specialist — marriage timing, spouse themes, love vs arranged cues, manglik, and when to progress with a match."
+                  href={routes.marriageGuru}
+                  cta="Ask AI Guru"
+                  tone="ai"
+                  buttonVariant="ai"
+                />
+                <GuidanceCard
+                  icon={ShieldAlert}
+                  kicker="Chart caution"
+                  title="Marriage precautions"
+                  description="Restlessness, delay, and conflict flags from your Kundli — plus what you can live with, and what you must refuse."
+                  href={routes.matrimonyPrecautions}
+                  cta="Open precautions"
+                  tone="rose"
+                />
+                <GuidanceCard
+                  icon={ListChecks}
+                  kicker="Optional"
+                  title="Situational alignment quiz"
+                  description="Answer everyday preferences around conflict, family, money, and support. Complements kundli matching without replacing it."
+                  href={routes.situationalAlignment}
+                  cta="Take the quiz"
+                  tone="gold"
+                />
               </div>
-              <Button asChild className="w-full shrink-0 sm:w-auto" variant="outline">
-                <Link href={routes.matrimonyPrecautions}>
-                  Open precautions
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </GlassCard>
-
-            <GlassCard className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="min-w-0 space-y-1">
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs tracking-wide uppercase">
-                  <ListChecks className="h-3.5 w-3.5" />
-                  Optional
-                </p>
-                <h2 className="font-display text-xl sm:text-2xl">Situational alignment quiz</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Answer everyday situation preferences (conflict, family, money, support).
-                  Complements kundli matching — not required. Then filter Matches to people who also
-                  completed it.
-                </p>
-              </div>
-              <Button asChild className="w-full shrink-0 sm:w-auto">
-                <Link href={routes.situationalAlignment}>
-                  Take the quiz
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </GlassCard>
+            </section>
 
             <section className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -376,13 +449,18 @@ export default function MatrimonyHomePage() {
             </section>
 
             {bundle.insight ? (
-              <section className="border-border/60 space-y-3 border-t pt-8">
-                <h2 className="font-display text-xl">A closer look at your compatibility</h2>
+              <GlassCard className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="bg-gold/10 text-gold grid h-8 w-8 place-items-center rounded-lg">
+                    <Sparkles className="h-4 w-4" aria-hidden />
+                  </span>
+                  <h2 className="font-display text-xl">A closer look at your compatibility</h2>
+                </div>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{bundle.insight}</p>
                 <Button asChild variant="outline" size="sm">
                   <Link href={routes.aiInsights}>Explore further</Link>
                 </Button>
-              </section>
+              </GlassCard>
             ) : null}
 
             <CrossModeCta />

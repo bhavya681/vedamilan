@@ -43,31 +43,31 @@ function greetingForHour(hour: number) {
 }
 
 const LIFE_AREAS = [
+  { title: "Predictions", href: routes.predictions, hint: "Life-area forecasts from your chart" },
   { title: "Dashas", href: routes.astrologyDasha, hint: "Mahadasha and Antardasha timeline" },
-  { title: "Yogas", href: routes.astrologyYogas, hint: "Yogas, doshas, and karmic patterns" },
   {
     title: "Charts",
     href: routes.astrologyDivisionalCharts,
     hint: "Moon, Sun, D9, D10, D7, D12 & more Vargas",
   },
+  { title: "Yogas", href: routes.astrologyYogas, hint: "Yogas, doshas, and karmic patterns" },
+  { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
   {
     title: "Celebrities",
     href: routes.astrologyCelebrities,
     hint: "Browse famous kundalis and chart patterns",
   },
-  { title: "Predictions", href: routes.predictions, hint: "Life-area forecasts from your chart" },
-  { title: "Nakshatra", href: routes.astrologyNakshatra, hint: "Janma Nakshatra intelligence" },
   {
     title: "Horizon",
     href: routes.astrologyNorthHorizon,
     hint: "See what is rising, setting, and moving across the sky",
   },
-  { title: "Remedies", href: routes.lalKitab, hint: "Lal Kitab–inspired guidance" },
   {
     title: "Graha Katha",
     href: routes.grahaKatha,
     hint: "Stories, symbolism & 12-house wisdom of the Grahas",
   },
+  { title: "Remedies", href: routes.lalKitab, hint: "Lal Kitab–inspired guidance" },
 ] as const;
 
 const ADVANCED_AREAS = [

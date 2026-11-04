@@ -126,7 +126,7 @@ export default function ConsultationChatPage() {
       ];
 
   return (
-    <div className="lg:dashboard-fill-h mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-3 sm:gap-4 md:gap-5 lg:flex-row lg:gap-8">
+    <div className="lg:dashboard-fill-h flex w-full min-w-0 flex-col gap-3 sm:gap-4 md:gap-5 lg:flex-row lg:gap-8">
       <aside className="border-border/50 from-card/60 via-muted/20 relative shrink-0 space-y-3 overflow-hidden rounded-2xl border bg-gradient-to-b to-transparent p-3 sm:space-y-4 sm:rounded-3xl sm:p-4 lg:w-[17.5rem] lg:space-y-5 lg:border-0 lg:border-r lg:bg-transparent lg:p-0 lg:pr-7">
         <div className="relative space-y-3 sm:space-y-4 lg:space-y-5">
           <Link

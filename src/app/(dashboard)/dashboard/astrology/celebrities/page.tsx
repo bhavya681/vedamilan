@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Calendar,
+  ChartCandlestick,
   Clapperboard,
   Clock,
   Compass,
@@ -26,6 +27,8 @@ import {
   Telescope,
   Trophy,
   Users,
+  Video,
+  Dices,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -62,6 +65,8 @@ type CelebritySummary = {
 
 type CelebrityChart = CelebritySummary & {
   birthTimeLabel: string;
+  chartSource: "computed" | "traditional";
+  chartSourceNote: string | null;
   lagnaSign: string;
   lagnaNakshatra: string | null;
   lagnaDegree: number;
@@ -95,11 +100,15 @@ type CelebrityStudioResponse = {
 
 const CATEGORIES = [
   "All",
-  "Cinema",
   "Sports",
+  "Cinema",
   "Music",
+  "Creators",
+  "Finance",
+  "Gamblers",
   "Leaders",
   "Science & arts",
+  "Divine",
   "Spiritual",
   "Mystic",
   "Criminals",
@@ -141,6 +150,30 @@ const CATEGORY_META: Record<
     chip: "border-saffron/25 bg-saffron/10 text-saffron",
     wash: "from-saffron/12 via-transparent",
   },
+  Divine: {
+    icon: Sparkles,
+    avatar: "border-gold/40 from-gold/30 to-saffron/15 text-gold",
+    chip: "border-gold/35 bg-gold/15 text-gold",
+    wash: "from-gold/15 via-transparent",
+  },
+  Creators: {
+    icon: Video,
+    avatar: "border-rose/30 from-rose/20 to-cosmic/10 text-rose",
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+  },
+  Finance: {
+    icon: ChartCandlestick,
+    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
+    chip: "border-emerald/25 bg-emerald/10 text-emerald",
+    wash: "from-emerald/12 via-transparent",
+  },
+  Gamblers: {
+    icon: Dices,
+    avatar: "border-amber/30 from-amber/20 to-rose/10 text-amber",
+    chip: "border-amber/25 bg-amber/10 text-amber",
+    wash: "from-amber/10 via-transparent",
+  },
   Spiritual: {
     icon: Flame,
     avatar: "border-gold/35 from-gold/25 to-saffron/10 text-saffron",
@@ -165,6 +198,7 @@ const TIME_ACCURACY_META: Record<string, { label: string; tone: string }> = {
   published: { label: "Published time", tone: "text-emerald" },
   approximate: { label: "Approx. time", tone: "text-amber" },
   unknown: { label: "Noon chart", tone: "text-muted-foreground" },
+  traditional: { label: "Traditional chart", tone: "text-gold" },
 };
 
 const YOGA_CATEGORY_META: Record<
@@ -269,8 +303,19 @@ function CelebrityAvatar({
 }
 
 function formatBirthDate(iso: string) {
-  const [year, month, day] = iso.split("-").map(Number);
+  const match = /^(-?\d+)-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return iso;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
   if (!year || !month || !day) return iso;
+  if (year <= 0) {
+    const monthLabel = new Date(Date.UTC(2000, month - 1, 1)).toLocaleDateString("en-GB", {
+      month: "short",
+      timeZone: "UTC",
+    });
+    return `${day} ${monthLabel} ${1 - year} BCE`;
+  }
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -308,6 +353,7 @@ function ChartPanel({
   subtitle,
   lagna,
   chart,
+  chartSource = "computed",
   planetVoice = false,
   footer,
 }: {
@@ -316,6 +362,7 @@ function ChartPanel({
   subtitle: string;
   lagna: string;
   chart: unknown;
+  chartSource?: "computed" | "traditional";
   planetVoice?: boolean;
   footer?: ReactNode;
 }) {
@@ -338,7 +385,8 @@ function ChartPanel({
           <p className="text-muted-foreground py-10 text-sm">Chart layout unavailable.</p>
         )}
         <p className="text-muted-foreground text-center text-[10px] tracking-[0.14em] uppercase">
-          North Indian · whole-sign houses · Lahiri ayanamsha
+          North Indian · whole-sign houses ·{" "}
+          {chartSource === "traditional" ? "traditional positions" : "Lahiri ayanamsha"}
         </p>
         {footer}
       </CardContent>
@@ -386,7 +434,9 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
             </h1>
             <p className="text-muted-foreground mt-1.5 flex items-center gap-1.5 text-sm">
               <Globe2 className="h-3.5 w-3.5 shrink-0" />
-              International icon · Vedic sidereal chart
+              {chart.category === "Divine"
+                ? "Divine figure · traditional Vedic chart"
+                : "International icon · Vedic sidereal chart"}
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -436,7 +486,12 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
             value={chart.moonSign}
             hint={chart.moonNakshatra}
           />
-          <SignatureTile icon={Sun} label="Sun" value={chart.sunSign} hint="Sidereal" />
+          <SignatureTile
+            icon={Sun}
+            label="Sun"
+            value={chart.sunSign}
+            hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
+          />
           <SignatureTile
             icon={Sparkles}
             label="Current Mahadasha"
@@ -656,6 +711,7 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
             subtitle="Primary kundli — body, personality, and life direction."
             lagna={chart.lagnaSign}
             chart={chart.chartNorth}
+            chartSource={chart.chartSource}
             planetVoice
           />
           <ChartPanel
@@ -664,6 +720,7 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
             subtitle="Marriage, dharma, and the inner strength of each graha."
             lagna={chart.d9LagnaSign}
             chart={chart.chartD9}
+            chartSource={chart.chartSource}
             footer={<D9Placements planets={chart.d9Planets} />}
           />
         </div>
@@ -698,7 +755,9 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
               Sun sign
             </p>
             <p className="font-display mt-1 text-lg">{chart.sunSign}</p>
-            <p className="text-muted-foreground text-xs">Sidereal · Lahiri</p>
+            <p className="text-muted-foreground text-xs">
+              {chart.chartSource === "traditional" ? "Traditional position" : "Sidereal · Lahiri"}
+            </p>
           </div>
           <div className="border-border/60 bg-background/60 rounded-xl border p-3.5">
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
@@ -715,14 +774,21 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
       <Card className="border-gold/25 bg-gold/5">
         <CardContent className="flex gap-3 p-4 sm:p-5">
           <Info className="text-gold mt-0.5 h-4 w-4 shrink-0" />
-          <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-            {chart.category === "Criminals"
-              ? "This infamous figure is included only for neutral astrological study and is not presented as a role model. "
-              : ""}
-            Birth records for public figures are often disputed. Unknown birth times use local noon,
-            so the ascendant and house cusps are illustrative. Charts use whole-sign houses and the
-            Lahiri ayanamsha for study and inspiration.
-          </p>
+          <div className="text-muted-foreground space-y-1.5 text-xs leading-relaxed sm:text-sm">
+            <p>
+              {chart.category === "Criminals"
+                ? "This infamous figure is included only for neutral astrological study and is not presented as a role model. "
+                : chart.category === "Gamblers"
+                  ? "This figure is included for a neutral study of risk, probability, and decision-making, not as gambling advice. "
+                  : ""}
+              {chart.chartSource === "traditional"
+                ? "This is a traditional devotional chart based on scriptural or traditional birth details. It is an educational reconstruction, not a modern ephemeris calculation or a claim of historical certainty."
+                : "Birth records for public figures are often disputed. Unknown birth times use local noon, so the ascendant and house cusps are illustrative. Charts use whole-sign houses and the Lahiri ayanamsha for study and inspiration."}
+            </p>
+            {chart.chartSource === "traditional" && chart.chartSourceNote ? (
+              <p>{chart.chartSourceNote}</p>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -820,18 +886,19 @@ function AtlasHero({ total, categories }: { total: number | null; categories: nu
         <div className="max-w-2xl min-w-0">
           <p className="text-gold flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase">
             <Globe2 className="h-3.5 w-3.5" />
-            International icons
+            Divine &amp; international icons
           </p>
           <h1 className="font-display mt-2 text-3xl leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
             Celebrity Kundali Atlas
           </h1>
           <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed sm:text-base">
-            Study D1 Rashi and D9 Navamsa charts of cinema, sport, music, leadership, science,
-            spiritual, mystical, and infamous figures from around the world.
+            Study D1 Rashi and D9 Navamsa charts of divine figures, cinema, sport, music,
+            leadership, science, spiritual, mystical, and infamous figures from around the world.
           </p>
           <p className="text-muted-foreground mt-1.5 text-xs">
-            A neutral study archive — spiritual teachers and infamous figures are included for
-            comparative astrology, not endorsement.
+            A neutral study archive — divine charts follow scriptural or traditional details, while
+            spiritual teachers and infamous figures are included for comparative astrology, not
+            endorsement.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge variant="outline" className="border-gold/30 bg-gold/10 gap-1.5">
@@ -883,8 +950,8 @@ function AtlasSkeleton() {
       <div className="border-border/60 bg-card rounded-2xl border p-4">
         <Skeleton className="h-10 w-full rounded-xl" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        {Array.from({ length: 10 }).map((_, index) => (
           <div key={index} className="border-border/60 bg-card space-y-3 rounded-2xl border p-4">
             <div className="flex items-center gap-3">
               <Skeleton className="h-11 w-11 rounded-xl" />
@@ -957,6 +1024,7 @@ function CelebritiesContent() {
         return (
           celebrity.name.toLowerCase().includes(q) ||
           celebrity.field.toLowerCase().includes(q) ||
+          celebrity.category.toLowerCase().includes(q) ||
           celebrity.place.toLowerCase().includes(q)
         );
       })
@@ -966,7 +1034,7 @@ function CelebritiesContent() {
   if (selectedId) {
     if (loading) {
       return (
-        <div className="mx-auto w-full max-w-6xl space-y-5">
+        <div className="min-w-0 space-y-5">
           <AtlasSkeleton />
         </div>
       );
@@ -990,7 +1058,7 @@ function CelebritiesContent() {
     }
     if (data?.selected) {
       return (
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="min-w-0">
           <ContentReveal>
             <CelebrityDetail chart={data.selected} />
           </ContentReveal>
@@ -1000,7 +1068,7 @@ function CelebritiesContent() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-6">
+    <div className="min-w-0 space-y-5 sm:space-y-6">
       <ContentReveal className="space-y-5 sm:space-y-6">
         <AtlasHero
           total={celebrities?.length ?? null}
@@ -1021,7 +1089,7 @@ function CelebritiesContent() {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
+              <div className="scrollbar-hidden -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0">
                 {CATEGORIES.map((option) => {
                   const active = category === option;
                   const Icon = option === "All" ? Globe2 : CATEGORY_META[option].icon;
@@ -1033,7 +1101,7 @@ function CelebritiesContent() {
                       onClick={() => setCategory(option)}
                       aria-pressed={active}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                         active
                           ? "border-gold/40 bg-gold/12 text-foreground"
                           : "border-border/60 text-muted-foreground hover:border-gold/30 hover:text-foreground",
@@ -1079,7 +1147,7 @@ function CelebritiesContent() {
                 Select a figure to open the D1 &amp; D9 studio
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {filtered.map((celebrity) => (
                 <CelebrityCard key={celebrity.id} celebrity={celebrity} />
               ))}
@@ -1095,7 +1163,7 @@ export default function CelebritiesPage() {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto w-full max-w-7xl">
+        <div data-dashboard-bleed className="w-full min-w-0">
           <PageHeader
             title={
               <span className="flex items-center gap-2">
@@ -1103,13 +1171,15 @@ export default function CelebritiesPage() {
                 Celebrity Kundali Atlas
               </span>
             }
-            description="Browse D1 and D9 charts of international icons."
+            description="Browse D1 and D9 charts of divine figures and international icons."
           />
           <AtlasSkeleton />
         </div>
       }
     >
-      <CelebritiesContent />
+      <div data-dashboard-bleed className="w-full min-w-0">
+        <CelebritiesContent />
+      </div>
     </Suspense>
   );
 }

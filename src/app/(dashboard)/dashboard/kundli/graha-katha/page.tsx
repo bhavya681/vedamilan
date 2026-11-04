@@ -3,7 +3,14 @@
 import { useDeferredValue, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import {
+  BookOpen,
+  Compass,
+  Library as LibraryIcon,
+  Search,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { PageHeader } from "@/components/layout/page-shell";
@@ -30,6 +37,31 @@ const CompareTeaser = dynamic(
     ),
   },
 );
+
+function LibraryFact({
+  icon: Icon,
+  value,
+  label,
+  detail,
+}: {
+  icon: LucideIcon;
+  value: string;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <div className="border-border/50 bg-card/70 shadow-soft flex min-w-0 items-start gap-3 rounded-2xl border p-4">
+      <span className="bg-gold/10 text-gold mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="font-display text-2xl leading-none tracking-tight">{value}</p>
+        <p className="mt-1.5 text-sm font-medium">{label}</p>
+        <p className="text-muted-foreground mt-1 text-xs leading-relaxed">{detail}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function GrahaKathaLibraryPage() {
   const t = useT();
@@ -67,6 +99,27 @@ export default function GrahaKathaLibraryPage() {
 
       <div className="katha-section-rule" />
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <LibraryFact
+          icon={LibraryIcon}
+          value={String(all.length)}
+          label="Graha stories"
+          detail="Nine planetary archetypes, each with a full traditional story."
+        />
+        <LibraryFact
+          icon={BookOpen}
+          value={String(all.length * 12)}
+          label="House readings"
+          detail="Every Graha interpreted across all twelve houses."
+        />
+        <LibraryFact
+          icon={Compass}
+          value="Your chart"
+          label="Personal overlay"
+          detail="See where each Graha sits in your own Kundli."
+        />
+      </div>
+
       <LearningProgressBar
         exploredCount={progress.exploredGrahaIds.length}
         total={all.length}
@@ -74,22 +127,37 @@ export default function GrahaKathaLibraryPage() {
         continueName={continueGraha?.englishName}
       />
 
-      <div className="relative max-w-lg">
-        <Search
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-          aria-hidden
-        />
-        <label className="sr-only" htmlFor="graha-search">
-          {t("grahaKatha.searchPlaceholder")}
-        </label>
-        <Input
-          id="graha-search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("grahaKatha.searchPlaceholder")}
-          autoComplete="off"
-          className="border-border/60 bg-card/80 shadow-soft h-11 rounded-xl pl-10"
-        />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative w-full max-w-lg">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+            aria-hidden
+          />
+          <label className="sr-only" htmlFor="graha-search">
+            {t("grahaKatha.searchPlaceholder")}
+          </label>
+          <Input
+            id="graha-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("grahaKatha.searchPlaceholder")}
+            autoComplete="off"
+            className="border-border/60 bg-card/80 shadow-soft h-11 rounded-xl pr-10 pl-10"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg transition-colors"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          ) : null}
+        </div>
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {grahas.length} of {all.length} Grahas
+        </p>
       </div>
 
       <GrahaLibraryGrid grahas={grahas} exploredIds={progress.exploredGrahaIds} />

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { MessageCircle, Mic, Sparkles } from "lucide-react";
+import { BookOpen, Check, Compass, MessageCircle, Mic, ShieldCheck, Sparkles } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal } from "@/components/ui/page-skeletons";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { AstrologerPortrait } from "@/features/consultation/components/astrologer-portrait";
+import { ASTROLOGER_SYSTEM_META } from "@/features/consultation/system-meta";
 import { getVirtualAstrologer } from "@/domain/consultation/virtual-astrologers";
 import { VEDIC_AI_DISCLAIMER } from "@/lib/constants/ai-disclaimer";
 import { consultationPaths, routes } from "@/lib/constants/routes";
@@ -34,10 +35,14 @@ export default function ConsultationAstrologerProfilePage() {
     );
   }
 
+  const system = ASTROLOGER_SYSTEM_META[astrologer.system];
+  const SystemIcon = system.icon;
+
   return (
     <div className="space-y-10">
       <ContentReveal className="space-y-10">
         <PageHeader
+          eyebrow={`${system.label} · Consultation`}
           title={astrologer.displayName}
           description={astrologer.tradition}
           actions={
@@ -70,11 +75,17 @@ export default function ConsultationAstrologerProfilePage() {
                 AI · {astrologer.gender}
               </span>
             </div>
-            <div className="max-w-2xl space-y-4">
-              <p className="text-muted-foreground flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] uppercase">
-                <Sparkles className="text-gold h-3.5 w-3.5" aria-hidden />
-                {astrologer.title}
-              </p>
+            <div className="max-w-2xl min-w-0 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-muted-foreground flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] uppercase">
+                  <Sparkles className="text-gold h-3.5 w-3.5" aria-hidden />
+                  {astrologer.title}
+                </p>
+                <span className="border-gold/25 bg-gold/8 text-gold inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">
+                  <SystemIcon className="h-3 w-3" aria-hidden />
+                  {system.label}
+                </span>
+              </div>
               <p className="font-display text-2xl leading-snug sm:text-3xl">
                 “{astrologer.shortBlurb}”
               </p>
@@ -100,49 +111,79 @@ export default function ConsultationAstrologerProfilePage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div className="border-border/60 space-y-3 rounded-2xl border p-5">
-            <h2 className="font-display text-xl">Approach</h2>
-            <ul className="grid gap-2">
+        <section className="grid gap-4 sm:gap-5 lg:grid-cols-2">
+          <div className="border-border/60 from-card/80 to-muted/20 shadow-soft space-y-4 rounded-2xl border bg-gradient-to-br p-5 sm:p-6">
+            <h2 className="font-display flex items-center gap-2 text-xl">
+              <span className="bg-gold/10 text-gold inline-flex h-8 w-8 items-center justify-center rounded-lg">
+                <Compass className="h-4 w-4" aria-hidden />
+              </span>
+              Approach
+            </h2>
+            <ul className="grid gap-2.5">
               {astrologer.coreApproach.map((item) => (
-                <li key={item} className="text-muted-foreground text-sm leading-relaxed">
-                  · {item}
+                <li
+                  key={item}
+                  className="text-muted-foreground flex items-start gap-2.5 text-sm leading-relaxed"
+                >
+                  <Check className="text-gold mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  {item}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="border-border/60 space-y-3 rounded-2xl border p-5">
-            <h2 className="font-display text-xl">Explore topics</h2>
+          <div className="border-border/60 from-card/80 to-muted/20 shadow-soft space-y-4 rounded-2xl border bg-gradient-to-br p-5 sm:p-6">
+            <h2 className="font-display flex items-center gap-2 text-xl">
+              <span className="bg-gold/10 text-gold inline-flex h-8 w-8 items-center justify-center rounded-lg">
+                <MessageCircle className="h-4 w-4" aria-hidden />
+              </span>
+              Explore topics
+            </h2>
             <div className="flex flex-wrap gap-2">
               {astrologer.topics.map((topic) => (
                 <Link
                   key={topic}
                   href={`${consultationPaths.chat(astrologer.id)}?topic=${encodeURIComponent(topic)}`}
-                  className="border-border/60 hover:border-gold/40 rounded-full border px-3 py-1.5 text-xs transition-colors"
+                  className="border-border/60 bg-background/50 hover:border-gold/40 hover:bg-gold/5 rounded-full border px-3 py-1.5 text-xs transition-colors"
                 >
                   {topic}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="border-border/60 space-y-3 rounded-2xl border p-5">
-            <h2 className="font-display text-xl">Primary sources</h2>
-            <ul className="grid gap-2">
+          <div className="border-border/60 from-card/80 to-muted/20 shadow-soft space-y-4 rounded-2xl border bg-gradient-to-br p-5 sm:p-6">
+            <h2 className="font-display flex items-center gap-2 text-xl">
+              <span className="bg-gold/10 text-gold inline-flex h-8 w-8 items-center justify-center rounded-lg">
+                <BookOpen className="h-4 w-4" aria-hidden />
+              </span>
+              Primary sources
+            </h2>
+            <ul className="grid gap-2.5">
               {astrologer.primarySources.map((s) => (
-                <li key={s} className="text-muted-foreground text-sm">
-                  · {s}
+                <li key={s} className="text-muted-foreground flex items-start gap-2.5 text-sm">
+                  <span className="bg-gold/60 mt-2 h-1 w-1 shrink-0 rounded-full" aria-hidden />
+                  {s}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="border-border/60 space-y-3 rounded-2xl border p-5">
-            <h2 className="font-display text-xl">Remedy style</h2>
+          <div className="border-border/60 from-card/80 to-muted/20 shadow-soft space-y-4 rounded-2xl border bg-gradient-to-br p-5 sm:p-6">
+            <h2 className="font-display flex items-center gap-2 text-xl">
+              <span className="bg-gold/10 text-gold inline-flex h-8 w-8 items-center justify-center rounded-lg">
+                <ShieldCheck className="h-4 w-4" aria-hidden />
+              </span>
+              Remedy style
+            </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
               {astrologer.remedyStyle}
             </p>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Limits: {astrologer.limitations.join(" · ")}
-            </p>
+            <div className="border-border/50 bg-background/40 rounded-xl border p-3">
+              <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                Limits
+              </p>
+              <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
+                {astrologer.limitations.join(" · ")}
+              </p>
+            </div>
           </div>
         </section>
 

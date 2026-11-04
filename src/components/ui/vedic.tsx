@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils/cn";
 
 export function GlassPanel({
@@ -20,21 +22,32 @@ export function SectionHeader({
   title,
   description,
   className,
+  icon: Icon,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   className?: string;
+  icon?: LucideIcon;
 }) {
   return (
-    <div className={cn("space-y-2", className)}>
-      {eyebrow ? (
-        <p className="text-saffron text-xs font-semibold tracking-[0.18em] uppercase">{eyebrow}</p>
+    <div className={cn("flex min-w-0 items-start gap-3", className)}>
+      {Icon ? (
+        <span className="bg-gold/10 text-gold mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
       ) : null}
-      <h2 className="font-display text-foreground text-2xl sm:text-3xl">{title}</h2>
-      {description ? (
-        <p className="text-muted-foreground max-w-2xl text-sm">{description}</p>
-      ) : null}
+      <div className="min-w-0 space-y-2">
+        {eyebrow ? (
+          <p className="text-saffron text-xs font-semibold tracking-[0.18em] uppercase">
+            {eyebrow}
+          </p>
+        ) : null}
+        <h2 className="font-display text-foreground text-2xl sm:text-3xl">{title}</h2>
+        {description ? (
+          <p className="text-muted-foreground max-w-2xl text-sm">{description}</p>
+        ) : null}
+      </div>
     </div>
   );
 }

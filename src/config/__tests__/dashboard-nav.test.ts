@@ -72,13 +72,10 @@ describe("dashboard nav icons", () => {
 });
 
 describe("astrology sidebar groups", () => {
-  it("lists Chart after Main, then Today, then Analysis", () => {
-    expect(navGroupsForMode("astrology").slice(0, 4)).toEqual([
-      "Main",
-      "Chart",
-      "Today",
-      "Analysis",
-    ]);
+  it("puts the astrology home first, then chart study, daily essentials, and analysis", () => {
+    const groups = navGroupsForMode("astrology");
+    expect(groups.slice(0, 5)).toEqual(["Main", "Chart", "Today", "Analysis", "Guidance"]);
+    expect(groups.at(-1)).toBe("Account");
   });
 
   it("exposes every astrology destination through grouped sidebar sections", () => {
@@ -92,16 +89,23 @@ describe("astrology sidebar groups", () => {
     expect(listed.some((item) => item.title === "Marriage Intelligence")).toBe(true);
     expect(listed.some((item) => item.title === "Panchanga")).toBe(true);
     expect(listed.some((item) => item.title === "Muhurta")).toBe(false);
+    expect(items.filter((item) => item.group === "Today").map((item) => item.title)).toEqual([
+      "Horoscope",
+      "Predictions",
+      "Panchanga",
+      "Gochar",
+      "Calendar",
+      "Horizon",
+    ]);
     expect(items.filter((item) => item.group === "Chart").map((item) => item.title)).toEqual([
       "My Kundli",
       "Charts",
-      "Celebrities",
       "Dashas",
+      "Yogas",
       "Nakshatra",
+      "Celebrities",
       "Varna & Gana",
       "Numerology",
-      "Yogas",
-      "Predictions",
     ]);
   });
 

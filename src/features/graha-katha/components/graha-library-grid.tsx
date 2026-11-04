@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, BookOpen, SearchX, Sparkles } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { prefetchGraha } from "@/domain/graha-katha";
@@ -25,6 +25,9 @@ export function GrahaLibraryGrid({
   if (!grahas.length) {
     return (
       <div className="border-border/50 bg-card/60 rounded-2xl border px-6 py-12 text-center">
+        <span className="bg-gold/10 text-gold mx-auto mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl">
+          <SearchX className="h-5 w-5" aria-hidden />
+        </span>
         <p className="font-display text-xl">No Grahas match your search</p>
         <p className="text-muted-foreground mt-2 text-sm">
           Try “Shani”, “love”, “career”, or “Moon”.
@@ -78,7 +81,11 @@ export function GrahaLibraryGrid({
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">{g.essence}</p>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {g.tags.slice(0, 3).map((tag) => (
+                  <span className="border-gold/20 bg-gold/5 text-gold inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase">
+                    <BookOpen className="h-3 w-3" aria-hidden />
+                    Story + houses
+                  </span>
+                  {g.tags.slice(0, 2).map((tag) => (
                     <span
                       key={tag}
                       className="katha-chip border-border/50 bg-muted/40 text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] tracking-wide uppercase"
@@ -87,7 +94,8 @@ export function GrahaLibraryGrid({
                     </span>
                   ))}
                   {seen ? (
-                    <span className="text-gold ml-auto text-[10px] font-semibold tracking-[0.14em] uppercase">
+                    <span className="text-gold ml-auto inline-flex items-center gap-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      <Sparkles className="h-3 w-3" aria-hidden />
                       {t("grahaKatha.continue")}
                     </span>
                   ) : null}

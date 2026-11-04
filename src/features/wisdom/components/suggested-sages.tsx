@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RishiSageTile } from "@/features/wisdom/components/wisdom-portrait";
+import { LIFE_NEED_QUESTIONS } from "@/domain/wisdom/life-prompts";
 import { LIFE_NEEDS, type LifeNeedId } from "@/domain/wisdom/sage-alignment";
 import type { WisdomGuide } from "@/domain/wisdom/guides";
 import { routes } from "@/lib/constants/routes";
@@ -57,9 +59,16 @@ export function SuggestedSages({ onSpotlight }: { onSpotlight?: (ids: string[]) 
   }, [need, onSpotlight]);
 
   const picks = useMemo(() => data?.suggestions.slice(0, 3) ?? [], [data]);
-  const councilHref = picks.length
-    ? `${routes.askTheSages}?ids=${picks.map((row) => row.guide.id).join(",")}`
-    : routes.askTheSages;
+  const councilHref = useMemo(() => {
+    const params = new URLSearchParams();
+    if (need) {
+      params.set("need", need);
+      params.set("q", LIFE_NEED_QUESTIONS[need]);
+    }
+    if (picks.length) params.set("ids", picks.map((row) => row.guide.id).join(","));
+    const query = params.toString();
+    return query ? `${routes.askTheSages}?${query}` : routes.askTheSages;
+  }, [need, picks]);
 
   const contextLine = data
     ? [
@@ -80,11 +89,11 @@ export function SuggestedSages({ onSpotlight }: { onSpotlight?: (ids: string[]) 
             For your life
           </p>
           <h2 className="font-display mt-1 text-2xl tracking-tight sm:text-3xl">
-            Sages suggested for you
+            Start with what you are facing
           </h2>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-            Ranked from what you need now, then from your chart tags — Moon, gana, and dasha. This
-            is counsel, not destiny.
+            Pick an area of life. Chart tags only refine the suggestion — they never decide for you.
+            This is practical counsel, not destiny.
           </p>
           {contextLine ? (
             <p className="text-muted-foreground mt-2 text-xs">{contextLine}</p>
@@ -122,16 +131,37 @@ export function SuggestedSages({ onSpotlight }: { onSpotlight?: (ids: string[]) 
       </div>
 
       {loading && picks.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Listening for the right counsel…</p>
-      ) : null}
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {picks.map((row) => (
-          <div key={row.guide.id} className="min-w-0">
-            <RishiSageTile guide={row.guide} reason={row.reasons[0]} />
-          </div>
-        ))}
-      </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="border-border/55 bg-card space-y-4 rounded-2xl border p-4 sm:p-5"
+            >
+              <div className="flex items-start gap-3">
+                <Skeleton className="h-20 w-20 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-32 max-w-full rounded-full" />
+                  <Skeleton className="h-3 w-full rounded-full" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-4/5 rounded-full" />
+              <div className="flex gap-2">
+                <Skeleton className="h-9 flex-1 rounded-xl sm:w-20 sm:flex-none" />
+                <Skeleton className="h-9 flex-1 rounded-xl sm:w-20 sm:flex-none" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {picks.map((row) => (
+            <div key={row.guide.id} className="min-w-0">
+              <RishiSageTile guide={row.guide} reason={row.reasons[0]} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -1,4 +1,10 @@
 export const CELEBRITY_IMAGES: Record<string, string> = {
+  "shri-krishna": "/images/sages/krishna.webp",
+  "shri-rama":
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Lord%20Rama%20with%20arrows.jpg?width=500",
+  bhima: "https://commons.wikimedia.org/wiki/Special:FilePath/General%20Bhimasen.jpg?width=500",
+  hanuman:
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman%20painting%20c1920.jpg?width=500",
   "abraham-lincoln":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Abraham_Lincoln_O-77_matte_collodion_print.jpg/500px-Abraham_Lincoln_O-77_matte_collodion_print.jpg",
   "ada-lovelace":
@@ -307,4 +313,83 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg/330px-Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg",
   zendaya:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Zendaya-byPhilipRomano.jpg/330px-Zendaya-byPhilipRomano.jpg",
+
+  // MMA, cricket, wrestling, finance, gambling & creators
+  "conor-mcgregor":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Conor_McGregor_2025.jpeg/500px-Conor_McGregor_2025.jpeg",
+  "khabib-nurmagomedov":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Khabib_nurmagomedov.jpg/500px-Khabib_nurmagomedov.jpg",
+  "ronda-rousey":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Rousey_HOF_2018_%28cropped%29.jpg/500px-Rousey_HOF_2018_%28cropped%29.jpg",
+  "jon-jones":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Jon_Jones_-_Supporting_Brain_Health_Study.jpg/500px-Jon_Jones_-_Supporting_Brain_Health_Study.jpg",
+  "amanda-nunes":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Ceremonial_weigh_ins_-_Amanda_Nunes_vs_Julianna_Pe%C3%B1a_UFC_269_%28cropped%29.jpg/500px-Ceremonial_weigh_ins_-_Amanda_Nunes_vs_Julianna_Pe%C3%B1a_UFC_269_%28cropped%29.jpg",
+  "israel-adesanya":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Israel_Adesanya_at_UFC_230.jpg/500px-Israel_Adesanya_at_UFC_230.jpg",
+  "virat-kohli":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Virat_Kohli_during_the_India_vs_Aus_4th_Test_match_at_Narendra_Modi_Stadium_on_09_March_2023.jpg/500px-Virat_Kohli_during_the_India_vs_Aus_4th_Test_match_at_Narendra_Modi_Stadium_on_09_March_2023.jpg",
+  "rohit-sharma":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Shri_Rohit_Gurunath_Sharma_%28Cropped%29.jpg/500px-Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Shri_Rohit_Gurunath_Sharma_%28Cropped%29.jpg",
+  "ms-dhoni":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg/500px-MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg",
+  "smriti-mandhana": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Smriti_Mandhana.jpg",
+  "ben-stokes":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg/500px-3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg",
+  "steve-smith":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/STEVE_SMITH_%2811705303043%29.jpg/500px-STEVE_SMITH_%2811705303043%29.jpg",
+  "babar-azam":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Babar_azam_2023.jpg/500px-Babar_azam_2023.jpg",
+  "jasprit-bumrah":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Jasprit_Bumrah_in_PMO_New_Delhi.jpg/500px-Jasprit_Bumrah_in_PMO_New_Delhi.jpg",
+  "harmanpreet-kaur":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Harmanpreet_Kaur_with_2025_Women%27s_Cricket_World_Cup_trophy.jpg/500px-Harmanpreet_Kaur_with_2025_Women%27s_Cricket_World_Cup_trophy.jpg",
+  "dwayne-johnson":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg/500px-Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg",
+  "john-cena":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/John_Cena_by_Gage_Skidmore.jpg/500px-John_Cena_by_Gage_Skidmore.jpg",
+  "roman-reigns":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Roman_Reigns_RR25_%281%29_%28headshot%29.jpg/500px-Roman_Reigns_RR25_%281%29_%28headshot%29.jpg",
+  "stone-cold-steve-austin":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Stone_Cold_Steve_Austin_%284840047167%29_%28cropped%29.jpg/500px-Stone_Cold_Steve_Austin_%284840047167%29_%28cropped%29.jpg",
+  "hulk-hogan":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Hulk_Hogan%2C_circa_1985.jpg/500px-Hulk_Hogan%2C_circa_1985.jpg",
+  "the-undertaker":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/The_Undertaker_US_Marine_Visit_2019_%28cropped%292.jpg/500px-The_Undertaker_US_Marine_Visit_2019_%28cropped%292.jpg",
+  "brock-lesnar":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Brock_Lesnar_At_SummerSlam_2023_%28cropped%29.jpg/500px-Brock_Lesnar_At_SummerSlam_2023_%28cropped%29.jpg",
+  "warren-buffett":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Warren_Buffett_at_the_2015_SelectUSA_Investment_Summit_%28cropped%29.jpg/500px-Warren_Buffett_at_the_2015_SelectUSA_Investment_Summit_%28cropped%29.jpg",
+  "george-soros":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/George_Soros%2C_Founder_and_Chairman_of_the_Open_Society_Foundations%2C_visits_the_EC_%283x4_cropped%29.jpg/500px-George_Soros%2C_Founder_and_Chairman_of_the_Open_Society_Foundations%2C_visits_the_EC_%283x4_cropped%29.jpg",
+  "jim-simons":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Jim_Simons_at_MSRI.jpg/500px-Jim_Simons_at_MSRI.jpg",
+  "ray-dalio":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Web_Summit_2018_-_Forum_-_Day_2%2C_November_7_HM1_7481_%2844858045925%29.jpg/500px-Web_Summit_2018_-_Forum_-_Day_2%2C_November_7_HM1_7481_%2844858045925%29.jpg",
+  "rakesh-jhunjhunwala":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Shri_Rakesh_Radheyshyam_Jhunjhunwala.jpg/500px-Shri_Rakesh_Radheyshyam_Jhunjhunwala.jpg",
+  "paul-tudor-jones":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Paul_Tudor_Jones_2006.jpg/500px-Paul_Tudor_Jones_2006.jpg",
+  "phil-ivey":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Phil_Ivey_%282009_WSOP%29.jpg/500px-Phil_Ivey_%282009_WSOP%29.jpg",
+  "doyle-brunson": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Doyle_Brunson.jpg",
+  "daniel-negreanu":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/DNegs_at_2022_WSOP.jpg/500px-DNegs_at_2022_WSOP.jpg",
+  "annie-duke":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Annie_Duke_jgphoto_002.jpg/500px-Annie_Duke_jgphoto_002.jpg",
+  mrbeast:
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/MrBeast_in_2026_%28cropped_4%29.png/500px-MrBeast_in_2026_%28cropped_4%29.png",
+  pewdiepie:
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Pewdiepie_head_shot.jpg/500px-Pewdiepie_head_shot.jpg",
+  carryminati: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Ajey_Nagar_2022.jpg",
+  "bhuvan-bam":
+    "https://upload.wikimedia.org/wikipedia/commons/6/64/Bhuvan_Bam_at_Myntra%27s_Creator_Fest_2023_event_%28cropped%29.jpg",
+  "dhruv-rathee":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Dhruv_Rathee_%28cropped%29.jpg/500px-Dhruv_Rathee_%28cropped%29.jpg",
+  "logan-paul":
+    "https://upload.wikimedia.org/wikipedia/commons/6/6a/Logan_Paul_in_2026_%28crop%29.jpg",
+  "jake-paul":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Jake_Paul_March_2026_%283x4_cropped%29.jpg/500px-Jake_Paul_March_2026_%283x4_cropped%29.jpg",
+  markiplier:
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Markiplier_in_Markiplier_Covered_Me_In_His_Glue_at_01_15.png/500px-Markiplier_in_Markiplier_Covered_Me_In_His_Glue_at_01_15.png",
 };
