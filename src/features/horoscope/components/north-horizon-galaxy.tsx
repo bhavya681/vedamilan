@@ -30,17 +30,7 @@ const R_NAK = 368;
 const R_RASHI = 312;
 const R_PLANET = 248;
 
-const PLANET_COLOR: Record<string, string> = {
-  Sun: "#e8c547",
-  Moon: "#f3efe4",
-  Mars: "#e07050",
-  Mercury: "#7dce82",
-  Jupiter: "#f0c36a",
-  Venus: "#f2b6c6",
-  Saturn: "#7aa2d4",
-  Rahu: "#c4b4e0",
-  Ketu: "#c4b8a0",
-};
+import { PLANET_COLOR } from "@/features/horoscope/components/planet-symbols";
 
 const CLASSICAL = [
   "Sun",

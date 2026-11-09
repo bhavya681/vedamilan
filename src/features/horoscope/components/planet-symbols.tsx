@@ -13,10 +13,51 @@ export const PLANET_GLYPH: Record<string, string> = {
   Ketu: "☋",
 };
 
-export type ChartPlanetView = "labels" | "symbols";
+/** Astrological planet colors (horizon-style). */
+export const PLANET_COLOR: Record<string, string> = {
+  Sun: "#e8c547",
+  Moon: "#e8e4da",
+  Mars: "#d94a3a",
+  Mercury: "#4fba6a",
+  Jupiter: "#f0a63a",
+  Venus: "#e88fb1",
+  Saturn: "#4a78c2",
+  Rahu: "#7b68c8",
+  Ketu: "#9a8f7a",
+};
+
+export function planetColor(planet: string) {
+  return PLANET_COLOR[planet] || "#94a3b8";
+}
+
+export function planetTextColor(planet: string) {
+  return planet === "Sun" || planet === "Moon" || planet === "Jupiter" || planet === "Mercury"
+    ? "#111827"
+    : "#ffffff";
+}
+
+export type ChartPlanetView = "labels" | "symbols" | "planets";
 
 export function planetSymbol(planet: string) {
   return PLANET_GLYPH[planet] || planet.slice(0, 1);
+}
+
+export function planetAbbr(planet: string) {
+  return (
+    (
+      {
+        Sun: "Su",
+        Moon: "Mo",
+        Mars: "Ma",
+        Mercury: "Me",
+        Jupiter: "Ju",
+        Venus: "Ve",
+        Saturn: "Sa",
+        Rahu: "Ra",
+        Ketu: "Ke",
+      } as Record<string, string>
+    )[planet] || planet.slice(0, 2)
+  );
 }
 
 /** Compact SVG mark centered at (cx, cy) — scales cleanly inside kundli viewBox */
@@ -181,6 +222,7 @@ export function ChartViewToggle({
         [
           ["labels", "Labels"],
           ["symbols", "Symbols"],
+          ["planets", "Planets"],
         ] as const
       ).map(([id, label]) => (
         <button

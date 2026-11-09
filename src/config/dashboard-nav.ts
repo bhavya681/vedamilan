@@ -91,6 +91,7 @@ export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.aiInsights]: BrainCircuit,
   [routes.consultation]: Headphones,
   [routes.astrologyMuhurta]: Clock,
+  [routes.astrologyRemedies]: Sparkles,
   [routes.lalKitab]: BookOpen,
   [routes.grahaKatha]: ScrollText,
   [routes.numerology]: Hash,
@@ -195,7 +196,8 @@ export function isDashboardNavActive(pathname: string, href: string) {
   if (href === routes.astrologyAshtakavarga)
     return matchesPath(pathname, routes.astrologyAshtakavarga);
   if (href === routes.astrologyGochar) return matchesPath(pathname, routes.astrologyGochar);
-  if (href === routes.astrologyCelebrities) return matchesPath(pathname, routes.astrologyCelebrities);
+  if (href === routes.astrologyCelebrities)
+    return matchesPath(pathname, routes.astrologyCelebrities);
 
   // Partner preferences vs Situational quiz share a path prefix — keep tabs exclusive.
   if (href === routes.preferences) {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -18,19 +18,67 @@ type RemedyTheme = {
   durationPractice: string;
 };
 
+type BirthDashaInsight = {
+  lord: string;
+  nakshatra: string | null;
+  yearsRemainingAtBirth: number | null;
+  soulTransition: string;
+  lifeTheme: string;
+  prediction: string;
+  healingFocus: string[];
+};
+
+type JupiterKarmaInsight = {
+  house: number | null;
+  sign: string | null;
+  nakshatra: string | null;
+  dignity: string | null;
+  isRetrograde: boolean;
+  pastLifeTheme: string;
+  prediction: string;
+  guidance: string[];
+};
+
 type KarmicTheme = {
   planet: string;
+  house: number | null;
+  sign: string | null;
+  nakshatra: string | null;
+  dignity: string | null;
+  isRetrograde: boolean;
+  isBirthDashaLord: boolean;
+  isChallenged: boolean;
   pastLifeIndication: string;
+  prediction: string;
   doThis: string[];
   avoidThis: string[];
   traditionalSource: string;
 };
 
 type PastLifeDeeds = {
+  birthDasha: BirthDashaInsight | null;
+  jupiterKarma: JupiterKarmaInsight | null;
   themes: KarmicTheme[];
   overallGuidance: string;
   disclaimer: string;
 };
+
+function placementLabel(theme: {
+  house?: number | null;
+  sign?: string | null;
+  nakshatra?: string | null;
+  dignity?: string | null;
+  isRetrograde?: boolean;
+}) {
+  const parts = [
+    theme.house ? `H${theme.house}` : null,
+    theme.sign || null,
+    theme.nakshatra || null,
+    theme.dignity && theme.dignity !== "Neutral" ? theme.dignity : null,
+    theme.isRetrograde ? "Retrograde" : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
 
 export default function AstrologyRemediesPage() {
   const [remedies, setRemedies] = useState<{ themes: RemedyTheme[]; disclaimer: string } | null>(
@@ -64,7 +112,6 @@ export default function AstrologyRemediesPage() {
           });
         }
         if (!karmicJson.success) {
-          // karmic is optional — don't block the whole page
           setKarmic(null);
         } else {
           setKarmic(karmicJson.data);
@@ -165,63 +212,189 @@ export default function AstrologyRemediesPage() {
             </div>
           )}
 
-          {karmic && karmic.themes.length > 0 ? (
+          {karmic ? (
             <section className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-xl sm:text-2xl">Past Life Deeds</h2>
+                <h2 className="font-display text-xl sm:text-2xl">Past Life & Karmic Journey</h2>
                 <Badge variant="outline">Traditional interpretation</Badge>
               </div>
               <p className="text-muted-foreground max-w-3xl text-sm leading-relaxed">
                 {karmic.overallGuidance}
               </p>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {karmic.themes.map((theme) => (
-                  <GlassCard key={theme.planet} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <p className="font-display text-base sm:text-lg">{theme.planet}</p>
-                      <Badge variant="secondary" className="text-[10px]">
-                        Karmic
+              {karmic.birthDasha ? (
+                <GlassCard className="border-gold/25 space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="border-gold/40 bg-gold/15 border">Birth Dasha</Badge>
+                    <p className="font-display text-lg sm:text-xl">{karmic.birthDasha.lord}</p>
+                    {karmic.birthDasha.nakshatra ? (
+                      <Badge variant="secondary">{karmic.birthDasha.nakshatra}</Badge>
+                    ) : null}
+                    {typeof karmic.birthDasha.yearsRemainingAtBirth === "number" ? (
+                      <Badge variant="outline">
+                        {karmic.birthDasha.yearsRemainingAtBirth.toFixed(2)} yrs balance at birth
                       </Badge>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                        Soul transition
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed">
+                        {karmic.birthDasha.soulTransition}
+                      </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        Past-life indication
+                        Life theme
                       </p>
-                      <p className="mt-1 text-xs leading-relaxed break-words">
-                        {theme.pastLifeIndication}
-                      </p>
+                      <p className="mt-1 text-sm leading-relaxed">{karmic.birthDasha.lifeTheme}</p>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        Do this
-                      </p>
-                      <ul className="mt-1 space-y-1">
-                        {theme.doThis.map((item) => (
-                          <li key={item} className="text-xs leading-relaxed">
-                            · {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
-                        Avoid this
-                      </p>
-                      <ul className="mt-1 space-y-1">
-                        {theme.avoidThis.map((item) => (
-                          <li key={item} className="text-destructive/80 text-xs leading-relaxed">
-                            · {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <p className="text-muted-foreground text-[10px] leading-relaxed break-words">
-                      Source: {theme.traditionalSource}
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Prediction
                     </p>
-                  </GlassCard>
-                ))}
-              </div>
+                    <p className="mt-1 text-sm leading-relaxed">{karmic.birthDasha.prediction}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Healing focus
+                    </p>
+                    <ul className="mt-1 grid gap-1 sm:grid-cols-2">
+                      {karmic.birthDasha.healingFocus.map((item) => (
+                        <li key={item} className="text-sm leading-relaxed">
+                          · {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </GlassCard>
+              ) : null}
+
+              {karmic.jupiterKarma ? (
+                <GlassCard className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">Jupiter & Past Karma</Badge>
+                    <p className="font-display text-lg sm:text-xl">
+                      {karmic.jupiterKarma.house
+                        ? `${karmic.jupiterKarma.house}th House`
+                        : "Jupiter"}
+                    </p>
+                    {placementLabel(karmic.jupiterKarma) ? (
+                      <Badge variant="outline">{placementLabel(karmic.jupiterKarma)}</Badge>
+                    ) : null}
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Past-life theme
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed">
+                      {karmic.jupiterKarma.pastLifeTheme}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Prediction
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed">{karmic.jupiterKarma.prediction}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Guidance
+                    </p>
+                    <ul className="mt-1 grid gap-1 sm:grid-cols-2">
+                      {karmic.jupiterKarma.guidance.map((item) => (
+                        <li key={item} className="text-sm leading-relaxed">
+                          · {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </GlassCard>
+              ) : null}
+
+              {karmic.themes.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-display text-lg">Planetary karmic themes</h3>
+                    <p className="text-muted-foreground text-xs">
+                      House, dignity, retrograde, and birth-dasha emphasis shape the prediction.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {karmic.themes.map((theme) => (
+                      <GlassCard key={theme.planet} className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-display text-base sm:text-lg">{theme.planet}</p>
+                          {theme.isBirthDashaLord ? (
+                            <Badge className="border-gold/40 bg-gold/15 border text-[10px]">
+                              Birth Dasha
+                            </Badge>
+                          ) : null}
+                          {theme.isChallenged ? (
+                            <Badge variant="outline" className="text-[10px]">
+                              Needs care
+                            </Badge>
+                          ) : null}
+                        </div>
+                        {placementLabel(theme) ? (
+                          <p className="text-muted-foreground text-[11px]">
+                            {placementLabel(theme)}
+                          </p>
+                        ) : null}
+                        <div>
+                          <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            Past-life indication
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed break-words">
+                            {theme.pastLifeIndication}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            Prediction
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed break-words">
+                            {theme.prediction}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            Do this
+                          </p>
+                          <ul className="mt-1 space-y-1">
+                            {theme.doThis.map((item) => (
+                              <li key={item} className="text-xs leading-relaxed">
+                                · {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                            Avoid this
+                          </p>
+                          <ul className="mt-1 space-y-1">
+                            {theme.avoidThis.map((item) => (
+                              <li
+                                key={item}
+                                className="text-destructive/80 text-xs leading-relaxed"
+                              >
+                                · {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <p className="text-muted-foreground text-[10px] leading-relaxed break-words">
+                          Source: {theme.traditionalSource}
+                        </p>
+                      </GlassCard>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               <p className="text-muted-foreground text-xs leading-relaxed">{karmic.disclaimer}</p>
             </section>

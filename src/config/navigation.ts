@@ -137,6 +137,12 @@ export const dashboardNav: NavItem[] = [
     group: "Guidance",
     modes: ["astrology"],
   },
+  {
+    title: "Remedies & Sadhana",
+    href: routes.astrologyRemedies,
+    group: "Guidance",
+    modes: ["astrology"],
+  },
   { title: "Lal Kitab", href: routes.lalKitab, group: "Guidance", modes: ["astrology"] },
   {
     title: "Graha Katha",
