@@ -30,7 +30,7 @@ export function GuruMarkdown({
   const isUser = tone === "user";
 
   return (
-    <div className={cn("guru-md", className)}>
+    <div className={cn("guru-md min-w-0 [overflow-wrap:anywhere]", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

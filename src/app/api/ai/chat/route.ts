@@ -32,6 +32,8 @@ const schema = z.object({
   message: z.string().min(1).max(4000),
   conversationId: z.string().optional(),
   candidateUserId: z.string().optional(),
+  /** When true, the reply is an OpenUI Lang program the client renders as agentic UI. */
+  ui: z.boolean().optional().default(false),
 });
 
 export async function GET(request: Request) {
@@ -65,13 +67,21 @@ export async function POST(request: Request) {
       limit: premium ? 500 : 60,
       windowSec: 60 * 60 * 24,
     });
-    const result = await aiService.chat({
-      userId: session.user.id,
-      agent: body.agent,
-      message: body.message,
-      conversationId: body.conversationId,
-      candidateUserId: body.candidateUserId,
-    });
+    const result = body.ui
+      ? await aiService.uiChat({
+          userId: session.user.id,
+          agent: body.agent,
+          message: body.message,
+          conversationId: body.conversationId,
+          candidateUserId: body.candidateUserId,
+        })
+      : await aiService.chat({
+          userId: session.user.id,
+          agent: body.agent,
+          message: body.message,
+          conversationId: body.conversationId,
+          candidateUserId: body.candidateUserId,
+        });
     return successResponse(result);
   } catch (error) {
     return handleRouteError(error);

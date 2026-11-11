@@ -13,8 +13,36 @@ import {
 import { compatibilityService } from "@/application/rules/compatibility.service";
 import { matchmakingService } from "@/application/matchmaking/matchmaking.service";
 import { computeGocharForUser } from "@/application/horoscope/gochar.service";
-import { vedaAgents, type VedaAgentKey } from "@/mastra/agents/veda-agents";
+import { guruUiAgent, vedaAgents, type VedaAgentKey } from "@/mastra/agents/veda-agents";
 import { type YogaItem } from "@/features/ai/components/guru-chart-panels";
+import {
+  buildFallbackGuruUi,
+  getGuruUiSystemPrompt,
+  parseGuruUiOutput,
+} from "@/features/ai/openui/server";
+
+function guruFollowUpPrompts(agent: VedaAgentKey): string[] {
+  if (agent === "MARRIAGE_GURU" || agent === "MARRIAGE_TIMING") {
+    return [
+      "Which marriage window is strongest for me?",
+      "What does my 7th house say about my spouse?",
+      "How does my current dasha affect marriage timing?",
+    ];
+  }
+  return [
+    "Explain my current dasha in simple words",
+    "What does my chart say about relationships?",
+    "Which yogas are active in my kundli?",
+    "What career direction suits my chart?",
+  ];
+}
+
+function textFromModel(raw: string): string {
+  return raw
+    .replace(/```(?:openui|openui-lang|txt)?/gi, "")
+    .replace(/```/g, "")
+    .trim();
+}
 
 function hasLlmCredentials(): boolean {
   return Boolean(
@@ -457,6 +485,153 @@ export class AiService {
       conversationId: String(conversation._id),
       agent,
       answer,
+      disclaimer: VEDIC_AI_DISCLAIMER,
+      model: modelUsed,
+      messages: (updated?.messages || messages).slice(-40),
+    };
+  }
+
+  /**
+   * AI Guru chat that returns an OpenUI Lang program the web client can render
+   * as structured, agentic blocks. Falls back to a validated text-based program
+   * when the model is unavailable or returns an unusable program.
+   */
+  async uiChat(input: {
+    userId: string;
+    agent: VedaAgentKey;
+    message: string;
+    conversationId?: string;
+    candidateUserId?: string;
+  }) {
+    await connectMongo();
+    const { userId, agent, message, conversationId, candidateUserId } = input;
+
+    let allowlistedCandidate: string | null = null;
+    if (candidateUserId) {
+      const { assertCandidateAccessible } = await import("@/lib/security/profile-access");
+      await assertCandidateAccessible(userId, candidateUserId);
+      allowlistedCandidate = candidateUserId;
+    }
+
+    let conversation = conversationId
+      ? await AiConversation.findById(conversationId).where({ userId })
+      : null;
+    if (!conversation) {
+      conversation = await AiConversation.create({
+        userId,
+        agent,
+        title: message.slice(0, 80),
+        messages: [],
+        contextRefs: allowlistedCandidate ? { candidateUserId: allowlistedCandidate } : {},
+        model: hasLlmCredentials() ? "openui-llm" : "openui-deterministic",
+      });
+    }
+
+    type ChatMessage = {
+      role: "user" | "assistant" | "system" | "tool";
+      content: string;
+      toolName?: string | null;
+      createdAt: Date;
+    };
+
+    const messages: ChatMessage[] = [
+      ...((conversation.messages || []) as unknown as ChatMessage[]),
+      { role: "user", content: message, toolName: null, createdAt: new Date() },
+    ];
+
+    const intent = classifyQuestionIntent(message);
+
+    const profile = await Profile.findOne({ userId, status: "ACTIVE" }).lean();
+    const preferredLanguage =
+      (profile?.localization?.aiLanguage as string | null | undefined) ||
+      (profile?.localization?.language as string | null | undefined) ||
+      "en";
+    const languageInstruction = `Reply in the member's preferred language code "${preferredLanguage}". Keep Vedic terms (Kundli, Nakshatra, Dasha, Lagna, Guna Milan, Gochar, Yoga, Dosha) in canonical form with a short local explanation when helpful.`;
+
+    let ui = null as Awaited<ReturnType<typeof buildFallbackGuruUi>>;
+    let plainAnswer = "";
+    let modelUsed = "openui-deterministic";
+
+    if (hasLlmCredentials()) {
+      try {
+        const history = formatChatHistory(messages, { limit: 8, excludeLastUser: true });
+        const prompt = [
+          getGuruUiSystemPrompt(),
+          languageInstruction,
+          allowlistedCandidate
+            ? `An allowlisted candidate partner id is available for compatibility tools only: ${allowlistedCandidate}`
+            : "No candidate partner in context; use list mode for compatibility history.",
+          needsAstrologyTools(intent)
+            ? "Call the relevant astrology tools before stating chart facts, then load the interface with verified data."
+            : "Do not call astrology tools for this message.",
+          `Classified intent: ${intent}`,
+          history ? `Recent conversation:\n${history}` : "This is the start of the conversation.",
+          `Member question: ${message}`,
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        const result = await runWithAiToolContext(
+          {
+            sessionUserId: userId,
+            allowedCandidateUserId: allowlistedCandidate,
+          },
+          () => guruUiAgent.generate(prompt),
+        );
+
+        const raw = typeof result.text === "string" ? result.text : "";
+        const parsed = raw.trim() ? parseGuruUiOutput(raw) : null;
+
+        if (parsed && parsed.errors === 0) {
+          ui = parsed;
+          plainAnswer = "AI Guru composed a structured reply.";
+          modelUsed = "openui-llm";
+        } else if (raw.trim() && !/\broot\s*=/.test(raw)) {
+          plainAnswer = textFromModel(raw);
+          modelUsed = "openui-llm-text";
+        }
+      } catch (error) {
+        console.error("OpenUI generation failed, falling back to deterministic UI", error);
+      }
+    }
+
+    if (!ui) {
+      if (!plainAnswer) {
+        plainAnswer = await deterministicExplain(agent, userId, message, intent);
+        modelUsed = "openui-deterministic";
+      }
+      ui = buildFallbackGuruUi(plainAnswer, guruFollowUpPrompts(agent));
+    }
+
+    const assistantContent = ui ? ui.code : plainAnswer;
+    messages.push({
+      role: "assistant",
+      content: assistantContent,
+      toolName: null,
+      createdAt: new Date(),
+    });
+
+    const updated = await AiConversation.findByIdAndUpdate(
+      conversation._id,
+      {
+        $set: {
+          messages,
+          model: modelUsed,
+          agent,
+        },
+      },
+      { new: true },
+    );
+
+    return {
+      conversationId: String(conversation._id),
+      agent,
+      answer: plainAnswer || "AI Guru composed a structured reply.",
+      ui: {
+        format: ui ? "openui" : "markdown",
+        code: ui?.code ?? "",
+        disclaimer: VEDIC_AI_DISCLAIMER,
+      },
       disclaimer: VEDIC_AI_DISCLAIMER,
       model: modelUsed,
       messages: (updated?.messages || messages).slice(-40),

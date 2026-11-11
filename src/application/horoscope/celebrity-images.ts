@@ -1,10 +1,10 @@
 export const CELEBRITY_IMAGES: Record<string, string> = {
   "shri-krishna": "/images/sages/krishna.webp",
-  "shri-rama":
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Lord%20Rama%20with%20arrows.jpg?width=500",
-  bhima: "https://commons.wikimedia.org/wiki/Special:FilePath/General%20Bhimasen.jpg?width=500",
+  "shri-rama": "https://i.pinimg.com/736x/e6/62/cc/e662cc08751f7d6b612350f2ef224f64.jpg",
+  bhima:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFs4gRMPSTDRLcXcZzAFtq5ZV0ItthXe3jN29KwnvtEA&s=10",
   hanuman:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Hanuman%20painting%20c1920.jpg?width=500",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRViO1p-t8K5Fh4WekGYLXfWqb320JjcKfG31zn9K4SOHszj_-MxN6aqY7t&s=10",
   "abraham-lincoln":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Abraham_Lincoln_O-77_matte_collodion_print.jpg/500px-Abraham_Lincoln_O-77_matte_collodion_print.jpg",
   "ada-lovelace":
@@ -43,6 +43,8 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Joseph_Karl_Stieler%27s_Beethoven_mit_dem_Manuskript_der_Missa_solemnis.jpg/330px-Joseph_Karl_Stieler%27s_Beethoven_mit_dem_Manuskript_der_Missa_solemnis.jpg",
   "bernie-madoff":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Bernard_Madoff_2009_mug_shot_%283x4_cropped%29.jpg/330px-Bernard_Madoff_2009_mug_shot_%283x4_cropped%29.jpg",
+  "umar-punjabi":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3zZFSAJkXpRnhkPsNghUOWCdLKoc9r9PrFQf5n4ctNA&s=10",
   beyonce:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg/330px-Beyonc%C3%A9_-_Tottenham_Hotspur_Stadium_-_1st_June_2023_%2810_of_118%29_%2852946364598%29_%28best_crop%29.jpg",
   "bill-gates":
@@ -79,6 +81,16 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/David-Bowie_Chicago_2002-08-08_photoby_Adam-Bielawski-cropped.jpg/330px-David-Bowie_Chicago_2002-08-08_photoby_Adam-Bielawski-cropped.jpg",
   "deepak-chopra":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Deepak_Chopra_by_Gage_Skidmore.jpg/330px-Deepak_Chopra_by_Gage_Skidmore.jpg",
+  "ramakrishna-paramahamsa":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSKexOZ9IMB3Hzh2pS5w67LPCww35ds0kV6AU3jumF--w&s",
+  "sarada-devi":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO3t3dcHZwbRhqGt_LtcITxvKyyAKL-uV6NScul8aGXg&s=10",
+  "sri-aurobindo":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8A1v5w83rdTej34aGbjWxm0u6F96U2Xe6JoaIC6Lqhw&s=10",
+  "swami-chinmayananda":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbI7v0dFfMBz8XAJmq0WAO47I2lZSBrcGCgNe5wb7j_A&s=10",
+  prabhupada:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJxSW184G7p2nmmg4PesgSTZzvi3192vnazInxfo-SLw&s=10",
   "denzel-washington":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg/330px-Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg",
   drake:
@@ -190,6 +202,8 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg/330px-Morgan_Freeman_at_The_Pentagon_on_2_August_2023_-_230802-D-PM193-3363_%28cropped%29.jpg",
   "mother-teresa":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Mother_Teresa_1.jpg/330px-Mother_Teresa_1.jpg",
+  "togi-shane-stoffer":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3UJ0cxQVYAJoiVvU3X3nAxyiWQChwvt_PBdbj41aOtw&s",
   mozart:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/The_Mozart_Family_-_Wolfgang_Amadeus_Mozart_headshot.jpg/330px-The_Mozart_Family_-_Wolfgang_Amadeus_Mozart_headshot.jpg",
   "muhammad-ali":
@@ -295,6 +309,8 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Tom_Cruise_at_53rd_Saturn_Awards_2026-01.jpg/330px-Tom_Cruise_at_53rd_Saturn_Awards_2026-01.jpg",
   "tom-hanks":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/TomHanksPrincEdw031223_%2811_of_41%29_%28cropped%29.jpg/330px-TomHanksPrincEdw031223_%2811_of_41%29_%28cropped%29.jpg",
+  "edward-thorp":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHazaJ4y7AguwHf2O7cPpcceE2FdrS-qUEBE-__07eYA&s=10",
   "usain-bolt":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Usain_Bolt_smiling_Berlin_2009.JPG/330px-Usain_Bolt_smiling_Berlin_2009.JPG",
   "vincent-van-gogh":
@@ -313,7 +329,8 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg/330px-Sir_Winston_Churchill_-_19086236948_%28restored%29.jpg",
   zendaya:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Zendaya-byPhilipRomano.jpg/330px-Zendaya-byPhilipRomano.jpg",
-
+  "michael-burry":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKgYBkm178VzFaZCfMb54ZVa_YNUuHws3mysfhDJI42Q&s=10",
   // MMA, cricket, wrestling, finance, gambling & creators
   "conor-mcgregor":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Conor_McGregor_2025.jpeg/500px-Conor_McGregor_2025.jpeg",
@@ -338,8 +355,6 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg/500px-3_14_Captain_Ben_%28cropped%29_%28cropped%29.jpg",
   "steve-smith":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/STEVE_SMITH_%2811705303043%29.jpg/500px-STEVE_SMITH_%2811705303043%29.jpg",
-  "babar-azam":
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Babar_azam_2023.jpg/500px-Babar_azam_2023.jpg",
   "jasprit-bumrah":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Jasprit_Bumrah_in_PMO_New_Delhi.jpg/500px-Jasprit_Bumrah_in_PMO_New_Delhi.jpg",
   "harmanpreet-kaur":
@@ -392,4 +407,51 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Jake_Paul_March_2026_%283x4_cropped%29.jpg/500px-Jake_Paul_March_2026_%283x4_cropped%29.jpg",
   markiplier:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Markiplier_in_Markiplier_Covered_Me_In_His_Glue_at_01_15.png/500px-Markiplier_in_Markiplier_Covered_Me_In_His_Glue_at_01_15.png",
+  // Added: MMA, actors, criminals, billionaires/millionaires
+  "mike-tyson":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg/500px-Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg",
+  "anderson-silva":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9cA1Ty-ZgWpECL5AG3YfTkx36g455l5E-iuGUe77L_A&s=10",
+  "georges-st-pierre":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/2021_-_Centre_Stage_DG4_5765_%2851685717187%29_%28cropped%29.jpg/500px-2021_-_Centre_Stage_DG4_5765_%2851685717187%29_%28cropped%29.jpg",
+  "chuck-liddell":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Chuck_Liddell_in_Santa_Monica-_California_on_5_5_18_-_Photo_by_ITHAKA_-_By_Glenn_Francis.jpg/500px-Chuck_Liddell_in_Santa_Monica-_California_on_5_5_18_-_Photo_by_ITHAKA_-_By_Glenn_Francis.jpg",
+  "kamaru-usman":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmYey-iXGWhvb1alTJh81fgANadRTcIsfU1FAySSrpyQ&s=10",
+  "alexander-volkanovski":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmiaj7-OSOB9A0fjMhS9yYScj6t1sUrGwVrCTkDN45tA&s=10",
+  "brad-pitt":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTu3R0SSTg2N1EEoo7tSI905pNWROg0qy5jwxw1O-olIw&s=10",
+  "johnny-depp":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Johnny_Depp_2020.jpg/500px-Johnny_Depp_2020.jpg",
+  "shah-rukh-khan":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Shah_Rukh_Khan_graces_the_launch_of_the_new_Santro.jpg/500px-Shah_Rukh_Khan_graces_the_launch_of_the_new_Santro.jpg",
+  "amitabh-bachchan":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Indian_actor_Amitabh_Bachchan.jpg/500px-Indian_actor_Amitabh_Bachchan.jpg",
+  "dwayne-johnson-actor":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg/500px-Dwayne_Johnson-1764_%284x5_cropped_with_moderate_headroom%29.jpg",
+  "jeff-bezos":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Jeff_Bezos_visits_LAAFB_SMC_%283908618%29_%28cropped%29.jpeg/500px-Jeff_Bezos_visits_LAAFB_SMC_%283908618%29_%28cropped%29.jpeg",
+  "mark-zuckerberg":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg/500px-Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg",
+  "mukesh-ambani":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Mukesh_Ambani.jpg/500px-Mukesh_Ambani.jpg",
+  "larry-ellison":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Larry_Ellison_picture.png/500px-Larry_Ellison_picture.png",
+  "bernard-arnault":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Bernard_Arnault_%283%29_-_2017_%28cropped%29.jpg/500px-Bernard_Arnault_%283%29_-_2017_%28cropped%29.jpg",
+  "gautam-adani":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZ7QXCWiKG4UjRDuUB1gCX_VUqKc7AVYeD9bOv8lPO-g&s=10",
+  "john-gotti":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQApwFQRkarzzOQ-Eh_Yhl4AYMdzOb_TIv-nUokHV-hOw&s=10",
+  "lucky-luciano":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK1tKB7smTtqQNJINlCSRds1wts2UVBQFq6l5L5CJuww&s",
+  "frank-abagnale":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQVQn4z6tPGQoKZncqSVCRjwUHlOrnrkDIznXbcNF7IA&s=10",
+  "jordan-belfort":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3zBhq6hc8adIiKK0-r5055xdPTI9OvRJ_1-UrMHCLNQ&s",
+  "john-dillinger":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/John_Dillinger_mug_shot.jpg/500px-John_Dillinger_mug_shot.jpg",
+  "billy-walters":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJ_D2VCrzbKaFD4aBr8ARRbjdQRyCeKAPT8T_wo_cemA&s=10",
 };
