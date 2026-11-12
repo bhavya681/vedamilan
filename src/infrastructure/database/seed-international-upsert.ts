@@ -22,18 +22,29 @@ import {
   Visitor,
 } from "@/infrastructure/database/models";
 import { INTERNATIONAL_DEMO_MEMBERS } from "@/lib/mock/international-demo-profiles";
-import { allDemoPhotoUrls } from "@/lib/mock/demo-extra-photos";
 import type { DemoMember } from "@/lib/mock/demo-profiles";
 import { getDemoSituationalAnswers } from "@/lib/mock/celeb-situational-answers";
 import { getAuth } from "@/lib/auth";
 import { horoscopeService } from "@/application/horoscope/horoscope.service";
 import { logger } from "@/lib/utils/logger";
 
+function uniquePhotoUrls(member: DemoMember) {
+  const urls = [member.photo, ...(member.extraPhotos ?? [])]
+    .map((url) => String(url || "").trim())
+    .filter(Boolean);
+  return [...new Set(urls)];
+}
+
 function photosFromUrls(urls: string[]) {
   return urls.map((url, sortOrder) => {
-    const slug = url.split("/").pop()?.split("?")[0] || `photo-${sortOrder}`;
+    const slug =
+      url
+        .split("/")
+        .pop()
+        ?.split("?")[0]
+        ?.replace(/[^a-zA-Z0-9_-]/g, "") || `photo-${sortOrder}`;
     return {
-      cloudinaryPublicId: `demo/${slug}`.slice(0, 180),
+      cloudinaryPublicId: `demo/${slug}-${sortOrder}`.slice(0, 180),
       url,
       secureUrl: url,
       width: 800,
@@ -100,7 +111,7 @@ async function purgeDemoUser(userId: string) {
   ]);
 }
 
-/** Drop extra demo accounts that share a celeb name (e.g. two Dua Lipa rows). */
+/** Drop leftover demo accounts no longer part of the curated international set. */
 async function retireDuplicateNamedDemos() {
   const db = getMongoDb();
   const keepEmails = new Set(INTERNATIONAL_DEMO_MEMBERS.map((m) => m.email.toLowerCase()));
@@ -115,52 +126,9 @@ async function retireDuplicateNamedDemos() {
     const userId = String(user.id || user._id);
     await purgeDemoUser(userId);
     await db.collection("user").deleteOne({ _id: user._id });
-    if (user._id) {
-      await db.collection("user").deleteOne({ id: userId });
-    }
+    await db.collection("user").deleteOne({ id: userId });
     removed += 1;
     logger.info({ email, userId }, "Retired leftover demo email");
-  }
-
-  const profiles = await Profile.find({
-    name: { $regex: /^dua\s*lipa$/i },
-  })
-    .select("userId name")
-    .lean();
-
-  if (profiles.length < 2) return removed;
-
-  const userIds = profiles.map((p) => p.userId);
-  const users = await db
-    .collection("user")
-    .find({
-      $or: [{ id: { $in: userIds } }, { _id: { $in: userIds as never[] } }],
-    })
-    .toArray();
-  const emailByUserId = new Map<string, string>();
-  for (const user of users) {
-    const id = String(user.id || user._id);
-    emailByUserId.set(id, String(user.email || "").toLowerCase());
-    emailByUserId.set(String(user._id), String(user.email || "").toLowerCase());
-  }
-
-  const keepUserId =
-    profiles.find((p) => keepEmails.has(emailByUserId.get(p.userId) || ""))?.userId ||
-    profiles[0]!.userId;
-
-  for (const profile of profiles) {
-    if (profile.userId === keepUserId) continue;
-    const email = emailByUserId.get(profile.userId) || "";
-    if (keepEmails.has(email)) continue;
-    await purgeDemoUser(profile.userId);
-    await db.collection("user").deleteMany({
-      $or: [{ id: profile.userId }, { _id: profile.userId as never }],
-    });
-    removed += 1;
-    logger.info(
-      { name: profile.name, email, userId: profile.userId },
-      "Retired duplicate demo profile",
-    );
   }
 
   return removed;
@@ -192,12 +160,15 @@ async function upsertOne(userId: string, member: DemoMember) {
         country: member.country || "United States",
         location: { type: "Point" as const, coordinates: member.coordinates },
         lifestyle: member.lifestyle,
-        photos: photosFromUrls(allDemoPhotoUrls(member)),
+        photos: photosFromUrls(uniquePhotoUrls(member)),
         isVerified: true,
         verificationStatus: "VERIFIED" as const,
         isProfileComplete: true,
         onboardingCompletedAt: new Date(),
         visibility: "MEMBERS" as const,
+        nationality: member.country || "International",
+        openToInternationalMatches: true,
+        openToRelocation: true,
         status: "ACTIVE" as const,
         deletedAt: null,
       } as never,
@@ -217,6 +188,7 @@ async function upsertOne(userId: string, member: DemoMember) {
         countries: [],
         minCompatibilityScore: 15,
         maritalStatuses: ["NEVER_MARRIED", "DIVORCED"],
+        openToInternationalMatches: true,
       },
     },
     { upsert: true },
