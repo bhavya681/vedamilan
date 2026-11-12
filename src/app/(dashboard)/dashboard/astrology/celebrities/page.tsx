@@ -4,13 +4,13 @@ import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
+  BookOpen,
+  Building,
   Calendar,
-  ChartCandlestick,
   Clapperboard,
   Clock,
   Compass,
   Crown,
-  Eye,
   Flame,
   FlaskConical,
   Gavel,
@@ -20,15 +20,14 @@ import {
   MapPin,
   Moon,
   Music2,
+  PenTool,
   Search,
+  Shield,
   Sparkles,
   Star,
   Sun,
   Telescope,
-  Trophy,
   Users,
-  Video,
-  Dices,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -50,6 +49,7 @@ import {
 import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { fetchJsonWhenAuthed } from "@/lib/http/session-fetch";
 import { cn } from "@/lib/utils/cn";
+import { getYogaCategoryDisplay, getYogaIcon } from "@/application/horoscope/yoga-icons";
 
 type CelebritySummary = {
   id: string;
@@ -100,19 +100,18 @@ type CelebrityStudioResponse = {
 
 const CATEGORIES = [
   "All",
-  "Sports",
+  "Entrepreneurs",
+  "Politicians",
   "Cinema",
   "Music",
-  "Creators",
-  "Finance",
-  "Gamblers",
-  "Leaders",
-  "Science & arts",
-  "Divine",
+  "Writers",
+  "Science & Arts",
   "Spiritual",
-  "Mystic",
-  "Criminals",
+  "Historical",
+  "International",
+  "Divine",
 ] as const;
+
 type CategoryFilter = (typeof CATEGORIES)[number];
 type CategoryName = Exclude<CategoryFilter, "All">;
 
@@ -120,17 +119,23 @@ const CATEGORY_META: Record<
   CategoryName,
   { icon: LucideIcon; avatar: string; chip: string; wash: string }
 > = {
+  Entrepreneurs: {
+    icon: Building,
+    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
+    chip: "border-emerald/25 bg-emerald/10 text-emerald",
+    wash: "from-emerald/12 via-transparent",
+  },
+  Politicians: {
+    icon: Gavel,
+    avatar: "border-gold/35 from-gold/25 to-saffron/10 text-gold",
+    chip: "border-gold/30 bg-gold/10 text-gold",
+    wash: "from-gold/12 via-transparent",
+  },
   Cinema: {
     icon: Clapperboard,
     avatar: "border-rose/30 from-rose/20 to-gold/10 text-rose",
     chip: "border-rose/25 bg-rose/10 text-rose",
     wash: "from-rose/12 via-transparent",
-  },
-  Sports: {
-    icon: Trophy,
-    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
-    chip: "border-emerald/25 bg-emerald/10 text-emerald",
-    wash: "from-emerald/12 via-transparent",
   },
   Music: {
     icon: Music2,
@@ -138,41 +143,17 @@ const CATEGORY_META: Record<
     chip: "border-cosmic/25 bg-cosmic/10 text-cosmic",
     wash: "from-cosmic/12 via-transparent",
   },
-  Leaders: {
-    icon: Crown,
-    avatar: "border-gold/35 from-gold/25 to-saffron/10 text-gold",
-    chip: "border-gold/30 bg-gold/10 text-gold",
-    wash: "from-gold/12 via-transparent",
-  },
-  "Science & arts": {
-    icon: FlaskConical,
+  Writers: {
+    icon: PenTool,
     avatar: "border-saffron/30 from-saffron/20 to-gold/10 text-saffron",
     chip: "border-saffron/25 bg-saffron/10 text-saffron",
     wash: "from-saffron/12 via-transparent",
   },
-  Divine: {
-    icon: Sparkles,
-    avatar: "border-gold/40 from-gold/30 to-saffron/15 text-gold",
-    chip: "border-gold/35 bg-gold/15 text-gold",
-    wash: "from-gold/15 via-transparent",
-  },
-  Creators: {
-    icon: Video,
-    avatar: "border-rose/30 from-rose/20 to-cosmic/10 text-rose",
-    chip: "border-rose/25 bg-rose/10 text-rose",
-    wash: "from-rose/12 via-transparent",
-  },
-  Finance: {
-    icon: ChartCandlestick,
-    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
-    chip: "border-emerald/25 bg-emerald/10 text-emerald",
-    wash: "from-emerald/12 via-transparent",
-  },
-  Gamblers: {
-    icon: Dices,
-    avatar: "border-amber/30 from-amber/20 to-rose/10 text-amber",
-    chip: "border-amber/25 bg-amber/10 text-amber",
-    wash: "from-amber/10 via-transparent",
+  "Science & Arts": {
+    icon: FlaskConical,
+    avatar: "border-blue/30 from-blue/20 to-gold/10 text-blue",
+    chip: "border-blue/25 bg-blue/10 text-blue",
+    wash: "from-blue/12 via-transparent",
   },
   Spiritual: {
     icon: Flame,
@@ -180,17 +161,23 @@ const CATEGORY_META: Record<
     chip: "border-gold/30 bg-gold/10 text-saffron",
     wash: "from-gold/12 via-transparent",
   },
-  Mystic: {
-    icon: Eye,
+  Historical: {
+    icon: BookOpen,
+    avatar: "border-amber/30 from-amber/20 to-rose/10 text-amber",
+    chip: "border-amber/25 bg-amber/10 text-amber",
+    wash: "from-amber/10 via-transparent",
+  },
+  International: {
+    icon: Globe2,
     avatar: "border-cosmic/30 from-cosmic/20 to-rose/10 text-cosmic",
     chip: "border-cosmic/25 bg-cosmic/10 text-cosmic",
     wash: "from-cosmic/12 via-transparent",
   },
-  Criminals: {
-    icon: Gavel,
-    avatar: "border-destructive/30 from-destructive/15 to-rose/10 text-destructive",
-    chip: "border-destructive/25 bg-destructive/10 text-destructive",
-    wash: "from-destructive/10 via-transparent",
+  Divine: {
+    icon: Sparkles,
+    avatar: "border-gold/40 from-gold/30 to-saffron/15 text-gold",
+    chip: "border-gold/35 bg-gold/15 text-gold",
+    wash: "from-gold/15 via-transparent",
   },
 };
 
@@ -205,46 +192,119 @@ const YOGA_CATEGORY_META: Record<
   string,
   { label: string; icon: LucideIcon; chip: string; wash: string; areas: string[] }
 > = {
-  CAREER: {
-    label: "Career",
+  "Raja Yoga": {
+    label: "Raja Yoga",
     icon: Crown,
-    chip: "border-gold/25 bg-gold/10 text-gold",
-    wash: "from-gold/12 via-transparent",
-    areas: ["Recognition", "Authority", "Status"],
+    chip: "border-gold/35 bg-gold/15 text-gold",
+    wash: "from-gold/15 via-transparent",
+    areas: ["Authority", "Status", "Leadership", "Exceptional Rise"],
   },
-  WEALTH: {
-    label: "Wealth",
+  "Dharma-Karmadhipati": {
+    label: "Dharma-Karmadhipati",
+    icon: Crown,
+    chip: "border-gold/30 bg-gold/10 text-gold",
+    wash: "from-gold/12 via-transparent",
+    areas: ["Purpose", "Career", "Duty", "Rise"],
+  },
+  "Gaja Kesari": {
+    label: "Gaja Kesari",
+    icon: Star,
+    chip: "border-gold/30 bg-gold/10 text-gold",
+    wash: "from-gold/12 via-transparent",
+    areas: ["Wisdom", "Respect", "Support", "Grace"],
+  },
+  "Dhana Yoga": {
+    label: "Dhana Yoga",
     icon: Sparkles,
     chip: "border-saffron/25 bg-saffron/10 text-saffron",
     wash: "from-saffron/12 via-transparent",
     areas: ["Prosperity", "Speech", "Resources"],
   },
-  MARRIAGE: {
-    label: "Partnership",
+  "Pancha Mahapurusha": {
+    label: "Mahapurusha",
     icon: Star,
-    chip: "border-rose/25 bg-rose/10 text-rose",
-    wash: "from-rose/12 via-transparent",
-    areas: ["Marriage", "Harmony", "Bonding"],
-  },
-  HEALTH: {
-    label: "Vitality",
-    icon: Sun,
     chip: "border-emerald/25 bg-emerald/10 text-emerald",
     wash: "from-emerald/12 via-transparent",
-    areas: ["Vitality", "Balance", "Routine"],
+    areas: ["Character", "Greatness", "Legacy"],
   },
-  GENERAL: {
-    label: "General",
-    icon: Compass,
+  "Lunar Yoga": {
+    label: "Lunar Yoga",
+    icon: Moon,
     chip: "border-cosmic/25 bg-cosmic/10 text-cosmic",
     wash: "from-cosmic/12 via-transparent",
-    areas: ["Character", "Timing", "Growth"],
+    areas: ["Mind", "Emotions", "Intuition"],
+  },
+  "Solar Yoga": {
+    label: "Solar Yoga",
+    icon: Sun,
+    chip: "border-amber/25 bg-amber/10 text-amber",
+    wash: "from-amber/12 via-transparent",
+    areas: ["Vitality", "Authority", "Self"],
+  },
+  "Nabhasa Yoga": {
+    label: "Nabhasa Yoga",
+    icon: Layers,
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+    areas: ["Structure", "Life Pattern", "Destiny"],
+  },
+  "Ashraya Yoga": {
+    label: "Ashraya Yoga",
+    icon: Layers,
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+    areas: ["Foundation", "Pattern", "Disposition"],
+  },
+  "Dala Yoga": {
+    label: "Dala Yoga",
+    icon: Layers,
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+    areas: ["Grouping", "Balance", "Momentum"],
+  },
+  "Akriti Yoga": {
+    label: "Akriti Yoga",
+    icon: Layers,
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+    areas: ["Form", "Pattern", "Life Shape"],
+  },
+  "Sankhya Yoga": {
+    label: "Sankhya Yoga",
+    icon: Layers,
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
+    areas: ["Distribution", "Count", "Configuration"],
+  },
+  "Planetary Yoga": {
+    label: "Planetary Yoga",
+    icon: Compass,
+    chip: "border-blue/25 bg-blue/10 text-blue",
+    wash: "from-blue/12 via-transparent",
+    areas: ["Exchange", "Special Combination", "Power"],
+  },
+  "Other Yoga": {
+    label: "Other Yoga",
+    icon: Shield,
+    chip: "border-muted/25 bg-muted/10 text-muted-foreground",
+    wash: "from-muted/12 via-transparent",
+    areas: ["Supportive", "Minor", "Contextual"],
+  },
+  "General": {
+    label: "General",
+    icon: Shield,
+    chip: "border-muted/25 bg-muted/10 text-muted-foreground",
+    wash: "from-muted/12 via-transparent",
+    areas: ["General", "Contextual", "Supportive"],
+  },
+  "Other": {
+    label: "Other",
+    icon: Shield,
+    chip: "border-muted/25 bg-muted/10 text-muted-foreground",
+    wash: "from-muted/12 via-transparent",
+    areas: ["Supportive", "Minor", "Contextual"],
   },
 };
-
-function yogaMeta(category: string) {
-  return YOGA_CATEGORY_META[category] ?? YOGA_CATEGORY_META.GENERAL!;
-}
 
 function categoryMeta(category: string) {
   return CATEGORY_META[category as CategoryName] ?? CATEGORY_META.Cinema;
@@ -473,32 +533,32 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          <SignatureTile
-            icon={Compass}
-            label="Lagna"
-            value={chart.lagnaSign}
-            hint={chart.lagnaNakshatra}
-          />
-          <SignatureTile
-            icon={Moon}
-            label="Moon"
-            value={chart.moonSign}
-            hint={chart.moonNakshatra}
-          />
-          <SignatureTile
-            icon={Sun}
-            label="Sun"
-            value={chart.sunSign}
-            hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
-          />
-          <SignatureTile
-            icon={Sparkles}
-            label="Current Mahadasha"
-            value={chart.dasha.currentMaha || "—"}
-            hint={chart.dasha.currentAntar ? `Antardasha · ${chart.dasha.currentAntar}` : null}
-          />
-        </div>
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <SignatureTile
+                icon={Compass}
+                label="Lagna"
+                value={chart.lagnaSign}
+                hint={chart.lagnaNakshatra}
+              />
+              <SignatureTile
+                icon={Moon}
+                label="Moon"
+                value={chart.moonSign}
+                hint={chart.moonNakshatra}
+              />
+              <SignatureTile
+                icon={Sun}
+                label="Sun"
+                value={chart.sunSign}
+                hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
+              />
+              <SignatureTile
+                icon={Sparkles}
+                label="Detected yogas"
+                value={String(chart.yogas.length)}
+                hint={chart.dasha.currentMaha ? `Mahadasha · ${chart.dasha.currentMaha}` : "From chart engine"}
+              />
+            </div>
       </CardContent>
     </Card>
   );
@@ -545,6 +605,12 @@ function YogaStrength({ value }: { value: number }) {
   );
 }
 
+function strengthLabel(value: number) {
+  if (value >= 80) return "Strong";
+  if (value >= 60) return "Moderate";
+  return "Mild";
+}
+
 function YogaSection({
   yogas,
   dasha,
@@ -554,26 +620,68 @@ function YogaSection({
 }) {
   const period = dashaPeriodText(dasha.currentMaha, dasha.currentAntar);
 
+  const groupedYogas = useMemo(() => {
+    const groups: Record<string, typeof yogas> = {};
+    for (const yoga of yogas) {
+      const cat = getYogaCategoryDisplay(yoga.code || yoga.category || "");
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(yoga);
+    }
+    return groups;
+  }, [yogas]);
+
+  const categoryOrder = useMemo(() => {
+    const preferred = [
+      "Raja Yoga",
+      "Dharma-Karmadhipati",
+      "Gaja Kesari",
+      "Pancha Mahapurusha",
+      "Dhana Yoga",
+      "Lunar Yoga",
+      "Solar Yoga",
+      "Nabhasa Yoga",
+      "Ashraya Yoga",
+      "Dala Yoga",
+      "Akriti Yoga",
+      "Sankhya Yoga",
+      "Planetary Yoga",
+      "Other Yoga",
+      "General",
+    ];
+    const present = Object.keys(groupedYogas);
+    const ordered = preferred.filter((c) => present.includes(c));
+    for (const c of present.sort((a, b) => a.localeCompare(b))) {
+      if (!ordered.includes(c)) ordered.push(c);
+    }
+    return ordered;
+  }, [groupedYogas]);
+
+  const topYogas = useMemo(() => yogas.slice(0, 3), [yogas]);
+
   return (
     <section className="space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-gold text-[10px] font-semibold tracking-[0.18em] uppercase">
             Classical combinations
           </p>
-          <h2 className="font-display mt-1 flex items-center gap-2 text-2xl sm:text-3xl">
+          <h2 className="font-display mt-0.5 flex items-center gap-2 text-xl sm:text-2xl">
             <Sparkles className="text-gold h-5 w-5" />
             Yoga signatures
           </h2>
-          <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
-            Combinations detected by the chart engine and ranked by how clearly they formed. Use
-            them as study themes, not fixed predictions.
+          <p className="text-muted-foreground mt-0.5 max-w-2xl text-sm">
+            Detected yogas from the chart engine, grouped by category and ranked by formation
+            strength. Use them as study themes, not fixed predictions.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant="outline" className="border-gold/30 bg-gold/10 gap-1.5">
             <Layers className="h-3 w-3" />
-            {yogas.length} flagged
+            {yogas.length} detected
+          </Badge>
+          <Badge variant="outline" className="gap-1.5">
+            <Star className="h-3 w-3" />
+            {categoryOrder.length} categories
           </Badge>
           {period ? (
             <Badge variant="outline" className="gap-1.5">
@@ -585,77 +693,134 @@ function YogaSection({
       </div>
 
       {yogas.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-          {yogas.map((yoga) => {
-            const meta = yogaMeta(yoga.category);
-            const Icon = meta.icon;
-            return (
-              <article
-                key={`${yoga.code}-${yoga.name}`}
-                className="border-border/60 bg-card hover:border-gold/35 relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-colors"
-              >
-                <div
-                  className={cn(
-                    "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-br to-transparent opacity-70",
-                    meta.wash,
-                  )}
-                />
-                <div className="relative flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-2.5">
-                    <span
+        <div className="space-y-3">
+          <Card className="border-gold/20 bg-gold/5">
+            <CardContent className="p-3.5 sm:p-4">
+              <p className="text-gold text-[10px] font-semibold tracking-[0.16em] uppercase">
+                Highlights
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {topYogas.map((yoga) => {
+                  const Icon = getYogaIcon(yoga.code, yoga.category);
+                  return (
+                    <div
+                      key={`${yoga.code}-${yoga.name}-highlight`}
+                      className="border-border/60 bg-background/70 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs"
+                    >
+                      <Icon className="text-gold h-3.5 w-3.5" />
+                      <span className="max-w-[12rem] truncate font-medium sm:max-w-none">{yoga.name}</span>
+                      <span className="text-muted-foreground shrink-0">{strengthLabel(yoga.strength)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {categoryOrder.map((catName) => {
+                  const items = groupedYogas[catName] || [];
+                  const meta = YOGA_CATEGORY_META[catName] ?? YOGA_CATEGORY_META.Other!;
+                  const Icon = getYogaIcon(items[0]?.code, items[0]?.category) || meta.icon;
+                  return (
+                    <div
+                      key={`${catName}-count`}
                       className={cn(
-                        "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+                        "flex min-w-0 items-center justify-between gap-2 rounded-lg border px-2 py-1.5 text-[10px] font-medium",
                         meta.chip,
                       )}
                     >
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="font-display text-base leading-snug font-medium sm:text-lg">
-                        {yoga.name}
-                      </h3>
-                      <Badge
-                        variant="outline"
-                        className={cn("mt-1.5 border text-[10px]", meta.chip)}
-                      >
-                        {meta.label}
-                      </Badge>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <Icon className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{catName}</span>
+                      </span>
+                      <span className="bg-background/40 shrink-0 rounded-full px-1.5 py-0.5 tabular-nums">
+                        {items.length}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-center gap-1">
-                    <YogaStrength value={yoga.strength} />
-                    <span className="text-muted-foreground text-[9px] font-semibold tracking-[0.12em] uppercase">
-                      Strength
-                    </span>
-                  </div>
-                </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-                <p className="text-muted-foreground relative mt-3 text-xs leading-relaxed sm:text-sm">
-                  {yoga.description}
-                </p>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {categoryOrder.flatMap((catName) => {
+              const items = groupedYogas[catName] || [];
+              const meta = YOGA_CATEGORY_META[catName] ?? YOGA_CATEGORY_META.Other!;
+              return items.map((yoga) => {
+                const Icon = getYogaIcon(yoga.code, yoga.category) || meta.icon;
+                return (
+                  <article
+                    key={`${yoga.code}-${yoga.name}`}
+                    className="border-border/60 bg-card hover:border-gold/35 relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border p-3.5 shadow-sm transition-colors"
+                  >
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-br to-transparent opacity-50",
+                        meta.wash,
+                      )}
+                    />
+                    <div className="relative flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <span
+                          className={cn(
+                            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                            meta.chip,
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="font-display line-clamp-2 text-sm leading-snug font-medium">
+                            {yoga.name}
+                          </h3>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <Badge
+                              variant="outline"
+                              className={cn("max-w-full border text-[10px]", meta.chip)}
+                            >
+                              <span className="truncate">{catName}</span>
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {strengthLabel(yoga.strength)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-center gap-0.5">
+                        <YogaStrength value={yoga.strength} />
+                        <span className="text-muted-foreground text-[9px] font-semibold tracking-[0.12em] uppercase">
+                          Strength
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="relative mt-3 flex flex-wrap gap-1.5">
-                  {meta.areas.map((area) => (
-                    <span
-                      key={area}
-                      className="border-border/50 bg-background/60 text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium"
-                    >
-                      {area}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            );
-          })}
+                    <p className="text-muted-foreground relative mt-2 line-clamp-3 text-xs leading-relaxed">
+                      {yoga.description}
+                    </p>
+
+                    <div className="relative mt-auto flex flex-wrap gap-1 pt-2">
+                      {meta.areas.slice(0, 3).map((area) => (
+                        <span
+                          key={area}
+                          className="border-border/50 bg-background/60 text-muted-foreground rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
+                        >
+                          {area}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                );
+              });
+            })}
+          </div>
         </div>
       ) : (
         <Card className="border-border/60">
-          <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
-            <Sparkles className="text-muted-foreground h-6 w-6" />
+          <CardContent className="flex flex-col items-center gap-1.5 py-6 text-center">
+            <Sparkles className="text-muted-foreground h-5 w-5" />
             <p className="font-medium">No major yogas flagged</p>
             <p className="text-muted-foreground max-w-md text-sm">
-              The engine did not flag a major classical combination for this chart. The D1 and D9
-              charts still show the full planetary story.
+              The engine did not flag a supported classical combination for this chart. The D1 and
+              D9 charts still show the full planetary story.
             </p>
           </CardContent>
         </Card>
@@ -663,18 +828,25 @@ function YogaSection({
 
       <p className="text-muted-foreground flex items-start gap-1.5 text-xs leading-relaxed">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Yoga results usually become more visible during the periods of the planets that form them.
-        {period ? ` Current period shown: ${period}.` : ""}
+        <span>
+          Yoga results usually become more visible during the periods of the planets that form them.
+          {period ? ` Current period shown: ${period}.` : ""}
+        </span>
       </p>
     </section>
   );
 }
 
 function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
+  const disclaimer =
+    chart.chartSource === "traditional"
+      ? "This is a traditional devotional chart based on scriptural or traditional birth details. It is an educational reconstruction, not a modern ephemeris calculation or a claim of historical certainty."
+      : "Birth records for public figures are often disputed. Unknown birth times use local noon, so the ascendant and house cusps are illustrative. Charts use whole-sign houses and the Lahiri ayanamsha for study and inspiration.";
+
   return (
-    <div className="min-w-0 space-y-6 sm:space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="ghost" asChild className="gap-2">
+    <div className="min-w-0 space-y-4 sm:space-y-5">
+      <div className="flex flex-wrap items-center justify-between space-y-1 space-x-1">
+        <Button variant="ghost" size="sm" asChild className="space-x-1 space-y-1">
           <Link href="/dashboard/astrology/celebrities">
             <ArrowLeft className="h-4 w-4" />
             All celebrities
@@ -689,22 +861,20 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
       <ProfileHero chart={chart} />
 
       <section className="space-y-3">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-gold text-[10px] font-semibold tracking-[0.18em] uppercase">
-              Chart studio
-            </p>
-            <h2 className="font-display mt-1 flex items-center gap-2 text-2xl sm:text-3xl">
-              <Telescope className="text-gold h-5 w-5" />
-              D1 &amp; D9 kundali
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Rashi for the life path; Navamsa for marriage, dharma, and inner planet strength.
-            </p>
-          </div>
+        <div>
+          <p className="text-gold text-[10px] font-semibold tracking-[0.18em] uppercase">
+            Chart studio
+          </p>
+          <h2 className="font-display mt-1 flex items-center gap-2 text-xl sm:text-2xl">
+            <Telescope className="text-gold h-5 w-5" />
+            D1 & D9 kundali
+          </h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
+            Rashi for the life path; Navamsa for marriage, dharma, and inner planet strength.
+          </p>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <ChartPanel
             code="D1 · Rashi"
             title="Birth Chart"
@@ -727,43 +897,43 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
       </section>
 
       <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+        <CardHeader className="px-4 py-3 sm:px-5">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Compass className="text-gold h-4 w-4" />
             Planetary positions
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="border-border/60 bg-background/60 rounded-xl border p-3.5">
+        <CardContent className="grid gap-2.5 px-4 pb-4 sm:grid-cols-2 sm:px-5 sm:pb-5 lg:grid-cols-4">
+          <div className="border-border/60 bg-background/60 rounded-xl border p-3">
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
               Lagna (Ascendant)
             </p>
-            <p className="font-display mt-1 text-lg">{chart.lagnaSign}</p>
+            <p className="font-display mt-0.5 text-lg">{chart.lagnaSign}</p>
             <p className="text-muted-foreground text-xs">
               {chart.lagnaNakshatra || `${chart.lagnaDegree.toFixed(1)}°`}
             </p>
           </div>
-          <div className="border-border/60 bg-background/60 rounded-xl border p-3.5">
+          <div className="border-border/60 bg-background/60 rounded-xl border p-3">
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
               Moon sign
             </p>
-            <p className="font-display mt-1 text-lg">{chart.moonSign}</p>
+            <p className="font-display mt-0.5 text-lg">{chart.moonSign}</p>
             <p className="text-muted-foreground text-xs">{chart.moonNakshatra || "—"}</p>
           </div>
-          <div className="border-border/60 bg-background/60 rounded-xl border p-3.5">
+          <div className="border-border/60 bg-background/60 rounded-xl border p-3">
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
               Sun sign
             </p>
-            <p className="font-display mt-1 text-lg">{chart.sunSign}</p>
+            <p className="font-display mt-0.5 text-lg">{chart.sunSign}</p>
             <p className="text-muted-foreground text-xs">
               {chart.chartSource === "traditional" ? "Traditional position" : "Sidereal · Lahiri"}
             </p>
           </div>
-          <div className="border-border/60 bg-background/60 rounded-xl border p-3.5">
+          <div className="border-border/60 bg-background/60 rounded-xl border p-3">
             <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
               D9 lagna
             </p>
-            <p className="font-display mt-1 text-lg">{chart.d9LagnaSign}</p>
+            <p className="font-display mt-0.5 text-lg">{chart.d9LagnaSign}</p>
             <p className="text-muted-foreground text-xs">Navamsa ascendant</p>
           </div>
         </CardContent>
@@ -771,22 +941,20 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
 
       <YogaSection yogas={chart.yogas} dasha={chart.dasha} />
 
-      <Card className="border-gold/25 bg-gold/5">
-        <CardContent className="flex gap-3 p-4 sm:p-5">
-          <Info className="text-gold mt-0.5 h-4 w-4 shrink-0" />
-          <div className="text-muted-foreground space-y-1.5 text-xs leading-relaxed sm:text-sm">
+      <Card className="border-gold/15 bg-gold/5">
+        <CardContent className="flex items-start gap-2 p-3 sm:p-3.5">
+          <Info className="text-gold/80 mt-px h-3.5 w-3.5 shrink-0" />
+          <div className="text-muted-foreground/90 min-w-0 text-[11px] leading-relaxed sm:text-xs">
             <p>
               {chart.category === "Criminals"
                 ? "This infamous figure is included only for neutral astrological study and is not presented as a role model. "
                 : chart.category === "Gamblers"
                   ? "This figure is included for a neutral study of risk, probability, and decision-making, not as gambling advice. "
                   : ""}
-              {chart.chartSource === "traditional"
-                ? "This is a traditional devotional chart based on scriptural or traditional birth details. It is an educational reconstruction, not a modern ephemeris calculation or a claim of historical certainty."
-                : "Birth records for public figures are often disputed. Unknown birth times use local noon, so the ascendant and house cusps are illustrative. Charts use whole-sign houses and the Lahiri ayanamsha for study and inspiration."}
+              {disclaimer}
             </p>
             {chart.chartSource === "traditional" && chart.chartSourceNote ? (
-              <p>{chart.chartSourceNote}</p>
+              <p className="mt-1">{chart.chartSourceNote}</p>
             ) : null}
           </div>
         </CardContent>
@@ -886,19 +1054,18 @@ function AtlasHero({ total, categories }: { total: number | null; categories: nu
         <div className="max-w-2xl min-w-0">
           <p className="text-gold flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase">
             <Globe2 className="h-3.5 w-3.5" />
-            Divine &amp; international icons
+            Divine & international icons
           </p>
           <h1 className="font-display mt-2 text-3xl leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
             Celebrity Kundali Atlas
           </h1>
           <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed sm:text-base">
-            Study D1 Rashi and D9 Navamsa charts of divine figures, cinema, sport, music,
-            leadership, science, spiritual, mystical, and infamous figures from around the world.
+            Study D1 Rashi and D9 Navamsa charts of entrepreneurs, politicians, cinema, music,
+            writers, science & arts, spiritual, historical, international, and divine figures.
           </p>
           <p className="text-muted-foreground mt-1.5 text-xs">
             A neutral study archive — divine charts follow scriptural or traditional details, while
-            spiritual teachers and infamous figures are included for comparative astrology, not
-            endorsement.
+            other figures use the best available public birth data for comparative astrology.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge variant="outline" className="border-gold/30 bg-gold/10 gap-1.5">
@@ -911,7 +1078,7 @@ function AtlasHero({ total, categories }: { total: number | null; categories: nu
             </Badge>
             <Badge variant="outline" className="gap-1.5">
               <Star className="h-3 w-3" />
-              {categories ?? "—"} fields
+              {categories ?? "—"} categories
             </Badge>
           </div>
         </div>
@@ -919,7 +1086,7 @@ function AtlasHero({ total, categories }: { total: number | null; categories: nu
         <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[19rem]">
           {[
             { label: "Charts", value: total ?? "—" },
-            { label: "Fields", value: categories ?? "—" },
+            { label: "Categories", value: categories ?? "—" },
             { label: "Vargas", value: "D1/D9" },
           ].map((stat) => (
             <div
@@ -1058,7 +1225,7 @@ function CelebritiesContent() {
     }
     if (data?.selected) {
       return (
-        <div className="min-w-0">
+        <div className="min-w-0 p-1 my-2">
           <ContentReveal>
             <CelebrityDetail chart={data.selected} />
           </ContentReveal>
@@ -1144,7 +1311,7 @@ function CelebritiesContent() {
                 {category === "All" ? "" : ` · ${category}`}
               </p>
               <p className="text-muted-foreground hidden text-xs sm:block">
-                Select a figure to open the D1 &amp; D9 studio
+                Select a figure to open the D1 & D9 studio
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -1171,7 +1338,7 @@ export default function CelebritiesPage() {
                 Celebrity Kundali Atlas
               </span>
             }
-            description="Browse D1 and D9 charts of divine figures and international icons."
+            description="Browse D1 and D9 charts of entrepreneurs, politicians, cinema, music, writers, science & arts, spiritual, historical, international, and divine figures."
           />
           <AtlasSkeleton />
         </div>

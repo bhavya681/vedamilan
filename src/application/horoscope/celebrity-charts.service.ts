@@ -86,8 +86,7 @@ function buildD9(
 
 function sortYogas(yogas: ReturnType<typeof detectYogas>) {
   return [...yogas]
-    .sort((a, b) => b.strength - a.strength)
-    .slice(0, 6)
+    .sort((a, b) => b.strength - a.strength || a.name.localeCompare(b.name))
     .map((y) => ({
       code: y.code,
       name: y.name,

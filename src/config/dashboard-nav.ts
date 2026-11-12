@@ -41,7 +41,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
-  Stars,
   Sunrise,
   Table2,
   Telescope,
@@ -58,7 +57,7 @@ import { routes } from "@/lib/constants/routes";
  */
 export const dashboardNavIcons: Record<string, LucideIcon> = {
   [routes.dashboard]: LayoutDashboard,
-  [routes.astrology]: Stars,
+  [routes.astrology]: Home,
   [routes.matrimony]: Home,
   [routes.vedicWisdom]: Library,
 

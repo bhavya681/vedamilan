@@ -5,6 +5,7 @@ import { ArrowUpRight, ChevronDown, Crown, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
+import { getYogaIcon, getYogaCategoryDisplay } from "@/application/horoscope/yoga-icons";
 
 export type YogaExemplar = {
   badge: string;
@@ -33,6 +34,13 @@ type YogaItem = {
   strength?: number;
   description?: string;
   insight: InsightBlock;
+  details?: {
+    planets: string[];
+    houses: number[];
+    signs: string[];
+    condition: string;
+    classicalReference: string;
+  };
 };
 
 type DoshaItem = {
@@ -43,6 +51,11 @@ type DoshaItem = {
   notes?: string;
   insight: InsightBlock;
 };
+
+function getYogaIconComponent(code?: string, category?: string) {
+  const Icon = getYogaIcon(code, category);
+  return <Icon className="h-4 w-4" aria-hidden />;
+}
 
 function ExemplarPanel({
   exemplar,
@@ -107,13 +120,47 @@ function ExemplarPanel({
 function DetailPanel({
   insight,
   tone = "yoga",
+  details,
 }: {
   insight: InsightBlock;
   tone?: "yoga" | "dosha";
+  details?: YogaItem["details"];
 }) {
   return (
     <div className="space-y-3">
       {insight.exemplar ? <ExemplarPanel exemplar={insight.exemplar} tone={tone} /> : null}
+
+      {details && (
+        <div className="border-border/40 bg-muted/25 grid gap-3 rounded-xl border p-3 text-sm sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+              Classical Formation Details
+            </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+              <div>
+                <p className="text-muted-foreground">Planets Involved</p>
+                <p className="font-medium">{details.planets.join(", ") || "&mdash;"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Houses</p>
+                <p className="font-medium">{details.houses.map(h => `H${h}`).join(", ") || "&mdash;"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Signs</p>
+                <p className="font-medium">{details.signs.join(", ") || "&mdash;"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Condition Met</p>
+                <p className="font-medium truncate">{details.condition}</p>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-4">
+                <p className="text-muted-foreground">Classical Reference</p>
+                <p className="font-medium text-xs leading-relaxed">{details.classicalReference}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="border-border/40 bg-muted/25 grid gap-3 rounded-xl border p-3 text-sm sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -177,6 +224,7 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
         const key = `${y.code || y.name}-${y.name}`;
         const isOpen = open === key;
         const badge = y.insight.exemplar?.badge;
+        const categoryDisplay = getYogaCategoryDisplay(y.category);
         return (
           <li key={key}>
             <article
@@ -193,14 +241,21 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1.5">
-                    <p className="font-display text-base font-medium sm:text-lg">{y.name}</p>
+                    <div className="flex items-center gap-2">
+                      {getYogaIconComponent(y.code, y.category)}
+                      <p className="font-display text-base font-medium sm:text-lg">{y.name}</p>
+                    </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {badge ? (
                         <Badge className="border-gold/40 bg-gold/15 text-foreground border text-[10px]">
                           {badge}
                         </Badge>
                       ) : null}
-                      {y.category ? <Badge variant="outline">{y.category}</Badge> : null}
+                      {categoryDisplay && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {categoryDisplay}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -219,7 +274,7 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
                     <span className="text-foreground/80 font-medium">
                       Like {y.insight.exemplar.parallelTitle.toLowerCase()}
                     </span>
-                    {" — "}
+                    {" &mdash; "}
                     {y.insight.exemplar.knownOutcome}
                   </p>
                 ) : null}
@@ -229,7 +284,7 @@ export function YogaDetailList({ items, empty }: { items: YogaItem[]; empty: str
               </button>
               {isOpen ? (
                 <div className="px-3.5 pb-4 sm:px-4">
-                  <DetailPanel insight={y.insight} tone="yoga" />
+                  <DetailPanel insight={y.insight} tone="yoga" details={y.details} />
                 </div>
               ) : null}
             </article>
@@ -324,12 +379,29 @@ export function VedicExtrasBanner() {
             Combinations from your stored Kundli
           </p>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Yogas are supportive patterns. Doshas are friction themes — not curses. Open any row for
+            Yogas are supportive patterns. Doshas are friction themes &mdash; not curses. Open any row for
             formation, dasha timing, and a public-life parallel. Parallels illustrate the theme;
             they are not celebrity-chart claims or guaranteed outcomes.
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function NoRajaYogaState() {
+  return (
+    <div className="border-border/50 rounded-2xl border bg-muted/30 p-6 text-center">
+      <Crown className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+      <p className="font-display text-lg">No Qualifying Raja Yoga Detected</p>
+      <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
+        The classical rule engine did not find Kendra-Trikona associations, Dharma-Karmadhipati,
+        Neecha Bhanga, Vipareeta Raja, or Pancha Mahapurusha yogas in the current chart.
+      </p>
+      <p className="text-muted-foreground mt-3 text-xs">
+        This is common &mdash; many charts don&apos;t have these specific classical combinations.
+        Other supportive yogas may still be present in the &quot;All&quot; or &quot;Other&quot; tabs.
+      </p>
     </div>
   );
 }
