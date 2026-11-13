@@ -22,9 +22,7 @@ import {
   Sun,
   Star,
   Shield,
-  Sparkles,
   Layers,
-  Orbit,
   Network,
   Award,
   Flower2,
@@ -48,7 +46,6 @@ const SO: YogaGroup = "Solar Yoga";
 const NA: YogaGroup = "Nabhasa Yoga";
 const PL: YogaGroup = "Planetary Yoga";
 const JI: YogaGroup = "Jaimini Yoga";
-const NK: YogaGroup = "Nakshatra Yoga";
 const OT: YogaGroup = "Other Classical Yogas";
 
 export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
@@ -67,15 +64,27 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       "Association between Kendra lords (1, 4, 7, 10) and Trikona lords (1, 5, 9) through conjunction, mutual aspect, exchange (parivartana), or Kendra-Trikona placement. The classic combination for recognition, authority, and life elevation.",
     shortMeaning: "Authority and recognition through kendra-trikona lord association.",
     classicalReferences: [
-      { text: "BPHS", chapter: "41", verse: "1-3", note: "Kendra lord and Trikona lord association forms Raja Yoga" },
-      { text: "Phaladeepika", chapter: "6", verse: "13", note: "Raja Yoga from Kendra-Trikona lords" },
+      {
+        text: "BPHS",
+        chapter: "41",
+        verse: "1-3",
+        note: "Kendra lord and Trikona lord association forms Raja Yoga",
+      },
+      {
+        text: "Phaladeepika",
+        chapter: "6",
+        verse: "13",
+        note: "Raja Yoga from Kendra-Trikona lords",
+      },
     ],
     inputs: { planets: ["Variable"], houses: [1, 4, 5, 7, 9, 10] },
     formation: [
       "Identify Kendra lords (houses 1, 4, 7, 10) and Trikona lords (houses 1, 5, 9).",
       "A Kendra lord associates with a Trikona lord via conjunction, mutual Parashari aspect, exchange (parivartana), or Kendra-Trikona placement.",
     ],
-    exclusions: ["Same planet ruling both a Kendra and a Trikona (e.g. Lagna lord) — excluded as a self-association."],
+    exclusions: [
+      "Same planet ruling both a Kendra and a Trikona (e.g. Lagna lord) — excluded as a self-association.",
+    ],
     cancellation: [
       "Debilitation of either lord without Neecha Bhanga.",
       "Combustion of either lord.",
@@ -106,7 +115,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       "Association between the 9th lord (dharma, fortune) and the 10th lord (karma, profession), connecting life purpose with vocation.",
     shortMeaning: "Fortune and profession aligned through 9th-10th lord association.",
     classicalReferences: [
-      { text: "BPHS", chapter: "41", verse: "33", note: "9th and 10th lord association forms Dharma-Karmadhipati Yoga" },
+      {
+        text: "BPHS",
+        chapter: "41",
+        verse: "33",
+        note: "9th and 10th lord association forms Dharma-Karmadhipati Yoga",
+      },
       { text: "Phaladeepika", chapter: "6", verse: "20", note: "9th and 10th lords give Raj Yoga" },
     ],
     inputs: { planets: ["Variable"], houses: [9, 10] },
@@ -145,7 +159,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     shortMeaning: "Jupiter angular from the Moon — wisdom, reputation, prosperity.",
     classicalReferences: [
       { text: "BPHS", chapter: "14", verse: "1-2", note: "Jupiter in Kendra from Moon" },
-      { text: "Phaladeepika", chapter: "6", verse: "13", note: "Gaja Kesari gives wealth and wisdom" },
+      {
+        text: "Phaladeepika",
+        chapter: "6",
+        verse: "13",
+        note: "Gaja Kesari gives wealth and wisdom",
+      },
       { text: "Saravali", chapter: "35", verse: "1", note: "Jupiter in Kendra from Moon" },
     ],
     inputs: { planets: ["Moon", "Jupiter"], houses: [1, 4, 7, 10], fromMoon: true },
@@ -187,8 +206,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     inputs: { planets: ["Sun", "Mercury"], houses: [] },
     formation: ["Sun and Mercury occupy the same house (conjunction)."],
     exclusions: ["Mercury combust within the classical orb (approx. 14°) weakens the yoga."],
-    cancellation: ["Mercury combust (within ~14° of the Sun).", "Mercury debilitated without cancellation."],
-    interpretation: "Supports intellect, communication, analytical skill, and professional clarity.",
+    cancellation: [
+      "Mercury combust (within ~14° of the Sun).",
+      "Mercury debilitated without cancellation.",
+    ],
+    interpretation:
+      "Supports intellect, communication, analytical skill, and professional clarity.",
     lifeAreas: ["Career", "Intellect", "Communication", "Education"],
     strengthFactors: [
       "Tight conjunction (< 5°).",
@@ -216,12 +239,19 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "6", verse: "25", note: "Chandra Mangala Yoga" },
     ],
     inputs: { planets: ["Moon", "Mars"], houses: [] },
-    formation: ["Moon and Mars associate via conjunction, mutual aspect, or Kendra-Trikona placement."],
+    formation: [
+      "Moon and Mars associate via conjunction, mutual aspect, or Kendra-Trikona placement.",
+    ],
     exclusions: [],
     cancellation: ["Mars debilitated without cancellation.", "Moon weak (waning or debilitated)."],
-    interpretation: "Supports wealth acquisition, entrepreneurship, property gains, and material success.",
+    interpretation:
+      "Supports wealth acquisition, entrepreneurship, property gains, and material success.",
     lifeAreas: ["Wealth", "Property", "Enterprise", "Courage"],
-    strengthFactors: ["Conjunction in a Kendra or Trikona.", "Both planets strong.", "Mutual aspect."],
+    strengthFactors: [
+      "Conjunction in a Kendra or Trikona.",
+      "Both planets strong.",
+      "Mutual aspect.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -242,7 +272,10 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "6", verse: "30-35", note: "Neecha Bhanga Raja Yoga" },
       { text: "Saravali", chapter: "35", verse: "15-20", note: "Cancellation of debilitation" },
     ],
-    inputs: { planets: ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"], houses: [] },
+    inputs: {
+      planets: ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"],
+      houses: [],
+    },
     formation: [
       "A classical planet is debilitated (in its debilitation sign).",
       "At least one cancellation condition is met (sign/exaltation lord in Kendra from Lagna or Moon, conjunction with an exalted planet, debilitated planet itself in Kendra, or sign lord aspects it).",
@@ -280,10 +313,17 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     inputs: { planets: ["Variable (6th lord)"], houses: [6, 8, 12] },
     formation: ["The 6th lord is placed in house 6, 8, or 12."],
     exclusions: [],
-    cancellation: ["6th lord strongly placed in own/exalted sign (this strengthens rather than cancels)."],
-    interpretation: "Victory over competitors, recovery from illness, resolution of debts, success through overcoming challenges.",
+    cancellation: [
+      "6th lord strongly placed in own/exalted sign (this strengthens rather than cancels).",
+    ],
+    interpretation:
+      "Victory over competitors, recovery from illness, resolution of debts, success through overcoming challenges.",
     lifeAreas: ["Health", "Enemies", "Obstacles", "Victory", "Legal"],
-    strengthFactors: ["6th lord exalted or in own sign in a dusthana.", "Benefic 6th lord.", "No malefic affliction."],
+    strengthFactors: [
+      "6th lord exalted or in own sign in a dusthana.",
+      "Benefic 6th lord.",
+      "No malefic affliction.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -307,9 +347,14 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     formation: ["The 8th lord is placed in house 6, 8, or 12."],
     exclusions: [],
     cancellation: [],
-    interpretation: "Unexpected inheritances, deep psychological transformation, longevity, gains through research or occult studies.",
+    interpretation:
+      "Unexpected inheritances, deep psychological transformation, longevity, gains through research or occult studies.",
     lifeAreas: ["Longevity", "Inheritance", "Transformation", "Research", "Occult"],
-    strengthFactors: ["8th lord exalted or in own sign in a dusthana.", "Benefic 8th lord.", "No malefic affliction."],
+    strengthFactors: [
+      "8th lord exalted or in own sign in a dusthana.",
+      "Benefic 8th lord.",
+      "No malefic affliction.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -333,9 +378,14 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     formation: ["The 12th lord is placed in house 6, 8, or 12."],
     exclusions: [],
     cancellation: [],
-    interpretation: "Foreign connections, spiritual progress, charitable gains, hospital/healing work, liberation from past karmas.",
+    interpretation:
+      "Foreign connections, spiritual progress, charitable gains, hospital/healing work, liberation from past karmas.",
     lifeAreas: ["Spirituality", "Foreign", "Charity", "Liberation", "Healing"],
-    strengthFactors: ["12th lord exalted or in own sign in a dusthana.", "Benefic 12th lord.", "No malefic affliction."],
+    strengthFactors: [
+      "12th lord exalted or in own sign in a dusthana.",
+      "Benefic 12th lord.",
+      "No malefic affliction.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -360,7 +410,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     formation: ["A 6th, 8th, or 12th lord is placed in house 6, 8, or 12."],
     exclusions: [],
     cancellation: [],
-    interpretation: "Obstacles transform into unexpected success, victory over enemies, and spiritual growth.",
+    interpretation:
+      "Obstacles transform into unexpected success, victory over enemies, and spiritual growth.",
     lifeAreas: ["Transformation", "Victory", "Spiritual Growth"],
     strengthFactors: ["Multiple dusthana lords in dusthana.", "Lords in own or exalted signs."],
     implementationStatus: "implemented",
@@ -389,7 +440,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     cancellation: ["Mars combust.", "Malefic affliction without benefic support."],
     interpretation: "Bestows courage, leadership, victory in competition, and physical prowess.",
     lifeAreas: ["Courage", "Leadership", "Sports", "Defense", "Surgery"],
-    strengthFactors: ["Mars exalted in Capricorn.", "Mars in own sign.", "Mars not combust.", "Mars direct."],
+    strengthFactors: [
+      "Mars exalted in Capricorn.",
+      "Mars in own sign.",
+      "Mars not combust.",
+      "Mars direct.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -413,9 +469,15 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     formation: ["Mercury is in Gemini or Virgo AND in a Kendra house (1, 4, 7, 10)."],
     exclusions: [],
     cancellation: ["Mercury combust.", "Malefic affliction without benefic support."],
-    interpretation: "Bestows intelligence, communication mastery, commercial success, and analytical brilliance.",
+    interpretation:
+      "Bestows intelligence, communication mastery, commercial success, and analytical brilliance.",
     lifeAreas: ["Intellect", "Commerce", "Communication", "Education", "Writing"],
-    strengthFactors: ["Mercury exalted in Virgo.", "Mercury in own sign.", "Mercury not combust.", "Mercury direct."],
+    strengthFactors: [
+      "Mercury exalted in Virgo.",
+      "Mercury in own sign.",
+      "Mercury not combust.",
+      "Mercury direct.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -435,13 +497,25 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "BPHS", chapter: "41", verse: "18-19", note: "Jupiter in own/exalted in Kendra" },
       { text: "Phaladeepika", chapter: "6", verse: "17", note: "Hamsa Yoga" },
     ],
-    inputs: { planets: ["Jupiter"], houses: [1, 4, 7, 10], signs: ["Sagittarius", "Pisces", "Cancer"] },
-    formation: ["Jupiter is in Sagittarius, Pisces, or Cancer AND in a Kendra house (1, 4, 7, 10)."],
+    inputs: {
+      planets: ["Jupiter"],
+      houses: [1, 4, 7, 10],
+      signs: ["Sagittarius", "Pisces", "Cancer"],
+    },
+    formation: [
+      "Jupiter is in Sagittarius, Pisces, or Cancer AND in a Kendra house (1, 4, 7, 10).",
+    ],
     exclusions: [],
     cancellation: ["Jupiter combust.", "Malefic affliction without benefic support."],
-    interpretation: "Bestows wisdom, spirituality, prosperity, righteous living, and respected counsel.",
+    interpretation:
+      "Bestows wisdom, spirituality, prosperity, righteous living, and respected counsel.",
     lifeAreas: ["Wisdom", "Spirituality", "Prosperity", "Counsel", "Teaching"],
-    strengthFactors: ["Jupiter exalted in Cancer.", "Jupiter in own sign.", "Jupiter not combust.", "Jupiter direct."],
+    strengthFactors: [
+      "Jupiter exalted in Cancer.",
+      "Jupiter in own sign.",
+      "Jupiter not combust.",
+      "Jupiter direct.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -465,9 +539,15 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     formation: ["Venus is in Taurus, Libra, or Pisces AND in a Kendra house (1, 4, 7, 10)."],
     exclusions: [],
     cancellation: ["Venus combust.", "Malefic affliction without benefic support."],
-    interpretation: "Bestows luxury, beauty, artistic talent, harmonious relationships, and enjoyment of comforts.",
+    interpretation:
+      "Bestows luxury, beauty, artistic talent, harmonious relationships, and enjoyment of comforts.",
     lifeAreas: ["Luxury", "Arts", "Relationships", "Beauty", "Creativity"],
-    strengthFactors: ["Venus exalted in Pisces.", "Venus in own sign.", "Venus not combust.", "Venus direct."],
+    strengthFactors: [
+      "Venus exalted in Pisces.",
+      "Venus in own sign.",
+      "Venus not combust.",
+      "Venus direct.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -487,13 +567,23 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "BPHS", chapter: "41", verse: "22-23", note: "Saturn in own/exalted in Kendra" },
       { text: "Phaladeepika", chapter: "6", verse: "19", note: "Shasha Yoga" },
     ],
-    inputs: { planets: ["Saturn"], houses: [1, 4, 7, 10], signs: ["Capricorn", "Aquarius", "Libra"] },
+    inputs: {
+      planets: ["Saturn"],
+      houses: [1, 4, 7, 10],
+      signs: ["Capricorn", "Aquarius", "Libra"],
+    },
     formation: ["Saturn is in Capricorn, Aquarius, or Libra AND in a Kendra house (1, 4, 7, 10)."],
     exclusions: [],
     cancellation: ["Saturn combust.", "Malefic affliction without benefic support."],
-    interpretation: "Bestows discipline, longevity, authority through hard work, spiritual detachment, and mastery over time.",
+    interpretation:
+      "Bestows discipline, longevity, authority through hard work, spiritual detachment, and mastery over time.",
     lifeAreas: ["Discipline", "Authority", "Longevity", "Karma", "Real Estate"],
-    strengthFactors: ["Saturn exalted in Libra.", "Saturn in own sign.", "Saturn retrograde (traditionally strong).", "Saturn not combust."],
+    strengthFactors: [
+      "Saturn exalted in Libra.",
+      "Saturn in own sign.",
+      "Saturn retrograde (traditionally strong).",
+      "Saturn not combust.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -523,7 +613,11 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     cancellation: ["9th lord or Venus debilitated or afflicted."],
     interpretation: "Abundant wealth, prosperity, luxury, and fulfillment of desires.",
     lifeAreas: ["Wealth", "Prosperity", "Luxury", "Fulfillment"],
-    strengthFactors: ["Both planets exalted.", "Both in Kendra houses.", "Venus in Pisces (exalted)."],
+    strengthFactors: [
+      "Both planets exalted.",
+      "Both in Kendra houses.",
+      "Venus in Pisces (exalted).",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -538,22 +632,38 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: BookOpen,
     description:
       "Jupiter, Venus, and Mercury in Kendra or Trikona houses from Lagna or Moon, with Jupiter strong. Bestows learning, eloquence, and artistic talent.",
-    shortMeaning: "Jupiter, Venus, Mercury angular/trinal with Jupiter strong — learning and eloquence.",
+    shortMeaning:
+      "Jupiter, Venus, Mercury angular/trinal with Jupiter strong — learning and eloquence.",
     classicalReferences: [
-      { text: "BPHS", chapter: "41", verse: "50-52", note: "Jupiter, Venus, Mercury in Kendra/Trikona" },
+      {
+        text: "BPHS",
+        chapter: "41",
+        verse: "50-52",
+        note: "Jupiter, Venus, Mercury in Kendra/Trikona",
+      },
       { text: "Phaladeepika", chapter: "6", verse: "42", note: "Saraswati Yoga" },
       { text: "Saravali", chapter: "35", verse: "12", note: "Saraswati" },
     ],
-    inputs: { planets: ["Jupiter", "Venus", "Mercury"], houses: [1, 4, 5, 7, 9, 10], fromLagna: true, fromMoon: true },
+    inputs: {
+      planets: ["Jupiter", "Venus", "Mercury"],
+      houses: [1, 4, 5, 7, 9, 10],
+      fromLagna: true,
+      fromMoon: true,
+    },
     formation: [
       "Jupiter, Venus, and Mercury are each in a Kendra or Trikona house from Lagna or from the Moon.",
       "Jupiter is strong (own, exalted, or friendly sign).",
     ],
     exclusions: [],
     cancellation: ["Jupiter debilitated or afflicted.", "Mercury combust.", "Malefic affliction."],
-    interpretation: "Learning, eloquence, artistic talent, wisdom, and mastery of arts and sciences.",
+    interpretation:
+      "Learning, eloquence, artistic talent, wisdom, and mastery of arts and sciences.",
     lifeAreas: ["Education", "Arts", "Eloquence", "Wisdom", "Creativity"],
-    strengthFactors: ["Jupiter exalted or in own sign.", "All three in Kendra/Trikona.", "Mercury and Venus strong."],
+    strengthFactors: [
+      "Jupiter exalted or in own sign.",
+      "All three in Kendra/Trikona.",
+      "Mercury and Venus strong.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -575,12 +685,19 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Saravali", chapter: "35", verse: "20", note: "Parivartana" },
     ],
     inputs: { planets: ["Variable (any two)"], houses: [] },
-    formation: ["Planet A occupies the sign ruled by Planet B, and Planet B occupies the sign ruled by Planet A."],
+    formation: [
+      "Planet A occupies the sign ruled by Planet B, and Planet B occupies the sign ruled by Planet A.",
+    ],
     exclusions: [],
     cancellation: ["Either planet debilitated or afflicted without cancellation."],
-    interpretation: "Strong linkage between the two houses — results depend on the houses and planets involved. Especially powerful for Kendra-Trikona exchanges.",
+    interpretation:
+      "Strong linkage between the two houses — results depend on the houses and planets involved. Especially powerful for Kendra-Trikona exchanges.",
     lifeAreas: ["Variable (depends on houses)"],
-    strengthFactors: ["Kendra-Trikona lords exchanging.", "Benefic exchange.", "Both planets strong."],
+    strengthFactors: [
+      "Kendra-Trikona lords exchanging.",
+      "Benefic exchange.",
+      "Both planets strong.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -601,13 +718,22 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "6", verse: "43", note: "Amala Yoga" },
       { text: "Saravali", chapter: "35", verse: "10", note: "Amala" },
     ],
-    inputs: { planets: ["Jupiter", "Venus", "Mercury", "Moon"], houses: [10], fromLagna: true, fromMoon: true },
+    inputs: {
+      planets: ["Jupiter", "Venus", "Mercury", "Moon"],
+      houses: [10],
+      fromLagna: true,
+      fromMoon: true,
+    },
     formation: ["A benefic occupies the 10th house from Lagna or from the Moon."],
     exclusions: [],
     cancellation: ["Benefic debilitated or afflicted.", "Malefic in the 10th."],
     interpretation: "Pure reputation, lasting fame, virtuous career, and respect in society.",
     lifeAreas: ["Reputation", "Career", "Virtue", "Fame"],
-    strengthFactors: ["Jupiter or Venus in the 10th.", "Planet exalted or in own sign.", "Present from both Lagna and Moon."],
+    strengthFactors: [
+      "Jupiter or Venus in the 10th.",
+      "Planet exalted or in own sign.",
+      "Present from both Lagna and Moon.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -627,7 +753,10 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Jataka_Parijata", chapter: "12", verse: "5-7", note: "Pushkala Yoga conditions" },
       { text: "Phaladeepika", chapter: "6", verse: "44", note: "Pushkala Yoga" },
     ],
-    inputs: { planets: ["Lagna lord", "Moon", "Benefic (Jupiter/Venus/Mercury)"], houses: [1, 4, 5, 7, 9, 10] },
+    inputs: {
+      planets: ["Lagna lord", "Moon", "Benefic (Jupiter/Venus/Mercury)"],
+      houses: [1, 4, 5, 7, 9, 10],
+    },
     formation: [
       "Lagna lord is strong (own, exalted, or friendly sign).",
       "Moon is in a Kendra or Trikona from the Lagna.",
@@ -659,12 +788,18 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Saravali", chapter: "35", verse: "22", note: "Shubha Kartari" },
     ],
     inputs: { planets: ["Jupiter", "Venus", "Mercury", "Moon"], houses: [] },
-    formation: ["Benefic planets occupy the houses immediately before and after a house or planet."],
+    formation: [
+      "Benefic planets occupy the houses immediately before and after a house or planet.",
+    ],
     exclusions: [],
     cancellation: ["Malefic aspect on the hemmed house or planet."],
     interpretation: "Protection and enhancement of the hemmed house or planet's significations.",
     lifeAreas: ["Protection", "Enhancement", "Support"],
-    strengthFactors: ["Strong benefics.", "Multiple benefics.", "Important house or planet hemmed."],
+    strengthFactors: [
+      "Strong benefics.",
+      "Multiple benefics.",
+      "Important house or planet hemmed.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -686,10 +821,16 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Saravali", chapter: "35", verse: "23", note: "Papa Kartari" },
     ],
     inputs: { planets: ["Sun", "Mars", "Saturn", "Rahu", "Ketu"], houses: [] },
-    formation: ["Malefic planets occupy the houses immediately before and after a house or planet."],
+    formation: [
+      "Malefic planets occupy the houses immediately before and after a house or planet.",
+    ],
     exclusions: [],
-    cancellation: ["Benefic aspect on the hemmed house or planet.", "Hemmed planet strong in own or exalted sign."],
-    interpretation: "Stress, challenges, and obstruction for the hemmed house or planet's significations.",
+    cancellation: [
+      "Benefic aspect on the hemmed house or planet.",
+      "Hemmed planet strong in own or exalted sign.",
+    ],
+    interpretation:
+      "Stress, challenges, and obstruction for the hemmed house or planet's significations.",
     lifeAreas: ["Challenges", "Obstruction", "Stress"],
     strengthFactors: ["Multiple malefics.", "Hemmed planet weak.", "Important house hemmed."],
     implementationStatus: "implemented",
@@ -713,12 +854,18 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Saravali", chapter: "35", verse: "5", note: "Adhi Yoga from Chandra" },
     ],
     inputs: { planets: ["Jupiter", "Venus", "Mercury"], houses: [6, 7, 8], fromMoon: true },
-    formation: ["At least two of Jupiter, Venus, Mercury occupy the 6th, 7th, or 8th house from the Moon."],
+    formation: [
+      "At least two of Jupiter, Venus, Mercury occupy the 6th, 7th, or 8th house from the Moon.",
+    ],
     exclusions: [],
     cancellation: ["Benefics debilitated or afflicted.", "Malefics in those houses."],
     interpretation: "Leadership, prosperity, comfort, and high status — like a king's yoga.",
     lifeAreas: ["Leadership", "Prosperity", "Comfort", "Status"],
-    strengthFactors: ["All three benefics present.", "Benefics in own or exalted signs.", "Moon strong."],
+    strengthFactors: [
+      "All three benefics present.",
+      "Benefics in own or exalted signs.",
+      "Moon strong.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -739,7 +886,11 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "7", verse: "4", note: "Sunapha Yoga" },
       { text: "Saravali", chapter: "35", verse: "2", note: "Sunapha" },
     ],
-    inputs: { planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [2], fromMoon: true },
+    inputs: {
+      planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [2],
+      fromMoon: true,
+    },
     formation: ["A planet other than Sun, Rahu, Ketu occupies the 2nd house from the Moon."],
     exclusions: ["Sun, Rahu, Ketu do not form Sunapha."],
     cancellation: ["Planet debilitated.", "Malefic planet without benefic support."],
@@ -766,13 +917,20 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "7", verse: "5", note: "Anapha Yoga" },
       { text: "Saravali", chapter: "35", verse: "3", note: "Anapha" },
     ],
-    inputs: { planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [12], fromMoon: true },
+    inputs: {
+      planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [12],
+      fromMoon: true,
+    },
     formation: ["A planet other than Sun, Rahu, Ketu occupies the 12th house from the Moon."],
     exclusions: ["Sun, Rahu, Ketu do not form Anapha."],
     cancellation: ["Planet debilitated.", "Malefic planet without benefic support."],
     interpretation: "Wealth, good reputation, material comforts, and peaceful life.",
     lifeAreas: ["Wealth", "Reputation", "Comforts", "Peace"],
-    strengthFactors: ["Benefic planet in the 12th from the Moon.", "Planet in own or exalted sign."],
+    strengthFactors: [
+      "Benefic planet in the 12th from the Moon.",
+      "Planet in own or exalted sign.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -793,13 +951,24 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "7", verse: "6", note: "Durudhara Yoga" },
       { text: "Saravali", chapter: "35", verse: "4", note: "Durudhara" },
     ],
-    inputs: { planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [2, 12], fromMoon: true },
-    formation: ["Planets occupy both the 2nd and the 12th house from the Moon (excluding Sun, Rahu, Ketu)."],
+    inputs: {
+      planets: ["Moon", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [2, 12],
+      fromMoon: true,
+    },
+    formation: [
+      "Planets occupy both the 2nd and the 12th house from the Moon (excluding Sun, Rahu, Ketu).",
+    ],
     exclusions: ["Sun, Rahu, Ketu do not count."],
     cancellation: ["Malefics on both sides without benefic support."],
-    interpretation: "Great wealth, enjoyment, comfort, high status — combination of Sunapha and Anapha.",
+    interpretation:
+      "Great wealth, enjoyment, comfort, high status — combination of Sunapha and Anapha.",
     lifeAreas: ["Wealth", "Enjoyment", "Status", "Comfort"],
-    strengthFactors: ["Benefics on both sides.", "Multiple benefics.", "Planets in own or exalted signs."],
+    strengthFactors: [
+      "Benefics on both sides.",
+      "Multiple benefics.",
+      "Planets in own or exalted signs.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -832,7 +1001,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       "Benefic aspect on the Moon.",
       "Jupiter or Venus in a Kendra from the Moon.",
     ],
-    interpretation: "Struggles, loneliness, financial difficulty — but cancellations transform it. Check Neecha Bhanga of the Moon.",
+    interpretation:
+      "Struggles, loneliness, financial difficulty — but cancellations transform it. Check Neecha Bhanga of the Moon.",
     lifeAreas: ["Struggles", "Isolation", "Financial Challenges"],
     strengthFactors: ["Cancellation conditions present.", "Moon strong by sign."],
     implementationStatus: "implemented",
@@ -855,7 +1025,11 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "7", verse: "8", note: "Vasi Yoga" },
       { text: "Saravali", chapter: "35", verse: "7", note: "Vasi" },
     ],
-    inputs: { planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [12], fromSun: true },
+    inputs: {
+      planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [12],
+      fromSun: true,
+    },
     formation: ["A planet other than Moon, Rahu, Ketu occupies the 12th house from the Sun."],
     exclusions: ["Moon, Rahu, Ketu do not form Vasi."],
     cancellation: ["Planet debilitated.", "Malefic without benefic support."],
@@ -882,7 +1056,11 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Phaladeepika", chapter: "7", verse: "9", note: "Vesi Yoga" },
       { text: "Saravali", chapter: "35", verse: "8", note: "Vesi" },
     ],
-    inputs: { planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [2], fromSun: true },
+    inputs: {
+      planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [2],
+      fromSun: true,
+    },
     formation: ["A planet other than Moon, Rahu, Ketu occupies the 2nd house from the Sun."],
     exclusions: ["Moon, Rahu, Ketu do not form Vesi."],
     cancellation: ["Planet debilitated.", "Malefic without benefic support."],
@@ -905,17 +1083,32 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       "Planets (other than Moon, Rahu, Ketu) in both the 2nd and 12th houses from the Sun. Combines Vasi and Vesi — great intelligence and wealth.",
     shortMeaning: "Planets on both sides of the Sun — great intelligence and wealth.",
     classicalReferences: [
-      { text: "BPHS", chapter: "14", verse: "17-18", note: "Planets in both 2nd and 12th from Sun" },
+      {
+        text: "BPHS",
+        chapter: "14",
+        verse: "17-18",
+        note: "Planets in both 2nd and 12th from Sun",
+      },
       { text: "Phaladeepika", chapter: "7", verse: "10", note: "Ubhayachari Yoga" },
       { text: "Saravali", chapter: "35", verse: "9", note: "Ubhayachari" },
     ],
-    inputs: { planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"], houses: [2, 12], fromSun: true },
-    formation: ["Planets occupy both the 2nd and the 12th house from the Sun (excluding Moon, Rahu, Ketu)."],
+    inputs: {
+      planets: ["Sun", "Variable (Mars/Mercury/Jupiter/Venus/Saturn)"],
+      houses: [2, 12],
+      fromSun: true,
+    },
+    formation: [
+      "Planets occupy both the 2nd and the 12th house from the Sun (excluding Moon, Rahu, Ketu).",
+    ],
     exclusions: ["Moon, Rahu, Ketu do not count."],
     cancellation: ["Malefics on both sides without benefic support."],
     interpretation: "Great intelligence, wealth, high status — combination of Vasi and Vesi.",
     lifeAreas: ["Intelligence", "Wealth", "Status", "Leadership"],
-    strengthFactors: ["Benefics on both sides.", "Multiple benefics.", "Planets in own or exalted signs."],
+    strengthFactors: [
+      "Benefics on both sides.",
+      "Multiple benefics.",
+      "Planets in own or exalted signs.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -935,12 +1128,19 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
       { text: "Jaimini_Sutras", chapter: "1", note: "Atmakaraka and Amatyakaraka relationships" },
     ],
     inputs: { planets: ["Atmakaraka", "Amatyakaraka"], houses: [] },
-    formation: ["Atmakaraka and Amatyakaraka associate via conjunction, mutual aspect, exchange, or same sign."],
+    formation: [
+      "Atmakaraka and Amatyakaraka associate via conjunction, mutual aspect, exchange, or same sign.",
+    ],
     exclusions: [],
     cancellation: ["Either karaka debilitated or heavily afflicted."],
-    interpretation: "Rise to authority, recognition, and a profession aligned with the soul's purpose.",
+    interpretation:
+      "Rise to authority, recognition, and a profession aligned with the soul's purpose.",
     lifeAreas: ["Authority", "Vocation", "Purpose", "Recognition"],
-    strengthFactors: ["Close association.", "Both karakas strong.", "In a Kendra or Trikona from Lagna."],
+    strengthFactors: [
+      "Close association.",
+      "Both karakas strong.",
+      "In a Kendra or Trikona from Lagna.",
+    ],
     implementationStatus: "planned",
     tested: false,
     calculationSupported: false,
@@ -956,7 +1156,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     description:
       "A secondary, modern-software attribution; not a uniformly defined BPHS Raja Yoga. Cataloged for transparency; treated as not independently implemented until a verified classical definition is sourced.",
     shortMeaning: "Attributed 'king of kings' combination — verify source before use.",
-    classicalReferences: [{ text: "Modern_Convention", note: "Not a uniformly defined classical BPHS combination" }],
+    classicalReferences: [
+      { text: "Modern_Convention", note: "Not a uniformly defined classical BPHS combination" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Definition varies by source; no single verified classical formulation."],
     exclusions: [],
@@ -999,9 +1201,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "raja",
     group: G,
     icon: Award,
-    description: "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
+    description:
+      "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
     shortMeaning: "Classical Raja Yoga variant — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1021,9 +1226,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "raja",
     group: G,
     icon: Award,
-    description: "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
+    description:
+      "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
     shortMeaning: "Classical Raja Yoga variant — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1043,9 +1251,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "raja",
     group: G,
     icon: Award,
-    description: "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
+    description:
+      "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
     shortMeaning: "Classical Raja Yoga variant — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1065,9 +1276,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "raja",
     group: G,
     icon: Award,
-    description: "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
+    description:
+      "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
     shortMeaning: "Classical Raja Yoga variant — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1087,9 +1301,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "raja",
     group: G,
     icon: Award,
-    description: "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
+    description:
+      "A classical Raja Yoga variant. Cataloged pending a verified primary-source formulation.",
     shortMeaning: "Classical Raja Yoga variant — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1160,7 +1377,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     shortMeaning: "Afflicted wealth-house lords — financial difficulty.",
     classicalReferences: [{ text: "Classical", note: "Wealth-destroying combinations" }],
     inputs: { planets: ["2nd lord", "11th lord"], houses: [2, 11, 6, 8, 12] },
-    formation: ["Wealth-house lords debilitated, in dusthana, or afflicted by malefics without benefic support."],
+    formation: [
+      "Wealth-house lords debilitated, in dusthana, or afflicted by malefics without benefic support.",
+    ],
     exclusions: [],
     cancellation: ["Benefic association or aspect on the afflicted lord."],
     interpretation: "Financial difficulty, loss of resources, instability of income.",
@@ -1201,9 +1420,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "other",
     group: OT,
     icon: Award,
-    description: "A classical combination involving artistic/refined talents. Cataloged pending verified formulation.",
+    description:
+      "A classical combination involving artistic/refined talents. Cataloged pending verified formulation.",
     shortMeaning: "Artistic and refined talent combination.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1225,7 +1447,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "A classical combination. Cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1247,7 +1471,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "A classical combination. Cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1269,7 +1495,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "A classical combination. Cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1292,7 +1520,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "All classical planets in movable (chara) signs (Aries, Cancer, Libra, Capricorn). The native is active, restless, and initiates change.",
+    description:
+      "All classical planets in movable (chara) signs (Aries, Cancer, Libra, Capricorn). The native is active, restless, and initiates change.",
     shortMeaning: "All planets in movable signs — active, restless life.",
     classicalReferences: [
       { text: "BPHS", chapter: "15", note: "Ashraya Yogas - Rajju (movable signs)" },
@@ -1316,7 +1545,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "All classical planets in fixed (sthira) signs (Taurus, Leo, Scorpio, Aquarius). The native is stable, determined, and accumulates.",
+    description:
+      "All classical planets in fixed (sthira) signs (Taurus, Leo, Scorpio, Aquarius). The native is stable, determined, and accumulates.",
     shortMeaning: "All planets in fixed signs — stable and determined.",
     classicalReferences: [
       { text: "BPHS", chapter: "15", note: "Ashraya Yogas - Musala (fixed signs)" },
@@ -1340,7 +1570,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "All classical planets in dual (dvisvabhava) signs (Gemini, Virgo, Sagittarius, Pisces). The native is adaptable, intellectual, and versatile.",
+    description:
+      "All classical planets in dual (dvisvabhava) signs (Gemini, Virgo, Sagittarius, Pisces). The native is adaptable, intellectual, and versatile.",
     shortMeaning: "All planets in dual signs — adaptable and versatile.",
     classicalReferences: [
       { text: "BPHS", chapter: "15", note: "Ashraya Yogas - Nala (dual signs)" },
@@ -1364,7 +1595,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "Benefics in Kendra houses with no malefics in Kendra — a garland of benefics giving prosperity.",
+    description:
+      "Benefics in Kendra houses with no malefics in Kendra — a garland of benefics giving prosperity.",
     shortMeaning: "Benefics in Kendra, no malefics in Kendra — prosperity.",
     classicalReferences: [{ text: "BPHS", chapter: "15", note: "Dala Yogas - Maala" }],
     inputs: { planets: ["Jupiter", "Venus", "Mercury"], houses: [1, 4, 7, 10] },
@@ -1386,7 +1618,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "Malefics in Kendra houses with no benefics in Kendra — serpent yoga, struggles but potential spiritual depth.",
+    description:
+      "Malefics in Kendra houses with no benefics in Kendra — serpent yoga, struggles but potential spiritual depth.",
     shortMeaning: "Malefics in Kendra, no benefics in Kendra — struggles.",
     classicalReferences: [{ text: "BPHS", chapter: "15", note: "Dala Yogas - Sarpa" }],
     inputs: { planets: ["Mars", "Saturn", "Sun"], houses: [1, 4, 7, 10] },
@@ -1408,7 +1641,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "Planets in two adjacent Kendra houses — mace yoga, authority and structural power.",
+    description:
+      "Planets in two adjacent Kendra houses — mace yoga, authority and structural power.",
     shortMeaning: "Planets in adjacent Kendras — authority.",
     classicalReferences: [{ text: "BPHS", chapter: "15", note: "Akriti Yogas - Gada" }],
     inputs: { planets: ["All classical planets"], houses: [1, 4, 7, 10] },
@@ -1430,7 +1664,8 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "All planets only in the 1st and 7th houses — cart yoga, ups and downs with eventual progress.",
+    description:
+      "All planets only in the 1st and 7th houses — cart yoga, ups and downs with eventual progress.",
     shortMeaning: "Planets only in 1st and 7th — ups and downs.",
     classicalReferences: [{ text: "BPHS", chapter: "15", note: "Akriti Yogas - Shakata" }],
     inputs: { planets: ["All classical planets"], houses: [1, 7] },
@@ -1452,9 +1687,12 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "nabhasa",
     group: NA,
     icon: Layers,
-    description: "Classical planets occupy exactly 7 houses — lute yoga, artistic and harmonious life.",
+    description:
+      "Classical planets occupy exactly 7 houses — lute yoga, artistic and harmonious life.",
     shortMeaning: "Planets in 7 houses — artistic, harmonious.",
-    classicalReferences: [{ text: "BPHS", chapter: "15", note: "Sankhya Yogas - Veena (7 houses)" }],
+    classicalReferences: [
+      { text: "BPHS", chapter: "15", note: "Sankhya Yogas - Veena (7 houses)" },
+    ],
     inputs: { planets: ["All classical planets"], houses: [] },
     formation: ["Classical planets occupy exactly 7 distinct houses."],
     exclusions: [],
@@ -1499,19 +1737,31 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     category: "dhana",
     group: DH,
     icon: Coins,
-    description: "Association of wealth house lords (2nd, 5th, 9th, 11th) through conjunction, mutual aspect, exchange, or Kendra-Trikona relationship.",
+    description:
+      "Association of wealth house lords (2nd, 5th, 9th, 11th) through conjunction, mutual aspect, exchange, or Kendra-Trikona relationship.",
     shortMeaning: "Wealth-house lord association — financial gains.",
     classicalReferences: [
       { text: "BPHS", chapter: "41", verse: "40-45", note: "Dhana Yogas from wealth house lords" },
       { text: "Phaladeepika", chapter: "6", verse: "36-40", note: "Dhana Yogas" },
     ],
     inputs: { planets: ["Variable"], houses: [2, 5, 9, 11] },
-    formation: ["Lords of wealth houses (2, 5, 9, 11) associate via conjunction, mutual aspect, exchange, or Kendra-Trikona placement."],
+    formation: [
+      "Lords of wealth houses (2, 5, 9, 11) associate via conjunction, mutual aspect, exchange, or Kendra-Trikona placement.",
+    ],
     exclusions: [],
-    cancellation: ["Lords debilitated or afflicted.", "Malefic association without benefic support."],
-    interpretation: "Wealth accumulation, financial gains, resource acquisition through multiple channels.",
+    cancellation: [
+      "Lords debilitated or afflicted.",
+      "Malefic association without benefic support.",
+    ],
+    interpretation:
+      "Wealth accumulation, financial gains, resource acquisition through multiple channels.",
     lifeAreas: ["Wealth", "Income", "Investments", "Resources"],
-    strengthFactors: ["Exchange (parivartana).", "Conjunction in Kendra/Trikona.", "Mutual aspect.", "Lords strong in own/exalted signs."],
+    strengthFactors: [
+      "Exchange (parivartana).",
+      "Conjunction in Kendra/Trikona.",
+      "Mutual aspect.",
+      "Lords strong in own/exalted signs.",
+    ],
     implementationStatus: "implemented",
     tested: true,
     calculationSupported: true,
@@ -1528,7 +1778,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Flower2,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1550,7 +1802,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: BookOpen,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1572,7 +1826,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1594,7 +1850,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1616,7 +1874,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1638,7 +1898,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1660,7 +1922,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1682,7 +1946,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1704,7 +1970,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1726,7 +1994,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1748,7 +2018,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1770,7 +2042,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1792,7 +2066,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1814,7 +2090,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Award,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1836,7 +2114,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Sun,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1858,7 +2138,9 @@ export const YOGA_TAXONOMY: YogaCatalogEntry[] = [
     icon: Sun,
     description: "Classical combination cataloged pending verified formulation.",
     shortMeaning: "Classical combination — source verification pending.",
-    classicalReferences: [{ text: "Classical", note: "Formulation not yet verified to a primary text" }],
+    classicalReferences: [
+      { text: "Classical", note: "Formulation not yet verified to a primary text" },
+    ],
     inputs: { planets: ["Variable"], houses: [] },
     formation: ["Source-dependent; not yet implemented."],
     exclusions: [],
@@ -1881,11 +2163,15 @@ export function getYogasByCategory(category: YogaCategoryId): YogaCatalogEntry[]
 }
 
 export function getImplementedYogas(): YogaCatalogEntry[] {
-  return YOGA_TAXONOMY.filter((e) => e.implementationStatus === "implemented" && e.calculationSupported);
+  return YOGA_TAXONOMY.filter(
+    (e) => e.implementationStatus === "implemented" && e.calculationSupported,
+  );
 }
 
 export function getPlannedYogas(): YogaCatalogEntry[] {
-  return YOGA_TAXONOMY.filter((e) => e.implementationStatus === "planned" || e.implementationStatus === "partial");
+  return YOGA_TAXONOMY.filter(
+    (e) => e.implementationStatus === "planned" || e.implementationStatus === "partial",
+  );
 }
 
 export function getNotImplementedYogas(): YogaCatalogEntry[] {

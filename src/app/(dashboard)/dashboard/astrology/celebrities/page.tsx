@@ -7,6 +7,7 @@ import {
   BookOpen,
   Building,
   Calendar,
+  ChevronDown,
   Clapperboard,
   Clock,
   Compass,
@@ -290,14 +291,14 @@ const YOGA_CATEGORY_META: Record<
     wash: "from-muted/12 via-transparent",
     areas: ["Supportive", "Minor", "Contextual"],
   },
-  "General": {
+  General: {
     label: "General",
     icon: Shield,
     chip: "border-muted/25 bg-muted/10 text-muted-foreground",
     wash: "from-muted/12 via-transparent",
     areas: ["General", "Contextual", "Supportive"],
   },
-  "Other": {
+  Other: {
     label: "Other",
     icon: Shield,
     chip: "border-muted/25 bg-muted/10 text-muted-foreground",
@@ -533,32 +534,36 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
           </div>
         </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-              <SignatureTile
-                icon={Compass}
-                label="Lagna"
-                value={chart.lagnaSign}
-                hint={chart.lagnaNakshatra}
-              />
-              <SignatureTile
-                icon={Moon}
-                label="Moon"
-                value={chart.moonSign}
-                hint={chart.moonNakshatra}
-              />
-              <SignatureTile
-                icon={Sun}
-                label="Sun"
-                value={chart.sunSign}
-                hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
-              />
-              <SignatureTile
-                icon={Sparkles}
-                label="Detected yogas"
-                value={String(chart.yogas.length)}
-                hint={chart.dasha.currentMaha ? `Mahadasha · ${chart.dasha.currentMaha}` : "From chart engine"}
-              />
-            </div>
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <SignatureTile
+            icon={Compass}
+            label="Lagna"
+            value={chart.lagnaSign}
+            hint={chart.lagnaNakshatra}
+          />
+          <SignatureTile
+            icon={Moon}
+            label="Moon"
+            value={chart.moonSign}
+            hint={chart.moonNakshatra}
+          />
+          <SignatureTile
+            icon={Sun}
+            label="Sun"
+            value={chart.sunSign}
+            hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
+          />
+          <SignatureTile
+            icon={Sparkles}
+            label="Detected yogas"
+            value={String(chart.yogas.length)}
+            hint={
+              chart.dasha.currentMaha
+                ? `Mahadasha · ${chart.dasha.currentMaha}`
+                : "From chart engine"
+            }
+          />
+        </div>
       </CardContent>
     </Card>
   );
@@ -611,6 +616,8 @@ function strengthLabel(value: number) {
   return "Mild";
 }
 
+const YOGA_VISIBLE_LIMIT = 6;
+
 function YogaSection({
   yogas,
   dasha,
@@ -657,6 +664,11 @@ function YogaSection({
   }, [groupedYogas]);
 
   const topYogas = useMemo(() => yogas.slice(0, 3), [yogas]);
+
+  const rankedYogas = useMemo(() => [...yogas].sort((a, b) => b.strength - a.strength), [yogas]);
+
+  const [showAllYogas, setShowAllYogas] = useState(false);
+  const visibleYogas = showAllYogas ? rankedYogas : rankedYogas.slice(0, YOGA_VISIBLE_LIMIT);
 
   return (
     <section className="space-y-3">
@@ -708,8 +720,12 @@ function YogaSection({
                       className="border-border/60 bg-background/70 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs"
                     >
                       <Icon className="text-gold h-3.5 w-3.5" />
-                      <span className="max-w-[12rem] truncate font-medium sm:max-w-none">{yoga.name}</span>
-                      <span className="text-muted-foreground shrink-0">{strengthLabel(yoga.strength)}</span>
+                      <span className="max-w-[12rem] truncate font-medium sm:max-w-none">
+                        {yoga.name}
+                      </span>
+                      <span className="text-muted-foreground shrink-0">
+                        {strengthLabel(yoga.strength)}
+                      </span>
                     </div>
                   );
                 })}
@@ -742,76 +758,91 @@ function YogaSection({
           </Card>
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {categoryOrder.flatMap((catName) => {
-              const items = groupedYogas[catName] || [];
+            {visibleYogas.map((yoga) => {
+              const catName = getYogaCategoryDisplay(yoga.code || yoga.category || "");
               const meta = YOGA_CATEGORY_META[catName] ?? YOGA_CATEGORY_META.Other!;
-              return items.map((yoga) => {
-                const Icon = getYogaIcon(yoga.code, yoga.category) || meta.icon;
-                return (
-                  <article
-                    key={`${yoga.code}-${yoga.name}`}
-                    className="border-border/60 bg-card hover:border-gold/35 relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border p-3.5 shadow-sm transition-colors"
-                  >
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-br to-transparent opacity-50",
-                        meta.wash,
-                      )}
-                    />
-                    <div className="relative flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <span
-                          className={cn(
-                            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
-                            meta.chip,
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <h3 className="font-display line-clamp-2 text-sm leading-snug font-medium">
-                            {yoga.name}
-                          </h3>
-                          <div className="mt-1 flex flex-wrap items-center gap-1">
-                            <Badge
-                              variant="outline"
-                              className={cn("max-w-full border text-[10px]", meta.chip)}
-                            >
-                              <span className="truncate">{catName}</span>
-                            </Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              {strengthLabel(yoga.strength)}
-                            </Badge>
-                          </div>
+              const Icon = getYogaIcon(yoga.code, yoga.category) || meta.icon;
+              return (
+                <article
+                  key={`${yoga.code}-${yoga.name}`}
+                  className="border-border/60 bg-card hover:border-gold/35 relative flex h-full min-w-0 flex-col overflow-hidden rounded-xl border p-3.5 shadow-sm transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-br to-transparent opacity-50",
+                      meta.wash,
+                    )}
+                  />
+                  <div className="relative flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <span
+                        className={cn(
+                          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                          meta.chip,
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="font-display line-clamp-2 text-sm leading-snug font-medium">
+                          {yoga.name}
+                        </h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className={cn("max-w-full border text-[10px]", meta.chip)}
+                          >
+                            <span className="truncate">{catName}</span>
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            {strengthLabel(yoga.strength)}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex shrink-0 flex-col items-center gap-0.5">
-                        <YogaStrength value={yoga.strength} />
-                        <span className="text-muted-foreground text-[9px] font-semibold tracking-[0.12em] uppercase">
-                          Strength
-                        </span>
-                      </div>
                     </div>
-
-                    <p className="text-muted-foreground relative mt-2 line-clamp-3 text-xs leading-relaxed">
-                      {yoga.description}
-                    </p>
-
-                    <div className="relative mt-auto flex flex-wrap gap-1 pt-2">
-                      {meta.areas.slice(0, 3).map((area) => (
-                        <span
-                          key={area}
-                          className="border-border/50 bg-background/60 text-muted-foreground rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
-                        >
-                          {area}
-                        </span>
-                      ))}
+                    <div className="flex shrink-0 flex-col items-center gap-0.5">
+                      <YogaStrength value={yoga.strength} />
+                      <span className="text-muted-foreground text-[9px] font-semibold tracking-[0.12em] uppercase">
+                        Strength
+                      </span>
                     </div>
-                  </article>
-                );
-              });
+                  </div>
+
+                  <p className="text-muted-foreground relative mt-2 line-clamp-3 text-xs leading-relaxed">
+                    {yoga.description}
+                  </p>
+
+                  <div className="relative mt-auto flex flex-wrap gap-1 pt-2">
+                    {meta.areas.slice(0, 3).map((area) => (
+                      <span
+                        key={area}
+                        className="border-border/50 bg-background/60 text-muted-foreground rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
+                      >
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              );
             })}
           </div>
+
+          {yogas.length > YOGA_VISIBLE_LIMIT ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllYogas((prev) => !prev)}
+                aria-expanded={showAllYogas}
+                className="border-border/60 text-muted-foreground hover:border-gold/35 hover:text-foreground inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors"
+              >
+                {showAllYogas ? "Show fewer" : `Show all ${yogas.length} yogas`}
+                <ChevronDown
+                  className={cn("h-3.5 w-3.5 transition-transform", showAllYogas && "rotate-180")}
+                  aria-hidden
+                />
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <Card className="border-border/60">
@@ -846,7 +877,7 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-center justify-between space-y-1 space-x-1">
-        <Button variant="ghost" size="sm" asChild className="space-x-1 space-y-1">
+        <Button variant="ghost" size="sm" asChild className="space-y-1 space-x-1">
           <Link href="/dashboard/astrology/celebrities">
             <ArrowLeft className="h-4 w-4" />
             All celebrities
@@ -975,7 +1006,7 @@ function CelebrityCard({ celebrity }: { celebrity: CelebritySummary }) {
     >
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+          "pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b to-transparent opacity-50 transition-opacity duration-300 group-hover:opacity-100",
           theme.wash,
         )}
         aria-hidden
@@ -1225,7 +1256,7 @@ function CelebritiesContent() {
     }
     if (data?.selected) {
       return (
-        <div className="min-w-0 p-1 my-2">
+        <div className="my-2 min-w-0 p-1">
           <ContentReveal>
             <CelebrityDetail chart={data.selected} />
           </ContentReveal>
@@ -1330,7 +1361,7 @@ export default function CelebritiesPage() {
   return (
     <Suspense
       fallback={
-        <div data-dashboard-bleed className="w-full min-w-0">
+        <div className="w-full min-w-0">
           <PageHeader
             title={
               <span className="flex items-center gap-2">
@@ -1344,7 +1375,7 @@ export default function CelebritiesPage() {
         </div>
       }
     >
-      <div data-dashboard-bleed className="w-full min-w-0">
+      <div className="w-full min-w-0">
         <CelebritiesContent />
       </div>
     </Suspense>

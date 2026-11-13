@@ -3,34 +3,37 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { PageHeader, EmptyState } from "@/components/layout/page-shell";
-import { GlassCard } from "@/components/ui/premium-cards";
+import { EmptyState } from "@/components/layout/page-shell";
+import { Surface } from "@/components/ui/premium-cards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PanelSkeleton } from "@/components/ui/page-skeletons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  YogaDetailList,
-  DoshaDetailList,
+  YogaCardGrid,
+  DoshaCardGrid,
   NoRajaYogaState,
+  yogaCardTheme,
 } from "@/features/horoscope/components/yoga-dosha-details";
 import { getYogaCategory } from "@/application/horoscope/yoga-filters";
 import { getYogaCategoryDisplay } from "@/application/horoscope/yoga-icons";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import {
-  Crown,
-  Coins,
-  Gem,
-  MoonStar,
-  Sun,
   BookOpen,
+  Coins,
+  Compass,
+  Crown,
+  Gem,
   Layers,
-  Star,
+  MoonStar,
+  Search,
   Shield,
   Sparkles,
-  Search,
+  Star,
+  Sun,
+  type LucideIcon,
 } from "lucide-react";
 
 type YogaRow = {
@@ -84,78 +87,170 @@ const YOGA_CATEGORIES = [
   { id: "all", label: "All Yogas", icon: Sparkles },
   { id: "Raja Yoga", label: "Raja Yogas", icon: Crown },
   { id: "Dhana Yoga", label: "Dhana Yogas", icon: Coins },
-  { id: "Pancha Mahapurusha", label: "Pancha Mahapurusha", icon: Gem },
+  { id: "Pancha Mahapurusha", label: "Mahapurusha", icon: Gem },
   { id: "Lunar Yoga", label: "Lunar Yogas", icon: MoonStar },
   { id: "Solar Yoga", label: "Solar Yogas", icon: Sun },
   { id: "Nabhasa Yoga", label: "Nabhasa Yogas", icon: Layers },
-  { id: "Planetary Yoga", label: "Planetary Yogas", icon: Star },
+  { id: "Planetary Yoga", label: "Planetary Yogas", icon: Compass },
   { id: "Other", label: "Other Yogas", icon: Shield },
 ] as const;
 
 type CategoryId = (typeof YOGA_CATEGORIES)[number]["id"];
 
-const CATEGORY_ICON_MAP: Record<string, typeof Crown> = {
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "Raja Yoga": Crown,
   "Dhana Yoga": Coins,
   "Pancha Mahapurusha": Gem,
   "Lunar Yoga": MoonStar,
   "Solar Yoga": Sun,
   "Nabhasa Yoga": Layers,
-  "Planetary Yoga": Star,
-  "Other": Shield,
+  "Planetary Yoga": Compass,
+  Other: Shield,
 };
 
-const CATEGORY_COLOR_MAP: Record<string, string> = {
-  "Raja Yoga": "border-gold/40 bg-gold/10 text-gold",
-  "Dhana Yoga": "border-saffron/40 bg-saffron/10 text-saffron",
-  "Pancha Mahapurusha": "border-emerald/40 bg-emerald/10 text-emerald",
-  "Lunar Yoga": "border-cosmic/40 bg-cosmic/10 text-cosmic",
-  "Solar Yoga": "border-amber/40 bg-amber/10 text-amber",
-  "Nabhasa Yoga": "border-rose/40 bg-rose/10 text-rose",
-  "Planetary Yoga": "border-blue/40 bg-blue/10 text-blue",
-  "Other": "border-muted/40 bg-muted/10 text-muted-foreground",
-};
+function renderCategoryIcon(category: string, className: string) {
+  const Icon = CATEGORY_ICONS[category] || yogaCardTheme(category).icon;
+  return <Icon className={className} aria-hidden />;
+}
 
-function CategoryBadge({ category }: { category: string }) {
+function CategoryHeading({ category }: { category: string }) {
+  const theme = yogaCardTheme(category);
   const display = getYogaCategoryDisplay(category);
-  const Icon = CATEGORY_ICON_MAP[display] || Shield;
-  const color = CATEGORY_COLOR_MAP[display] || CATEGORY_COLOR_MAP.Other;
   return (
-    <Badge variant="outline" className={cn("gap-1.5 text-[10px]", color)}>
-      <Icon className="h-3 w-3" />
-      {display}
-    </Badge>
+    <div className="flex min-w-0 items-center gap-2">
+      <span
+        className={cn(
+          "flex size-7 shrink-0 items-center justify-center rounded-lg border",
+          theme.chip,
+        )}
+      >
+        {renderCategoryIcon(category, "h-3.5 w-3.5")}
+      </span>
+      <h3 className="font-display truncate text-base font-medium sm:text-lg">{display}</h3>
+    </div>
   );
 }
 
-function CategoryTabButton({
-  category,
+function CategoryPill({
+  label,
+  icon: Icon,
   isActive,
   count,
   onClick,
 }: {
-  category: (typeof YOGA_CATEGORIES)[number];
+  label: string;
+  icon: LucideIcon;
   isActive: boolean;
   count: number;
   onClick: () => void;
 }) {
-  const Icon = category.icon;
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={isActive}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
         isActive
-          ? "border-gold/40 bg-gold/10 text-foreground"
+          ? "border-gold/45 bg-gold/12 text-foreground"
           : "border-border/60 text-muted-foreground hover:border-gold/30 hover:text-foreground",
       )}
-      aria-pressed={isActive}
     >
       <Icon className="h-3.5 w-3.5" />
-      {category.label}
-      <span className="text-muted-foreground/80 tabular-nums">{count}</span>
+      {label}
+      <span
+        className={cn(
+          "rounded-full px-1.5 text-[10px] tabular-nums",
+          isActive ? "bg-gold/15 text-foreground" : "text-muted-foreground/80",
+        )}
+      >
+        {count}
+      </span>
     </button>
+  );
+}
+
+function HeroStat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="border-border/60 bg-background/60 min-w-0 rounded-xl border px-3 py-3 backdrop-blur-sm">
+      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+        {label}
+      </p>
+      <p className="font-display mt-1 truncate text-xl leading-none sm:text-2xl">{value}</p>
+      {hint ? <p className="text-muted-foreground mt-1.5 truncate text-[10px]">{hint}</p> : null}
+    </div>
+  );
+}
+
+function YogaHero({
+  total,
+  detected,
+  doshasPresent,
+  doshasTotal,
+  currentMaha,
+  currentAntar,
+}: {
+  total: number;
+  detected: number;
+  doshasPresent: number;
+  doshasTotal: number;
+  currentMaha?: string | null;
+  currentAntar?: string | null;
+}) {
+  return (
+    <div className="border-border/60 bg-card shadow-soft relative overflow-hidden rounded-3xl border">
+      <div className="mandala-bg pointer-events-none absolute inset-0 opacity-[0.4]" aria-hidden />
+      <div
+        className="pointer-events-none absolute -top-28 -right-24 h-80 w-80 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--gold)_20%,transparent),transparent_70%)] blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--saffron)_14%,transparent),transparent_70%)] blur-3xl"
+        aria-hidden
+      />
+
+      <div className="relative flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between lg:p-9">
+        <div className="max-w-2xl min-w-0">
+          <p className="text-gold flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase">
+            <Crown className="h-3.5 w-3.5" />
+            Parashari combinations · Kundli engine
+          </p>
+          <h1 className="font-display mt-2 text-3xl leading-tight tracking-tight text-balance sm:text-4xl lg:text-5xl">
+            Classical Yogas
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed sm:text-base">
+            Explore traditional Vedic planetary combinations — what forms them, when they activate
+            through dasha, and how they show up in your chart.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button asChild size="sm">
+              <Link href={routes.kundli}>Open Kundli</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={routes.astrologyDasha}>Dasha timing</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={routes.lalKitab}>Lal Kitab</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:min-w-[26rem]">
+          <HeroStat label="Total yogas" value={String(total)} hint="In catalog" />
+          <HeroStat label="Detected" value={String(detected)} hint="In your chart" />
+          <HeroStat
+            label="Doshas"
+            value={`${doshasPresent}/${doshasTotal}`}
+            hint="Present / checked"
+          />
+          <HeroStat
+            label="Mahadasha"
+            value={currentMaha || "—"}
+            hint={currentAntar ? `Antar · ${currentAntar}` : "Open Dasha for timing"}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -165,7 +260,7 @@ export default function AstrologyYogasPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showOnlyDetected, setShowOnlyDetected] = useState(false);
+  const [showOnlyDetected, setShowOnlyDetected] = useState(true);
   const [sortBy, setSortBy] = useState<"strength" | "name" | "category">("strength");
 
   useEffect(() => {
@@ -242,33 +337,28 @@ export default function AstrologyYogasPage() {
     return grouped;
   }, [filteredYogas]);
 
+  const detectedByCategory = useMemo(() => {
+    const grouped: Record<string, YogaRow[]> = {};
+    for (const yoga of rankedYogas) {
+      if ((yoga.strength ?? 0) <= 0) continue;
+      const cat = getYogaCategory(yoga);
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(yoga);
+    }
+    return grouped;
+  }, [rankedYogas]);
+
   const categoryTabs = YOGA_CATEGORIES.map((cat) => ({
     ...cat,
     count: cat.id === "all" ? rankedYogas.length : categoryCounts[cat.id] || 0,
   }));
 
+  const detectedCount = rankedYogas.filter((y) => (y.strength ?? 0) > 0).length;
+
   return (
     <div className="relative min-w-0 space-y-5 sm:space-y-6">
-      <PageHeader
-        eyebrow="Parashari combinations · Kundli engine"
-        title="Classical Yogas"
-        description="Explore traditional Vedic planetary combinations — what forms them, when they activate through dasha, and how they appear in your chart."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="secondary">
-              <Link href={routes.kundli}>Kundli</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={routes.astrologyDasha}>Dasha</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={routes.lalKitab}>Lal Kitab</Link>
-            </Button>
-          </div>
-        }
-      />
-
       {loading ? <PanelSkeleton lines={8} /> : null}
+
       {error ? (
         <EmptyState
           title="Chart required"
@@ -282,224 +372,206 @@ export default function AstrologyYogasPage() {
       ) : null}
 
       {data ? (
-        <div className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <GlassCard className="space-y-1 p-3 sm:p-4">
-              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">Total Yogas</p>
-              <p className="font-display text-2xl sm:text-3xl">{rankedYogas.length}</p>
-              <p className="text-muted-foreground text-xs">In catalog</p>
-            </GlassCard>
-            <GlassCard className="space-y-1 p-3 sm:p-4">
-              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">Detected</p>
-              <p className="font-display text-2xl sm:text-3xl">
-                {rankedYogas.filter((y) => (y.strength ?? 0) > 0).length}
-              </p>
-              <p className="text-muted-foreground text-xs">Present in your chart</p>
-            </GlassCard>
-            <GlassCard className="space-y-1 p-3 sm:p-4">
-              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                Doshas present
-              </p>
-              <p className="font-display text-2xl sm:text-3xl">
-                {presentDoshas.length}
-                <span className="text-muted-foreground text-base">
-                  {" "}
-                  / {(data.doshas || []).length}
-                </span>
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {clearDoshas.length} clear · friction, not fate
-              </p>
-            </GlassCard>
-            <GlassCard className="space-y-1 p-3 sm:p-4">
-              <p className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                Current Mahadasha
-              </p>
-              <p className="font-display text-lg leading-snug sm:text-xl">
-                {data.currentMaha || "—"}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {data.currentAntar ? `Antardasha · ${data.currentAntar}` : "Open Dashas for timing"}
-              </p>
-            </GlassCard>
-          </div>
+        <div className="space-y-5 sm:space-y-6">
+          <YogaHero
+            total={rankedYogas.length}
+            detected={detectedCount}
+            doshasPresent={presentDoshas.length}
+            doshasTotal={(data.doshas || []).length}
+            currentMaha={data.currentMaha}
+            currentAntar={data.currentAntar}
+          />
 
-          <Tabs defaultValue="library">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-              <TabsTrigger value="library" className="justify-center gap-1.5">
+          <Tabs defaultValue="library" className="min-w-0">
+            <TabsList>
+              <TabsTrigger value="library" className="gap-1.5">
                 <BookOpen className="h-3.5 w-3.5" />
                 Library
               </TabsTrigger>
-              <TabsTrigger value="my-yogas" className="justify-center gap-1.5">
+              <TabsTrigger value="my-yogas" className="gap-1.5">
                 <Star className="h-3.5 w-3.5" />
                 My Yogas
               </TabsTrigger>
-              <TabsTrigger value="doshas" className="justify-center gap-1.5">
+              <TabsTrigger value="doshas" className="gap-1.5">
                 <Shield className="h-3.5 w-3.5" />
                 Doshas
               </TabsTrigger>
-              <TabsTrigger value="guide" className="justify-center gap-1.5">
+              <TabsTrigger value="guide" className="gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" />
                 Guide
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="library" className="space-y-4">
-              <GlassCard className="space-y-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Search className="text-muted-foreground h-4 w-4" />
-                    <Input
-                      placeholder="Search by name, code, planets, or condition..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full sm:w-64 max-w-xs"
-                      aria-label="Search yogas"
-                    />
-                    <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Surface className="space-y-3 p-3.5 sm:p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                    <div className="relative w-full sm:w-64">
+                      <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                      <Input
+                        placeholder="Search name, code, planets…"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                        aria-label="Search yogas"
+                      />
+                    </div>
+
+                    <label className="text-muted-foreground inline-flex shrink-0 items-center gap-1.5 text-xs">
                       <input
                         type="checkbox"
                         checked={showOnlyDetected}
                         onChange={(e) => setShowOnlyDetected(e.target.checked)}
-                        className="rounded border-border/60"
+                        className="border-border/60 accent-[var(--gold)]"
                       />
                       Detected only
                     </label>
+
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as "strength" | "name" | "category")}
-                      className="border-border/60 bg-background rounded-lg px-2 py-1 text-xs text-sm"
+                      onChange={(e) =>
+                        setSortBy(e.target.value as "strength" | "name" | "category")
+                      }
+                      className="border-border/60 bg-background focus-visible:border-gold/50 rounded-lg border px-2.5 py-1.5 text-xs focus-visible:outline-none"
                       aria-label="Sort by"
                     >
-                      <option value="strength">Strength</option>
-                      <option value="name">Name (A-Z)</option>
-                      <option value="category">Category</option>
+                      <option value="strength">Sort · Strength</option>
+                      <option value="name">Sort · Name (A–Z)</option>
+                      <option value="category">Sort · Category</option>
                     </select>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-muted-foreground text-xs">
-                      {filteredYogas.length} of {rankedYogas.length} yogas
-                    </span>
-                  </div>
+
+                  <span className="text-muted-foreground shrink-0 text-xs">
+                    {filteredYogas.length} of {rankedYogas.length} yogas
+                  </span>
                 </div>
 
-                <div className="scrollbar-hidden flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                <div className="scrollbar-hidden -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
                   {categoryTabs.map((cat) => (
-                    <CategoryTabButton
+                    <CategoryPill
                       key={cat.id}
-                      category={cat}
+                      label={cat.label}
+                      icon={cat.icon}
                       isActive={selectedCategory === cat.id}
                       count={cat.count}
                       onClick={() => setSelectedCategory(cat.id)}
                     />
                   ))}
                 </div>
+              </Surface>
 
-                <GlassCard className="space-y-3">
-                  {Object.keys(yogasByCategory).length === 0 ? (
-                    <EmptyState
-                      title="No yogas match"
-                      description="Try adjusting your search or filters."
-                    />
-                  ) : (
-                    <div className="space-y-4">
-                      {Object.entries(yogasByCategory)
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([catName, items]) => (
-                          <div key={catName} className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <CategoryBadge category={catName} />
-                              <span className="text-muted-foreground text-xs">
-                                {items.length} {items.length === 1 ? "yoga" : "yogas"}
-                              </span>
-                            </div>
-                            <YogaDetailList items={items} empty="" />
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </GlassCard>
-              </GlassCard>
+              {Object.keys(yogasByCategory).length === 0 ? (
+                <EmptyState
+                  title="No yogas match"
+                  description={
+                    showOnlyDetected
+                      ? "No yogas were detected in your chart. Untick “Detected only” to browse the full classical catalog."
+                      : "Try adjusting your search or filters."
+                  }
+                />
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(yogasByCategory)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([catName, items]) => (
+                      <section key={catName} className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <CategoryHeading category={catName} />
+                          <span className="text-muted-foreground text-xs">
+                            {items.length} {items.length === 1 ? "yoga" : "yogas"}
+                          </span>
+                        </div>
+                        <YogaCardGrid items={items} initialVisible={6} />
+                      </section>
+                    ))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="my-yogas" className="space-y-4">
-              <GlassCard className="space-y-3">
+              <Surface className="space-y-3 p-4 sm:p-5">
                 <div>
-                  <h2 className="font-display text-xl">Yogas in Your Kundli</h2>
-                  <p className="text-muted-foreground text-xs">
-                    All detected yogas organized by category — each shows the specific planets, houses, signs,
-                    and classical condition satisfied.
+                  <h2 className="font-display text-xl">Yogas in your kundli</h2>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {detectedCount} detected yogas organized by category — each card shows the
+                    planets, houses, signs, and the classical condition satisfied.
                   </p>
                 </div>
 
-                {rankedYogas.length > 0 ? (
-                  <div className="space-y-4">
-                    {Object.entries(
-                      rankedYogas.reduce((acc, yoga) => {
-                        const cat = getYogaCategory(yoga);
-                        if (!acc[cat]) acc[cat] = [];
-                        acc[cat].push(yoga);
-                        return acc;
-                      }, {} as Record<string, YogaRow[]>),
-                    )
+                {detectedCount > 0 ? (
+                  <div className="space-y-6">
+                    {Object.entries(detectedByCategory)
                       .sort(([a], [b]) => a.localeCompare(b))
                       .map(([catName, items]) => (
-                        <div key={catName} className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <CategoryBadge category={catName} />
+                        <section key={catName} className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <CategoryHeading category={catName} />
                             <span className="text-muted-foreground text-xs">
                               {items.length} {items.length === 1 ? "yoga" : "yogas"}
                             </span>
                           </div>
-                          <YogaDetailList items={items} empty="" />
-                        </div>
+                          <YogaCardGrid items={items} initialVisible={6} />
+                        </section>
                       ))}
                   </div>
                 ) : (
                   <NoRajaYogaState />
                 )}
-              </GlassCard>
+              </Surface>
             </TabsContent>
 
-            <TabsContent value="doshas">
-              <GlassCard className="space-y-3">
-                <div>
-                  <h2 className="font-display text-xl">Dosha scan</h2>
-                  <p className="text-muted-foreground text-xs">
-                    Present flags first conceptually — still listed with clear items so you can see
-                    what was checked.
-                  </p>
+            <TabsContent value="doshas" className="space-y-4">
+              <Surface className="space-y-4 p-4 sm:p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="font-display text-xl">Dosha scan</h2>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Friction themes — not curses. Present flags come first, with clear items
+                      listed so you can see what the engine checked.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary" className="text-[10px]">
+                      {presentDoshas.length} present
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {clearDoshas.length} clear
+                    </Badge>
+                  </div>
                 </div>
-                <DoshaDetailList items={[...presentDoshas, ...clearDoshas]} />
-              </GlassCard>
+                <DoshaCardGrid items={[...presentDoshas, ...clearDoshas]} />
+              </Surface>
             </TabsContent>
 
             <TabsContent value="guide">
-              <GlassCard className="space-y-4 text-sm leading-relaxed">
+              <Surface className="space-y-4 text-sm leading-relaxed">
                 <h2 className="font-display text-xl">How to read this page</h2>
                 <p>
                   Yogas are named combinations from your stored Kundli. Strength is an engine score
                   for how clearly the pattern formed — not a percentage of life success.
                 </p>
                 <p>
-                  <span className="font-medium">Raja Yogas</span> covers classical combinations: Kendra-Trikona Raja Yoga,
-                  Dharma-Karmadhipati, Gaja Kesari, Budhaditya, Chandra-Mangal, Neecha Bhanga,
-                  Vipareeta Raja (Harsha, Sarala, Vimala), Pancha Mahapurusha (Ruchaka, Bhadra, Hamsa, Malavya, Shasha),
-                  and Dhana Yogas.
+                  <span className="font-medium">Raja Yogas</span> covers classical combinations:
+                  Kendra-Trikona Raja Yoga, Dharma-Karmadhipati, Gaja Kesari, Budhaditya,
+                  Chandra-Mangal, Neecha Bhanga, Vipareeta Raja (Harsha, Sarala, Vimala), Pancha
+                  Mahapurusha (Ruchaka, Bhadra, Hamsa, Malavya, Shasha), and Dhana Yogas.
                 </p>
                 <p>
-                  <span className="font-medium">Lunar Yogas</span> (from Moon): Adhi, Sunapha, Anapha, Durudhara, Kemadruma.
+                  <span className="font-medium">Lunar Yogas</span> (from Moon): Adhi, Sunapha,
+                  Anapha, Durudhara, Kemadruma.
                 </p>
                 <p>
-                  <span className="font-medium">Solar Yogas</span> (from Sun): Vasi, Vesi, Ubhayachari.
+                  <span className="font-medium">Solar Yogas</span> (from Sun): Vasi, Vesi,
+                  Ubhayachari.
                 </p>
                 <p>
-                  <span className="font-medium">Nabhasa Yogas</span> (structural): Ashraya (Rajju/Musala/Nala), Dala (Maala/Sarpa),
-                  Akriti (Gada/Shakata), Sankhya (Veena/Damini/Pasha/Kedara/Shula/Yuga/Gola).
+                  <span className="font-medium">Nabhasa Yogas</span> (structural): Ashraya
+                  (Rajju/Musala/Nala), Dala (Maala/Sarpa), Akriti (Gada/Shakata), Sankhya
+                  (Veena/Damini/Pasha/Kedara/Shula/Yuga/Gola).
                 </p>
                 <p>
-                  <span className="font-medium">Planetary Yogas</span>: Saraswati, Lakshmi, Parivartana, Amala, Pushkala,
-                  Shubha/Papa Kartari.
+                  <span className="font-medium">Planetary Yogas</span>: Saraswati, Lakshmi,
+                  Parivartana, Amala, Pushkala, Shubha/Papa Kartari.
                 </p>
                 <p>
                   Results usually show more during the dasha of the planets that form the yoga. Open
@@ -514,7 +586,7 @@ export default function AstrologyYogasPage() {
                   Public-life parallels are teaching devices. They are not verified celebrity charts
                   or predictions.
                 </p>
-              </GlassCard>
+              </Surface>
             </TabsContent>
           </Tabs>
         </div>

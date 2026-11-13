@@ -28,21 +28,8 @@ import {
   isTrikonaHouse,
   getHouseFromMoon,
 } from "./planetary-aspects";
-import {
-  analyzeNakshatraPlanets,
-  calculateTaraBala,
-  detectNakshatraYogas,
-  getNakshatraAnalysisSummary,
-} from "./nakshatra-yogas";
-import {
-  calculateJaiminiKaraka,
-  calculateArudhaLagna,
-  calculateArudhaPadas,
-  calculateGhatiLagna,
-  calculateHoraLagna,
-  detectJaiminiYogas,
-  getJaiminiAnalysis,
-} from "./jaimini-yogas";
+import { detectNakshatraYogas } from "./nakshatra-yogas";
+import { detectJaiminiYogas } from "./jaimini-yogas";
 
 const DISPLAY_NAMES: Record<PlanetKey, string> = {
   sun: "Sun",
@@ -292,7 +279,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   for (const kLordName of kendraLords) {
     for (const tLordName of trikonaLords) {
       if (kLordName === tLordName) continue; // Same planet ruling both
-      
+
       const kLord = placement(kLordName);
       const tLord = placement(tLordName);
       if (!kLord || !tLord) continue;
@@ -333,7 +320,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
             houses: [kLord.house, tLord.house],
             signs: [kLord.sign, tLord.sign],
             condition,
-            classicalReference: "BPHS 41.1-41.3: Kendra lord and Trikona lord association forms Raja Yoga",
+            classicalReference:
+              "BPHS 41.1-41.3: Kendra lord and Trikona lord association forms Raja Yoga",
           },
         });
         break;
@@ -347,7 +335,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // ============================================
   const ninthLord = placement(lordOf(9));
   const tenthLord = placement(lordOf(10));
-  
+
   if (ninthLord && tenthLord && ninthLord.planet !== tenthLord.planet) {
     let condition = "";
     let strength = 0;
@@ -355,16 +343,15 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
     if (isConjunct(ninthLord, tenthLord)) {
       condition = `Conjunction in house ${ninthLord.house} (${ninthLord.sign})`;
       strength = 90;
-    }
-    else if (getMutualAspect(ninthLord.planet, tenthLord.planet, ninthLord.house, tenthLord.house)) {
+    } else if (
+      getMutualAspect(ninthLord.planet, tenthLord.planet, ninthLord.house, tenthLord.house)
+    ) {
       condition = `Mutual aspect: ${ninthLord.planet} in H${ninthLord.house} aspects ${tenthLord.planet} in H${tenthLord.house} and vice versa`;
       strength = 85;
-    }
-    else if (isExchange(ninthLord, tenthLord, lagnaSignId, houseLords)) {
+    } else if (isExchange(ninthLord, tenthLord, lagnaSignId, houseLords)) {
       condition = `Parivartana: ${ninthLord.planet} in ${ninthLord.sign} (lord of ${tenthLord.sign}), ${tenthLord.planet} in ${tenthLord.sign} (lord of ${ninthLord.sign})`;
       strength = 95;
-    }
-    else if (hasKendraTrikonaRelationship(ninthLord.house, tenthLord.house)) {
+    } else if (hasKendraTrikonaRelationship(ninthLord.house, tenthLord.house)) {
       condition = `Kendra-Trikona association between 9th lord (H${ninthLord.house}) and 10th lord (H${tenthLord.house})`;
       strength = 75;
     }
@@ -381,7 +368,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           houses: [ninthLord.house, tenthLord.house],
           signs: [ninthLord.sign, tenthLord.sign],
           condition,
-          classicalReference: "BPHS 41.33: 9th and 10th lord association forms Dharma-Karmadhipati Yoga",
+          classicalReference:
+            "BPHS 41.33: 9th and 10th lord association forms Dharma-Karmadhipati Yoga",
         },
       });
     }
@@ -393,13 +381,13 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   if (jupiter && moon) {
     const fromMoon = ((jupiter.house - moon.house + 12) % 12) + 1;
     const angularDist = getAngularDistance(jupiter.longitude, moon.longitude);
-    
+
     // Jupiter in kendra from Moon (1, 4, 7, 10 houses from Moon)
     // Also check degree proximity for stronger yoga (< 30° for conjunction-like effect)
     if ([1, 4, 7, 10].includes(fromMoon)) {
-      let condition = `Jupiter in ${["1st", "4th", "7th", "10th"][[1,4,7,10].indexOf(fromMoon)]} from Moon`;
+      let condition = `Jupiter in ${["1st", "4th", "7th", "10th"][[1, 4, 7, 10].indexOf(fromMoon)]} from Moon`;
       let strength = 78;
-      
+
       // If also conjunct or very close in degrees, increase strength
       if (angularDist < 10) {
         condition += ` (close conjunction: ${angularDist.toFixed(1)}°)`;
@@ -408,7 +396,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         condition += ` (near conjunction: ${angularDist.toFixed(1)}°)`;
         strength = 85;
       }
-      
+
       yogas.push({
         code: "GAJAKESARI",
         name: "Gaja Kesari Yoga",
@@ -433,7 +421,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
     const angularDist = getAngularDistance(sun.longitude, mercury.longitude);
     let strength = 70;
     let condition = `Conjunction in house ${sun.house} (${sun.sign})`;
-    
+
     if (angularDist < 5) {
       condition += ` (very tight: ${angularDist.toFixed(1)}°)`;
       strength = 85;
@@ -441,7 +429,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       condition += ` (${angularDist.toFixed(1)}° apart)`;
       strength = 78;
     }
-    
+
     // Check if combust
     const combust = isCombust(mercury, sun);
     if (combust) {
@@ -471,7 +459,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   if (moon && mars) {
     let condition = "";
     let strength = 0;
-    
+
     if (isConjunct(moon, mars)) {
       condition = `Conjunction in house ${moon.house} (${moon.sign})`;
       strength = 75;
@@ -482,7 +470,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       condition = `Kendra-Trikona association between Moon (H${moon.house}) and Mars (H${mars.house})`;
       strength = 60;
     }
-    
+
     if (condition) {
       yogas.push({
         code: "CHANDRA_MANGAL",
@@ -507,24 +495,54 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // Ruchaka (Mars), Bhadra (Mercury), Hamsa (Jupiter), Malavya (Venus), Shasha (Saturn)
   // Planet in own/exaltation sign AND in Kendra (1, 4, 7, 10)
   const mahapurushaPlanets = [
-    { planet: mars, name: "Mars", yoga: "RUCHAKA", display: "Ruchaka Yoga", category: "CAREER" as const },
-    { planet: mercury, name: "Mercury", yoga: "BHADRA", display: "Bhadra Yoga", category: "CAREER" as const },
-    { planet: jupiter, name: "Jupiter", yoga: "HAMSA", display: "Hamsa Yoga", category: "WEALTH" as const },
-    { planet: venus, name: "Venus", yoga: "MALAVYA", display: "Malavya Yoga", category: "MARRIAGE" as const },
-    { planet: saturn, name: "Saturn", yoga: "SHASHA", display: "Shasha Yoga", category: "CAREER" as const },
+    {
+      planet: mars,
+      name: "Mars",
+      yoga: "RUCHAKA",
+      display: "Ruchaka Yoga",
+      category: "CAREER" as const,
+    },
+    {
+      planet: mercury,
+      name: "Mercury",
+      yoga: "BHADRA",
+      display: "Bhadra Yoga",
+      category: "CAREER" as const,
+    },
+    {
+      planet: jupiter,
+      name: "Jupiter",
+      yoga: "HAMSA",
+      display: "Hamsa Yoga",
+      category: "WEALTH" as const,
+    },
+    {
+      planet: venus,
+      name: "Venus",
+      yoga: "MALAVYA",
+      display: "Malavya Yoga",
+      category: "MARRIAGE" as const,
+    },
+    {
+      planet: saturn,
+      name: "Saturn",
+      yoga: "SHASHA",
+      display: "Shasha Yoga",
+      category: "CAREER" as const,
+    },
   ];
 
   for (const mp of mahapurushaPlanets) {
     if (!mp.planet) continue;
-    
+
     const p = mp.planet;
     const inKendra = isKendraHouse(p.house);
     const inOwnOrExalted = isInOwnSign(p) || isExalted(p);
-    
+
     if (inKendra && inOwnOrExalted) {
       let condition = `${mp.name} in ${p.sign} (${isExalted(p) ? "exalted" : "own sign"}) in Kendra house ${p.house}`;
       let strength = 85;
-      
+
       if (isExalted(p)) {
         condition += " — exalted";
         strength = 95;
@@ -532,7 +550,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         condition += " — own sign";
         strength = 88;
       }
-      
+
       // Check for cancellation (debilitated in navamsa, combust, etc.)
       if (isCombust(p, sun)) {
         condition += " — combust";
@@ -542,7 +560,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         condition += " — retrograde";
         strength = Math.max(70, strength - 10);
       }
-      
+
       yogas.push({
         code: mp.yoga,
         name: mp.display,
@@ -566,31 +584,31 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // Cancellation of debilitation with Raja Yoga results
   // Conditions (any one):
   // 1. Debilitated planet's sign lord is in Kendra from Lagna or Moon
-  // 2. Debilitated planet's exaltation lord is in Kendra from Lagna or Moon  
+  // 2. Debilitated planet's exaltation lord is in Kendra from Lagna or Moon
   // 3. Debilitated planet is conjunct/exalted planet
   // 4. Debilitated planet is in Kendra from Lagna/Moon
   // 5. Debilitated planet's sign lord aspects the debilitated planet
-  
+
   const classicalPlanets = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
-  
+
   for (const planetName of classicalPlanets) {
     const planet = byName(planetName);
     if (!planet || !isDebilitated(planet)) continue;
-    
+
     const debilSign = getDebilitationSign(planetName);
     const exaltSign = getExaltationSign(planetName);
     if (!debilSign || !exaltSign) continue;
-    
+
     const debilSignLord = HOUSE_LORDS[debilSign as (typeof SIGNS)[number]];
     const exaltSignLord = HOUSE_LORDS[exaltSign as (typeof SIGNS)[number]];
-    
+
     const debilLordPlanet = placement(debilSignLord);
     const exaltLordPlanet = placement(exaltSignLord);
-    
+
     let condition = "";
     let strength = 0;
     let cancelled = false;
-    
+
     // Condition 1: Debilitated planet's sign lord in Kendra from Lagna
     if (debilLordPlanet && isKendraHouse(debilLordPlanet.house)) {
       condition = `${debilSignLord} (lord of ${debilSign}, ${planetName}'s debilitation sign) in Kendra house ${debilLordPlanet.house} from Lagna`;
@@ -598,7 +616,11 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       strength = 80;
     }
     // Condition 2: Debilitated planet's sign lord in Kendra from Moon
-    else if (debilLordPlanet && moon && isKendraHouse(getHouseFromMoon(debilLordPlanet.house, moon.house))) {
+    else if (
+      debilLordPlanet &&
+      moon &&
+      isKendraHouse(getHouseFromMoon(debilLordPlanet.house, moon.house))
+    ) {
       condition = `${debilSignLord} (lord of ${debilSign}) in Kendra from Moon`;
       cancelled = true;
       strength = 78;
@@ -610,7 +632,11 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       strength = 82;
     }
     // Condition 4: Exaltation lord in Kendra from Moon
-    else if (exaltLordPlanet && moon && isKendraHouse(getHouseFromMoon(exaltLordPlanet.house, moon.house))) {
+    else if (
+      exaltLordPlanet &&
+      moon &&
+      isKendraHouse(getHouseFromMoon(exaltLordPlanet.house, moon.house))
+    ) {
       condition = `${exaltSignLord} (lord of ${exaltSign}) in Kendra from Moon`;
       cancelled = true;
       strength = 80;
@@ -642,12 +668,16 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       strength = 68;
     }
     // Condition 8: Sign lord aspects the debilitated planet
-    if (!cancelled && debilLordPlanet && doesPlanetAspectHouse(debilSignLord, debilLordPlanet.house, planet.house)) {
+    if (
+      !cancelled &&
+      debilLordPlanet &&
+      doesPlanetAspectHouse(debilSignLord, debilLordPlanet.house, planet.house)
+    ) {
       condition = `${debilSignLord} (lord of ${debilSign}) aspects debilitated ${planetName} in H${planet.house}`;
       cancelled = true;
       strength = 75;
     }
-    
+
     if (cancelled) {
       yogas.push({
         code: "NEECHA_BHANGA",
@@ -657,10 +687,13 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         description: `${planetName} debilitated in ${planet.sign} (H${planet.house}) — cancellation: ${condition}. Debilitation transformed into Raja Yoga giving exceptional results during ${planetName} dasha.`,
         details: {
           planets: [planetName, debilSignLord, exaltSignLord].filter(Boolean),
-          houses: [planet.house, debilLordPlanet?.house, exaltLordPlanet?.house].filter((h): h is number => h !== undefined),
+          houses: [planet.house, debilLordPlanet?.house, exaltLordPlanet?.house].filter(
+            (h): h is number => h !== undefined,
+          ),
           signs: [planet.sign, debilSign, exaltSign],
           condition,
-          classicalReference: "BPHS: Neecha Bhanga conditions — debilitation cancelled by Kendra placement of sign/exaltation lord, conjunction with exalted planet, etc.",
+          classicalReference:
+            "BPHS: Neecha Bhanga conditions — debilitation cancelled by Kendra placement of sign/exaltation lord, conjunction with exalted planet, etc.",
         },
       });
     }
@@ -670,31 +703,31 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // 8. VIPAREETA RAJA YOGA
   // ============================================
   // Harsha: 6th lord in 6, 8, 12
-  // Sarala: 8th lord in 6, 8, 12  
+  // Sarala: 8th lord in 6, 8, 12
   // Vimala: 12th lord in 6, 8, 12
   const dusthanaHouses = new Set([6, 8, 12]);
-  
+
   const vipareetaYogas = [
     { house: 6, name: "HARSHA", display: "Harsha Yoga", lord: lordOf(6) },
     { house: 8, name: "SARALA", display: "Sarala Yoga", lord: lordOf(8) },
     { house: 12, name: "VIMALA", display: "Vimala Yoga", lord: lordOf(12) },
   ];
-  
+
   for (const vy of vipareetaYogas) {
     const lordPlanet = placement(vy.lord);
     if (!lordPlanet) continue;
-    
+
     if (dusthanaHouses.has(lordPlanet.house)) {
       const dusthanaName = lordPlanet.house === 6 ? "6th" : lordPlanet.house === 8 ? "8th" : "12th";
       let condition = `${vy.lord} (${vy.display.split(" ")[0]} lord) placed in ${dusthanaName} house (H${lordPlanet.house} in ${lordPlanet.sign})`;
       let strength = 75;
-      
+
       // Check if the lord is also in own/exalted sign in dusthana (stronger)
       if (isInOwnSign(lordPlanet) || isExalted(lordPlanet)) {
         condition += ` — ${isExalted(lordPlanet) ? "exalted" : "own sign"}`;
         strength = 85;
       }
-      
+
       yogas.push({
         code: vy.name,
         name: vy.display,
@@ -720,7 +753,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // 2nd & 9th lords association
   // 5th & 9th lords association (Lakshmi Yoga)
   // 11th lord in Kendra/Trikona
-  
+
   const dhanaPairs = [
     { h1: 2, h2: 11, name: "2nd-11th" },
     { h1: 2, h2: 5, name: "2nd-5th" },
@@ -728,16 +761,16 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
     { h1: 5, h2: 9, name: "5th-9th (Lakshmi)" },
     { h1: 11, h2: 9, name: "11th-9th" },
   ];
-  
+
   for (const pair of dhanaPairs) {
     const lord1 = placement(lordOf(pair.h1));
     const lord2 = placement(lordOf(pair.h2));
-    
+
     if (!lord1 || !lord2 || lord1.planet === lord2.planet) continue;
-    
+
     let condition = "";
     let strength = 0;
-    
+
     if (isConjunct(lord1, lord2)) {
       condition = `Conjunction in H${lord1.house} (${lord1.sign})`;
       strength = 85;
@@ -751,7 +784,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       condition = `Kendra-Trikona association between ${lord1.planet} (H${lord1.house}) and ${lord2.planet} (H${lord2.house})`;
       strength = 70;
     }
-    
+
     if (condition) {
       yogas.push({
         code: "DHANA_YOGA",
@@ -769,7 +802,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       });
     }
   }
-  
+
   // 11th lord in Kendra/Trikona (strong Dhana Yoga)
   const eleventhLord = placement(lordOf(11));
   if (eleventhLord && (isKendraHouse(eleventhLord.house) || isTrikonaHouse(eleventhLord.house))) {
@@ -809,7 +842,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       },
     });
   }
-  
+
   if (venus && [1, 2, 4, 5, 7, 11].includes(venus.house)) {
     yogas.push({
       code: "VENUS_HARMONY",
@@ -826,7 +859,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       },
     });
   }
-  
+
   if (moon && moon.dignity === "Own") {
     yogas.push({
       code: "MOON_OWN",
@@ -903,7 +936,9 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         description: `Benefics (${beneficsFromMoon.join(", ")}) in houses ${houses.join(", ")} from Moon. Gives leadership, prosperity, comfort, and high status.`,
         details: {
           planets: beneficsFromMoon,
-          houses: houses.map((h) => moon.house + h - 1 > 12 ? moon.house + h - 13 : moon.house + h - 1),
+          houses: houses.map((h) =>
+            moon.house + h - 1 > 12 ? moon.house + h - 13 : moon.house + h - 1,
+          ),
           signs: beneficsFromMoon.map((name) => byName(name)!.sign),
           condition: `${beneficsFromMoon.length} benefics in 6th, 7th, 8th from Moon`,
           classicalReference: "BPHS 14.10-12: Benefics in 6, 7, 8 from Moon form Adhi Yoga",
@@ -976,7 +1011,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           houses: [...sunaphaPlanets, ...anaphaPlanets].map((name) => byName(name)!.house),
           signs: [...sunaphaPlanets, ...anaphaPlanets].map((name) => byName(name)!.sign),
           condition: `Planets in both 2nd and 12th from Moon`,
-          classicalReference: "BPHS 14.7-8: Planets in both 2nd and 12th from Moon form Durudhara Yoga",
+          classicalReference:
+            "BPHS 14.7-8: Planets in both 2nd and 12th from Moon form Durudhara Yoga",
         },
       });
     }
@@ -992,7 +1028,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       // Check cancellation conditions
       let cancelled = false;
       let cancellationReason = "";
-      
+
       // Moon in Kendra from Lagna
       if (isKendraHouse(moon.house)) {
         cancelled = true;
@@ -1007,8 +1043,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       else if (jupiter && doesPlanetAspectHouse("Jupiter", jupiter.house, moon.house)) {
         cancelled = true;
         cancellationReason = "Jupiter aspects Moon";
-      }
-      else if (venus && doesPlanetAspectHouse("Venus", venus.house, moon.house)) {
+      } else if (venus && doesPlanetAspectHouse("Venus", venus.house, moon.house)) {
         cancelled = true;
         cancellationReason = "Venus aspects Moon";
       }
@@ -1016,8 +1051,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       else if (jupiter && isKendraHouse(getHouseFromMoon(jupiter.house, moon.house))) {
         cancelled = true;
         cancellationReason = "Jupiter in Kendra from Moon";
-      }
-      else if (venus && isKendraHouse(getHouseFromMoon(venus.house, moon.house))) {
+      } else if (venus && isKendraHouse(getHouseFromMoon(venus.house, moon.house))) {
         cancelled = true;
         cancellationReason = "Venus in Kendra from Moon";
       }
@@ -1032,7 +1066,9 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           planets: ["Moon"],
           houses: [moon.house],
           signs: [moon.sign],
-          condition: cancelled ? `Kemadruma cancelled: ${cancellationReason}` : "No planets around Moon",
+          condition: cancelled
+            ? `Kemadruma cancelled: ${cancellationReason}`
+            : "No planets around Moon",
           classicalReference: "BPHS 14.9: No planets around Moon forms Kemadruma Yoga",
         },
       });
@@ -1111,7 +1147,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           houses: [...vasiPlanets, ...vesiPlanets].map((name) => byName(name)!.house),
           signs: [...vasiPlanets, ...vesiPlanets].map((name) => byName(name)!.sign),
           condition: `Planets in both 2nd and 12th from Sun`,
-          classicalReference: "BPHS 14.17-18: Planets in both 2nd and 12th from Sun form Ubhayachari Yoga",
+          classicalReference:
+            "BPHS 14.17-18: Planets in both 2nd and 12th from Sun form Ubhayachari Yoga",
         },
       });
     }
@@ -1125,9 +1162,18 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
     const jupiterInGoodHouse = isKendraHouse(jupiter.house) || isTrikonaHouse(jupiter.house);
     const mercuryInGoodHouse = isKendraHouse(mercury.house) || isTrikonaHouse(mercury.house);
     const venusInGoodHouse = isKendraHouse(venus.house) || isTrikonaHouse(venus.house);
-    const fromMoon = moon ? (isKendraHouse(getHouseFromMoon(jupiter.house, moon.house)) || isTrikonaHouse(getHouseFromMoon(jupiter.house, moon.house))) : false;
-    const mercuryFromMoon = moon ? (isKendraHouse(getHouseFromMoon(mercury.house, moon.house)) || isTrikonaHouse(getHouseFromMoon(mercury.house, moon.house))) : false;
-    const venusFromMoon = moon ? (isKendraHouse(getHouseFromMoon(venus.house, moon.house)) || isTrikonaHouse(getHouseFromMoon(venus.house, moon.house))) : false;
+    const fromMoon = moon
+      ? isKendraHouse(getHouseFromMoon(jupiter.house, moon.house)) ||
+        isTrikonaHouse(getHouseFromMoon(jupiter.house, moon.house))
+      : false;
+    const mercuryFromMoon = moon
+      ? isKendraHouse(getHouseFromMoon(mercury.house, moon.house)) ||
+        isTrikonaHouse(getHouseFromMoon(mercury.house, moon.house))
+      : false;
+    const venusFromMoon = moon
+      ? isKendraHouse(getHouseFromMoon(venus.house, moon.house)) ||
+        isTrikonaHouse(getHouseFromMoon(venus.house, moon.house))
+      : false;
 
     // From Lagna or Moon
     const fromLagna = jupiterStrong && jupiterInGoodHouse && mercuryInGoodHouse && venusInGoodHouse;
@@ -1145,7 +1191,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           houses: [jupiter.house, venus.house, mercury.house],
           signs: [jupiter.sign, venus.sign, mercury.sign],
           condition: `Jupiter, Venus, Mercury in Kendra/Trikona ${fromLagna ? "from Lagna" : ""}${fromLagna && fromMoonCondition ? " and " : ""}${fromMoonCondition ? "from Moon" : ""}`,
-          classicalReference: "BPHS 41.50-52: Jupiter, Venus, Mercury in Kendra/Trikona with Jupiter strong forms Saraswati Yoga",
+          classicalReference:
+            "BPHS 41.50-52: Jupiter, Venus, Mercury in Kendra/Trikona with Jupiter strong forms Saraswati Yoga",
         },
       });
     }
@@ -1173,7 +1220,8 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           houses: [9, ninthLord.house, venus.house],
           signs: [SIGNS[(lagnaSignId + 8) % 12] ?? "", ninthLord.sign, venus.sign],
           condition: "9th lord and Venus in own/exalted in Kendra/Trikona",
-          classicalReference: "BPHS 41.46-48: 9th lord and Venus in Kendra/Trikona in own/exalted signs form Lakshmi Yoga",
+          classicalReference:
+            "BPHS 41.46-48: 9th lord and Venus in Kendra/Trikona in own/exalted signs form Lakshmi Yoga",
         },
       });
     }
@@ -1183,7 +1231,15 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // 15. PARIVARTANA YOGA (Exchange)
   // ============================================
   // Already detected via isExchange in other yogas, but list explicitly
-  const classicalPlanetsForExchange: readonly string[] = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"];
+  const classicalPlanetsForExchange: readonly string[] = [
+    "Sun",
+    "Moon",
+    "Mars",
+    "Mercury",
+    "Jupiter",
+    "Venus",
+    "Saturn",
+  ];
   for (let i = 0; i < classicalPlanetsForExchange.length; i++) {
     for (let j = i + 1; j < classicalPlanetsForExchange.length; j++) {
       const p1Name = classicalPlanetsForExchange[i]!;
@@ -1271,8 +1327,11 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // ============================================
   const lagnaLord = placement(lordOf(1));
   if (lagnaLord && moon) {
-    const lagnaLordStrong = isInOwnSign(lagnaLord) || isExalted(lagnaLord) || isInFriendlySign(lagnaLord);
-    const moonInKendraTrikona = isKendraHouse(getHouseFromMoon(moon.house, lagnaLord.house)) || isTrikonaHouse(getHouseFromMoon(moon.house, lagnaLord.house));
+    const lagnaLordStrong =
+      isInOwnSign(lagnaLord) || isExalted(lagnaLord) || isInFriendlySign(lagnaLord);
+    const moonInKendraTrikona =
+      isKendraHouse(getHouseFromMoon(moon.house, lagnaLord.house)) ||
+      isTrikonaHouse(getHouseFromMoon(moon.house, lagnaLord.house));
     const beneficInKendra = ["Jupiter", "Venus", "Mercury"].some((name) => {
       const p = byName(name);
       return p && isKendraHouse(p.house);
@@ -1303,7 +1362,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   for (let house = 1; house <= 12; house++) {
     const prevHouse = house === 1 ? 12 : house - 1;
     const nextHouse = house === 12 ? 1 : house + 1;
-    
+
     const prevBenefic = benefics.find((name) => {
       const p = byName(name);
       return p && p.house === prevHouse;
@@ -1344,7 +1403,11 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           details: {
             planets: [prevBenefic, nextBenefic],
             houses: [house, prevHouse, nextHouse],
-            signs: [SIGNS[(lagnaSignId + house - 1) % 12] ?? "", byName(prevBenefic)!.sign, byName(nextBenefic)!.sign],
+            signs: [
+              SIGNS[(lagnaSignId + house - 1) % 12] ?? "",
+              byName(prevBenefic)!.sign,
+              byName(nextBenefic)!.sign,
+            ],
             condition: `Benefics on both sides of house ${house}`,
             classicalReference: "BPHS 31.15-16: Benefic hemming forms Shubha Kartari Yoga",
           },
@@ -1360,7 +1423,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   for (let house = 1; house <= 12; house++) {
     const prevHouse = house === 1 ? 12 : house - 1;
     const nextHouse = house === 12 ? 1 : house + 1;
-    
+
     const prevMalefic = malefics.find((name) => {
       const p = byName(name);
       return p && p.house === prevHouse;
@@ -1399,7 +1462,11 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
           details: {
             planets: [prevMalefic, nextMalefic],
             houses: [house, prevHouse, nextHouse],
-            signs: [SIGNS[(lagnaSignId + house - 1) % 12] ?? "", byName(prevMalefic)!.sign, byName(nextMalefic)!.sign],
+            signs: [
+              SIGNS[(lagnaSignId + house - 1) % 12] ?? "",
+              byName(prevMalefic)!.sign,
+              byName(nextMalefic)!.sign,
+            ],
             condition: `Malefics on both sides of house ${house}`,
             classicalReference: "BPHS 31.17-18: Malefic hemming forms Papa Kartari Yoga",
           },
@@ -1411,20 +1478,18 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // ============================================
   // 20. NABHASA YOGAS (Sky/Structural Yogas)
   // ============================================
-  
+
   // Ashraya Yogas - based on sign modalities
   const movableSigns = new Set([0, 3, 6, 9]); // Aries, Cancer, Libra, Capricorn
   const fixedSigns = new Set([1, 4, 7, 10]); // Taurus, Leo, Scorpio, Aquarius
   const dualSigns = new Set([2, 5, 8, 11]); // Gemini, Virgo, Sagittarius, Pisces
-  
-  const classicalPlanetSigns = planets
-    .filter((p) => CLASSICAL.has(p.planet))
-    .map((p) => p.signId);
-  
+
+  const classicalPlanetSigns = planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.signId);
+
   const inMovable = classicalPlanetSigns.filter((s) => movableSigns.has(s)).length;
   const inFixed = classicalPlanetSigns.filter((s) => fixedSigns.has(s)).length;
   const inDual = classicalPlanetSigns.filter((s) => dualSigns.has(s)).length;
-  
+
   if (inMovable === classicalPlanetSigns.length && classicalPlanetSigns.length >= 5) {
     yogas.push({
       code: "NABHASA_ASHRAYA",
@@ -1475,7 +1540,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   // Dala Yogas - distribution between two halves
   const _firstHalf = classicalPlanetSigns.filter((s) => s <= 5).length; // Aries to Virgo
   const _secondHalf = classicalPlanetSigns.filter((s) => s >= 6).length; // Libra to Pisces
-  
+
   // Maala: Benefics in Kendra, malefics in Kendra (simplified: benefics in 1,4,7,10)
   const beneficsInKendra = ["Jupiter", "Venus", "Mercury"].filter((name) => {
     const p = byName(name);
@@ -1485,7 +1550,7 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
     const p = byName(name);
     return p && isKendraHouse(p.house);
   });
-  
+
   if (beneficsInKendra.length >= 2 && maleficsInKendra.length === 0) {
     yogas.push({
       code: "NABHASA_DALA",
@@ -1519,24 +1584,33 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   }
 
   // Akriti Yogas - geometric patterns
-  const _kendrasOccupied = [1, 4, 7, 10].filter((h) => planets.some((p) => CLASSICAL.has(p.planet) && p.house === h)).length;
-  const _kendrasWithBenefics = [1, 4, 7, 10].filter((h) => ["Jupiter", "Venus", "Mercury", "Moon"].some((name) => {
-    const p = byName(name);
-    return p && p.house === h;
-  })).length;
-  const _kendrasWithMalefics = [1, 4, 7, 10].filter((h) => ["Mars", "Saturn", "Sun"].some((name) => {
-    const p = byName(name);
-    return p && p.house === h;
-  })).length;
-  
+  const _kendrasOccupied = [1, 4, 7, 10].filter((h) =>
+    planets.some((p) => CLASSICAL.has(p.planet) && p.house === h),
+  ).length;
+  const _kendrasWithBenefics = [1, 4, 7, 10].filter((h) =>
+    ["Jupiter", "Venus", "Mercury", "Moon"].some((name) => {
+      const p = byName(name);
+      return p && p.house === h;
+    }),
+  ).length;
+  const _kendrasWithMalefics = [1, 4, 7, 10].filter((h) =>
+    ["Mars", "Saturn", "Sun"].some((name) => {
+      const p = byName(name);
+      return p && p.house === h;
+    }),
+  ).length;
+
   // Gada: Planets in two adjacent Kendras
-  const adjacentKendras = [[1,4], [4,7], [7,10], [10,1]] as const;
+  const adjacentKendras = [
+    [1, 4],
+    [4, 7],
+    [7, 10],
+    [10, 1],
+  ] as const;
   for (const [k1, k2] of adjacentKendras) {
     const p1 = planets.find((p) => CLASSICAL.has(p.planet) && p.house === k1);
     const p2 = planets.find((p) => CLASSICAL.has(p.planet) && p.house === k2);
     if (p1 && p2) {
-      const planet1: ChartPlanet = p1;
-      const planet2: ChartPlanet = p2;
       yogas.push({
         code: "NABHASA_AKRITI",
         name: `Gada Yoga (Kendras ${k1}-${k2})`,
@@ -1554,10 +1628,13 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       break; // Only report one Gada
     }
   }
-  
+
   // Shakata: Planets only in 1st and 7th
-  const planetsIn1and7 = planets.filter((p) => CLASSICAL.has(p.planet) && (p.house === 1 || p.house === 7));
-  const planetsOnlyIn1and7 = planetsIn1and7.length === classicalPlanetSigns.length && classicalPlanetSigns.length >= 3;
+  const planetsIn1and7 = planets.filter(
+    (p) => CLASSICAL.has(p.planet) && (p.house === 1 || p.house === 7),
+  );
+  const planetsOnlyIn1and7 =
+    planetsIn1and7.length === classicalPlanetSigns.length && classicalPlanetSigns.length >= 3;
   if (planetsOnlyIn1and7) {
     yogas.push({
       code: "NABHASA_AKRITI",
@@ -1576,17 +1653,46 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
   }
 
   // Sankhya Yogas - number of houses occupied
-  const occupiedHouses = new Set(planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.house)).size;
+  const occupiedHouses = new Set(planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.house))
+    .size;
   const sankhyaNames: Record<number, { name: string; desc: string; ref: string }> = {
-    7: { name: "Veena Yoga", desc: "Planets in 7 houses. Lute yoga — artistic, musical, harmonious life.", ref: "BPHS 15.51-55" },
-    6: { name: "Damini Yoga", desc: "Planets in 6 houses. Lightning yoga — brilliant, sudden success, electrifying.", ref: "BPHS 15.56-60" },
-    5: { name: "Pasha Yoga", desc: "Planets in 5 houses. Noose yoga — entanglements, but also focus and mastery.", ref: "BPHS 15.61-65" },
-    4: { name: "Kedara Yoga", desc: "Planets in 4 houses. Field yoga — agricultural, grounded, productive.", ref: "BPHS 15.66-70" },
-    3: { name: "Shula Yoga", desc: "Planets in 3 houses. Spear yoga — piercing focus, specialization, intensity.", ref: "BPHS 15.71-75" },
-    2: { name: "Yuga Yoga", desc: "Planets in 2 houses. Pair yoga — duality, partnerships, complementary skills.", ref: "BPHS 15.76-80" },
-    1: { name: "Gola Yoga", desc: "All planets in 1 house. Ball yoga — extreme concentration, obsession, single-minded.", ref: "BPHS 15.81-85" },
+    7: {
+      name: "Veena Yoga",
+      desc: "Planets in 7 houses. Lute yoga — artistic, musical, harmonious life.",
+      ref: "BPHS 15.51-55",
+    },
+    6: {
+      name: "Damini Yoga",
+      desc: "Planets in 6 houses. Lightning yoga — brilliant, sudden success, electrifying.",
+      ref: "BPHS 15.56-60",
+    },
+    5: {
+      name: "Pasha Yoga",
+      desc: "Planets in 5 houses. Noose yoga — entanglements, but also focus and mastery.",
+      ref: "BPHS 15.61-65",
+    },
+    4: {
+      name: "Kedara Yoga",
+      desc: "Planets in 4 houses. Field yoga — agricultural, grounded, productive.",
+      ref: "BPHS 15.66-70",
+    },
+    3: {
+      name: "Shula Yoga",
+      desc: "Planets in 3 houses. Spear yoga — piercing focus, specialization, intensity.",
+      ref: "BPHS 15.71-75",
+    },
+    2: {
+      name: "Yuga Yoga",
+      desc: "Planets in 2 houses. Pair yoga — duality, partnerships, complementary skills.",
+      ref: "BPHS 15.76-80",
+    },
+    1: {
+      name: "Gola Yoga",
+      desc: "All planets in 1 house. Ball yoga — extreme concentration, obsession, single-minded.",
+      ref: "BPHS 15.81-85",
+    },
   };
-  
+
   const sk = sankhyaNames[occupiedHouses as keyof typeof sankhyaNames];
   if (sk) {
     yogas.push({
@@ -1597,7 +1703,9 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
       description: `${sk.desc} (${occupiedHouses} houses occupied by classical planets).`,
       details: {
         planets: planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.planet),
-        houses: Array.from(new Set(planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.house))),
+        houses: Array.from(
+          new Set(planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.house)),
+        ),
         signs: planets.filter((p) => CLASSICAL.has(p.planet)).map((p) => p.sign),
         condition: `Classical planets occupy ${occupiedHouses} houses`,
         classicalReference: `${sk.ref}: ${occupiedHouses} houses occupied`,
@@ -1619,8 +1727,12 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         description: `${ny.condition}. ${ny.interpretation}`,
         details: {
           planets: ny.planets,
-          houses: ny.planets.map((pName) => byName(pName)?.house).filter((h): h is number => h !== undefined),
-          signs: ny.planets.map((pName) => byName(pName)?.sign).filter((s): s is string => s !== undefined),
+          houses: ny.planets
+            .map((pName) => byName(pName)?.house)
+            .filter((h): h is number => h !== undefined),
+          signs: ny.planets
+            .map((pName) => byName(pName)?.sign)
+            .filter((s): s is string => s !== undefined),
           condition: ny.condition,
           classicalReference: ny.classicalReference,
         },
@@ -1644,8 +1756,12 @@ export function detectYogas(planets: ChartPlanet[], lagnaSign: string): YogaResu
         description: `${jy.condition}. ${jy.interpretation}`,
         details: {
           planets: jy.planets,
-          houses: jy.planets.map((pName) => byName(pName)?.house).filter((h): h is number => h !== undefined),
-          signs: jy.planets.map((pName) => byName(pName)?.sign).filter((s): s is string => s !== undefined),
+          houses: jy.planets
+            .map((pName) => byName(pName)?.house)
+            .filter((h): h is number => h !== undefined),
+          signs: jy.planets
+            .map((pName) => byName(pName)?.sign)
+            .filter((s): s is string => s !== undefined),
           condition: jy.condition,
           classicalReference: jy.classicalReference,
         },
@@ -1722,13 +1838,5 @@ export function buildEastChart(planets: ChartPlanet[], lagnaSignId: number, lagn
   return { ...south, style: "EAST" as const };
 }
 
-export { analyzeNakshatraPlanets, calculateTaraBala, detectNakshatraYogas, getNakshatraAnalysisSummary } from "./nakshatra-yogas";
-export {
-  calculateJaiminiKaraka,
-  calculateArudhaLagna,
-  calculateArudhaPadas,
-  calculateGhatiLagna,
-  calculateHoraLagna,
-  detectJaiminiYogas,
-  getJaiminiAnalysis,
-} from "./jaimini-yogas";
+export { detectNakshatraYogas } from "./nakshatra-yogas";
+export { detectJaiminiYogas } from "./jaimini-yogas";

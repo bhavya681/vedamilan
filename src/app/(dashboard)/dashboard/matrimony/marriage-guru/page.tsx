@@ -460,9 +460,9 @@ export default function MarriageGuruPage() {
   // =====================================================
 
   const sidebar = (
-    <div className="ml-4 flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
       {/* Fixed sidebar header */}
-      <div className="border-border/50 flex h-[68px] min-h-[68px] w-full shrink-0 items-center gap-2 border-b px-4 pt-[env(safe-area-inset-top)] lg:pt-0">
+      <div className="border-border/50 from-rose/[0.07] flex h-[68px] min-h-[68px] w-full shrink-0 items-center gap-2 border-b bg-gradient-to-r to-transparent px-4 pt-[env(safe-area-inset-top)] lg:pt-0">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <AiGuruAvatar size="sm" className="border-rose/30 shrink-0" />
 
@@ -636,10 +636,7 @@ export default function MarriageGuruPage() {
   // =====================================================
 
   return (
-    <div
-      data-dashboard-bleed
-      className="dashboard-fill-h bg-background -mx-3 flex h-full min-h-0 min-w-0 flex-col overflow-hidden sm:-mx-4 md:-mx-5 lg:-mx-8"
-    >
+    <div className="dashboard-fill-h bg-background flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
       {/* Main desktop layout */}
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
         {/* Fixed desktop history sidebar */}
@@ -661,7 +658,7 @@ export default function MarriageGuruPage() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--rose)_6%,transparent),transparent_42%)]" />
 
           {/* Header */}
-          <header className="border-border/50 bg-background/85 relative z-10 flex min-h-[68px] w-full min-w-0 shrink-0 items-center justify-between gap-2 border-b px-3 py-2 backdrop-blur-xl sm:h-[68px] sm:px-4 sm:py-0">
+          <header className="border-border/50 from-rose/[0.06] via-background/85 to-background/85 relative z-10 flex min-h-[68px] w-full min-w-0 shrink-0 items-center justify-between gap-2 border-b bg-gradient-to-r px-3 py-2 backdrop-blur-xl sm:h-[68px] sm:px-4 sm:py-0">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               {/* Mobile history button */}
               <Button

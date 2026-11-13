@@ -42,7 +42,7 @@ const KARAKA_NAMES = [
 
 export function calculateJaiminiKaraka(planets: ChartPlanet[]): JaiminiKaraka[] {
   const classicalPlanets = planets.filter((p) =>
-    ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].includes(p.planet)
+    ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"].includes(p.planet),
   );
 
   const sortedByLongitude = [...classicalPlanets].sort((a, b) => b.longitude - a.longitude);
@@ -77,7 +77,10 @@ export function calculateArudhaLagna(planets: ChartPlanet[], lagnaSignId: number
   };
 }
 
-export function calculateArudhaPadas(planets: ChartPlanet[], lagnaSignId: number): Record<number, JaiminiLagna> {
+export function calculateArudhaPadas(
+  planets: ChartPlanet[],
+  lagnaSignId: number,
+): Record<number, JaiminiLagna> {
   const padas: Record<number, JaiminiLagna> = {};
 
   for (let house = 1; house <= 12; house++) {
@@ -109,7 +112,11 @@ export function calculateArudhaPadas(planets: ChartPlanet[], lagnaSignId: number
   return padas;
 }
 
-export function calculateGhatiLagna(lagnaLongitude: number, sunLongitude: number, birthTime: Date): JaiminiLagna {
+export function calculateGhatiLagna(
+  lagnaLongitude: number,
+  sunLongitude: number,
+  birthTime: Date,
+): JaiminiLagna {
   const sunriseHour = 6;
   const birthHour = birthTime.getHours() + birthTime.getMinutes() / 60;
   const hoursFromSunrise = birthHour - sunriseHour;
@@ -125,7 +132,11 @@ export function calculateGhatiLagna(lagnaLongitude: number, sunLongitude: number
   };
 }
 
-export function calculateHoraLagna(lagnaLongitude: number, sunLongitude: number, birthTime: Date): JaiminiLagna {
+export function calculateHoraLagna(
+  lagnaLongitude: number,
+  sunLongitude: number,
+  birthTime: Date,
+): JaiminiLagna {
   const sunriseHour = 6;
   const birthHour = birthTime.getHours() + birthTime.getMinutes() / 60;
   const hoursFromSunrise = birthHour - sunriseHour;
@@ -173,7 +184,7 @@ export function detectJaiminiYogas(
   planets: ChartPlanet[],
   lagnaSignId: number,
   lagnaLongitude: number,
-  birthTime?: Date
+  birthTime?: Date,
 ): JaiminiYogaResult[] {
   const yogas: JaiminiYogaResult[] = [];
 
@@ -184,14 +195,15 @@ export function detectJaiminiYogas(
   const dk = karakas.find((k) => k.name === "Darakaraka");
 
   const arudhaLagna = calculateArudhaLagna(planets, lagnaSignId);
-  const arudhaPadas = calculateArudhaPadas(planets, lagnaSignId);
+  void arudhaLagna;
+  void calculateArudhaPadas(planets, lagnaSignId);
 
   // Yoga 1: Atmakaraka-Amatyakaraka Raja Sambandha
   if (ak && amk) {
     const sameSign = ak.signId === amk.signId;
-    const mutualAspect = getJaiminiAspect(ak.signId, amk.signId) && getJaiminiAspect(amk.signId, ak.signId);
+    const mutualAspect =
+      getJaiminiAspect(ak.signId, amk.signId) && getJaiminiAspect(amk.signId, ak.signId);
     const conjunction = ak.house === amk.house;
-    const exchange = false; // Would need sign lordship check
 
     if (sameSign || mutualAspect || conjunction) {
       yogas.push({
@@ -201,8 +213,10 @@ export function detectJaiminiYogas(
         category: "jaimini",
         planets: [ak.planet, amk.planet],
         condition: `Atmakaraka (${ak.planet} in ${ak.sign}) and Amatyakaraka (${amk.planet} in ${amk.sign}) ${sameSign ? "in same sign" : mutualAspect ? "mutually aspect" : "conjoined"}`,
-        classicalReference: "Jaimini Sutras 1.1-1.3: AK-AMK relationship indicates career and authority",
-        interpretation: "Strong connection between soul purpose (AK) and career/profession (AMK). Indicates rise to authority and fulfillment of life purpose through vocation.",
+        classicalReference:
+          "Jaimini Sutras 1.1-1.3: AK-AMK relationship indicates career and authority",
+        interpretation:
+          "Strong connection between soul purpose (AK) and career/profession (AMK). Indicates rise to authority and fulfillment of life purpose through vocation.",
         present: true,
         strength: sameSign ? 95 : mutualAspect ? 85 : 80,
       });
@@ -220,7 +234,8 @@ export function detectJaiminiYogas(
         planets: [ak.planet],
         condition: `Atmakaraka (${ak.planet}) placed in Arudha Lagna (${arudhaLagna.sign})`,
         classicalReference: "Jaimini Sutras: AK in Arudha Lagna gives fame and recognition",
-        interpretation: "The soul's significator in the Arudha Lagna (manifestation point) brings public recognition, fame, and manifestation of soul purpose in the world.",
+        interpretation:
+          "The soul's significator in the Arudha Lagna (manifestation point) brings public recognition, fame, and manifestation of soul purpose in the world.",
         present: true,
         strength: 90,
       });
@@ -238,7 +253,8 @@ export function detectJaiminiYogas(
         planets: [ak.planet],
         condition: `Atmakaraka (${ak.planet} in ${ak.sign}) aspects Arudha Lagna (${arudhaLagna.sign})`,
         classicalReference: "Jaimini Sutras: AK aspect on Arudha Lagna supports public image",
-        interpretation: "The soul planet's aspect on the manifestation point supports recognition and the fruition of one's karmic path.",
+        interpretation:
+          "The soul planet's aspect on the manifestation point supports recognition and the fruition of one's karmic path.",
         present: true,
         strength: 75,
       });
@@ -257,8 +273,10 @@ export function detectJaiminiYogas(
         category: "jaimini",
         planets: [amk.planet],
         condition: `Amatyakaraka (${amk.planet}) in 10th house from Arudha Lagna (${SIGNS[tenthFromAL] ?? "Aries"})`,
-        classicalReference: "Jaimini Sutras: AMK in 10th from AL gives career success and authority",
-        interpretation: "The career significator in the 10th from the manifestation point gives professional success, authority, and public standing.",
+        classicalReference:
+          "Jaimini Sutras: AMK in 10th from AL gives career success and authority",
+        interpretation:
+          "The career significator in the 10th from the manifestation point gives professional success, authority, and public standing.",
         present: true,
         strength: 85,
       });
@@ -277,8 +295,10 @@ export function detectJaiminiYogas(
         category: "jaimini",
         planets: [pk.planet],
         condition: `Putrakaraka (${pk.planet}) in 5th house from Arudha Lagna (${SIGNS[fifthFromAL] ?? "Aries"})`,
-        classicalReference: "Jaimini Sutras: PK in 5th from AL gives creative progeny and intelligence",
-        interpretation: "The progeny/creativity significator in the 5th from manifestation supports creative expression, children, and intellectual pursuits.",
+        classicalReference:
+          "Jaimini Sutras: PK in 5th from AL gives creative progeny and intelligence",
+        interpretation:
+          "The progeny/creativity significator in the 5th from manifestation supports creative expression, children, and intellectual pursuits.",
         present: true,
         strength: 75,
       });
@@ -297,8 +317,10 @@ export function detectJaiminiYogas(
         category: "jaimini",
         planets: [dk.planet],
         condition: `Darakaraka (${dk.planet}) in 7th house from Arudha Lagna (${SIGNS[seventhFromAL] ?? "Aries"})`,
-        classicalReference: "Jaimini Sutras: DK in 7th from AL gives relationship and partnership success",
-        interpretation: "The spouse/partnership significator in the 7th from manifestation supports harmonious relationships and successful partnerships.",
+        classicalReference:
+          "Jaimini Sutras: DK in 7th from AL gives relationship and partnership success",
+        interpretation:
+          "The spouse/partnership significator in the 7th from manifestation supports harmonious relationships and successful partnerships.",
         present: true,
         strength: 80,
       });
@@ -306,7 +328,12 @@ export function detectJaiminiYogas(
   }
 
   // Yoga 7: Karakas in Kendra from Arudha Lagna
-  const kendraFromAL = [arudhaLagna.signId, (arudhaLagna.signId + 3) % 12, (arudhaLagna.signId + 6) % 12, (arudhaLagna.signId + 9) % 12];
+  const kendraFromAL = [
+    arudhaLagna.signId,
+    (arudhaLagna.signId + 3) % 12,
+    (arudhaLagna.signId + 6) % 12,
+    (arudhaLagna.signId + 9) % 12,
+  ];
   const karakasInKendra = karakas.filter((k) => kendraFromAL.includes(k.signId));
   if (karakasInKendra.length >= 3) {
     yogas.push({
@@ -317,7 +344,8 @@ export function detectJaiminiYogas(
       planets: karakasInKendra.map((k) => k.planet),
       condition: `${karakasInKendra.length} karakas in Kendra houses from Arudha Lagna`,
       classicalReference: "Jaimini Sutras: Karakas in Kendra from AL gives power and authority",
-      interpretation: "Multiple karakas angular from the manifestation point gives structural strength, authority, and the ability to manifest results.",
+      interpretation:
+        "Multiple karakas angular from the manifestation point gives structural strength, authority, and the ability to manifest results.",
       present: true,
       strength: 70 + karakasInKendra.length * 5,
     });
@@ -343,8 +371,10 @@ export function detectJaiminiYogas(
         category: "jaimini",
         planets: [ak.planet],
         condition: `Atmakaraka (${ak.planet}) in own sign ${ak.sign}`,
-        classicalReference: "Jaimini Sutras: AK in own sign (Swamsa) gives spiritual progress and self-realization",
-        interpretation: "The soul planet in its own sign indicates strong self-awareness, spiritual inclination, and the ability to manifest one's true nature.",
+        classicalReference:
+          "Jaimini Sutras: AK in own sign (Swamsa) gives spiritual progress and self-realization",
+        interpretation:
+          "The soul planet in its own sign indicates strong self-awareness, spiritual inclination, and the ability to manifest one's true nature.",
         present: true,
         strength: 88,
       });
@@ -432,7 +462,12 @@ export function detectJaiminiYogas(
   return yogas;
 }
 
-export function getJaiminiAnalysis(planets: ChartPlanet[], lagnaSignId: number, lagnaLongitude: number, birthTime?: Date) {
+export function getJaiminiAnalysis(
+  planets: ChartPlanet[],
+  lagnaSignId: number,
+  lagnaLongitude: number,
+  birthTime?: Date,
+) {
   const karakas = calculateJaiminiKaraka(planets);
   const arudhaLagna = calculateArudhaLagna(planets, lagnaSignId);
   const arudhaPadas = calculateArudhaPadas(planets, lagnaSignId);

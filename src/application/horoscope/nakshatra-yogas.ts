@@ -1,9 +1,5 @@
 import { ChartPlanet } from "./chart-builder";
-import {
-  NAKSHATRAS,
-  VIMSHOTTARI_LORDS,
-  SIGNS,
-} from "./vedic-constants";
+import { NAKSHATRAS, VIMSHOTTARI_LORDS } from "./vedic-constants";
 
 export type NakshatraPlanetInfo = {
   planet: string;
@@ -22,7 +18,16 @@ export type NakshatraPlanetInfo = {
 export type TaraBalaResult = {
   planet: string;
   taraName: string;
-  taraGroup: "janma" | "sampat" | "vipat" | "kshema" | "pratyak" | "sadhaka" | "naidhana" | "mitra" | "paramamitra";
+  taraGroup:
+    | "janma"
+    | "sampat"
+    | "vipat"
+    | "kshema"
+    | "pratyak"
+    | "sadhaka"
+    | "naidhana"
+    | "mitra"
+    | "paramamitra";
   nakshatraFromMoon: number;
   auspicious: boolean;
   description: string;
@@ -154,7 +159,11 @@ export function calculateTaraBala(moonNakshatra: string, planets: ChartPlanet[])
   const results: TaraBalaResult[] = [];
 
   for (const planet of planets) {
-    if (!["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].includes(planet.planet)) {
+    if (
+      !["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"].includes(
+        planet.planet,
+      )
+    ) {
       continue;
     }
 
@@ -254,8 +263,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
           nakshatras: [p1.nakshatra, p2.nakshatra],
           nakshatraLords: [p1.nakshatraLord, p2.nakshatraLord],
           condition: `${p1.planet} in ${p1.nakshatra} (lord: ${p1.nakshatraLord}) and ${p2.planet} in ${p2.nakshatra} (lord: ${p2.nakshatraLord}) exchange nakshatra lordship`,
-          classicalReference: "Classical: Mutual exchange of nakshatra lords creates powerful linkage",
-          interpretation: "Strong linkage between the two planets' nakshatra significations. Enhances both planets' results.",
+          classicalReference:
+            "Classical: Mutual exchange of nakshatra lords creates powerful linkage",
+          interpretation:
+            "Strong linkage between the two planets' nakshatra significations. Enhances both planets' results.",
           present: true,
           strength: 85,
         });
@@ -264,8 +275,8 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
   }
 
   // Yoga 2: Nakshatra Dispositor Strength
-  const strongDispositor = nakshatraInfo.filter((p) =>
-    p.dispositorRelationship === "own" || p.dispositorRelationship === "exalted"
+  const strongDispositor = nakshatraInfo.filter(
+    (p) => p.dispositorRelationship === "own" || p.dispositorRelationship === "exalted",
   );
   if (strongDispositor.length >= 2) {
     yogas.push({
@@ -277,8 +288,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
       nakshatras: strongDispositor.map((p) => p.nakshatra),
       nakshatraLords: strongDispositor.map((p) => p.nakshatraLord),
       condition: `${strongDispositor.length} planets have nakshatra lords in own or exalted signs`,
-      classicalReference: "Classical: Nakshatra lord in own/exalted sign strengthens the planet's results",
-      interpretation: "Planets with strong nakshatra dispositors give enhanced results in their domains.",
+      classicalReference:
+        "Classical: Nakshatra lord in own/exalted sign strengthens the planet's results",
+      interpretation:
+        "Planets with strong nakshatra dispositors give enhanced results in their domains.",
       present: true,
       strength: 70 + strongDispositor.length * 5,
     });
@@ -290,7 +303,9 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
   if (moonNakLordPlanet) {
     const moonNakLordInKendra = [1, 4, 7, 10].includes(moonNakLordPlanet.house);
     const moonNakLordInTrikona = [1, 5, 9].includes(moonNakLordPlanet.house);
-    const moonNakLordInOwnExalted = OWN_SIGNS[moonNakLord]?.includes(moonNakLordPlanet.sign) || EXALTATION_SIGNS[moonNakLord] === moonNakLordPlanet.sign;
+    const moonNakLordInOwnExalted =
+      OWN_SIGNS[moonNakLord]?.includes(moonNakLordPlanet.sign) ||
+      EXALTATION_SIGNS[moonNakLord] === moonNakLordPlanet.sign;
 
     if (moonNakLordInKendra || moonNakLordInTrikona || moonNakLordInOwnExalted) {
       yogas.push({
@@ -302,8 +317,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
         nakshatras: [moon.nakshatra],
         nakshatraLords: [moonNakLord],
         condition: `Moon's nakshatra lord (${moonNakLord}) in ${moonNakLordPlanet.sign} (H${moonNakLordPlanet.house}) ${moonNakLordInKendra ? "in Kendra" : moonNakLordInTrikona ? "in Trikona" : "in own/exalted"}`,
-        classicalReference: "Classical: Moon's nakshatra lord well-placed gives emotional stability and mental strength",
-        interpretation: "Strong Moon nakshatra lord supports emotional well-being, mental clarity, and public recognition.",
+        classicalReference:
+          "Classical: Moon's nakshatra lord well-placed gives emotional stability and mental strength",
+        interpretation:
+          "Strong Moon nakshatra lord supports emotional well-being, mental clarity, and public recognition.",
         present: true,
         strength: moonNakLordInOwnExalted ? 90 : moonNakLordInKendra ? 80 : 75,
       });
@@ -322,16 +339,23 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
       sanskritName: "Tara Bala Shubha",
       category: "nakshatra",
       planets: taraBala.filter((t) => t.auspicious).map((t) => t.planet),
-      nakshatras: taraBala.filter((t) => t.auspicious).map((t) => {
-        const p = planets.find((pl) => pl.planet === t.planet);
-        return p?.nakshatra || "";
-      }).filter(Boolean),
-      nakshatraLords: taraBala.filter((t) => t.auspicious).map((t) => getNakshatraLord(
-        planets.find((pl) => pl.planet === t.planet)?.nakshatra || ""
-      )),
+      nakshatras: taraBala
+        .filter((t) => t.auspicious)
+        .map((t) => {
+          const p = planets.find((pl) => pl.planet === t.planet);
+          return p?.nakshatra || "";
+        })
+        .filter(Boolean),
+      nakshatraLords: taraBala
+        .filter((t) => t.auspicious)
+        .map((t) =>
+          getNakshatraLord(planets.find((pl) => pl.planet === t.planet)?.nakshatra || ""),
+        ),
       condition: `${auspiciousCount} planets in auspicious Tara groups (Sampat, Kshema, Sadhaka, Mitra, Param Mitra)`,
-      classicalReference: "Classical: Majority of planets in auspicious Tara from Moon supports overall well-being",
-      interpretation: "Most planets in favorable Tara positions from Moon indicates general support for life endeavors.",
+      classicalReference:
+        "Classical: Majority of planets in auspicious Tara from Moon supports overall well-being",
+      interpretation:
+        "Most planets in favorable Tara positions from Moon indicates general support for life endeavors.",
       present: true,
       strength: 60 + auspiciousCount * 3,
     });
@@ -342,23 +366,37 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
       sanskritName: "Tara Bala Ashubha",
       category: "nakshatra",
       planets: taraBala.filter((t) => !t.auspicious).map((t) => t.planet),
-      nakshatras: taraBala.filter((t) => !t.auspicious).map((t) => {
-        const p = planets.find((pl) => pl.planet === t.planet);
-        return p?.nakshatra || "";
-      }).filter(Boolean),
-      nakshatraLords: taraBala.filter((t) => !t.auspicious).map((t) => getNakshatraLord(
-        planets.find((pl) => pl.planet === t.planet)?.nakshatra || ""
-      )),
+      nakshatras: taraBala
+        .filter((t) => !t.auspicious)
+        .map((t) => {
+          const p = planets.find((pl) => pl.planet === t.planet);
+          return p?.nakshatra || "";
+        })
+        .filter(Boolean),
+      nakshatraLords: taraBala
+        .filter((t) => !t.auspicious)
+        .map((t) =>
+          getNakshatraLord(planets.find((pl) => pl.planet === t.planet)?.nakshatra || ""),
+        ),
       condition: `${inauspiciousCount} planets in challenging Tara groups (Janma, Vipat, Pratyak, Naidhana)`,
-      classicalReference: "Classical: Majority of planets in challenging Tara from Moon indicates karmic lessons",
-      interpretation: "Many planets in difficult Tara positions suggests areas requiring conscious effort and transformation.",
+      classicalReference:
+        "Classical: Majority of planets in challenging Tara from Moon indicates karmic lessons",
+      interpretation:
+        "Many planets in difficult Tara positions suggests areas requiring conscious effort and transformation.",
       present: true,
       strength: 40,
     });
   }
 
   // Yoga 5: Pushkara Navamsa / Nakshatra alignment
-  const pushkaraNakshatras = ["Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni"];
+  const pushkaraNakshatras = [
+    "Punarvasu",
+    "Pushya",
+    "Ashlesha",
+    "Magha",
+    "Purva Phalguni",
+    "Uttara Phalguni",
+  ];
   const pushkaraPlanets = planets.filter((p) => pushkaraNakshatras.includes(p.nakshatra));
   if (pushkaraPlanets.length >= 3) {
     yogas.push({
@@ -370,8 +408,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
       nakshatras: pushkaraPlanets.map((p) => p.nakshatra),
       nakshatraLords: pushkaraPlanets.map((p) => getNakshatraLord(p.nakshatra)),
       condition: `${pushkaraPlanets.length} planets in Pushkara nakshatras (nourishing/fortunate group)`,
-      classicalReference: "Jataka Parijata / classical: Planets in Pushkara nakshatras give favorable results",
-      interpretation: "Multiple planets in nourishing nakshatras supports growth, protection, and positive outcomes.",
+      classicalReference:
+        "Jataka Parijata / classical: Planets in Pushkara nakshatras give favorable results",
+      interpretation:
+        "Multiple planets in nourishing nakshatras supports growth, protection, and positive outcomes.",
       present: true,
       strength: 70 + pushkaraPlanets.length * 3,
     });
@@ -384,7 +424,6 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
   });
   if (nakshatraLordConjunctions.length > 0) {
     for (const nc of nakshatraLordConjunctions) {
-      const lordPlanet = planets.find((pl) => pl.planet === nc.nakshatraLord)!;
       yogas.push({
         id: "NAKSHATRA_LORD_CONJUNCTION",
         name: `Nakshatra Lord Conjunction (${nc.planet})`,
@@ -394,8 +433,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
         nakshatras: [nc.nakshatra],
         nakshatraLords: [nc.nakshatraLord],
         condition: `${nc.planet} in ${nc.nakshatra} conjunct its nakshatra lord ${nc.nakshatraLord} in H${nc.house}`,
-        classicalReference: "Classical: Planet conjunct its nakshatra lord intensifies the planet's results",
-        interpretation: "Planet conjunct its nakshatra lord gives intensified, focused results in that planet's domain.",
+        classicalReference:
+          "Classical: Planet conjunct its nakshatra lord intensifies the planet's results",
+        interpretation:
+          "Planet conjunct its nakshatra lord gives intensified, focused results in that planet's domain.",
         present: true,
         strength: 80,
       });
@@ -417,8 +458,10 @@ export function detectNakshatraYogas(planets: ChartPlanet[]): NakshatraYogaResul
       nakshatras: [atmakaraka.nakshatra],
       nakshatraLords: [getNakshatraLord(atmakaraka.nakshatra)],
       condition: `Atmakaraka (${atmakaraka.planet}) in Pushkara nakshatra ${atmakaraka.nakshatra}`,
-      classicalReference: "Jaimini / Classical: Soul planet in nourishing nakshatra supports life purpose",
-      interpretation: "The soul's indicator in a nourishing nakshatra supports spiritual growth and life fulfillment.",
+      classicalReference:
+        "Jaimini / Classical: Soul planet in nourishing nakshatra supports life purpose",
+      interpretation:
+        "The soul's indicator in a nourishing nakshatra supports spiritual growth and life fulfillment.",
       present: true,
       strength: 88,
     });

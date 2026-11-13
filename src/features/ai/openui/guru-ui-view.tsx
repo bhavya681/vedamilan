@@ -49,7 +49,13 @@ export function GuruUiView({
   const streaming = widthSafe(visibleChars) < code.length;
 
   return (
-    <div className={cn("w-full min-w-0 overflow-x-auto", className)} data-guru-openui>
+    <div
+      className={cn(
+        "w-full min-w-0 [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+      data-guru-openui
+    >
       <Renderer
         response={code.slice(0, widthSafe(visibleChars))}
         library={guruUiLibrary}
