@@ -16,6 +16,7 @@ import {
   stripLocaleFromPathname,
   withLocalePrefix,
 } from "@/lib/i18n/path";
+import { applyCorsHeaders, corsPreflightResponse } from "@/lib/security/cors";
 
 function resolveLocale(request: NextRequest, urlLocale: AppLocale | null): AppLocale {
   if (urlLocale) return urlLocale;
@@ -66,6 +67,18 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/maintenance";
     return NextResponse.redirect(url);
+  }
+
+  // API routes are cross-origin targets for the Expo web app. Handle preflight
+  // here and attach CORS headers once, so every route (including auth errors)
+  // shares the same allowlist and no duplicate headers are produced.
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    if (request.method === "OPTIONS") {
+      return corsPreflightResponse(request);
+    }
+    const response = NextResponse.next();
+    applyCorsHeaders(response.headers, request);
+    return response;
   }
 
   if (isLocaleExemptPath(pathname)) {

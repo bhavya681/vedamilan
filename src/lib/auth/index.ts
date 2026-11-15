@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin, emailOTP } from "better-auth/plugins";
+import { admin, bearer, emailOTP } from "better-auth/plugins";
 import { adminAc, defaultAc, userAc } from "better-auth/plugins/admin/access";
 import { nextCookies } from "better-auth/next-js";
 import type { Db, MongoClient } from "mongodb";
@@ -12,6 +12,7 @@ import {
   emailVerificationEmail,
   passwordResetEmail,
 } from "@/lib/emails/templates";
+import { getTrustedOrigins } from "@/lib/security/cors";
 import { logger } from "@/lib/utils/logger";
 
 /** Super-admin access — includes impersonate-admins beyond the default admin role. */
@@ -56,7 +57,15 @@ function createAuth(db: Db, client: MongoClient) {
 
   return betterAuth({
     appName: process.env.NEXT_PUBLIC_APP_NAME || "VedaMilan AI",
-    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL,
+    baseURL:
+      process.env.BETTER_AUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000"),
+    basePath: "/api/auth",
     secret: process.env.BETTER_AUTH_SECRET,
     database: mongodbAdapter(db, { client }),
     emailAndPassword: {
@@ -131,6 +140,9 @@ function createAuth(db: Db, client: MongoClient) {
       },
     },
     plugins: [
+      // Native (Expo/React Native) clients cannot rely on httpOnly web cookies.
+      // Bearer sessions are additive: browser cookie auth is unchanged.
+      bearer(),
       admin({
         defaultRole: "user",
         adminRoles: ["admin", "super_admin"],
@@ -169,7 +181,8 @@ function createAuth(db: Db, client: MongoClient) {
       }),
       nextCookies(),
     ],
-    trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"].filter(Boolean),
+    // Explicit allowlist shared with the API CORS middleware. Never use "*".
+    trustedOrigins: getTrustedOrigins(),
   });
 }
 

@@ -1,9 +1,12 @@
 import { ForbiddenError } from "@/lib/utils/error-handler";
 
+import { isTrustedOrigin } from "./cors";
+
 /**
  * Soft CSRF defense for cookie-authenticated mutating requests.
- * Allows same-origin browser calls and non-browser clients without Origin
- * (server-to-server) when Referer is also absent.
+ * Allows trusted browser origins (web app + Expo web) and non-browser clients
+ * without Origin (server-to-server, React Native fetch). Never disables the
+ * origin check.
  */
 export function assertSameOriginMutation(request: Request): void {
   if (request.method === "GET" || request.method === "HEAD" || request.method === "OPTIONS") {
@@ -12,21 +15,9 @@ export function assertSameOriginMutation(request: Request): void {
 
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BETTER_AUTH_URL;
-
-  if (!appUrl) return;
-
-  let allowed: URL;
-  try {
-    allowed = new URL(appUrl);
-  } catch {
-    return;
-  }
-
-  const allowedOrigin = allowed.origin;
 
   if (origin) {
-    if (origin !== allowedOrigin) {
+    if (!isTrustedOrigin(origin)) {
       throw new ForbiddenError("Cross-origin request blocked");
     }
     return;
@@ -35,7 +26,7 @@ export function assertSameOriginMutation(request: Request): void {
   if (referer) {
     try {
       const ref = new URL(referer);
-      if (ref.origin !== allowedOrigin) {
+      if (!isTrustedOrigin(ref.origin)) {
         throw new ForbiddenError("Cross-origin request blocked");
       }
     } catch (error) {
