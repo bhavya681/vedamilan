@@ -251,6 +251,53 @@ function formatTime(timestamp: number, timezone: string): string {
   }
 }
 
+function zonedParts(date: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const value = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  return {
+    year: value("year"),
+    month: value("month"),
+    day: value("day"),
+    hour: value("hour"),
+    minute: value("minute"),
+    second: value("second"),
+  };
+}
+
+function timezoneOffsetMs(date: Date, timezone: string): number {
+  const parts = zonedParts(date, timezone);
+  const asUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+  return asUtc - date.getTime();
+}
+
+function localMidnightUtc(date: Date, timezone: string): Date {
+  const parts = zonedParts(date, timezone);
+  const base = Date.UTC(parts.year, parts.month - 1, parts.day, 0, 0, 0);
+  let utc = base - timezoneOffsetMs(new Date(base), timezone);
+  utc = base - timezoneOffsetMs(new Date(utc), timezone);
+  return new Date(utc);
+}
+
+function jdToUnixMs(jd: number): number {
+  return (jd - 2440587.5) * 86400000;
+}
+
 export function computePanchanga(
   date: Date,
   latitude: number,
@@ -287,10 +334,12 @@ export function computePanchanga(
   const karanaName = KARANA_NAMES[Math.min(5, Math.max(0, isFixed ? 0 : karanaIndex + 1))] || "";
   const karanaType: "moving" | "fixed" = isFixed ? "fixed" : "moving";
 
-  const sunriseTs = houses.ascmc[0] ? jdToTimestamp(jd, houses.ascmc[0], timezone) : Date.now();
-  const sunsetTs = houses.ascmc[1]
-    ? jdToTimestamp(jd, houses.ascmc[1], timezone)
-    : Date.now() + 43200000;
+  const dayJd = swissEphemerisService.julDay(localMidnightUtc(date, timezone));
+  const sunEvents = swissEphemerisService.calculateRiseSet(dayJd, latitude, longitude, "sun");
+  const moonEvents = swissEphemerisService.calculateRiseSet(dayJd, latitude, longitude, "moon");
+  const sunriseTs = sunEvents.rise !== null ? jdToUnixMs(sunEvents.rise) : Date.now();
+  const sunsetTs =
+    sunEvents.set !== null ? jdToUnixMs(sunEvents.set) : sunriseTs + 12 * 60 * 60 * 1000;
 
   const rahu = rahuKalamFor(vara, sunriseTs, sunsetTs);
   const yamag = yamagandaFor(vara, sunriseTs, sunsetTs);
@@ -330,23 +379,20 @@ export function computePanchanga(
     },
     sunrise: { time: formatTime(sunriseTs, timezone), timestamp: sunriseTs },
     sunset: { time: formatTime(sunsetTs, timezone), timestamp: sunsetTs },
-    moonrise: null,
-    moonset: null,
+    moonrise:
+      moonEvents.rise !== null
+        ? { time: formatTime(jdToUnixMs(moonEvents.rise), timezone), timestamp: jdToUnixMs(moonEvents.rise) }
+        : null,
+    moonset:
+      moonEvents.set !== null
+        ? { time: formatTime(jdToUnixMs(moonEvents.set), timezone), timestamp: jdToUnixMs(moonEvents.set) }
+        : null,
     dayLengthMinutes: Math.max(0, Math.round((sunsetTs - sunriseTs) / 60000)),
     rahuKalam: clockWindow(rahu.start, rahu.end, timezone),
     yamaganda: clockWindow(yamag.start, yamag.end, timezone),
     gulika: clockWindow(gulik.start, gulik.end, timezone),
     abhijit: abhijit ? clockWindow(abhijit.start, abhijit.end, timezone) : null,
   };
-}
-
-function jdToTimestamp(jd: number, angle: number, _timezone: string): number {
-  const dayFraction = angle / 360;
-  const baseDate = new Date(Date.UTC(1970, 0, 1));
-  const jd1970 = 2440587.5;
-  const diffDays = jd - jd1970 + dayFraction;
-  const ts = baseDate.getTime() + diffDays * 86400000;
-  return ts;
 }
 
 export function computeMuhurta(

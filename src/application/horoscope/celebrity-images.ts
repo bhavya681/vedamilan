@@ -454,4 +454,13 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/John_Dillinger_mug_shot.jpg/500px-John_Dillinger_mug_shot.jpg",
   "billy-walters":
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJ_D2VCrzbKaFD4aBr8ARRbjdQRyCeKAPT8T_wo_cemA&s=10",
+  "shivkrupanand-swami":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Babaswami.jpg/330px-Babaswami.jpg",
+  "eeshaan-mahesh": "https://eeshaandhyanmandir.com/wp-content/uploads/2022/11/HC2.jpg",
+  "tony-ferguson":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Tony_Ferguson_2025.jpg/330px-Tony_Ferguson_2025.jpg",
+  "charles-oliveira":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Charles_Oliveira_do_Bronxs.jpg/330px-Charles_Oliveira_do_Bronxs.jpg",
+  "adolf-hitler":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Hitler_portrait_crop_%28cropped%29%282%29.jpg/330px-Hitler_portrait_crop_%28cropped%29%282%29.jpg",
 };

@@ -64,6 +64,16 @@ type SwephModule = {
     error?: string;
     data: { houses: number[] | Record<string, number>; points: number[] | Record<string, number> };
   };
+  rise_trans: (
+    tjdUt: number,
+    ipl: number,
+    starname: string | null,
+    epheflag: number,
+    rsmi: number,
+    geopos: [number, number, number],
+    atpress: number,
+    attemp: number,
+  ) => { flag: number; error?: string; data: number };
   close: () => void;
 };
 
@@ -281,6 +291,31 @@ export class SwissEphemerisService {
     return {
       cusps: Array.isArray(houseList) ? [...houseList] : Object.values(houseList),
       ascmc: Array.isArray(points) ? [...points] : Object.values(points),
+    };
+  }
+
+  calculateRiseSet(
+    jd: number,
+    latitude: number,
+    longitude: number,
+    body: "sun" | "moon",
+  ): { rise: number | null; set: number | null } {
+    this.ensureInitialized();
+    const sweph = loadSweph();
+    const objectId = body === "sun" ? sweConst(sweph, "SE_SUN") : sweConst(sweph, "SE_MOON");
+    const ephemerisFlag = sweConst(sweph, "SEFLG_SWIEPH");
+    const geopos: [number, number, number] = [longitude, latitude, 0];
+    const ok = sweConst(sweph, "OK");
+
+    const event = (mode: number) =>
+      sweph.rise_trans(jd, objectId, null, ephemerisFlag, mode, geopos, 0, 0);
+
+    const rise = event(sweConst(sweph, "SE_CALC_RISE"));
+    const set = event(sweConst(sweph, "SE_CALC_SET"));
+
+    return {
+      rise: rise.flag === ok ? rise.data : null,
+      set: set.flag === ok ? set.data : null,
     };
   }
 

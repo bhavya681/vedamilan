@@ -28,6 +28,7 @@ import {
   Star,
   Sun,
   Telescope,
+  Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -104,6 +105,7 @@ const CATEGORIES = [
   "Entrepreneurs",
   "Politicians",
   "Cinema",
+  "Sports",
   "Music",
   "Writers",
   "Science & Arts",
@@ -111,6 +113,7 @@ const CATEGORIES = [
   "Historical",
   "International",
   "Divine",
+  "Criminals",
 ] as const;
 
 type CategoryFilter = (typeof CATEGORIES)[number];
@@ -137,6 +140,12 @@ const CATEGORY_META: Record<
     avatar: "border-rose/30 from-rose/20 to-gold/10 text-rose",
     chip: "border-rose/25 bg-rose/10 text-rose",
     wash: "from-rose/12 via-transparent",
+  },
+  Sports: {
+    icon: Trophy,
+    avatar: "border-blue/30 from-blue/20 to-gold/10 text-blue",
+    chip: "border-blue/25 bg-blue/10 text-blue",
+    wash: "from-blue/12 via-transparent",
   },
   Music: {
     icon: Music2,
@@ -179,6 +188,12 @@ const CATEGORY_META: Record<
     avatar: "border-gold/40 from-gold/30 to-saffron/15 text-gold",
     chip: "border-gold/35 bg-gold/15 text-gold",
     wash: "from-gold/15 via-transparent",
+  },
+  Criminals: {
+    icon: Shield,
+    avatar: "border-rose/30 from-rose/20 to-gold/10 text-rose",
+    chip: "border-rose/25 bg-rose/10 text-rose",
+    wash: "from-rose/12 via-transparent",
   },
 };
 
