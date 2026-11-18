@@ -306,7 +306,6 @@ export function computePanchanga(
 ): Panchanga {
   swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
   const jd = swissEphemerisService.julDay(date);
-  const houses = swissEphemerisService.calculateHouses(jd, latitude, longitude, "P");
   const positions = swissEphemerisService.calculatePlanets(jd);
 
   const sunLong = positions.sun.longitude;
