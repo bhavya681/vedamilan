@@ -32,6 +32,7 @@ export type CelebrityChartPayload = ReturnType<typeof celebrityPublicSummary> & 
   chartD9: unknown;
   d9LagnaSign: string;
   d9Planets: Array<{ planet: string; sign: string; house: number }>;
+  planets: ChartPlanet[];
   dasha: {
     currentMaha: string | null;
     currentAntar: string | null;
@@ -129,6 +130,7 @@ function computeTraditionalCelebrity(record: CelebrityBirthRecord): CelebrityCha
     chartD9: d9.chartD9,
     d9LagnaSign: d9.d9LagnaSign,
     d9Planets: d9.d9Planets,
+    planets,
     dasha: { currentMaha: null, currentAntar: null },
   };
 }
@@ -171,6 +173,7 @@ function computeCelebrity(id: string): CelebrityChartPayload {
       chartD9: d9.chartD9,
       d9LagnaSign: d9.d9LagnaSign,
       d9Planets: d9.d9Planets,
+      planets: natal.planets,
       dasha: {
         currentMaha: dasha.currentMaha,
         currentAntar: dasha.currentAntar,
@@ -180,6 +183,10 @@ function computeCelebrity(id: string): CelebrityChartPayload {
 
   chartCache.set(id, payload);
   return payload;
+}
+
+export function getCelebrityChart(id: string) {
+  return computeCelebrity(id);
 }
 
 export function listCelebritySummaries() {

@@ -4,7 +4,6 @@ import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
-  BookOpen,
   Building,
   Calendar,
   ChevronDown,
@@ -14,7 +13,6 @@ import {
   Crown,
   Flame,
   FlaskConical,
-  Gavel,
   Globe2,
   Info,
   Layers,
@@ -50,6 +48,7 @@ import {
 } from "@/features/horoscope/components/kundli-charts";
 import { dashaPeriodText } from "@/features/horoscope/dasha-view";
 import { fetchJsonWhenAuthed } from "@/lib/http/session-fetch";
+import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { getYogaCategoryDisplay, getYogaIcon } from "@/application/horoscope/yoga-icons";
 
@@ -100,18 +99,62 @@ type CelebrityStudioResponse = {
   };
 };
 
+type SimilarityFocus = "overall" | "conjunctions" | "placements" | "yogas" | "core";
+
+type SimilarSignal = {
+  kind: string;
+  label: string;
+  detail: string;
+  points: number;
+};
+
+type SimilarityMatch = {
+  celebrity: CelebritySummary;
+  score: number;
+  signals: SimilarSignal[];
+  shared: {
+    conjunctions: string[];
+    signs: string[];
+    houses: string[];
+    yogas: string[];
+  };
+  timeAccuracy: string;
+  reliabilityNote: string | null;
+};
+
+type SimilarCelebritiesData = {
+  hasKundli: boolean;
+  focus: SimilarityFocus;
+  userChart: { lagnaSign: string; moonSign: string; sunSign: string } | null;
+  results: SimilarityMatch[];
+  scanned: number;
+};
+
+type SimilarCelebritiesResponse = {
+  success: boolean;
+  data: SimilarCelebritiesData;
+};
+
+const FOCUS_OPTIONS: Array<{ value: SimilarityFocus; label: string }> = [
+  { value: "overall", label: "Overall" },
+  { value: "conjunctions", label: "Conjunctions" },
+  { value: "placements", label: "Placements" },
+  { value: "yogas", label: "Yogas" },
+  { value: "core", label: "Moon & Lagna" },
+];
+
 const CATEGORIES = [
   "All",
-  "Entrepreneurs",
-  "Politicians",
   "Cinema",
   "Sports",
   "Music",
-  "Writers",
-  "Science & Arts",
+  "Creators",
+  "Finance",
+  "Gamblers",
+  "Leaders",
+  "Science & arts",
   "Spiritual",
-  "Historical",
-  "International",
+  "Mystic",
   "Divine",
   "Criminals",
 ] as const;
@@ -123,18 +166,6 @@ const CATEGORY_META: Record<
   CategoryName,
   { icon: LucideIcon; avatar: string; chip: string; wash: string }
 > = {
-  Entrepreneurs: {
-    icon: Building,
-    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
-    chip: "border-emerald/25 bg-emerald/10 text-emerald",
-    wash: "from-emerald/12 via-transparent",
-  },
-  Politicians: {
-    icon: Gavel,
-    avatar: "border-gold/35 from-gold/25 to-saffron/10 text-gold",
-    chip: "border-gold/30 bg-gold/10 text-gold",
-    wash: "from-gold/12 via-transparent",
-  },
   Cinema: {
     icon: Clapperboard,
     avatar: "border-rose/30 from-rose/20 to-gold/10 text-rose",
@@ -153,13 +184,31 @@ const CATEGORY_META: Record<
     chip: "border-cosmic/25 bg-cosmic/10 text-cosmic",
     wash: "from-cosmic/12 via-transparent",
   },
-  Writers: {
+  Creators: {
     icon: PenTool,
     avatar: "border-saffron/30 from-saffron/20 to-gold/10 text-saffron",
     chip: "border-saffron/25 bg-saffron/10 text-saffron",
     wash: "from-saffron/12 via-transparent",
   },
-  "Science & Arts": {
+  Finance: {
+    icon: Building,
+    avatar: "border-emerald/30 from-emerald/20 to-gold/10 text-emerald",
+    chip: "border-emerald/25 bg-emerald/10 text-emerald",
+    wash: "from-emerald/12 via-transparent",
+  },
+  Gamblers: {
+    icon: Flame,
+    avatar: "border-amber/30 from-amber/20 to-rose/10 text-amber",
+    chip: "border-amber/25 bg-amber/10 text-amber",
+    wash: "from-amber/10 via-transparent",
+  },
+  Leaders: {
+    icon: Crown,
+    avatar: "border-gold/35 from-gold/25 to-saffron/10 text-gold",
+    chip: "border-gold/30 bg-gold/10 text-gold",
+    wash: "from-gold/12 via-transparent",
+  },
+  "Science & arts": {
     icon: FlaskConical,
     avatar: "border-blue/30 from-blue/20 to-gold/10 text-blue",
     chip: "border-blue/25 bg-blue/10 text-blue",
@@ -168,17 +217,11 @@ const CATEGORY_META: Record<
   Spiritual: {
     icon: Flame,
     avatar: "border-gold/35 from-gold/25 to-saffron/10 text-saffron",
-    chip: "border-gold/30 bg-gold/10 text-saffron",
+    chip: "border-gold/30 bg-gold/10 text-gold",
     wash: "from-gold/12 via-transparent",
   },
-  Historical: {
-    icon: BookOpen,
-    avatar: "border-amber/30 from-amber/20 to-rose/10 text-amber",
-    chip: "border-amber/25 bg-amber/10 text-amber",
-    wash: "from-amber/10 via-transparent",
-  },
-  International: {
-    icon: Globe2,
+  Mystic: {
+    icon: Telescope,
     avatar: "border-cosmic/30 from-cosmic/20 to-rose/10 text-cosmic",
     chip: "border-cosmic/25 bg-cosmic/10 text-cosmic",
     wash: "from-cosmic/12 via-transparent",
@@ -1009,7 +1052,103 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
   );
 }
 
-function CelebrityCard({ celebrity }: { celebrity: CelebritySummary }) {
+function SimilarityControls({
+  active,
+  focus,
+  minScore,
+  disabled,
+  onToggle,
+  onFocusChange,
+  onMinScoreChange,
+}: {
+  active: boolean;
+  focus: SimilarityFocus;
+  minScore: number;
+  disabled: boolean;
+  onToggle: () => void;
+  onFocusChange: (focus: SimilarityFocus) => void;
+  onMinScoreChange: (score: number) => void;
+}) {
+  return (
+    <div className="border-border/60 mb-4 space-y-3 border-b pb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-gold text-[10px] font-semibold tracking-[0.18em] uppercase">
+            Kundali similarity
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+            Rank the atlas by shared conjunctions, planet signs, houses, yogas, and Moon/Lagna —
+            scored against your saved kundli.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant={active ? "default" : "outline"}
+          onClick={onToggle}
+          disabled={disabled}
+          aria-pressed={active}
+          className={cn("w-full shrink-0 sm:w-auto", active && "border-gold/50")}
+        >
+          {active ? "Clear chart matches" : "Find charts like mine"}
+        </Button>
+      </div>
+
+      {active ? (
+        <div className="space-y-2.5">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="scrollbar-hidden -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0">
+              {FOCUS_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => onFocusChange(option.value)}
+                  aria-pressed={focus === option.value}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    focus === option.value
+                      ? "border-gold/40 bg-gold/12 text-foreground"
+                      : "border-border/60 text-muted-foreground hover:border-gold/30 hover:text-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <label className="text-muted-foreground inline-flex shrink-0 items-center gap-2 text-xs">
+              Minimum match
+              <select
+                value={minScore}
+                onChange={(event) => onMinScoreChange(Number(event.target.value))}
+                className="border-border/60 bg-background focus-visible:border-gold/50 rounded-lg border px-2.5 py-1.5 text-xs focus-visible:outline-none"
+                aria-label="Minimum match score"
+              >
+                <option value={0}>Any</option>
+                <option value={50}>50%+</option>
+                <option value={65}>65%+</option>
+                <option value={80}>80%+</option>
+              </select>
+            </label>
+          </div>
+          <p className="text-muted-foreground flex items-start gap-1.5 text-[11px] leading-relaxed">
+            <Info className="mt-px h-3.5 w-3.5 shrink-0" />
+            <span>
+              Public birth times are often unknown. Noon charts are still ranked, but their Lagna and
+              houses carry less weight. This is a structural study, not a claim of destiny.
+            </span>
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CelebrityCard({
+  celebrity,
+  match,
+}: {
+  celebrity: CelebritySummary;
+  match?: SimilarityMatch;
+}) {
   const theme = categoryMeta(celebrity.category);
   const accuracy = TIME_ACCURACY_META[celebrity.timeAccuracy] ?? TIME_ACCURACY_META.unknown!;
   const Icon = theme.icon;
@@ -1052,7 +1191,33 @@ function CelebrityCard({ celebrity }: { celebrity: CelebritySummary }) {
         <Badge variant="outline" className="font-mono text-[10px] tracking-wide">
           D1 · D9
         </Badge>
+        {match ? (
+          <Badge
+            variant="outline"
+            className="border-gold/40 bg-gold/12 text-gold tabular-nums"
+            title={match.reliabilityNote ?? "Structural chart similarity score"}
+          >
+            {match.score}% match
+          </Badge>
+        ) : null}
       </div>
+
+      {match ? (
+        <div className="relative mt-2 flex flex-wrap gap-1">
+          {match.signals.slice(0, 3).map((signal, index) => (
+            <span
+              key={`${signal.kind}-${signal.detail}-${index}`}
+              className="border-border/50 bg-background/60 text-muted-foreground max-w-full truncate rounded-full border px-2 py-0.5 text-[10px]"
+              title={signal.detail}
+            >
+              {signal.label}
+            </span>
+          ))}
+          {match.signals.length === 0 ? (
+            <span className="text-muted-foreground text-[10px]">No structural overlap</span>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="text-muted-foreground relative mt-4 space-y-1.5 text-xs">
         <p className="flex items-center gap-1.5">
@@ -1106,8 +1271,8 @@ function AtlasHero({ total, categories }: { total: number | null; categories: nu
             Celebrity Kundali Atlas
           </h1>
           <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-relaxed sm:text-base">
-            Study D1 Rashi and D9 Navamsa charts of entrepreneurs, politicians, cinema, music,
-            writers, science & arts, spiritual, historical, international, and divine figures.
+            Study D1 Rashi and D9 Navamsa charts of cinema, sports, music, creators, finance,
+            leaders, science & arts, spiritual, mystic, and divine figures.
           </p>
           <p className="text-muted-foreground mt-1.5 text-xs">
             A neutral study archive — divine charts follow scriptural or traditional details, while
@@ -1192,6 +1357,12 @@ function CelebritiesContent() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("All");
+  const [matchMode, setMatchMode] = useState(false);
+  const [focus, setFocus] = useState<SimilarityFocus>("overall");
+  const [minScore, setMinScore] = useState(0);
+  const [similar, setSimilar] = useState<SimilarCelebritiesData | null>(null);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState<string | null>(null);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -1216,6 +1387,33 @@ function CelebritiesContent() {
       .finally(() => setLoading(false));
     return () => ac.abort();
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!matchMode) {
+      setSimilar(null);
+      setSimilarError(null);
+      return;
+    }
+    const ac = new AbortController();
+    setSimilarLoading(true);
+    setSimilarError(null);
+    const params = new URLSearchParams({ focus, minScore: String(minScore) });
+    fetchJsonWhenAuthed(`/api/astrology/celebrities/similar?${params.toString()}`, ac.signal)
+      .then((res) => {
+        const payload = res as SimilarCelebritiesResponse;
+        if (payload?.success && payload.data) {
+          setSimilar(payload.data);
+        } else {
+          setSimilarError("Failed to load kundali matches");
+        }
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        setSimilarError("Failed to load kundali matches");
+      })
+      .finally(() => setSimilarLoading(false));
+    return () => ac.abort();
+  }, [matchMode, focus, minScore]);
 
   const celebrities = data?.celebrities;
 
@@ -1243,6 +1441,22 @@ function CelebritiesContent() {
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [category, celebrities, query]);
+
+  const matched = useMemo(() => {
+    if (!similar) return [];
+    const q = query.trim().toLowerCase();
+    return similar.results.filter((match) => {
+      if (category !== "All" && match.celebrity.category !== category) return false;
+      if (!q) return true;
+      return (
+        match.celebrity.name.toLowerCase().includes(q) ||
+        match.celebrity.field.toLowerCase().includes(q) ||
+        match.celebrity.category.toLowerCase().includes(q) ||
+        match.celebrity.place.toLowerCase().includes(q)
+      );
+    });
+  }, [category, query, similar]);
+  const visible = matchMode ? matched : filtered;
 
   if (selectedId) {
     if (loading) {
@@ -1290,6 +1504,15 @@ function CelebritiesContent() {
 
         <Card className="border-border/60">
           <CardContent className="p-4 sm:p-5">
+            <SimilarityControls
+              active={matchMode}
+              focus={focus}
+              minScore={minScore}
+              disabled={loading || !celebrities}
+              onToggle={() => setMatchMode((value) => !value)}
+              onFocusChange={setFocus}
+              onMinScoreChange={setMinScore}
+            />
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="relative w-full lg:max-w-md">
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -1331,39 +1554,85 @@ function CelebritiesContent() {
           </CardContent>
         </Card>
 
-        {loading ? (
+        {loading || (matchMode && (similarLoading || (!similar && !similarError))) ? (
           <AtlasSkeleton />
-        ) : error ? (
+        ) : error || (matchMode && similarError) ? (
           <Card className="border-destructive/25 bg-destructive/5">
             <CardContent className="p-6">
-              <p className="text-destructive text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error ?? similarError}</p>
             </CardContent>
           </Card>
-        ) : filtered.length === 0 ? (
+        ) : matchMode && similar && !similar.hasKundli ? (
+          <Card className="border-gold/25 bg-gold/5">
+            <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-display text-xl">Generate your kundli first</p>
+                <p className="text-muted-foreground mt-1 max-w-xl text-sm">
+                  Chart matching needs your saved birth chart. Add your birth details and generate a
+                  kundli, then return here to find structurally similar public charts.
+                </p>
+              </div>
+              <Button asChild className="w-full shrink-0 sm:w-auto">
+                <Link href={routes.kundli}>
+                  Open kundli studio
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : visible.length === 0 ? (
           <Card className="border-border/60">
             <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
               <Search className="text-muted-foreground h-6 w-6" />
               <p className="font-display text-xl">No charts found</p>
               <p className="text-muted-foreground text-sm">
-                Try another name, field, place, or category.
+                {matchMode
+                  ? "Try another focus, lower the minimum match, or clear the search and category filters."
+                  : "Try another name, field, place, or category."}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
+            {matchMode && similar ? (
+              <Card className="border-gold/25 bg-gold/5">
+                <CardContent className="flex flex-col gap-2 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
+                    <span className="text-foreground font-medium">
+                      Ranked by {FOCUS_OPTIONS.find((option) => option.value === focus)?.label}.
+                    </span>{" "}
+                    {similar.userChart
+                      ? `Your chart: ${similar.userChart.lagnaSign} Lagna · ${similar.userChart.moonSign} Moon · ${similar.userChart.sunSign} Sun.`
+                      : null}
+                  </p>
+                  <Badge variant="outline" className="border-gold/30 bg-gold/10 shrink-0">
+                    {matched.length} of {similar.scanned} charts
+                  </Badge>
+                </CardContent>
+              </Card>
+            ) : null}
             <div className="flex items-center justify-between gap-3">
               <p className="text-muted-foreground text-xs font-semibold tracking-[0.14em] uppercase">
-                {filtered.length} {filtered.length === 1 ? "chart" : "charts"}
+                {visible.length} {visible.length === 1 ? "chart" : "charts"}
                 {category === "All" ? "" : ` · ${category}`}
+                {matchMode ? " · by similarity" : ""}
               </p>
               <p className="text-muted-foreground hidden text-xs sm:block">
                 Select a figure to open the D1 & D9 studio
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {filtered.map((celebrity) => (
-                <CelebrityCard key={celebrity.id} celebrity={celebrity} />
-              ))}
+              {matchMode
+                ? matched.map((match) => (
+                    <CelebrityCard
+                      key={match.celebrity.id}
+                      celebrity={match.celebrity}
+                      match={match}
+                    />
+                  ))
+                : filtered.map((celebrity) => (
+                    <CelebrityCard key={celebrity.id} celebrity={celebrity} />
+                  ))}
             </div>
           </div>
         )}
@@ -1384,7 +1653,7 @@ export default function CelebritiesPage() {
                 Celebrity Kundali Atlas
               </span>
             }
-            description="Browse D1 and D9 charts of entrepreneurs, politicians, cinema, music, writers, science & arts, spiritual, historical, international, and divine figures."
+            description="Browse D1 and D9 charts of cinema, sports, music, creators, finance, leaders, science & arts, spiritual, mystic, and divine figures."
           />
           <AtlasSkeleton />
         </div>
