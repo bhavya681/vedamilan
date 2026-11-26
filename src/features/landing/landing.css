@@ -294,11 +294,93 @@
   transform-origin: center;
 }
 
+.landing-vedic-sky {
+  opacity: 0.55;
+  animation: landing-vedic-reveal 14s ease-in-out infinite alternate;
+}
+
+.dark .landing-vedic-sky {
+  opacity: 0.72;
+}
+
+.landing-vedic-orbit,
+.landing-vedic-orbit-rev,
+.landing-vedic-node-orbit {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.landing-vedic-orbit {
+  animation: landing-orbit 96s linear infinite;
+}
+
+.landing-vedic-orbit-rev {
+  animation: landing-orbit-rev 74s linear infinite;
+}
+
+.landing-vedic-node-orbit {
+  animation: landing-orbit-node 132s linear infinite;
+}
+
+.landing-vedic-breathe {
+  animation: landing-hero-breathe 8s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.landing-vedic-float {
+  animation: landing-vedic-float 10s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes landing-orbit-rev {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes landing-orbit-node {
+  from {
+    transform: rotate(-18deg);
+  }
+  to {
+    transform: rotate(342deg);
+  }
+}
+
+@keyframes landing-vedic-float {
+  from {
+    transform: translateY(-4px);
+  }
+  to {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes landing-vedic-reveal {
+  from {
+    opacity: 0.38;
+  }
+  to {
+    opacity: 0.72;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-orbit,
   .landing-orbit-rev,
   .landing-hero-ring,
-  .landing-hero-glow {
+  .landing-hero-glow,
+  .landing-vedic-sky,
+  .landing-vedic-orbit,
+  .landing-vedic-orbit-rev,
+  .landing-vedic-node-orbit,
+  .landing-vedic-breathe,
+  .landing-vedic-float {
     animation: none;
   }
 }

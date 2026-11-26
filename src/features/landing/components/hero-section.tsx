@@ -90,6 +90,7 @@ export function LandingHero() {
         </svg>
       </motion.div>
       <div className="landing-hero-wash absolute inset-0 -z-10" aria-hidden />
+      <VedicSky reduceMotion={Boolean(reduceMotion)} />
       <div
         className="from-background via-background/50 absolute inset-x-0 bottom-0 -z-10 h-[18%] bg-gradient-to-t to-transparent md:h-[26%]"
         aria-hidden
@@ -230,6 +231,140 @@ export function LandingHero() {
         </span>
       </motion.a>
     </section>
+  );
+}
+
+function VedicSky({ reduceMotion }: { reduceMotion: boolean }) {
+  return (
+    <div
+      className="landing-vedic-sky pointer-events-none absolute inset-0 -z-10 hidden overflow-hidden md:block"
+      aria-hidden
+    >
+      <svg
+        viewBox="0 0 1200 800"
+        preserveAspectRatio="xMidYMid slice"
+        className="text-foreground h-full w-full"
+      >
+        <defs>
+          <radialGradient id="vedic-guru-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFF4D6" stopOpacity="0.95" />
+            <stop offset="42%" stopColor="#C9A96E" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#C9A96E" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="vedic-shukra-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFE7E1" stopOpacity="0.9" />
+            <stop offset="45%" stopColor="#B76E79" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#B76E79" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="vedic-node-shadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#0B1020" stopOpacity="0.72" />
+            <stop offset="70%" stopColor="#0B1020" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#0B1020" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="vedic-ecliptic" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#C9A96E" stopOpacity="0" />
+            <stop offset="50%" stopColor="#C9A96E" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#C9A96E" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        <g transform="translate(880 370)">
+          <ellipse
+            rx="340"
+            ry="126"
+            transform="rotate(-24)"
+            fill="none"
+            stroke="url(#vedic-ecliptic)"
+            strokeWidth="0.9"
+            strokeDasharray="3 10"
+          />
+          <ellipse
+            rx="268"
+            ry="92"
+            transform="rotate(16)"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.07"
+            strokeWidth="0.7"
+          />
+          <circle r="3" fill="#C9A96E" opacity="0.55" />
+
+          <g className={cn(!reduceMotion && "landing-vedic-node-orbit")}>
+            <line
+              x1="-212"
+              y1="0"
+              x2="212"
+              y2="0"
+              stroke="#C9A96E"
+              strokeOpacity="0.22"
+              strokeWidth="0.7"
+              strokeDasharray="4 9"
+            />
+            <g transform="translate(212 0)">
+              <circle r="22" fill="url(#vedic-node-shadow)" opacity="0.7" />
+              <circle r="7" fill="#0B1020" stroke="#C9A96E" strokeOpacity="0.8" strokeWidth="0.9" />
+              <circle r="2" fill="#F4F0E7" opacity="0.85" />
+            </g>
+            <g transform="translate(-212 0)">
+              <circle r="20" fill="url(#vedic-guru-glow)" opacity="0.35" />
+              <circle r="6" fill="#F4F0E7" stroke="#C9A96E" strokeOpacity="0.7" strokeWidth="0.8" />
+            </g>
+          </g>
+
+          <g className={cn(!reduceMotion && "landing-vedic-orbit")}>
+            <ellipse
+              rx="176"
+              ry="176"
+              fill="none"
+              stroke="#C9A96E"
+              strokeOpacity="0.09"
+              strokeWidth="0.6"
+              strokeDasharray="2 12"
+            />
+            <g transform="translate(0 -176)">
+              <circle
+                r="40"
+                fill="url(#vedic-guru-glow)"
+                className={cn(!reduceMotion && "landing-vedic-breathe")}
+              />
+              <circle r="11" fill="#C9A96E" opacity="0.9" />
+              <circle r="4" fill="#FFF7E4" opacity="0.9" />
+              <ellipse cx="9" cy="11" rx="20" ry="7" fill="#0B1020" opacity="0.16" />
+            </g>
+          </g>
+
+          <g className={cn(!reduceMotion && "landing-vedic-orbit-rev")}>
+            <ellipse
+              rx="248"
+              ry="112"
+              transform="rotate(34)"
+              fill="none"
+              stroke="#B76E79"
+              strokeOpacity="0.11"
+              strokeWidth="0.6"
+            />
+            <g transform="translate(228 62)" className={cn(!reduceMotion && "landing-vedic-float")}>
+              <circle r="32" fill="url(#vedic-shukra-glow)" />
+              <circle r="8" fill="#B76E79" opacity="0.85" />
+              <circle r="3" fill="#FFF7E4" opacity="0.85" />
+              <ellipse cx="7" cy="9" rx="16" ry="6" fill="#0B1020" opacity="0.14" />
+            </g>
+          </g>
+        </g>
+
+        <text
+          x="1160"
+          y="744"
+          textAnchor="end"
+          fontSize="8"
+          letterSpacing="3"
+          fill="currentColor"
+          opacity="0.28"
+        >
+          RAHU · KETU · GURU · SHUKRA
+        </text>
+      </svg>
+    </div>
   );
 }
 
