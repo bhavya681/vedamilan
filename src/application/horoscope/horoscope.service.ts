@@ -79,7 +79,7 @@ export function parseBirthDateTime(birthDate: Date, birthTime: string, timezone:
   }
 }
 
-function resolveAyanamsha(raw?: string | null): AyanamshaMode {
+export function resolveAyanamsha(raw?: string | null): AyanamshaMode {
   const key = (raw || "LAHIRI").toUpperCase().replace(/\s+/g, "_");
   if (key === "RAMAN") return "RAMAN";
   if (key === "KRISHNAMURTI" || key === "KP") return "KRISHNAMURTI";
@@ -100,19 +100,24 @@ export class HoroscopeService {
   computeNatal(input: NatalComputeInput) {
     swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
     const ayanamsha = resolveAyanamsha(input.ayanamsha);
-    swissEphemerisService.setAyanamsha(ayanamsha);
 
     const birthUtc = parseBirthDateTime(input.birthDate, input.birthTime, input.timezone);
     const jd = swissEphemerisService.julDay(birthUtc);
-    const ayanamsaDeg = swissEphemerisService.getAyanamsa(jd);
+    const ayanamsaDeg = swissEphemerisService.getAyanamsa(jd, ayanamsha);
 
     // Whole-sign rasi charts in Vedic apps still need accurate sidereal ASC;
     // Placidus ASC longitude is standard for Lagna degree (AstroSage-compatible).
-    const houses = swissEphemerisService.calculateHouses(jd, input.latitude, input.longitude, "P");
+    const houses = swissEphemerisService.calculateHouses(
+      jd,
+      input.latitude,
+      input.longitude,
+      "P",
+      ayanamsha,
+    );
     const lagnaLongitude = houses.ascmc[0] ?? 0;
     const lagna = longitudeToSign(lagnaLongitude);
     const lagnaNak = longitudeToNakshatra(lagnaLongitude);
-    const positions = swissEphemerisService.calculatePlanets(jd);
+    const positions = swissEphemerisService.calculatePlanets(jd, ayanamsha);
     const planets = buildPlanetRows(positions, lagnaLongitude);
     const moon = planets.find((p) => p.planet === "Moon");
     const sun = planets.find((p) => p.planet === "Sun");

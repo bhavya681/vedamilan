@@ -107,13 +107,13 @@ export async function computeCelestialSnapshot(
   }
   assertWhen(when);
 
+  const ayanamshaMode = "LAHIRI" as const;
   swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
-  swissEphemerisService.setAyanamsha("LAHIRI");
   const jd = swissEphemerisService.julDay(when);
-  const ayanamsa = swissEphemerisService.getAyanamsa(jd);
-  const houses = swissEphemerisService.calculateHouses(jd, lat, lon, "P");
+  const ayanamsa = swissEphemerisService.getAyanamsa(jd, ayanamshaMode);
+  const houses = swissEphemerisService.calculateHouses(jd, lat, lon, "P", ayanamshaMode);
   const lagnaLon = houses.ascmc[0] ?? 0;
-  const positions = swissEphemerisService.calculatePlanets(jd);
+  const positions = swissEphemerisService.calculatePlanets(jd, ayanamshaMode);
   const rows = buildPlanetRows(positions, lagnaLon).filter((p) => PLANET_KEY[p.planet]);
 
   const natalLagnaSignId = natal?.lagnaSign

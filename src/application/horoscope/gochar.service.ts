@@ -1,7 +1,8 @@
 import { BirthDetails, Horoscope } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
-import { swissEphemerisService } from "@/lib/services/swiss-ephemeris";
+import { swissEphemerisService, type AyanamshaMode } from "@/lib/services/swiss-ephemeris";
 import { NotFoundError } from "@/lib/utils/error-handler";
+import { resolveAyanamsha } from "@/application/horoscope/horoscope.service";
 import { longitudeToSign } from "@/application/horoscope/vedic-constants";
 import {
   buildEastChart,
@@ -56,6 +57,7 @@ type BirthNatal = {
   latitude: number;
   longitude: number;
   timezone?: string | null;
+  ayanamsha?: string | null;
   lagnaSign: string;
   lagnaDegree?: number | null;
   moonSign?: string | null;
@@ -67,11 +69,18 @@ function buildGocharSnapshot(
   natalLagnaSign: string,
   natalLagnaDegree: number,
 ) {
+  const ayanamsha: AyanamshaMode = resolveAyanamsha(birth.ayanamsha);
   swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
   const jd = swissEphemerisService.julDay(asOf);
-  const houses = swissEphemerisService.calculateHouses(jd, birth.latitude, birth.longitude, "P");
+  const houses = swissEphemerisService.calculateHouses(
+    jd,
+    birth.latitude,
+    birth.longitude,
+    "P",
+    ayanamsha,
+  );
   const transitLagnaLong = houses.ascmc[0] ?? 0;
-  const positions = swissEphemerisService.calculatePlanets(jd);
+  const positions = swissEphemerisService.calculatePlanets(jd, ayanamsha);
 
   const natalLagnaSignId = Math.max(
     0,
@@ -147,6 +156,7 @@ export async function computeGocharForUser(userId: string, asOf: Date = new Date
       latitude: birth.latitude,
       longitude: birth.longitude,
       timezone: birth.timezone,
+      ayanamsha: birth.ayanamsha,
       lagnaSign: natal.lagnaSign,
       lagnaDegree: natal.lagnaDegree,
       moonSign: natal.moonSign,
@@ -177,6 +187,7 @@ export async function computeGocharAtDate(userId: string, asOf: Date) {
       latitude: birth.latitude,
       longitude: birth.longitude,
       timezone: birth.timezone,
+      ayanamsha: birth.ayanamsha,
       lagnaSign: natal.lagnaSign,
       lagnaDegree: natal.lagnaDegree,
       moonSign: natal.moonSign,

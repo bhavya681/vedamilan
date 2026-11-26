@@ -1,5 +1,6 @@
 import { NAKSHATRAS, VIMSHOTTARI_LORDS } from "./vedic-constants";
-import { swissEphemerisService } from "@/lib/services/swiss-ephemeris";
+import { swissEphemerisService, type AyanamshaMode } from "@/lib/services/swiss-ephemeris";
+import { AppError } from "@/lib/utils/error-handler";
 
 export type Panchanga = {
   tithi: {
@@ -23,6 +24,9 @@ export type Panchanga = {
   yamaganda: { start: string; end: string; startTs: number; endTs: number };
   gulika: { start: string; end: string; startTs: number; endTs: number };
   abhijit: { start: string; end: string; startTs: number; endTs: number } | null;
+  localDate: string;
+  timezone: string;
+  basis: "sunrise";
 };
 
 export type MuhurtaWindow = {
@@ -38,7 +42,7 @@ export type MuhurtaWindow = {
   cautions: string[];
 };
 
-const TITHI_NAMES = [
+export const TITHI_NAMES = [
   "Pratipada",
   "Dwitiya",
   "Tritiya",
@@ -71,7 +75,7 @@ const TITHI_NAMES = [
   "Amavasya",
 ];
 
-const YOGA_NAMES = [
+export const YOGA_NAMES = [
   "Vishkumbha",
   "Priti",
   "Ayushman",
@@ -101,7 +105,17 @@ const YOGA_NAMES = [
   "Vaidhrti",
 ];
 
-const KARANA_NAMES = ["Bhadra", "Vishti", "Shakuni", "Chatushpada", "Naga", "Kimstughna"];
+export const MOVING_KARANAS = [
+  "Bava",
+  "Balava",
+  "Kaulava",
+  "Taitila",
+  "Gara",
+  "Vanija",
+  "Vishti",
+] as const;
+
+export const FIXED_KARANAS = ["Kimstughna", "Shakuni", "Chatushpada", "Naga"] as const;
 
 const VARA_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const VARA_SANSKRIT = [
@@ -152,8 +166,8 @@ function rahuKalamFor(
 ): { start: number; end: number } {
   const daylight = sunset - sunrise;
   const eighth = daylight / 8;
-  const offsets: Record<number, number> = { 0: 1, 1: 7, 2: 5, 3: 6, 4: 3, 5: 4, 6: 2 };
-  const startOffset = eighth * (offsets[vara] || 1);
+  const parts: Record<number, number> = { 0: 8, 1: 2, 2: 7, 3: 5, 4: 6, 5: 4, 6: 3 };
+  const startOffset = eighth * ((parts[vara] || 8) - 1);
   return { start: sunrise + startOffset, end: sunrise + startOffset + eighth };
 }
 
@@ -164,16 +178,16 @@ function yamagandaFor(
 ): { start: number; end: number } {
   const daylight = sunset - sunrise;
   const eighth = daylight / 8;
-  const offsets: Record<number, number> = { 0: 5, 1: 3, 2: 7, 3: 6, 4: 4, 5: 2, 6: 1 };
-  const startOffset = eighth * (offsets[vara] || 1);
+  const parts: Record<number, number> = { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 7, 6: 6 };
+  const startOffset = eighth * ((parts[vara] || 5) - 1);
   return { start: sunrise + startOffset, end: sunrise + startOffset + eighth };
 }
 
 function gulikaFor(vara: number, sunrise: number, sunset: number): { start: number; end: number } {
   const daylight = sunset - sunrise;
   const eighth = daylight / 8;
-  const offsets: Record<number, number> = { 0: 6, 1: 2, 2: 4, 3: 3, 4: 1, 5: 5, 6: 7 };
-  const startOffset = eighth * (offsets[vara] || 1);
+  const parts: Record<number, number> = { 0: 7, 1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1 };
+  const startOffset = eighth * ((parts[vara] || 7) - 1);
   return { start: sunrise + startOffset, end: sunrise + startOffset + eighth };
 }
 
@@ -190,6 +204,28 @@ function clockWindow(start: number, end: number, timezone: string) {
     startTs: start,
     endTs: end,
   };
+}
+
+function subtractBlocks(
+  start: number,
+  end: number,
+  blocks: Array<{ start: number; end: number }>,
+): Array<{ start: number; end: number }> {
+  let segments = [{ start, end }];
+  for (const block of blocks) {
+    segments = segments.flatMap((segment) => {
+      if (block.end <= segment.start || block.start >= segment.end) return [segment];
+      const parts: Array<{ start: number; end: number }> = [];
+      if (block.start > segment.start) {
+        parts.push({ start: segment.start, end: Math.min(segment.end, block.start) });
+      }
+      if (block.end < segment.end) {
+        parts.push({ start: Math.max(segment.start, block.end), end: segment.end });
+      }
+      return parts;
+    });
+  }
+  return segments.filter((segment) => segment.end - segment.start >= 5 * 60 * 1000);
 }
 
 function yogaNature(name: string): "auspicious" | "inauspicious" | "mixed" {
@@ -237,6 +273,64 @@ function tithiMeaning(
   return `${base} · ${paksha} paksha`;
 }
 
+export function norm360(value: number): number {
+  return ((value % 360) + 360) % 360;
+}
+
+export function tithiForDifference(difference: number) {
+  const progress = norm360(difference) / 12;
+  const number = Math.min(30, Math.floor(progress) + 1);
+  const paksha: "Shukla" | "Krishna" = number <= 15 ? "Shukla" : "Krishna";
+  const pakshaTithi = number === 30 ? 15 : number > 15 ? number - 15 : number;
+  return {
+    number,
+    name: TITHI_NAMES[number - 1] || "Pratipada",
+    progress: Number((progress - Math.floor(progress)).toFixed(3)),
+    paksha,
+    pakshaTithi,
+    meaning: tithiMeaning(number, paksha, pakshaTithi),
+  };
+}
+
+export function nakshatraForLongitude(longitude: number) {
+  const span = 360 / 27;
+  const normalized = norm360(longitude);
+  const index = Math.min(26, Math.floor(normalized / span));
+  const pada = Math.min(4, Math.floor((normalized % span) / (span / 4)) + 1) as 1 | 2 | 3 | 4;
+  return {
+    index,
+    name: NAKSHATRAS[index] || "Ashwini",
+    pada,
+    lord: VIMSHOTTARI_LORDS[index % 9] || "Ketu",
+  };
+}
+
+export function nityaYogaFor(longitudes: { sun: number; moon: number }) {
+  const span = 360 / 27;
+  const index = Math.min(26, Math.floor(norm360(longitudes.sun + longitudes.moon) / span));
+  const name = YOGA_NAMES[index] || "Vishkumbha";
+  return { index, name, nature: yogaNature(name) };
+}
+
+export function karanaForDifference(difference: number) {
+  const halfIndex = Math.floor(norm360(difference) / 6);
+  if (halfIndex === 0) {
+    const name = FIXED_KARANAS[0] ?? "Kimstughna";
+    return {
+      index: halfIndex,
+      name,
+      type: "fixed" as const,
+      note: karanaNote(name, "fixed"),
+    };
+  }
+  if (halfIndex >= 57) {
+    const name = FIXED_KARANAS[halfIndex - 56] ?? "Naga";
+    return { index: halfIndex, name, type: "fixed" as const, note: karanaNote(name, "fixed") };
+  }
+  const name = MOVING_KARANAS[(halfIndex - 1) % MOVING_KARANAS.length] ?? "Bava";
+  return { index: halfIndex, name, type: "moving" as const, note: karanaNote(name, "moving") };
+}
+
 function formatTime(timestamp: number, timezone: string): string {
   const d = new Date(timestamp);
   try {
@@ -252,16 +346,21 @@ function formatTime(timestamp: number, timezone: string): string {
 }
 
 function zonedParts(date: Date, timezone: string) {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(date);
+  let parts: Intl.DateTimeFormatPart[];
+  try {
+    parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(date);
+  } catch {
+    throw new AppError("INVALID_TIMEZONE", `Unknown IANA timezone: ${timezone}`, 422);
+  }
   const value = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
   return {
     year: value("year"),
@@ -286,7 +385,7 @@ function timezoneOffsetMs(date: Date, timezone: string): number {
   return asUtc - date.getTime();
 }
 
-function localMidnightUtc(date: Date, timezone: string): Date {
+export function localMidnightUtc(date: Date, timezone: string): Date {
   const parts = zonedParts(date, timezone);
   const base = Date.UTC(parts.year, parts.month - 1, parts.day, 0, 0, 0);
   let utc = base - timezoneOffsetMs(new Date(base), timezone);
@@ -294,8 +393,25 @@ function localMidnightUtc(date: Date, timezone: string): Date {
   return new Date(utc);
 }
 
-function jdToUnixMs(jd: number): number {
+export function jdToUnixMs(jd: number): number {
   return (jd - 2440587.5) * 86400000;
+}
+
+export function localDateToUtc(dateString: string, timezone: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  if (!match) {
+    throw new AppError("INVALID_DATE", "Date must be YYYY-MM-DD", 422);
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const base = Date.UTC(year, month - 1, day, 0, 0, 0);
+  if (Number.isNaN(base)) {
+    throw new AppError("INVALID_DATE", "Invalid calendar date", 422);
+  }
+  let utc = base - timezoneOffsetMs(new Date(base), timezone);
+  utc = base - timezoneOffsetMs(new Date(utc), timezone);
+  return new Date(utc);
 }
 
 export function computePanchanga(
@@ -303,42 +419,36 @@ export function computePanchanga(
   latitude: number,
   longitude: number,
   timezone: string,
+  ayanamsha: AyanamshaMode = "LAHIRI",
 ): Panchanga {
   swissEphemerisService.initialize(process.env.SWISS_EPHEMERIS_PATH);
-  const jd = swissEphemerisService.julDay(date);
-  const positions = swissEphemerisService.calculatePlanets(jd);
-
-  const sunLong = positions.sun.longitude;
-  const moonLong = positions.moon.longitude;
-
-  const tithiSpan = 360 / 30;
-  const tithiProgress = ((((moonLong - sunLong) % 360) + 360) % 360) / tithiSpan;
-  const tithiNumber = Math.min(30, Math.max(1, Math.floor(tithiProgress) + 1));
-  const tithiName = TITHI_NAMES[Math.min(29, Math.max(0, tithiNumber - 1))];
-  const paksha: "Shukla" | "Krishna" = tithiNumber <= 15 ? "Shukla" : "Krishna";
-  const pakshaTithi = tithiNumber === 30 ? 15 : tithiNumber > 15 ? tithiNumber - 15 : tithiNumber;
-
-  const vara = new Date(date).getDay();
-  const varaName = VARA_NAMES[vara];
-
-  const moonNak = Math.floor((((moonLong % 360) + 360) % 360) / (360 / 27));
-  const nakshatraName = NAKSHATRAS[Math.min(26, Math.max(0, moonNak))];
-
-  const yogaSpan = 360 / 27;
-  const yogaIndex = Math.floor(((((sunLong + moonLong) % 360) + 360) % 360) / yogaSpan);
-  const yogaName = YOGA_NAMES[Math.min(26, Math.max(0, yogaIndex))];
-
-  const karanaIndex = Math.floor((tithiProgress % 1) * 2);
-  const isFixed = [1, 8, 15, 22].includes(tithiNumber);
-  const karanaName = KARANA_NAMES[Math.min(5, Math.max(0, isFixed ? 0 : karanaIndex + 1))] || "";
-  const karanaType: "moving" | "fixed" = isFixed ? "fixed" : "moving";
-
-  const dayJd = swissEphemerisService.julDay(localMidnightUtc(date, timezone));
+  const localMidnight = localMidnightUtc(date, timezone);
+  const dayParts = zonedParts(localMidnight, timezone);
+  const localDate = `${dayParts.year}-${String(dayParts.month).padStart(2, "0")}-${String(
+    dayParts.day,
+  ).padStart(2, "0")}`;
+  const dayJd = swissEphemerisService.julDay(localMidnight);
   const sunEvents = swissEphemerisService.calculateRiseSet(dayJd, latitude, longitude, "sun");
   const moonEvents = swissEphemerisService.calculateRiseSet(dayJd, latitude, longitude, "moon");
-  const sunriseTs = sunEvents.rise !== null ? jdToUnixMs(sunEvents.rise) : Date.now();
-  const sunsetTs =
-    sunEvents.set !== null ? jdToUnixMs(sunEvents.set) : sunriseTs + 12 * 60 * 60 * 1000;
+
+  if (sunEvents.rise === null || sunEvents.set === null) {
+    throw new AppError(
+      "SUNRISE_SUNSET_UNAVAILABLE",
+      `Sunrise or sunset is not defined for ${localDate} at this location; Panchanga times cannot be calculated without invented data.`,
+      422,
+    );
+  }
+
+  const sunriseTs = jdToUnixMs(sunEvents.rise);
+  const sunsetTs = jdToUnixMs(sunEvents.set);
+  const positions = swissEphemerisService.calculatePlanets(sunEvents.rise, ayanamsha);
+  const difference = positions.moon.longitude - positions.sun.longitude;
+  const tithi = tithiForDifference(difference);
+  const nakshatra = nakshatraForLongitude(positions.moon.longitude);
+  const yoga = nityaYogaFor({ sun: positions.sun.longitude, moon: positions.moon.longitude });
+  const karana = karanaForDifference(difference);
+  const vara = new Date(Date.UTC(dayParts.year, dayParts.month - 1, dayParts.day)).getUTCDay();
+  const varaName = VARA_NAMES[vara];
 
   const rahu = rahuKalamFor(vara, sunriseTs, sunsetTs);
   const yamag = yamagandaFor(vara, sunriseTs, sunsetTs);
@@ -346,51 +456,40 @@ export function computePanchanga(
   const abhijit = abhijitMuhurta(sunriseTs, sunsetTs);
 
   return {
-    tithi: {
-      number: tithiNumber,
-      name: tithiName || "",
-      progress: parseFloat((tithiProgress % 1).toFixed(3)),
-      paksha,
-      pakshaTithi,
-      meaning: tithiMeaning(tithiNumber, paksha, pakshaTithi),
-    },
+    tithi,
     vara: {
       number: vara + 1,
       name: varaName || "",
       english: varaName || "",
       sanskrit: VARA_SANSKRIT[vara] || "",
     },
-    nakshatra: {
-      index: moonNak,
-      name: nakshatraName || "",
-      lord: VIMSHOTTARI_LORDS[moonNak % 9] || "Moon",
-    },
-    yoga: {
-      index: yogaIndex,
-      name: yogaName || "",
-      nature: yogaNature(yogaName || ""),
-    },
-    karana: {
-      index: karanaIndex,
-      name: karanaName,
-      type: karanaType,
-      note: karanaNote(karanaName, karanaType),
-    },
+    nakshatra,
+    yoga,
+    karana,
     sunrise: { time: formatTime(sunriseTs, timezone), timestamp: sunriseTs },
     sunset: { time: formatTime(sunsetTs, timezone), timestamp: sunsetTs },
     moonrise:
       moonEvents.rise !== null
-        ? { time: formatTime(jdToUnixMs(moonEvents.rise), timezone), timestamp: jdToUnixMs(moonEvents.rise) }
+        ? {
+            time: formatTime(jdToUnixMs(moonEvents.rise), timezone),
+            timestamp: jdToUnixMs(moonEvents.rise),
+          }
         : null,
     moonset:
       moonEvents.set !== null
-        ? { time: formatTime(jdToUnixMs(moonEvents.set), timezone), timestamp: jdToUnixMs(moonEvents.set) }
+        ? {
+            time: formatTime(jdToUnixMs(moonEvents.set), timezone),
+            timestamp: jdToUnixMs(moonEvents.set),
+          }
         : null,
     dayLengthMinutes: Math.max(0, Math.round((sunsetTs - sunriseTs) / 60000)),
     rahuKalam: clockWindow(rahu.start, rahu.end, timezone),
     yamaganda: clockWindow(yamag.start, yamag.end, timezone),
     gulika: clockWindow(gulik.start, gulik.end, timezone),
     abhijit: abhijit ? clockWindow(abhijit.start, abhijit.end, timezone) : null,
+    localDate,
+    timezone,
+    basis: "sunrise",
   };
 }
 
@@ -400,8 +499,9 @@ export function computeMuhurta(
   longitude: number,
   timezone: string,
   activity: string,
+  ayanamsha: AyanamshaMode = "LAHIRI",
 ): MuhurtaWindow[] {
-  const panchanga = computePanchanga(date, latitude, longitude, timezone);
+  const panchanga = computePanchanga(date, latitude, longitude, timezone, ayanamsha);
   const windows: MuhurtaWindow[] = [];
 
   const sunrise = panchanga.sunrise.timestamp;
@@ -411,7 +511,7 @@ export function computeMuhurta(
   const yama = panchanga.yamaganda;
   const gulik = panchanga.gulika;
 
-  const dateStr = date.toISOString().split("T")[0] || "";
+  const dateStr = panchanga.localDate;
 
   const activityKeywords: Record<string, string[]> = {
     marriage: ["marriage", "wedding", "engagement", "vivaha"],
@@ -495,17 +595,20 @@ export function computeMuhurta(
   }
 
   if (!isAmavasya && !isChaturdashi && favorableNakshatra) {
+    const morningStart = sunrise + 1800000;
+    const morningEnd = sunrise + 5400000;
+    const avoidsRahu = morningEnd <= rahu.startTs || morningStart >= rahu.endTs;
     windows.push(
       generate(
-        sunrise + 1800000,
-        sunrise + 5400000,
+        morningStart,
+        morningEnd,
         "good",
         78,
         [
           "Post-sunrise morning window",
           `Nakshatra: ${panchanga.nakshatra.name}`,
           `Yoga: ${panchanga.yoga.name}`,
-          "Rahu Kalam avoided",
+          avoidsRahu ? "Rahu Kalam avoided" : "Rahu Kalam overlaps part of this window",
         ],
         isTritiya ? ["Tritiya — moderate for new beginnings"] : [],
       ),
@@ -543,6 +646,33 @@ export function computeMuhurta(
       ),
     );
   }
+
+  const avoidBlocks = [rahu, yama, gulik].map((window) => ({
+    start: window.startTs,
+    end: window.endTs,
+  }));
+  const trimmed: MuhurtaWindow[] = [];
+  for (const window of windows) {
+    if (window.rating === "avoid") {
+      trimmed.push(window);
+      continue;
+    }
+    subtractBlocks(window.startTs, window.endTs, avoidBlocks).forEach((segment, index) => {
+      trimmed.push({
+        ...window,
+        startTime: formatTime(segment.start, timezone),
+        endTime: formatTime(segment.end, timezone),
+        startTs: segment.start,
+        endTs: segment.end,
+        score: index === 0 ? window.score : Math.max(0, window.score - 10),
+        cautions:
+          index === 0
+            ? window.cautions
+            : [...window.cautions, "Trimmed to avoid Rahu Kalam, Yamaganda, or Gulika"],
+      });
+    });
+  }
+  windows.splice(0, windows.length, ...trimmed);
 
   windows.push(
     generate(

@@ -42,6 +42,14 @@ export type HouseSystemResult = {
 
 export type AyanamshaMode = "LAHIRI" | "RAMAN" | "KRISHNAMURTI" | "FAGAN_BRADLEY";
 
+export type CalculationBody = Exclude<PlanetKey, "ketu">;
+
+export type EclipseSearchResult = {
+  type: number;
+  maximumJd: number;
+  jd: number;
+};
+
 type SwephModule = {
   constants: Record<string, number>;
   set_ephe_path: (path: string) => void;
@@ -74,6 +82,18 @@ type SwephModule = {
     atpress: number,
     attemp: number,
   ) => { flag: number; error?: string; data: number };
+  sol_eclipse_when_glob: (
+    tjdStart: number,
+    ifl: number,
+    iftype: number,
+    backwards: boolean,
+  ) => { flag: number; error?: string; data: number[] };
+  lun_eclipse_when: (
+    tjdStart: number,
+    ifl: number,
+    iftype: number,
+    backwards: boolean,
+  ) => { flag: number; error?: string; data: number[] };
   close: () => void;
 };
 
@@ -196,8 +216,9 @@ export class SwissEphemerisService {
     this.ayanamsha = mode;
   }
 
-  getAyanamsa(jd: number): number {
+  getAyanamsa(jd: number, ayanamsha?: AyanamshaMode): number {
     this.ensureInitialized();
+    if (ayanamsha) this.setAyanamsha(ayanamsha);
     return loadSweph().get_ayanamsa_ut(jd);
   }
 
@@ -217,43 +238,41 @@ export class SwissEphemerisService {
     return sweph.julday(year, month, day, hour, flag);
   }
 
-  calculatePlanets(jd: number): Record<PlanetKey, PlanetPosition> {
+  calculateBody(jd: number, key: CalculationBody, ayanamsha?: AyanamshaMode): PlanetPosition {
     this.ensureInitialized();
+    if (ayanamsha) this.setAyanamsha(ayanamsha);
     const sweph = loadSweph();
-    const bodies = planetBodies(sweph);
-    // Sidereal (Lahiri by default) — matches AstroSage / Indian Vedic apps
-    const preferred =
-      sweConst(sweph, "SEFLG_SWIEPH") |
-      sweConst(sweph, "SEFLG_SPEED") |
-      sweConst(sweph, "SEFLG_SIDEREAL");
-    const fallback =
-      sweConst(sweph, "SEFLG_MOSEPH") |
-      sweConst(sweph, "SEFLG_SPEED") |
-      sweConst(sweph, "SEFLG_SIDEREAL");
+    const body = planetBodies(sweph)[key];
+    const flags = sweConst(sweph, "SEFLG_SPEED") | sweConst(sweph, "SEFLG_SIDEREAL");
+    const preferred = flags | sweConst(sweph, "SEFLG_SWIEPH");
+    const fallback = flags | sweConst(sweph, "SEFLG_MOSEPH");
+
+    let calc = sweph.calc_ut(jd, body, preferred);
+    if (calc.flag < 0) calc = sweph.calc_ut(jd, body, fallback);
+    if (calc.flag < 0) {
+      throw new AppError(
+        "SWISS_EPHEMERIS_CALC_FAILED",
+        `Failed calculating ${key}: ${calc.error || "unknown error"}`,
+        500,
+      );
+    }
+
+    return {
+      longitude: calc.data[0] ?? 0,
+      latitude: calc.data[1] ?? 0,
+      distance: calc.data[2] ?? 0,
+      speedLongitude: calc.data[3] ?? 0,
+    };
+  }
+
+  calculatePlanets(jd: number, ayanamsha?: AyanamshaMode): Record<PlanetKey, PlanetPosition> {
+    this.ensureInitialized();
+    if (ayanamsha) this.setAyanamsha(ayanamsha);
     const result = {} as Record<PlanetKey, PlanetPosition>;
 
-    (Object.keys(bodies) as Array<Exclude<PlanetKey, "ketu">>).forEach((key) => {
-      const body = bodies[key];
-      let calc = sweph.calc_ut(jd, body, preferred);
-      if (calc.flag < 0) {
-        calc = sweph.calc_ut(jd, body, fallback);
-      }
-      if (calc.flag < 0) {
-        throw new AppError(
-          "SWISS_EPHEMERIS_CALC_FAILED",
-          `Failed calculating ${key}: ${calc.error || "unknown error"}`,
-          500,
-        );
-      }
-
-      const data = calc.data;
-      result[key] = {
-        longitude: data[0] ?? 0,
-        latitude: data[1] ?? 0,
-        distance: data[2] ?? 0,
-        speedLongitude: data[3] ?? 0,
-      };
-    });
+    for (const key of Object.keys(planetBodies(loadSweph())) as CalculationBody[]) {
+      result[key] = this.calculateBody(jd, key);
+    }
 
     const rahuLongitude = result.rahu.longitude;
     result.ketu = {
@@ -266,8 +285,15 @@ export class SwissEphemerisService {
     return result;
   }
 
-  calculateHouses(jd: number, latitude: number, longitude: number, hsys = "P"): HouseSystemResult {
+  calculateHouses(
+    jd: number,
+    latitude: number,
+    longitude: number,
+    hsys = "P",
+    ayanamsha?: AyanamshaMode,
+  ): HouseSystemResult {
     this.ensureInitialized();
+    if (ayanamsha) this.setAyanamsha(ayanamsha);
     const sweph = loadSweph();
     // SEFLG_SIDEREAL so Ascendant / cusps are sidereal (Lahiri), not tropical
     const houses = sweph.houses_ex2(
@@ -317,6 +343,28 @@ export class SwissEphemerisService {
       rise: rise.flag === ok ? rise.data : null,
       set: set.flag === ok ? set.data : null,
     };
+  }
+
+  findSolarEclipse(jdStart: number, type = 63): EclipseSearchResult | null {
+    this.ensureInitialized();
+    const sweph = loadSweph();
+    const flags = sweConst(sweph, "SEFLG_SWIEPH");
+    const err = sweConst(sweph, "ERR");
+    const result = sweph.sol_eclipse_when_glob(jdStart, flags, type, false);
+    const maximumJd = result.data[0] ?? 0;
+    if (result.flag === err || !Number.isFinite(maximumJd) || maximumJd <= 0) return null;
+    return { type: result.flag, maximumJd, jd: maximumJd };
+  }
+
+  findLunarEclipse(jdStart: number, type = 84): EclipseSearchResult | null {
+    this.ensureInitialized();
+    const sweph = loadSweph();
+    const flags = sweConst(sweph, "SEFLG_SWIEPH");
+    const err = sweConst(sweph, "ERR");
+    const result = sweph.lun_eclipse_when(jdStart, flags, type, false);
+    const maximumJd = result.data[0] ?? 0;
+    if (result.flag === err || !Number.isFinite(maximumJd) || maximumJd <= 0) return null;
+    return { type: result.flag, maximumJd, jd: maximumJd };
   }
 
   close(): void {

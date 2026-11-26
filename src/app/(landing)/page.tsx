@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 
+import { getIllustrativeYogaPreview } from "@/application/horoscope/illustrative-yoga-preview";
 import { HomeGuideChat } from "@/features/ai/components/home-guide-chat";
 import { ThreeExperiences } from "@/features/landing/components/experiences-section";
 import { TrustStrip } from "@/features/landing/components/editorial-sections";
@@ -52,10 +53,12 @@ const LandingFinalCta = dynamic(() =>
 );
 
 export default function HomePage() {
+  const yogaPreview = getIllustrativeYogaPreview();
+
   return (
     <>
       <main id="main-content">
-        <LandingHero />
+        <LandingHero yogaPreview={yogaPreview} />
         <ThreeExperiences />
         <AstrologyExplained />
         <VedicKnowledge />

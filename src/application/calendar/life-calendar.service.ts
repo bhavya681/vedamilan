@@ -6,8 +6,14 @@ import {
   Profile,
 } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
+import {
+  computeVedicCalendar,
+  type VedicCalendarPayload,
+  type VedicEventCategory,
+} from "@/application/calendar/vedic-events.service";
 import { computeGocharAtDate, computeGocharForUser } from "@/application/horoscope/gochar.service";
 import { resolveCurrentDasha } from "@/application/horoscope/dasha-engine";
+import { resolveAyanamsha } from "@/application/horoscope/horoscope.service";
 import {
   computeLifeEventsCalendar,
   type GocharLite,
@@ -32,6 +38,17 @@ type PeriodRow = {
   endDate: Date | string;
   level: string;
   parentLord?: string | null;
+};
+
+export type AstrologyCalendarRequest = {
+  from: Date;
+  to: Date;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  ayanamsha: string;
+  include?: VedicEventCategory[];
+  dailyDays?: number;
 };
 
 function periodsFrom(dasha: { periods?: unknown } | null | undefined): PeriodRow[] {
@@ -95,7 +112,10 @@ async function buildDatedGocharMap(
 }
 
 export class LifeCalendarService {
-  async forUser(userId: string) {
+  async forUser(
+    userId: string,
+    options?: { astrologyEvents?: AstrologyCalendarRequest },
+  ): Promise<{ astrologyCalendar: VedicCalendarPayload | null; [key: string]: unknown }> {
     await connectMongo();
     const [chart, dasha, birth, profile] = await Promise.all([
       Horoscope.findOne({ userId }).sort({ calculatedAt: -1 }).lean(),
@@ -206,6 +226,14 @@ export class LifeCalendarService {
         }
       : null;
 
+    const astrologyRequest = options?.astrologyEvents;
+    const astrologyCalendar = astrologyRequest
+      ? computeVedicCalendar({
+          ...astrologyRequest,
+          ayanamsha: resolveAyanamsha(astrologyRequest.ayanamsha),
+        })
+      : null;
+
     let userMilestones: LifeEventItem[] = [];
     try {
       const milestones = await CoupleMilestone.find({
@@ -259,6 +287,7 @@ export class LifeCalendarService {
     const dedupedPastMarriage = dedupeByDate(marriageChapters);
 
     return {
+      astrologyCalendar,
       context: life.context,
       events,
       byPhase,
@@ -353,8 +382,8 @@ function dedupeWindows(windows: TimingWindow[]): TimingWindow[] {
     const existing = map.get(key);
     if (!existing || w.score > existing.score) map.set(key, w);
   }
-  return [...map.values()].sort((a, b) =>
-    (a.startDate || "").localeCompare(b.startDate || "") || b.score - a.score,
+  return [...map.values()].sort(
+    (a, b) => (a.startDate || "").localeCompare(b.startDate || "") || b.score - a.score,
   );
 }
 

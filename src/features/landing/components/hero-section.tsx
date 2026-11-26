@@ -12,6 +12,7 @@ import {
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { useEffect, useRef, type PointerEvent } from "react";
 
+import type { IllustrativeYogaPreview } from "@/application/horoscope/illustrative-yoga-preview";
 import { Button } from "@/components/ui/button";
 import { landingCta } from "@/features/landing/lib/nav";
 import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
@@ -26,9 +27,19 @@ const PREVIEW = [
   { title: "Compatibility", detail: "Guna Milan · life goals", glyph: "compatibility" },
 ] as const;
 
+const RASHI_SPOKES = Array.from({ length: 12 }, (_, index) => index * 30);
+const NAKSHATRA_STARS = Array.from({ length: 27 }, (_, index) => {
+  const angle = (((index * 360) / 27 - 90) * Math.PI) / 180;
+  return {
+    x: Number((Math.cos(angle) * 250).toFixed(2)),
+    y: Number((Math.sin(angle) * 250).toFixed(2)),
+    r: index % 3 === 0 ? 1.6 : 1,
+  };
+});
+
 type GlyphKind = (typeof PREVIEW)[number]["glyph"];
 
-export function LandingHero() {
+export function LandingHero({ yogaPreview }: { yogaPreview: IllustrativeYogaPreview }) {
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
   const finePointer = useRef(false);
@@ -196,7 +207,7 @@ export function LandingHero() {
           </motion.ul>
         </div>
 
-        <PlatformPreview reduceMotion={Boolean(reduceMotion)} />
+        <PlatformPreview reduceMotion={Boolean(reduceMotion)} yogaPreview={yogaPreview} />
       </div>
 
       <motion.a
@@ -287,6 +298,44 @@ function VedicSky({ reduceMotion }: { reduceMotion: boolean }) {
             strokeOpacity="0.07"
             strokeWidth="0.7"
           />
+          <circle
+            r="250"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.05"
+            strokeWidth="0.6"
+          />
+          <circle r="176" fill="none" stroke="#C9A96E" strokeOpacity="0.06" strokeWidth="0.6" />
+          {RASHI_SPOKES.map((degree) => (
+            <line
+              key={degree}
+              x1="0"
+              y1="-176"
+              x2="0"
+              y2="-250"
+              transform={`rotate(${degree})`}
+              stroke="currentColor"
+              strokeOpacity="0.08"
+              strokeWidth="0.5"
+            />
+          ))}
+          {NAKSHATRA_STARS.map((star, index) => (
+            <circle
+              key={index}
+              cx={star.x}
+              cy={star.y}
+              r={star.r}
+              fill="#F4F0E7"
+              opacity={index % 3 === 0 ? 0.55 : 0.32}
+            />
+          ))}
+          <path
+            d="M -212 0 L 0 -176 L 228 62 Z"
+            fill="none"
+            stroke="#C9A96E"
+            strokeOpacity="0.1"
+            strokeWidth="0.6"
+          />
           <circle r="3" fill="#C9A96E" opacity="0.55" />
 
           <g className={cn(!reduceMotion && "landing-vedic-node-orbit")}>
@@ -368,7 +417,13 @@ function VedicSky({ reduceMotion }: { reduceMotion: boolean }) {
   );
 }
 
-function PlatformPreview({ reduceMotion }: { reduceMotion: boolean }) {
+function PlatformPreview({
+  reduceMotion,
+  yogaPreview,
+}: {
+  reduceMotion: boolean;
+  yogaPreview: IllustrativeYogaPreview;
+}) {
   const cardRef = useRef<HTMLElement>(null);
   const rx = useSpring(0, { stiffness: 140, damping: 18 });
   const ry = useSpring(0, { stiffness: 140, damping: 18 });
@@ -460,7 +515,40 @@ function PlatformPreview({ reduceMotion }: { reduceMotion: boolean }) {
             </li>
           ))}
         </ul>
-        <p className="border-border text-muted-foreground mt-5 border-t pt-4 text-[10px] tracking-[0.12em] uppercase">
+        <div className="border-gold/20 bg-gold/[0.06] mt-4 rounded-xl border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-gold text-[9px] font-semibold tracking-[0.16em] uppercase">
+              Yoga intelligence
+            </p>
+            <span className="text-muted-foreground text-[9px] tracking-[0.12em] uppercase">
+              Illustrative
+            </span>
+          </div>
+          <ul className="mt-2.5 space-y-1.5">
+            {yogaPreview.yogas.slice(0, 3).map((yoga) => (
+              <li key={yoga.code} className="flex items-start gap-2">
+                <span className="border-gold/50 bg-gold/15 mt-1 h-1.5 w-1.5 shrink-0 rounded-full" />
+                <span className="min-w-0 flex-1">
+                  <span className="text-foreground block text-[11px] leading-tight">
+                    {yoga.name}
+                  </span>
+                  <span className="text-muted-foreground block truncate text-[9px]">
+                    {yoga.relationship}
+                  </span>
+                </span>
+                <span className="text-gold/80 shrink-0 text-[9px] tabular-nums">
+                  {yoga.strength}%
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted-foreground mt-2.5 text-[9px] leading-relaxed">
+            {yogaPreview.yogas.length
+              ? `Calculated from ${yogaPreview.reference} with the KUNDLIV ${yogaPreview.ayanamsha} engine. Reference chart only — not your birth chart or a live event.`
+              : "Illustrative reference chart — no featured yoga detected in this sample."}
+          </p>
+        </div>
+        <p className="border-border text-muted-foreground mt-4 border-t pt-4 text-[10px] tracking-[0.12em] uppercase">
           Engine-calculated charts · AI-guided explanations
         </p>
       </div>
