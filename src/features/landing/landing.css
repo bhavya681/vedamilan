@@ -294,6 +294,20 @@
   transform-origin: center;
 }
 
+@keyframes landing-preview-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.landing-preview-fill {
+  animation: landing-preview-fill 4.8s linear forwards;
+  transform-origin: left;
+}
+
 .landing-vedic-sky {
   opacity: 0.55;
   animation: landing-vedic-reveal 14s ease-in-out infinite alternate;
@@ -375,6 +389,7 @@
   .landing-orbit-rev,
   .landing-hero-ring,
   .landing-hero-glow,
+  .landing-preview-fill,
   .landing-vedic-sky,
   .landing-vedic-orbit,
   .landing-vedic-orbit-rev,

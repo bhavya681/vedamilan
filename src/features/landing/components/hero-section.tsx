@@ -9,8 +9,8 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
-import { useEffect, useRef, type PointerEvent } from "react";
+import { ArrowUpRight, ChevronDown, Pause, Play } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FocusEvent, type PointerEvent } from "react";
 
 import type { IllustrativeYogaPreview } from "@/application/horoscope/illustrative-yoga-preview";
 import { Button } from "@/components/ui/button";
@@ -427,6 +427,57 @@ function PlatformPreview({
   const cardRef = useRef<HTMLElement>(null);
   const rx = useSpring(0, { stiffness: 140, damping: 18 });
   const ry = useSpring(0, { stiffness: 140, damping: 18 });
+  const [activePreview, setActivePreview] = useState(0);
+  const [cycleNonce, setCycleNonce] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [manuallyPaused, setManuallyPaused] = useState(false);
+  const paused = !reduceMotion && (manuallyPaused || hovered || focused);
+
+  useEffect(() => {
+    if (reduceMotion || paused) return;
+    const timer = window.setInterval(
+      () => setActivePreview((value) => (value + 1) % PREVIEW.length),
+      4800,
+    );
+    return () => window.clearInterval(timer);
+  }, [reduceMotion, paused, cycleNonce]);
+
+  function selectPreview(index: number) {
+    setActivePreview(index);
+    setCycleNonce((value) => value + 1);
+  }
+
+  function togglePause() {
+    const next = !manuallyPaused;
+    setManuallyPaused(next);
+    if (!next) setCycleNonce((value) => value + 1);
+  }
+
+  function onBlur(event: FocusEvent<HTMLElement>) {
+    if (event.currentTarget.contains(event.relatedTarget)) return;
+    setFocused(false);
+    if (!manuallyPaused && !hovered) setCycleNonce((value) => value + 1);
+  }
+
+  function onFocus(event: FocusEvent<HTMLElement>) {
+    if (event.target instanceof HTMLElement && event.target.matches(":focus-visible")) {
+      setFocused(true);
+    }
+  }
+
+  function onPointerEnter(event: PointerEvent<HTMLElement>) {
+    if (event.pointerType === "mouse") setHovered(true);
+  }
+
+  function onPointerLeave(event: PointerEvent<HTMLElement>) {
+    if (event.pointerType === "mouse") {
+      setHovered(false);
+      if (!manuallyPaused && !focused) setCycleNonce((value) => value + 1);
+    }
+    rx.set(0);
+    ry.set(0);
+  }
 
   function onMove(event: PointerEvent<HTMLElement>) {
     if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
@@ -441,10 +492,10 @@ function PlatformPreview({
     <motion.aside
       ref={cardRef}
       onPointerMove={onMove}
-      onPointerLeave={() => {
-        rx.set(0);
-        ry.set(0);
-      }}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onFocusCapture={onFocus}
+      onBlurCapture={onBlur}
       initial={reduceMotion ? false : { opacity: 0, y: 28, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.85, ease, delay: 0.22 }}
@@ -491,68 +542,241 @@ function PlatformPreview({
       </svg>
 
       <div className="border-border bg-card/80 shadow-elevated mt-5 rounded-2xl border p-4 backdrop-blur-xl sm:p-5">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-[10px] tracking-[0.2em] uppercase">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-muted-foreground flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase">
             Platform preview
+            <span
+              aria-hidden
+              className={cn(
+                "bg-gold h-1.5 w-1.5 rounded-full opacity-60",
+                !reduceMotion && "animate-pulse motion-reduce:animate-none",
+              )}
+            />
           </p>
-          <p className="text-foreground/70 border-border rounded-full border px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase">
-            Illustrative
-          </p>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <p className="text-foreground/70 border-border rounded-full border px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase">
+              Illustrative
+            </p>
+            {!reduceMotion ? (
+              <button
+                type="button"
+                onClick={togglePause}
+                aria-label={manuallyPaused ? "Resume preview" : "Pause preview"}
+                aria-pressed={manuallyPaused}
+                className="border-border text-muted-foreground hover:text-foreground focus-visible:ring-gold/60 flex h-6 w-6 items-center justify-center rounded-full border transition-colors outline-none focus-visible:ring-1"
+              >
+                {manuallyPaused ? (
+                  <Play className="h-3 w-3" aria-hidden />
+                ) : (
+                  <Pause className="h-3 w-3" aria-hidden />
+                )}
+              </button>
+            ) : null}
+          </div>
         </div>
-        <ul className="mt-4 space-y-3">
+        <div className="mt-3 flex gap-1" aria-hidden>
           {PREVIEW.map((item, i) => (
-            <li key={item.title} className="flex items-center gap-3">
-              <span className="border-border bg-foreground/5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
-                <PreviewGlyph kind={item.glyph} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="text-foreground block text-sm">{item.title}</span>
-                <span className="text-muted-foreground block text-[11px]">{item.detail}</span>
-              </span>
-              <span className="text-muted-foreground text-[10px] tracking-[0.16em] tabular-nums">
-                0{i + 1}
-              </span>
+            <span
+              key={item.title}
+              className="bg-border/70 h-0.5 flex-1 overflow-hidden rounded-full"
+            >
+              {i < activePreview ? (
+                <span className="bg-gold/70 block h-full w-full rounded-full" />
+              ) : i === activePreview ? (
+                <span
+                  key={`${activePreview}-${cycleNonce}`}
+                  className={cn(
+                    "bg-gold block h-full w-full origin-left rounded-full",
+                    !reduceMotion && "landing-preview-fill",
+                    paused && "[animation-play-state:paused]",
+                    reduceMotion && "w-full",
+                  )}
+                />
+              ) : null}
+            </span>
+          ))}
+        </div>
+        <ul className="mt-3 space-y-1">
+          {PREVIEW.map((item, i) => (
+            <li
+              key={item.title}
+              className={cn(
+                "-mx-2 rounded-xl transition-colors duration-500",
+                !reduceMotion && activePreview === i && "bg-gold/[0.06]",
+              )}
+            >
+              <button
+                type="button"
+                aria-pressed={activePreview === i}
+                onClick={() => selectPreview(i)}
+                className="focus-visible:ring-gold/60 flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left outline-none focus-visible:ring-1"
+              >
+                <span
+                  className={cn(
+                    "border-border bg-foreground/5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all duration-500",
+                    !reduceMotion &&
+                      activePreview === i &&
+                      "border-gold/40 bg-gold/10 scale-105 shadow-[0_0_18px_rgba(201,169,110,0.14)]",
+                  )}
+                >
+                  <PreviewGlyph kind={item.glyph} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="text-foreground block text-sm">{item.title}</span>
+                  <span className="text-muted-foreground block text-[11px]">{item.detail}</span>
+                </span>
+                <span
+                  className={cn(
+                    "text-muted-foreground text-[10px] tracking-[0.16em] tabular-nums transition-colors duration-500",
+                    !reduceMotion && activePreview === i && "text-gold",
+                  )}
+                >
+                  0{i + 1}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
-        <div className="border-gold/20 bg-gold/[0.06] mt-4 rounded-xl border p-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-gold text-[9px] font-semibold tracking-[0.16em] uppercase">
-              Yoga intelligence
-            </p>
-            <span className="text-muted-foreground text-[9px] tracking-[0.12em] uppercase">
-              Illustrative
-            </span>
-          </div>
-          <ul className="mt-2.5 space-y-1.5">
-            {yogaPreview.yogas.slice(0, 3).map((yoga) => (
-              <li key={yoga.code} className="flex items-start gap-2">
-                <span className="border-gold/50 bg-gold/15 mt-1 h-1.5 w-1.5 shrink-0 rounded-full" />
-                <span className="min-w-0 flex-1">
-                  <span className="text-foreground block text-[11px] leading-tight">
-                    {yoga.name}
-                  </span>
-                  <span className="text-muted-foreground block truncate text-[9px]">
-                    {yoga.relationship}
-                  </span>
-                </span>
-                <span className="text-gold/80 shrink-0 text-[9px] tabular-nums">
-                  {yoga.strength}%
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-muted-foreground mt-2.5 text-[9px] leading-relaxed">
-            {yogaPreview.yogas.length
-              ? `Calculated from ${yogaPreview.reference} with the KUNDLIV ${yogaPreview.ayanamsha} engine. Reference chart only — not your birth chart or a live event.`
-              : "Illustrative reference chart — no featured yoga detected in this sample."}
-          </p>
-        </div>
+        <LiveYogaReadout
+          yogaPreview={yogaPreview}
+          activeIndex={activePreview}
+          reduceMotion={reduceMotion}
+        />
         <p className="border-border text-muted-foreground mt-4 border-t pt-4 text-[10px] tracking-[0.12em] uppercase">
           Engine-calculated charts · AI-guided explanations
         </p>
       </div>
     </motion.aside>
+  );
+}
+
+function LiveYogaReadout({
+  yogaPreview,
+  activeIndex,
+  reduceMotion,
+}: {
+  yogaPreview: IllustrativeYogaPreview;
+  activeIndex: number;
+  reduceMotion: boolean;
+}) {
+  const yogas = useMemo(() => yogaPreview.yogas.slice(0, 3), [yogaPreview.yogas]);
+  const [typed, setTyped] = useState("");
+  const safeIndex = yogas.length ? activeIndex % yogas.length : 0;
+  const current = yogas[safeIndex];
+  const complete = current ? typed.length === current.relationship.length : false;
+  const ratio = current ? Math.min(1, typed.length / Math.max(1, current.relationship.length)) : 0;
+  const progress = current ? Math.round(current.strength * ratio) : 0;
+  const typing = Boolean(current) && !complete && !reduceMotion;
+
+  useEffect(() => {
+    if (!current) {
+      setTyped("");
+      return;
+    }
+    if (reduceMotion) {
+      setTyped(current.relationship);
+      return;
+    }
+    setTyped("");
+    let cursor = 0;
+    const typeTimer = window.setInterval(() => {
+      cursor += 1;
+      setTyped(current.relationship.slice(0, cursor));
+      if (cursor >= current.relationship.length) window.clearInterval(typeTimer);
+    }, 18);
+    return () => window.clearInterval(typeTimer);
+  }, [current, reduceMotion]);
+
+  return (
+    <div className="border-gold/20 bg-gold/[0.06] mt-4 rounded-xl border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-gold text-[9px] font-semibold tracking-[0.16em] uppercase">
+          Yoga intelligence
+        </p>
+        <span className="text-muted-foreground text-[9px] tracking-[0.12em] uppercase">
+          Illustrative
+        </span>
+      </div>
+      <ul className="mt-2.5 space-y-1.5">
+        {yogas.map((yoga, i) => {
+          const active = i === safeIndex;
+          return (
+            <li
+              key={yoga.code}
+              className={cn(
+                "-mx-1 flex items-start gap-2 rounded-lg px-1 py-1 transition-colors duration-300",
+                active && "bg-gold/10",
+              )}
+            >
+              <span
+                className={cn(
+                  "border-gold/50 bg-gold/15 mt-2 h-1.5 w-1.5 shrink-0 rounded-full transition-transform duration-300",
+                  active && !reduceMotion && "scale-125",
+                )}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="text-foreground block text-[11px] leading-tight">{yoga.name}</span>
+                <span className="text-muted-foreground block truncate text-[9px]">
+                  {yoga.relationship}
+                </span>
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 text-[9px] tabular-nums transition-colors",
+                  active ? "text-gold" : "text-gold/80",
+                )}
+              >
+                {active ? progress : yoga.strength}%
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {current ? (
+        <motion.div
+          key={safeIndex}
+          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease }}
+          className="border-gold/10 bg-background/50 mt-2.5 rounded-lg border px-2.5 py-2"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-gold/80 text-[8px] font-semibold tracking-[0.16em] uppercase">
+              Live reading
+            </p>
+            <span className="text-muted-foreground flex items-center gap-2 text-[9px] tabular-nums">
+              <span aria-live="polite" className="tracking-[0.08em] uppercase">
+                {reduceMotion || complete ? "Result ready" : "Reading…"}
+              </span>
+              {progress}%
+            </span>
+          </div>
+          <p className="text-foreground/80 mt-1 min-h-[3.2rem] text-[9px] leading-relaxed break-words sm:min-h-[2.4rem]">
+            <span className="sr-only">{current.relationship}</span>
+            <span aria-hidden>{typed}</span>
+            <span
+              aria-hidden
+              className={cn(
+                "bg-gold ml-0.5 inline-block h-2.5 w-px translate-y-px align-middle",
+                "animate-pulse motion-reduce:animate-none",
+                !typing && "opacity-0",
+              )}
+            />
+          </p>
+          <div className="bg-muted/70 mt-1.5 h-1 overflow-hidden rounded-full">
+            <div
+              className="bg-gold h-full rounded-full transition-[width] duration-150 ease-out motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </motion.div>
+      ) : null}
+      <p className="text-muted-foreground mt-2.5 text-[9px] leading-relaxed">
+        {yogaPreview.yogas.length
+          ? `Calculated from ${yogaPreview.reference} with the KUNDLIV ${yogaPreview.ayanamsha} engine. Reference chart only — not your birth chart or a live event.`
+          : "Illustrative reference chart — no featured yoga detected in this sample."}
+      </p>
+    </div>
   );
 }
 
