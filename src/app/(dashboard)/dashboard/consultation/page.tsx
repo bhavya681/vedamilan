@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Bot, CalendarDays, MessageCircle, Mic, Orbit, Sparkles } from "lucide-react";
+import { ArrowUpRight, Bot, CalendarDays, MessageCircle, Mic, Orbit, Users } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ export default function ConsultationPage() {
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
               <Button asChild variant="outline" className="w-full sm:w-auto">
                 <Link href={routes.aiInsights}>
-                  <Sparkles className="h-4 w-4" aria-hidden />
+                  <Bot className="h-4 w-4" aria-hidden />
                   AI Guru
                 </Link>
               </Button>
@@ -93,7 +93,7 @@ export default function ConsultationPage() {
           <div className="relative grid min-w-0 gap-7 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:gap-10 lg:p-9">
             <div className="min-w-0 space-y-4 sm:space-y-5">
               <p className="text-gold/85 flex items-center gap-2 text-[11px] font-medium tracking-[0.18em] uppercase">
-                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                <Users className="h-3.5 w-3.5" aria-hidden />
                 {all.length} AI masters · one kundli
               </p>
               <h2 className="font-display max-w-2xl text-[1.9rem] leading-[1.08] tracking-tight text-balance sm:text-4xl">

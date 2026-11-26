@@ -87,7 +87,7 @@ export default function SearchPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Search"
         description="Discover with intention"
         actions={

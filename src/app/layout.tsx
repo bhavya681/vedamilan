@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/config/site";
+import { brand } from "@/lib/constants/brand";
 import { getMessages } from "@/lib/i18n/get-messages";
 import { publicLocales, getLocaleMeta, type AppLocale } from "@/lib/i18n/locales";
 import { getRequestLocale } from "@/lib/i18n/request-locale";
@@ -16,8 +17,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f1e3" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0a08" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f0e7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1020" },
   ],
 };
 
@@ -48,17 +49,19 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     applicationName: siteConfig.name,
     icons: {
-      icon: [{ url: "/brand/favicon.png", type: "image/png" }],
+      icon: [{ url: brand.logo.favicon, type: "image/png" }],
       apple: [{ url: "/apple-touch-icon.png" }],
     },
     keywords: [
-      "VedaMilan AI",
-      "Vedic matchmaking",
-      "AI kundli",
+      "KUNDLIV",
+      brand.tagline,
+      "Vedic astrology",
+      "Kundli",
+      "AI Guru",
+      "Rishi wisdom",
+      "Vedic compatibility",
       "guna milan",
       "marriage timing",
-      "relationship intelligence",
-      "horoscope compatibility",
     ],
     authors: [{ name: siteConfig.name }],
     creator: siteConfig.name,
@@ -66,14 +69,14 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: meta.ogLocale,
       url: `${siteConfig.url}${withLocalePrefix(locale, "/")}`,
-      title: siteConfig.name,
+      title: `${siteConfig.name} — ${brand.tagline}`,
       description,
       siteName: siteConfig.name,
       images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
     },
     twitter: {
       card: "summary_large_image",
-      title: siteConfig.name,
+      title: `${siteConfig.name} — ${brand.tagline}`,
       description,
       images: [siteConfig.ogImage],
     },

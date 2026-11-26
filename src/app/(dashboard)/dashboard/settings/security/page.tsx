@@ -42,7 +42,7 @@ export default function SecuritySettingsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Security"
         description="Password and sessions"
         actions={

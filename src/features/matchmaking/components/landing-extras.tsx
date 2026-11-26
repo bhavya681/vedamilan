@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Heart, MapPin, Search, Sparkles } from "lucide-react";
+import { Heart, MapPin, Search, UserRoundPlus } from "lucide-react";
 import { useState } from "react";
 
 import { FadeIn } from "@/components/animations/motion";
@@ -106,7 +106,7 @@ export function SuccessStoriesStrip() {
                 </p>
                 <p className="text-gold mt-2 inline-flex items-center gap-1.5 text-xs">
                   <Heart className="h-3.5 w-3.5" aria-hidden />
-                  Matched on VedaMilan
+                  Matched on KUNDLIV
                 </p>
               </div>
             </motion.article>
@@ -129,7 +129,7 @@ export function AiDemoSection() {
           />
           <Button asChild className="mt-7" variant="secondary">
             <Link href={routes.register}>
-              <Sparkles className="h-4 w-4" />
+              <UserRoundPlus className="h-4 w-4" />
               Create your profile
             </Link>
           </Button>

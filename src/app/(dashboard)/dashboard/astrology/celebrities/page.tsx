@@ -9,10 +9,12 @@ import {
   ChevronDown,
   Clapperboard,
   Clock,
+  Coins,
   Compass,
   Crown,
   Flame,
   FlaskConical,
+  Gem,
   Globe2,
   Info,
   Layers,
@@ -21,14 +23,14 @@ import {
   Music2,
   PenTool,
   Search,
+  SearchX,
   Shield,
-  Sparkles,
   Star,
   Sun,
   Telescope,
   Trophy,
-  Users,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -227,7 +229,7 @@ const CATEGORY_META: Record<
     wash: "from-cosmic/12 via-transparent",
   },
   Divine: {
-    icon: Sparkles,
+    icon: Crown,
     avatar: "border-gold/40 from-gold/30 to-saffron/15 text-gold",
     chip: "border-gold/35 bg-gold/15 text-gold",
     wash: "from-gold/15 via-transparent",
@@ -274,7 +276,7 @@ const YOGA_CATEGORY_META: Record<
   },
   "Dhana Yoga": {
     label: "Dhana Yoga",
-    icon: Sparkles,
+    icon: Coins,
     chip: "border-saffron/25 bg-saffron/10 text-saffron",
     wash: "from-saffron/12 via-transparent",
     areas: ["Prosperity", "Speech", "Resources"],
@@ -612,7 +614,7 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
             hint={chart.chartSource === "traditional" ? "Traditional position" : "Sidereal"}
           />
           <SignatureTile
-            icon={Sparkles}
+            icon={Gem}
             label="Detected yogas"
             value={String(chart.yogas.length)}
             hint={
@@ -736,7 +738,7 @@ function YogaSection({
             Classical combinations
           </p>
           <h2 className="font-display mt-0.5 flex items-center gap-2 text-xl sm:text-2xl">
-            <Sparkles className="text-gold h-5 w-5" />
+            <Gem className="text-gold h-5 w-5" />
             Yoga signatures
           </h2>
           <p className="text-muted-foreground mt-0.5 max-w-2xl text-sm">
@@ -905,7 +907,7 @@ function YogaSection({
       ) : (
         <Card className="border-border/60">
           <CardContent className="flex flex-col items-center gap-1.5 py-6 text-center">
-            <Sparkles className="text-muted-foreground h-5 w-5" />
+            <SearchX className="text-muted-foreground h-5 w-5" />
             <p className="font-medium">No major yogas flagged</p>
             <p className="text-muted-foreground max-w-md text-sm">
               The engine did not flag a supported classical combination for this chart. The D1 and

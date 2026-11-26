@@ -1,5 +1,5 @@
 /**
- * VedaMilan classical yoga taxonomy — source-backed catalog.
+ * KUNDLIV classical yoga taxonomy — source-backed catalog.
  *
  * Every entry records: id, name, Sanskrit name, alternatives, category, source
  * references (chapter/verse only where verified), required inputs, formation

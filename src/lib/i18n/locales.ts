@@ -1,5 +1,5 @@
 /**
- * VedaMilan locale registry — scalable without rewriting the app.
+ * KUNDLIV locale registry — scalable without rewriting the app.
  * Calculations stay language-independent; UI/AI use these codes.
  *
  * UI language switching is paused until screens are actually translated.

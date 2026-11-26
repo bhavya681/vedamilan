@@ -6,13 +6,14 @@ import {
   Activity,
   BookOpen,
   Briefcase,
+  CircleHelp,
   Coins,
+  Flame,
   GraduationCap,
   Heart,
   Plane,
-  Sparkles,
-  Users,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
@@ -63,7 +64,7 @@ const THEME_ICON: Record<string, LucideIcon> = {
   health: Activity,
   learning: GraduationCap,
   travel: Plane,
-  spirituality: Sparkles,
+  spirituality: Flame,
 };
 
 const STATUS_LABEL: Record<Theme["activation"]["status"], string> = {
@@ -87,7 +88,7 @@ function ThemeCard({
   open: boolean;
   onToggle: () => void;
 }) {
-  const Icon = THEME_ICON[theme.theme] ?? Sparkles;
+  const Icon = THEME_ICON[theme.theme] ?? CircleHelp;
   const active = theme.activation.status === "activated";
 
   return (

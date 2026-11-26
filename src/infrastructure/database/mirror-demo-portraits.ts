@@ -12,7 +12,7 @@ import { logger } from "@/lib/utils/logger";
 
 const OUT_DIR = path.join(process.cwd(), "public", "demo-portraits");
 const UA =
-  "VedaMilanDemo/1.0 (local development portrait mirror; https://github.com/local/vedamilan)";
+  "KUNDLIVDemo/1.0 (local development portrait mirror; https://github.com/local/vedamilan)";
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));

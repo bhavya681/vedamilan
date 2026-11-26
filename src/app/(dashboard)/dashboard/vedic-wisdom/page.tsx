@@ -11,9 +11,10 @@ import {
   Home,
   Leaf,
   MessageCircle,
-  Sparkles,
-  Users,
+  MessagesSquare,
+  Orbit,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -63,7 +64,7 @@ const NEED_ICONS: Record<LifeNeedId, LucideIcon> = {
   inner: Leaf,
   duty: Home,
   inquiry: Compass,
-  astrology: Sparkles,
+  astrology: Orbit,
 };
 
 export default function RishiSageHomePage() {
@@ -112,7 +113,7 @@ export default function RishiSageHomePage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button asChild size="lg" className="shadow-gold">
                 <Link href={routes.askTheSages}>
-                  <Sparkles className="h-4 w-4" aria-hidden />
+                  <MessagesSquare className="h-4 w-4" aria-hidden />
                   Ask the Sages
                 </Link>
               </Button>

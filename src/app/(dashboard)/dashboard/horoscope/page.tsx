@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  Bot,
   CalendarDays,
   Clock,
   MoonStar,
   Orbit,
-  Sparkles,
   Sunrise,
   Sunset,
   type LucideIcon,
@@ -173,7 +173,7 @@ export default function HoroscopePage() {
             <div className="grid gap-5 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.9fr)]">
               <div className="min-w-0">
                 <p className="text-muted-foreground mb-3 flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase">
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Bot className="h-3.5 w-3.5" />
                   {AI_GURU_NAME} interpretation
                 </p>
                 {loading || !summary ? (
@@ -201,7 +201,7 @@ export default function HoroscopePage() {
                       note={`${tithiPct}% elapsed`}
                     />
                     <AlmanacRow
-                      icon={Sparkles}
+                      icon={MoonStar}
                       label="Nakshatra"
                       value={panchanga.nakshatra.name}
                       note={`Lord ${panchanga.nakshatra.lord}`}

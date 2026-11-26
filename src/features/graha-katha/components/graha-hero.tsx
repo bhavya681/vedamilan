@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen, ChartPie } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export function GrahaHero({
           <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:gap-3">
             <Button asChild size="lg" className="w-full gap-2 sm:w-auto">
               <Link href={chartHref}>
-                <Sparkles className="h-4 w-4" aria-hidden />
+                <ChartPie className="h-4 w-4" aria-hidden />
                 {t("grahaKatha.exploreChart")}
               </Link>
             </Button>

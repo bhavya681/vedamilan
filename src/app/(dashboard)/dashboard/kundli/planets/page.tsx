@@ -18,7 +18,7 @@ export default function PlanetsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Planet Details"
         description="Positions, dignity, and themes — open Graha Katha for stories & symbolism"
         actions={

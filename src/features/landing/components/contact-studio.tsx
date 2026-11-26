@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils/cn";
 const INDIA = { lat: 21.15, lng: 79.09 };
 
 const fieldClass =
-  "border-border/50 bg-muted/70 h-12 rounded-xl shadow-none dark:border-transparent dark:bg-[#0c0a08]";
+  "border-border/50 bg-muted/70 h-12 rounded-xl shadow-none dark:border-transparent dark:bg-[#080808]";
 
 type FormState = {
   name: string;
@@ -111,12 +111,12 @@ export function ContactStudio() {
           <WorldMap
             className="max-w-xl lg:max-w-none"
             pin={{ ...INDIA, label: "We are here" }}
-            lineColor="#D4AF37"
+            lineColor="#C9A96E"
           />
         </div>
       </div>
 
-      <div className="border-border/60 bg-card shadow-elevated relative min-w-0 overflow-hidden rounded-2xl border p-5 sm:p-7 dark:border-white/8 dark:bg-[#16120e]">
+      <div className="border-border/60 bg-card shadow-elevated relative min-w-0 overflow-hidden rounded-2xl border p-5 sm:p-7 dark:border-white/8 dark:bg-[#121212]">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_62%)] opacity-70"

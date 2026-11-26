@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   ArrowUpRight,
+  BookOpen,
   ChevronDown,
   Coins,
   Compass,
@@ -11,7 +12,6 @@ import {
   Layers,
   MoonStar,
   Shield,
-  Sparkles,
   Sun,
   type LucideIcon,
 } from "lucide-react";
@@ -96,7 +96,7 @@ function ExemplarPanel({
           {tone === "yoga" ? (
             <Crown className="h-3.5 w-3.5" />
           ) : (
-            <Sparkles className="h-3.5 w-3.5" />
+            <BookOpen className="h-3.5 w-3.5" />
           )}
         </span>
         <div className="min-w-0 space-y-1">

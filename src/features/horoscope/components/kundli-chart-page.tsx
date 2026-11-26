@@ -44,7 +44,7 @@ export function KundliChartPage({
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title={title}
         description={description}
         actions={

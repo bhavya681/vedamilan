@@ -8,9 +8,9 @@ import {
   HeartHandshake,
   Lock,
   MessageCircle,
+  Milestone,
   Route,
   Share2,
-  Sparkles,
 } from "lucide-react";
 
 import { EmptyState, PageHeader } from "@/components/layout/page-shell";
@@ -743,7 +743,7 @@ export function YourConnectionSpace({ partnerUserId }: { partnerUserId: string }
                     }).then((d) => d && load())
                   }
                 >
-                  <Sparkles className="mr-1 h-3.5 w-3.5" />
+                  <Milestone className="mr-1 h-3.5 w-3.5" />
                   {m.label}
                 </Button>
               ))}

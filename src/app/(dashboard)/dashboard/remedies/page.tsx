@@ -6,10 +6,11 @@ import {
   ArrowUpRight,
   BookOpen,
   CalendarDays,
+  ChartPie,
   CheckCircle2,
   ChevronDown,
   Clock,
-  Sparkles,
+  Leaf,
 } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
@@ -320,7 +321,7 @@ export default function RemediesPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-gold flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <ChartPie className="h-3.5 w-3.5" />
                   Personal chart focus
                 </p>
                 <h2 className="font-display mt-1 text-xl leading-snug sm:text-2xl">
@@ -633,7 +634,7 @@ export default function RemediesPage() {
 
                         <div>
                           <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
-                            <Sparkles className="h-3 w-3" />
+                            <Leaf className="h-3 w-3" />
                             What to practice
                           </p>
                           <p className="mt-1 text-sm leading-relaxed">{theme.possibleRemedy}</p>

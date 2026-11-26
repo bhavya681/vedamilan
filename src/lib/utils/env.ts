@@ -7,7 +7,7 @@ const booleanFromString = z.union([z.boolean(), z.string()]).transform((value) =
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("VedaMilan AI"),
+  NEXT_PUBLIC_APP_NAME: z.string().min(1).default("KUNDLIV"),
   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional().default(""),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional().default(""),
   NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional().default(""),
@@ -42,7 +42,7 @@ const serverSchema = clientSchema.extend({
   RAZORPAY_KEY_ID: z.string().optional().default(""),
   RAZORPAY_KEY_SECRET: z.string().optional().default(""),
   RESEND_API_KEY: z.string().optional().default(""),
-  EMAIL_FROM: z.string().optional().default("VedaMilan AI <noreply@vedamilan.ai>"),
+  EMAIL_FROM: z.string().optional().default("KUNDLIV <noreply@vedamilan.ai>"),
   TWILIO_ACCOUNT_SID: z.string().optional().default(""),
   TWILIO_AUTH_TOKEN: z.string().optional().default(""),
   TWILIO_FROM_NUMBER: z.string().optional().default(""),

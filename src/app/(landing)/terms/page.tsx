@@ -23,7 +23,7 @@ export default function TermsPage() {
       />
       <GlassCard className="mx-auto max-w-3xl space-y-4">
         <p className="text-muted-foreground text-sm leading-relaxed">
-          These demo Terms describe how members use VedaMilan AI for relationship intelligence,
+          These demo Terms describe how members use KUNDLIV for relationship intelligence,
           matchmaking, and Vedic reports.
         </p>
         <p className="text-muted-foreground text-sm leading-relaxed">

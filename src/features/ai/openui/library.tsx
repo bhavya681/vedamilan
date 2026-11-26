@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, CircleAlert, Compass, Sparkles } from "lucide-react";
+import { ChevronRight, CircleAlert, Compass, Lightbulb } from "lucide-react";
 
 import {
   createLibrary,
@@ -37,7 +37,7 @@ const calloutTones = {
   insight: {
     wrap: "border-gold/30 bg-gold/[0.06]",
     icon: "text-gold",
-    Icon: Sparkles,
+    Icon: Lightbulb,
   },
   caution: {
     wrap: "border-amber/30 bg-amber/[0.07]",
@@ -212,7 +212,7 @@ function InsightListView({ props }: ComponentRenderProps<{ items: string[]; titl
       <ul className="space-y-1.5">
         {props.items.map((item, index) => (
           <li key={`${item}-${index}`} className="flex gap-2 text-[13.5px] leading-relaxed">
-            <Sparkles className="text-gold mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <Lightbulb className="text-gold mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="text-foreground/90">{item}</span>
           </li>
         ))}

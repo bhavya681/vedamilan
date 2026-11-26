@@ -7,6 +7,7 @@ import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-st
 import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 import { fetchJsonWhenAuthed, isAbortError } from "@/lib/http/session-fetch";
+import { inferModeFromPath } from "@/lib/workspace/mode";
 
 /** Routes allowed while onboarding is incomplete */
 const ALLOW_WHILE_INCOMPLETE = [
@@ -40,6 +41,7 @@ export function OnboardingRedirect() {
     if (ALLOW_WHILE_INCOMPLETE.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
       return;
     }
+    if (inferModeFromPath(pathname)) return;
 
     // `/dashboard` resolves its own gate to avoid racing astrology/matrimony homes.
     if (pathname === routes.dashboard) return;

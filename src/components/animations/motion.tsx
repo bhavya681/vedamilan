@@ -1,6 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 
 export function FadeIn({
   children,

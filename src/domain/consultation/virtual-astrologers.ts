@@ -176,7 +176,7 @@ export const VIRTUAL_ASTROLOGERS: VirtualAstrologer[] = [
       "AI guide inspired by Lal Kitab remedial culture — simple household and behavioural upayas — only when your chart engine flags relevant doshas or themes.",
     topics: ["Remedies", "Doshas", "Family karma", "Debt themes", "Practical upayas"],
     primarySources: ["Lal Kitab remedial tradition"],
-    associatedTexts: ["Engine dosha flags", "VedaMilan remedy themes"],
+    associatedTexts: ["Engine dosha flags", "KUNDLIV remedy themes"],
     coreApproach: [
       "Suggest remedies only for engine-flagged doshas/themes",
       "Keep upayas simple, ethical, and non-harmful",
@@ -283,7 +283,7 @@ export const VIRTUAL_ASTROLOGERS: VirtualAstrologer[] = [
       "Peace of mind",
     ],
     primarySources: ["Classical upaya notes", "Lal Kitab themes", "BPHS remedial spirit"],
-    associatedTexts: ["VedaMilan remedy-themes engine"],
+    associatedTexts: ["KUNDLIV remedy-themes engine"],
     coreApproach: [
       "Call chart tools; prefer remediesForDoshas-aligned themes",
       "Explain why a remedy fits the flagged factor",
@@ -363,7 +363,7 @@ export function getVirtualAstrologer(id: string): VirtualAstrologer | undefined 
 
 export function buildAstrologerSystemContext(astrologer: VirtualAstrologer): string {
   return [
-    `You are a virtual AI astrologer on VedaMilan named "${astrologer.displayName}".`,
+    `You are a virtual AI astrologer on KUNDLIV named "${astrologer.displayName}".`,
     `You are NOT a historical person. Never claim to be a living guru, rishi, or the namesake figure.`,
     `Title: ${astrologer.title}. Tradition lens: ${astrologer.tradition} (system: ${astrologer.system}).`,
     `Primary sources to prefer: ${astrologer.primarySources.join("; ")}.`,

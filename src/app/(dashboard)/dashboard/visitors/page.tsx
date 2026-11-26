@@ -47,7 +47,7 @@ export default function VisitorsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Visitors"
         description="Who viewed your profile"
         actions={

@@ -1,33 +1,32 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   motion,
   useMotionTemplate,
   useMotionValue,
-  useMotionValueEvent,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { useEffect, useRef, type PointerEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { editorial } from "@/features/landing/lib/images";
 import { landingCta } from "@/features/landing/lib/nav";
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
+import { brand } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils/cn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
-const SCORE = 92;
-const LAYERS = [
-  { label: "Vedic", value: 94 },
-  { label: "Values", value: 93 },
-  { label: "Life goals", value: 89 },
+const SIGNALS = ["Kundli & charts", "AI Guru & wisdom", "Vedic compatibility"] as const;
+const PREVIEW = [
+  { title: "Kundli", detail: "Planets · Nakshatras · Dashas", glyph: "kundli" },
+  { title: "AI Guru", detail: "Wisdom, explained", glyph: "guru" },
+  { title: "Compatibility", detail: "Guna Milan · life goals", glyph: "compatibility" },
 ] as const;
-const SIGNALS = ["Private by design", "Vedic compatibility", "Human preferences"] as const;
+
+type GlyphKind = (typeof PREVIEW)[number]["glyph"];
 
 export function LandingHero() {
   const reduceMotion = useReducedMotion();
@@ -41,9 +40,9 @@ export function LandingHero() {
   const my = useMotionValue(40);
   const spotX = useSpring(mx, { stiffness: 50, damping: 22 });
   const spotY = useSpring(my, { stiffness: 50, damping: 22 });
-  const spotlight = useMotionTemplate`radial-gradient(38rem 28rem at ${spotX}% ${spotY}%, rgba(212,175,55,0.22), transparent 58%)`;
-  const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "12%"]);
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1.08, 1.18]);
+  const spotlight = useMotionTemplate`radial-gradient(38rem 28rem at ${spotX}% ${spotY}%, rgba(201,169,110,0.16), transparent 58%)`;
+  const artY = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+  const artScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
 
   useEffect(() => {
     finePointer.current = window.matchMedia("(pointer: fine)").matches;
@@ -66,58 +65,61 @@ export function LandingHero() {
         mx.set(50);
         my.set(40);
       }}
-      className="relative isolate overflow-hidden min-h-0 sm:min-h-[100svh]"
+      className="relative isolate min-h-0 overflow-hidden sm:min-h-[100svh]"
       aria-labelledby="hero-heading"
     >
+      <div className="landing-hero-surface absolute inset-0 -z-20" aria-hidden />
       <motion.div
-        className="absolute inset-0 -z-20"
-        style={reduceMotion ? undefined : { y: imageY, scale: imageScale }}
+        className="absolute inset-0 -z-10"
+        style={reduceMotion ? undefined : { y: artY, scale: artScale }}
         aria-hidden
       >
-        <Image
-          src={editorial.hero.src}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[center_32%]"
-        />
+        <svg
+          viewBox="0 0 1200 800"
+          preserveAspectRatio="xMidYMid slice"
+          className="text-foreground h-full w-full opacity-[0.14]"
+        >
+          <g fill="none" stroke="#C9A96E">
+            <circle cx="900" cy="360" r="258" strokeOpacity="0.32" strokeDasharray="2 12" />
+            <circle cx="900" cy="360" r="182" strokeOpacity="0.24" />
+            <path d="M900 102 L1158 360 L900 618 L642 360 Z" strokeOpacity="0.28" />
+            <path d="M642 360 H1158 M900 102 V618" strokeOpacity="0.14" />
+            <circle cx="900" cy="102" r="2.5" fill="#C9A96E" stroke="none" />
+            <circle cx="1158" cy="360" r="2" fill="currentColor" stroke="none" opacity="0.75" />
+          </g>
+        </svg>
       </motion.div>
-
+      <div className="landing-hero-wash absolute inset-0 -z-10" aria-hidden />
       <div
-        className="absolute inset-0 -z-10 bg-[linear-gradient(108deg,rgba(20,17,14,0.92)_0%,rgba(20,17,14,0.62)_42%,rgba(20,17,14,0.18)_100%)]"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(20,17,14,0.35),transparent_42%)]"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 -z-10 h-[18%] bg-gradient-to-t from-[#F7F1E3] via-[#F7F1E3]/50 to-transparent md:h-[26%]"
+        className="from-background via-background/50 absolute inset-x-0 bottom-0 -z-10 h-[18%] bg-gradient-to-t to-transparent md:h-[26%]"
         aria-hidden
       />
       {!reduceMotion ? (
-        <motion.div className="pointer-events-none absolute inset-0 -z-10 hidden md:block" style={{ background: spotlight }} aria-hidden />
+        <motion.div
+          className="pointer-events-none absolute inset-0 -z-10 hidden md:block"
+          style={{ background: spotlight }}
+          aria-hidden
+        />
       ) : null}
       <div className="landing-hero-grain -z-10 hidden md:block" aria-hidden />
 
       <FrameMarks />
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-end gap-8 px-4 pt-[calc(5.75rem+var(--landing-notice,0px)+env(safe-area-inset-top,0px))] pb-10 sm:min-h-[100svh] sm:px-6 sm:pb-14 md:items-center md:pb-16 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-12 lg:px-8 lg:pb-16">
+      <div className="landing-container relative grid items-end gap-8 pt-[calc(5.75rem+var(--landing-notice,0px)+env(safe-area-inset-top,0px))] pb-10 sm:min-h-[100svh] sm:pb-14 md:items-center md:pb-16 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] lg:gap-12 lg:pb-16 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)] xl:gap-16 2xl:gap-24">
         <div className="max-w-xl">
           <motion.p
             initial={reduceMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease }}
-            className="text-ivory/72 flex items-center gap-3 text-[10px] font-semibold tracking-[0.2em] uppercase sm:text-[11px] sm:tracking-[0.26em]"
+            className="text-muted-foreground flex items-center gap-3 text-[10px] font-semibold tracking-[0.2em] uppercase sm:text-[11px] sm:tracking-[0.26em]"
           >
-            <span className="bg-[#D4AF37] inline-block h-px w-8" aria-hidden />
-            Where compatibility meets destiny
+            <span className="bg-gold inline-block h-px w-8" aria-hidden />
+            {brand.tagline}
           </motion.p>
 
           <h1
             id="hero-heading"
-            className="font-display text-ivory mt-4 text-[2.15rem] leading-[1.05] tracking-tight text-balance sm:mt-5 sm:text-4xl md:text-5xl lg:text-[4.15rem] lg:leading-[0.98]"
+            className="font-display text-foreground mt-4 text-[2.15rem] leading-[1.05] tracking-tight text-balance sm:mt-5 sm:text-4xl md:text-5xl lg:text-[4.15rem] lg:leading-[0.98]"
           >
             <motion.span
               className="block"
@@ -125,7 +127,7 @@ export function LandingHero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, ease, delay: 0.06 }}
             >
-              Find someone
+              Discover the intelligence
             </motion.span>
             <motion.span
               className="mt-1 block"
@@ -133,12 +135,12 @@ export function LandingHero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, ease, delay: 0.14 }}
             >
-              who{" "}
+              of your{" "}
               <em className="relative inline-block italic">
-                aligns
-                <span className="absolute inset-x-0 -bottom-1 h-px bg-[#D4AF37]/80" aria-hidden />
-              </em>{" "}
-              with your life.
+                Vedic universe
+                <span className="bg-gold/80 absolute inset-x-0 -bottom-1 h-px" aria-hidden />
+              </em>
+              .
             </motion.span>
           </h1>
 
@@ -146,10 +148,10 @@ export function LandingHero() {
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.24 }}
-            className="text-ivory/78 mt-6 max-w-md text-sm leading-relaxed sm:text-base"
+            className="text-muted-foreground mt-6 max-w-md text-sm leading-relaxed sm:text-base"
           >
-            Modern matchmaking, Vedic compatibility, and guidance you can actually understand — so
-            you find a partner who fits your values, timing, and household, not just a profile.
+            Explore your Kundli, understand ancient wisdom with AI, and discover meaningful
+            compatibility — all in one intelligent platform.
           </motion.p>
 
           <motion.div
@@ -161,10 +163,10 @@ export function LandingHero() {
             <Button
               asChild
               size="lg"
-              className="h-12 w-full bg-[#F7F1E3] text-[#14110E] shadow-[0_12px_40px_rgba(247,241,227,0.16)] hover:bg-[#F7F1E3]/90 sm:w-auto"
+              className="bg-primary text-primary-foreground shadow-elevated hover:bg-primary/90 h-12 w-full sm:w-auto"
             >
-              <Link href={landingCta.match.href}>
-                {landingCta.match.label}
+              <Link href={landingCta.explore.href}>
+                {landingCta.explore.label}
                 <ArrowUpRight className="h-4 w-4" aria-hidden />
               </Link>
             </Button>
@@ -172,9 +174,9 @@ export function LandingHero() {
               asChild
               size="lg"
               variant="outline"
-              className="border-ivory/30 bg-ivory/5 text-ivory hover:bg-ivory/10 h-12 w-full backdrop-blur-sm sm:w-auto"
+              className="border-border bg-background/10 text-foreground hover:bg-foreground/10 h-12 w-full backdrop-blur-sm sm:w-auto"
             >
-              <Link href={landingCta.compatibility.href}>{landingCta.compatibility.label}</Link>
+              <Link href={landingCta.getStarted.href}>{landingCta.getStarted.label}</Link>
             </Button>
           </motion.div>
 
@@ -182,41 +184,56 @@ export function LandingHero() {
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, ease, delay: 0.48 }}
-            className="text-ivory/58 mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] tracking-[0.14em] uppercase"
+            className="text-muted-foreground mt-8 flex flex-wrap gap-x-5 gap-y-2 text-[11px] tracking-[0.14em] uppercase"
           >
             {SIGNALS.map((item) => (
               <li key={item} className="flex items-center gap-2">
-                <span className="bg-[#D4AF37]/80 h-1 w-1 rounded-full" aria-hidden />
+                <span className="bg-gold/80 h-1 w-1 rounded-full" aria-hidden />
                 {item}
               </li>
             ))}
           </motion.ul>
         </div>
 
-        <MatchPreview reduceMotion={Boolean(reduceMotion)} />
+        <PlatformPreview reduceMotion={Boolean(reduceMotion)} />
       </div>
 
       <motion.a
-        href="#discover"
+        href="#experiences"
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.9, duration: 0.6 }}
-        className="text-foreground/45 hover:text-foreground absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] tracking-[0.22em] uppercase lg:flex"
+        className="group absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2.5 sm:bottom-5 sm:flex"
+        aria-label="Scroll to explore"
       >
-        <span>Begin</span>
-        <span className="bg-foreground/20 relative h-10 w-px overflow-hidden" aria-hidden>
-          <motion.span
-            className="absolute inset-x-0 top-0 h-4 bg-[#D4AF37]"
-            animate={reduceMotion ? undefined : { y: [0, 24, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          />
+        <span className="border-border bg-card/60 text-muted-foreground group-hover:text-foreground group-hover:border-gold/50 shadow-soft rounded-full border px-3 py-1.5 text-[9px] font-semibold tracking-[0.22em] uppercase backdrop-blur-md transition-colors sm:text-[10px]">
+          Explore
+        </span>
+        <span className="relative h-12 w-6" aria-hidden>
+          <span className="from-gold/0 via-foreground/25 to-gold/0 absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b" />
+          <span className="absolute top-0 left-1/2 -translate-x-1/2">
+            <motion.span
+              className="bg-gold block h-3 w-1.5 rounded-full shadow-[0_0_12px_rgba(201,169,110,0.65)]"
+              animate={reduceMotion ? undefined : { y: [0, 28, 0], opacity: [0.35, 1, 0.35] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </span>
+          <span className="text-gold absolute -bottom-1.5 left-1/2 -translate-x-1/2">
+            <motion.span
+              className="block"
+              animate={reduceMotion ? undefined : { y: [0, 3, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </motion.span>
+          </span>
         </span>
       </motion.a>
     </section>
   );
 }
 
-function MatchPreview({ reduceMotion }: { reduceMotion: boolean }) {
+function PlatformPreview({ reduceMotion }: { reduceMotion: boolean }) {
   const cardRef = useRef<HTMLElement>(null);
   const rx = useSpring(0, { stiffness: 140, damping: 18 });
   const ry = useSpring(0, { stiffness: 140, damping: 18 });
@@ -247,155 +264,110 @@ function MatchPreview({ reduceMotion }: { reduceMotion: boolean }) {
         transformPerspective: 1100,
         transformStyle: "preserve-3d",
       }}
-      className="relative mx-auto w-full max-w-[20rem] sm:max-w-[24rem] lg:mx-0 lg:justify-self-end"
-      aria-label="Illustrative compatibility preview"
+      className="relative mx-auto w-full max-w-[20rem] sm:max-w-[24rem] lg:mx-0 lg:justify-self-end xl:max-w-[28rem] 2xl:max-w-[32rem]"
+      aria-label="Illustrative KUNDLIV platform preview"
     >
-      <div className="landing-hero-glow pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#D4AF37]/18 blur-3xl" aria-hidden />
+      <div
+        className="landing-hero-glow bg-gold/18 pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        aria-hidden
+      />
 
-      <svg viewBox="0 0 360 360" className="landing-hero-ring pointer-events-none absolute -top-6 -right-8 hidden h-[22rem] w-[22rem] opacity-50 sm:block" aria-hidden>
-        <circle cx="180" cy="180" r="148" fill="none" stroke="#F7F1E3" strokeOpacity="0.14" strokeWidth="0.6" strokeDasharray="3 10" />
-        <circle cx="180" cy="180" r="118" fill="none" stroke="#D4AF37" strokeOpacity="0.35" strokeWidth="0.7" />
-        <circle cx="180" cy="32" r="2.2" fill="#D4AF37" />
-        <circle cx="318" cy="180" r="1.6" fill="#F7F1E3" fillOpacity="0.7" />
+      <svg
+        viewBox="0 0 360 360"
+        className="landing-hero-ring text-foreground pointer-events-none absolute -top-6 -right-8 hidden h-[22rem] w-[22rem] opacity-50 sm:block"
+        aria-hidden
+      >
+        <circle
+          cx="180"
+          cy="180"
+          r="148"
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.14"
+          strokeWidth="0.6"
+          strokeDasharray="3 10"
+        />
+        <circle
+          cx="180"
+          cy="180"
+          r="118"
+          fill="none"
+          stroke="#C9A96E"
+          strokeOpacity="0.35"
+          strokeWidth="0.7"
+        />
+        <circle cx="180" cy="32" r="2.2" fill="#C9A96E" />
+        <circle cx="318" cy="180" r="1.6" fill="currentColor" fillOpacity="0.7" />
       </svg>
 
-      <div className="relative flex items-end justify-center px-1 pt-4">
-        <PreviewPerson
-          label="You"
-          name="Adrian"
-          src={editorial.you.src}
-          className="-rotate-6 translate-y-3"
-          delay={0.32}
-          reduceMotion={reduceMotion}
-        />
-        <ScoreOrb reduceMotion={reduceMotion} />
-        <PreviewPerson
-          label="Partner"
-          name="Elena"
-          src={editorial.partner.src}
-          className="rotate-6 translate-y-3"
-          delay={0.4}
-          reduceMotion={reduceMotion}
-        />
-      </div>
-
-      <div className="border-ivory/14 mt-5 rounded-2xl border bg-[#14110E]/72 p-4 shadow-[0_28px_70px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-5">
+      <div className="border-border bg-card/80 shadow-elevated mt-5 rounded-2xl border p-4 backdrop-blur-xl sm:p-5">
         <div className="flex items-center justify-between">
-          <p className="text-ivory/50 text-[10px] tracking-[0.2em] uppercase">Product preview</p>
-          <p className="text-ivory/70 rounded-full border border-white/10 px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase">
-            Strong alignment
+          <p className="text-muted-foreground text-[10px] tracking-[0.2em] uppercase">
+            Platform preview
+          </p>
+          <p className="text-foreground/70 border-border rounded-full border px-2 py-0.5 text-[10px] tracking-[0.14em] uppercase">
+            Illustrative
           </p>
         </div>
-        <dl className="mt-4 space-y-3">
-          {LAYERS.map((layer, i) => (
-            <div key={layer.label}>
-              <div className="flex items-center justify-between text-xs">
-                <dt className="text-ivory/70">{layer.label}</dt>
-                <dd className="text-ivory tabular-nums">{layer.value}</dd>
-              </div>
-              <div className="mt-1.5 h-px overflow-hidden bg-white/10">
-                <motion.div
-                  className="h-px origin-left bg-[#D4AF37]"
-                  initial={reduceMotion ? { scaleX: layer.value / 100 } : { scaleX: 0 }}
-                  animate={{ scaleX: layer.value / 100 }}
-                  transition={{ duration: 0.9, delay: 0.45 + i * 0.08, ease }}
-                />
-              </div>
-            </div>
+        <ul className="mt-4 space-y-3">
+          {PREVIEW.map((item, i) => (
+            <li key={item.title} className="flex items-center gap-3">
+              <span className="border-border bg-foreground/5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
+                <PreviewGlyph kind={item.glyph} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="text-foreground block text-sm">{item.title}</span>
+                <span className="text-muted-foreground block text-[11px]">{item.detail}</span>
+              </span>
+              <span className="text-muted-foreground text-[10px] tracking-[0.16em] tabular-nums">
+                0{i + 1}
+              </span>
+            </li>
           ))}
-        </dl>
+        </ul>
+        <p className="border-border text-muted-foreground mt-5 border-t pt-4 text-[10px] tracking-[0.12em] uppercase">
+          Engine-calculated charts · AI-guided explanations
+        </p>
       </div>
     </motion.aside>
   );
 }
 
-function ScoreOrb({ reduceMotion }: { reduceMotion: boolean }) {
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  const offset = c * (1 - SCORE / 100);
-
+function PreviewGlyph({ kind }: { kind: GlyphKind }) {
   return (
-    <div className="relative z-10 -mx-3 mb-8 flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center sm:-mx-5 sm:mb-10 sm:h-[6.75rem] sm:w-[6.75rem]">
-      <div className="absolute inset-0 rounded-full bg-[#14110E]/80 shadow-[0_12px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/15 backdrop-blur-md" />
-      <svg viewBox="0 0 88 88" className="relative -rotate-90" aria-hidden>
-        <circle cx="44" cy="44" r={r} fill="none" stroke="rgba(247,241,227,0.16)" strokeWidth="1.6" />
-        <motion.circle
-          cx="44"
-          cy="44"
-          r={r}
-          fill="none"
-          stroke="#D4AF37"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          initial={{ strokeDashoffset: reduceMotion ? offset : c }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.35, delay: 0.45, ease }}
-        />
-      </svg>
-      <p className="font-display text-ivory absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <AnimatedScore value={SCORE} reduceMotion={reduceMotion} />
-        <span className="text-ivory/50 mt-1 text-[9px] tracking-[0.18em] uppercase">Match</span>
-      </p>
-    </div>
-  );
-}
-
-function AnimatedScore({ value, reduceMotion }: { value: number; reduceMotion: boolean }) {
-  const spring = useSpring(reduceMotion ? value : 0, { stiffness: 70, damping: 18 });
-  const [shown, setShown] = useState(reduceMotion ? value : 0);
-
-  useEffect(() => {
-    spring.set(value);
-  }, [spring, value]);
-
-  useMotionValueEvent(spring, "change", (next) => {
-    setShown(Math.round(next));
-  });
-
-  return <span className="text-[1.5rem] tabular-nums sm:text-[1.85rem]">{shown}</span>;
-}
-
-function PreviewPerson({
-  label,
-  name,
-  src,
-  className,
-  delay,
-  reduceMotion,
-}: {
-  label: string;
-  name: string;
-  src: string;
-  className?: string;
-  delay: number;
-  reduceMotion: boolean;
-}) {
-  return (
-    <motion.figure
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease, delay }}
-      className={cn("w-[5.5rem] sm:w-[7.25rem] md:w-[8.25rem]", className)}
-    >
-      <p className="text-ivory/55 mb-2 text-center text-[10px] tracking-[0.18em] uppercase">{label}</p>
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/20 shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
-        <Image src={src} alt="" fill sizes="160px" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#14110E]/55 to-transparent" />
-        <figcaption className="font-display text-ivory absolute inset-x-0 bottom-2 text-center text-sm">{name}</figcaption>
-      </div>
-    </motion.figure>
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#C9A96E" aria-hidden>
+      {kind === "kundli" ? (
+        <>
+          <path d="M12 3 L21 12 L12 21 L3 12 Z" strokeOpacity="0.85" />
+          <path d="M3 12 H21 M12 3 V21" strokeOpacity="0.35" />
+        </>
+      ) : null}
+      {kind === "guru" ? (
+        <>
+          <rect x="3" y="4" width="13" height="10" rx="3" strokeOpacity="0.8" />
+          <path d="M6 8h7 M6 11h4" strokeOpacity="0.5" strokeLinecap="round" />
+          <circle cx="19" cy="18" r="2" strokeOpacity="0.6" />
+        </>
+      ) : null}
+      {kind === "compatibility" ? (
+        <>
+          <circle cx="9" cy="12" r="6" strokeOpacity="0.75" />
+          <circle cx="15" cy="12" r="6" strokeOpacity="0.45" />
+          <circle cx="12" cy="12" r="1.6" fill="#C9A96E" stroke="none" />
+        </>
+      ) : null}
+    </svg>
   );
 }
 
 function FrameMarks() {
-  const mark = "pointer-events-none absolute h-5 w-5 border-[#F7F1E3]/25";
+  const mark = "border-foreground/25 pointer-events-none absolute h-5 w-5";
   return (
     <div className="hidden lg:block" aria-hidden>
       <span className={cn(mark, "top-[5.5rem] left-8 border-t border-l")} />
       <span className={cn(mark, "top-[5.5rem] right-8 border-t border-r")} />
       <span className={cn(mark, "bottom-10 left-8 border-b border-l")} />
-      <span className={cn(mark, "bottom-10 right-8 border-b border-r")} />
+      <span className={cn(mark, "right-8 bottom-10 border-r border-b")} />
     </div>
   );
 }

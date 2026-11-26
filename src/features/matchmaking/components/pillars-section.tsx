@@ -1,10 +1,10 @@
-import { Sparkles, Stars, HeartHandshake } from "lucide-react";
+import { BrainCircuit, HeartHandshake, Stars } from "lucide-react";
 
 import { FadeIn } from "@/components/animations/motion";
 
 const pillars = [
   {
-    icon: Sparkles,
+    icon: BrainCircuit,
     title: "AI Matchmaking",
     body: "Multi-signal ranking blends personality, preferences, and astrological harmony into clear compatibility scores.",
   },
@@ -31,7 +31,7 @@ export function PillarsSection() {
           Built for intentional unions
         </h2>
         <p className="text-muted-foreground mt-3 max-w-2xl">
-          Every layer of VedaMilan AI is designed for clarity—never noise—so your search feels
+          Every layer of KUNDLIV is designed for clarity—never noise—so your search feels
           ceremonial, private, and decisive.
         </p>
       </FadeIn>

@@ -7,6 +7,7 @@ import {
 } from "@/infrastructure/database/models";
 import { connectMongo } from "@/infrastructure/database/mongodb";
 import { computeGocharAtDate, computeGocharForUser } from "@/application/horoscope/gochar.service";
+import { resolveCurrentDasha } from "@/application/horoscope/dasha-engine";
 import {
   computeLifeEventsCalendar,
   type GocharLite,
@@ -37,15 +38,28 @@ function periodsFrom(dasha: { periods?: unknown } | null | undefined): PeriodRow
   return (dasha?.periods as PeriodRow[] | undefined) || [];
 }
 
-async function buildHistoricalGocharMap(
+function evenlySpaced<T>(items: T[], limit: number): T[] {
+  if (items.length <= limit) return items;
+  const indexes = new Set<number>();
+  for (let i = 0; i < limit; i += 1) {
+    indexes.add(Math.round((i * (items.length - 1)) / (limit - 1)));
+  }
+  return [...indexes].sort((a, b) => a - b).map((i) => items[i]!);
+}
+
+async function buildDatedGocharMap(
   userId: string,
   periods: PeriodRow[],
   now: Date,
+  birthDate?: Date | string | null,
+  horizonYears = 60,
 ): Promise<Record<string, GocharLite[]>> {
   const full = ensureAntardashaCoverage(periods);
   const antars = full.filter((p) => p.level === "ANTAR");
-  const pastCutoff = new Date(now);
-  pastCutoff.setFullYear(pastCutoff.getFullYear() - 12);
+  const birth = birthDate ? new Date(birthDate) : null;
+  const validBirth = birth && !Number.isNaN(birth.getTime()) ? birth : null;
+  const horizon = new Date(now);
+  horizon.setFullYear(horizon.getFullYear() + horizonYears);
 
   const candidates = antars
     .map((p) => {
@@ -54,13 +68,16 @@ async function buildHistoricalGocharMap(
       const mid = new Date((start.getTime() + end.getTime()) / 2);
       return { start, end, mid, key: start.toISOString() };
     })
-    .filter((p) => p.end < now && p.end >= pastCutoff)
-    .sort((a, b) => b.end.getTime() - a.end.getTime())
-    .slice(0, 14);
+    .filter((p) => {
+      if (Number.isNaN(p.mid.getTime())) return false;
+      if (p.mid < now) return !validBirth || p.mid >= validBirth;
+      return p.mid <= horizon;
+    })
+    .sort((a, b) => a.mid.getTime() - b.mid.getTime());
 
   const map: Record<string, GocharLite[]> = {};
   await Promise.all(
-    candidates.map(async (c) => {
+    evenlySpaced(candidates, 48).map(async (c) => {
       try {
         const snap = await computeGocharAtDate(userId, c.mid);
         map[c.key] = snap.planets.map((p) => ({
@@ -70,7 +87,7 @@ async function buildHistoricalGocharMap(
           note: p.note,
         }));
       } catch {
-        // skip failed historical ephemeris sample
+        // skip failed ephemeris sample
       }
     }),
   );
@@ -94,19 +111,22 @@ export class LifeCalendarService {
     const periods = periodsFrom(dasha);
     const birthDate = birth?.birthDate || profile?.dateOfBirth || null;
     const now = new Date();
+    const resolvedDasha = resolveCurrentDasha(periods, now);
+    const currentMaha = resolvedDasha.currentMaha;
+    const currentAntar = resolvedDasha.currentAntar;
 
     let gochar: Awaited<ReturnType<typeof computeGocharForUser>> | null = null;
     try {
-      gochar = await computeGocharForUser(userId);
+      gochar = await computeGocharForUser(userId, now);
     } catch {
       gochar = null;
     }
 
-    let historicalGocharByAntarStart: Record<string, GocharLite[]> = {};
+    let datedGocharByAntarStart: Record<string, GocharLite[]> = {};
     try {
-      historicalGocharByAntarStart = await buildHistoricalGocharMap(userId, periods, now);
+      datedGocharByAntarStart = await buildDatedGocharMap(userId, periods, now, birthDate);
     } catch {
-      historicalGocharByAntarStart = {};
+      datedGocharByAntarStart = {};
     }
 
     const seventh = seventhLord(chart.lagnaSign || "Aries");
@@ -129,21 +149,16 @@ export class LifeCalendarService {
       gocharHighlights: gochar?.highlights,
       manglikStatus: chart.manglikStatus || "UNKNOWN",
       seventhLord: seventh,
-      currentMaha: dasha.currentMaha || null,
-      currentAntar: dasha.currentAntar || null,
+      currentMaha,
+      currentAntar,
       birthDate: birthDate,
+      now,
     });
 
-    const marriageWindows = marriageTiming.bestMarriageWindows;
-    const marriageWindowsAll =
-      marriageWindows.length > 0
-        ? marriageWindows
-        : generateMarriageFallback({
-            periods,
-            marriageTiming,
-            birthDate,
-            seventhLord: seventh,
-          });
+    const marriageWindowsAll = dedupeWindows([
+      ...marriageTiming.bestMarriageWindows,
+      ...marriageTiming.pastMarriageWindows,
+    ]).slice(0, 12);
 
     const life = computeLifeEventsCalendar({
       periods,
@@ -151,12 +166,14 @@ export class LifeCalendarService {
       birthDate,
       city: birth?.placeName || profile?.city || null,
       country: profile?.country || null,
-      currentMaha: dasha.currentMaha,
-      currentAntar: dasha.currentAntar,
+      currentMaha,
+      currentAntar,
       gocharPlanets: gochar?.planets || null,
       gocharHighlights: gochar?.highlights || null,
-      historicalGocharByAntarStart,
+      datedGocharByAntarStart,
       maritalStatus: profile?.maritalStatus || null,
+      limits: { past: 80, present: 8, future: 40 },
+      horizonYears: 60,
       now,
     });
 
@@ -179,9 +196,6 @@ export class LifeCalendarService {
       present: life.byPhase.present.map(enrichMarriage),
       future: life.byPhase.future.map(enrichMarriage),
     };
-    const events = [...byPhase.present, ...byPhase.future, ...byPhase.past];
-
-    const marriageChapters = byPhase.past.filter((e) => e.category === "marriage").slice(0, 6);
 
     const marryNow = marriageTiming.marryNowVerdict
       ? {
@@ -198,40 +212,51 @@ export class LifeCalendarService {
         notedByUserId: userId,
         status: "ACTIVE",
         deletedAt: null,
-        milestoneType: "MARRIAGE",
         occurredOn: { $exists: true, $ne: null },
       }).lean();
       userMilestones = milestones
-        .filter((m) => m.occurredOn)
-        .map((m) => ({
-          id: `milestone-${String(m._id)}`,
-          category: "marriage" as LifeEventCategory,
-          title: m.label || "Marriage milestone",
-          window: fmtRange(new Date(m.occurredOn!), new Date(m.occurredOn!)),
-          startDate: new Date(m.occurredOn!).toISOString(),
-          endDate: new Date(m.occurredOn!).toISOString(),
-          score: 95,
-          phase: "past" as const,
-          dashaLabel: "User-asserted milestone",
-          reason: `You marked this as a marriage milestone on ${new Date(m.occurredOn!).toLocaleDateString("en-IN", { dateStyle: "long" })}.`,
-          suggestion: "Confirmed by your journey record.",
-          acceptLine: "Confirmed milestone.",
-          probability: "high" as const,
-          probabilityLabel: "Confirmed",
-          explain: `User-asserted milestone: ${m.label}.`,
-          significance: "major" as const,
-          spanMonths: 0,
-        }));
+        .filter((m) => m.occurredOn && !Number.isNaN(new Date(m.occurredOn!).getTime()))
+        .map((m) => {
+          const occurred = new Date(m.occurredOn!);
+          return {
+            id: `milestone-${String(m._id)}`,
+            category: "marriage" as LifeEventCategory,
+            title: m.label || "Relationship milestone",
+            window: fmtRange(occurred, occurred),
+            startDate: occurred.toISOString(),
+            endDate: occurred.toISOString(),
+            score: 92,
+            phase: occurred < now ? ("past" as const) : ("present" as const),
+            dashaLabel: "Your journey record",
+            reason: `You recorded this milestone on ${occurred.toLocaleDateString("en-IN", { dateStyle: "long" })}.`,
+            suggestion: "Confirmed by your journey record.",
+            acceptLine: "Confirmed milestone.",
+            probability: "high" as const,
+            probabilityLabel: "Confirmed by you",
+            explain: `Confirmed milestone: ${m.label || "Relationship milestone"}.`,
+            significance: "major" as const,
+            spanMonths: 0,
+            source: "user-asserted" as const,
+            skyAt: occurred.toISOString(),
+          };
+        });
     } catch {
       userMilestones = [];
     }
 
-    const allPastMarriage = [
-      ...marriageChapters,
-      ...userMilestones,
-      ...byPhase.past.filter((e) => e.category === "marriage"),
-    ];
-    const dedupedPastMarriage = dedupeByDate(allPastMarriage);
+    for (const milestone of userMilestones) {
+      if (!byPhase[milestone.phase].some((e) => e.id === milestone.id)) {
+        byPhase[milestone.phase].push(milestone);
+      }
+    }
+    for (const phase of Object.keys(byPhase) as Array<keyof typeof byPhase>) {
+      byPhase[phase] = dedupeByDate(byPhase[phase]);
+    }
+    const events = [...byPhase.past, ...byPhase.present, ...byPhase.future].sort((a, b) =>
+      a.startDate.localeCompare(b.startDate),
+    );
+    const marriageChapters = byPhase.past.filter((e) => e.category === "marriage");
+    const dedupedPastMarriage = dedupeByDate(marriageChapters);
 
     return {
       context: life.context,
@@ -248,8 +273,11 @@ export class LifeCalendarService {
         lagnaSign: chart.lagnaSign,
         moonSign: chart.moonSign,
         sunSign: chart.sunSign,
-        currentMaha: dasha.currentMaha,
-        currentAntar: dasha.currentAntar,
+        currentMaha,
+        currentAntar,
+        asOf: now.toISOString(),
+        gocharAsOf: gochar?.asOf || null,
+        gocharStatus: gochar ? "live" : "unavailable",
         seventhLord: seventh,
         gocharHighlights: gochar?.highlights?.slice(0, 5) || [],
         gocharPlanets: (gochar?.planets || []).slice(0, 9).map((p) => ({
@@ -258,7 +286,8 @@ export class LifeCalendarService {
           sign: p.sign,
           retrograde: p.isRetrograde,
         })),
-        historicalSamples: Object.keys(historicalGocharByAntarStart).length,
+        historicalSamples: Object.keys(datedGocharByAntarStart).length,
+        datedSamples: Object.keys(datedGocharByAntarStart).length,
       },
       marriageWindows: marriageWindowsAll.map((w) => ({
         label: w.label,
@@ -271,9 +300,9 @@ export class LifeCalendarService {
         kind: w.kind || "MARRIAGE",
         approxNote: w.approxNote || null,
         phase:
-          w.endDate && new Date(w.endDate) < new Date()
+          w.endDate && new Date(w.endDate) < now
             ? ("past" as const)
-            : w.startDate && new Date(w.startDate) <= new Date()
+            : w.startDate && new Date(w.startDate) <= now
               ? ("present" as const)
               : ("future" as const),
       })),
@@ -295,7 +324,7 @@ export class LifeCalendarService {
       marriageChapters: dedupedPastMarriage,
       marryNow,
       methodology:
-        "Major life chapters only: one primary theme per Vimshottari Antardasha, scored with gochar (live for now/upcoming; sky at period midpoint for past). Marriage cards include love/arranged and spouse-origin leanings from D1. Mild windows are filtered out. Directional guidance — not a fixed prediction.",
+        "Major chapters from birth onward: one primary theme per Vimshottari Antardasha, in date order. Current chapters use live sky at load time; past and future chapters use Swiss Ephemeris sky dated to each chapter midpoint. Your recorded milestones are marked as confirmed. Directional guidance — not a fixed prediction.",
     };
   }
 }
@@ -309,7 +338,7 @@ function dedupeByDate(items: LifeEventItem[]): LifeEventItem[] {
       map.set(key, item);
     }
   }
-  return [...map.values()].sort((a, b) => b.startDate.localeCompare(a.startDate));
+  return [...map.values()].sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
 function fmtRange(start: Date, end: Date) {
@@ -317,92 +346,16 @@ function fmtRange(start: Date, end: Date) {
   return `${start.toLocaleDateString("en-IN", opts)} - ${end.toLocaleDateString("en-IN", opts)}`;
 }
 
-function ageAt(date: Date, birth: Date) {
-  let age = date.getFullYear() - birth.getFullYear();
-  const m = date.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && date.getDate() < birth.getDate())) age--;
-  return age;
-}
-
-function lordBaseScore(lord: string, seventhLord?: string | null): number {
-  let base =
-    lord === "Venus"
-      ? 92
-      : lord === "Jupiter"
-        ? 90
-        : lord === "Moon"
-          ? 86
-          : lord === "Mercury"
-            ? 80
-            : lord === "Sun"
-              ? 72
-              : lord === "Saturn"
-                ? 68
-                : lord === "Mars"
-                  ? 64
-                  : 58;
-  if (seventhLord && lord === seventhLord) base = Math.min(99, base + 6);
-  return base;
-}
-
-type FallbackInput = {
-  periods: PeriodRow[];
-  marriageTiming: Awaited<ReturnType<typeof predictSelfTiming>>;
-  birthDate: Date | string | null;
-  seventhLord: string | null;
-};
-
-function generateMarriageFallback(input: FallbackInput): TimingWindow[] {
-  const seventhLord: string | null = input.seventhLord;
-  const { periods, marriageTiming, birthDate } = input;
-  const now = new Date();
-  const full = ensureAntardashaCoverage(periods);
-  const mahas = full.filter((p) => p.level === "MAHA");
-
-  const currentMaha = mahas.find((p) => new Date(p.startDate) <= now && new Date(p.endDate) >= now);
-
-  let target: PeriodRow | null = currentMaha || null;
-  if (!target) {
-    target =
-      mahas.find((p) => new Date(p.startDate) > now) ||
-      mahas
-        .filter((p) => new Date(p.endDate) <= now)
-        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0] ||
-      null;
+function dedupeWindows(windows: TimingWindow[]): TimingWindow[] {
+  const map = new Map<string, TimingWindow>();
+  for (const w of windows) {
+    const key = `${w.startDate || ""}|${w.endDate || ""}|${w.label}`;
+    const existing = map.get(key);
+    if (!existing || w.score > existing.score) map.set(key, w);
   }
-
-  if (!target) {
-    return [];
-  }
-
-  const start = new Date(Math.max(new Date(target.startDate).getTime(), now.getTime()));
-  const end = new Date(target.endDate);
-  if (end < now) return [];
-
-  const lord = target.lord;
-  const dashaScore = lordBaseScore(lord, seventhLord) - 8;
-  const gocharBoost = marriageTiming.factors.find((f) => f.id === "gochar")?.score || 0;
-  const rawScore = dashaScore + Math.round(gocharBoost * 0.5);
-  const score = Math.max(58, Math.min(74, Math.round(rawScore)));
-
-  const birth = birthDate ? new Date(birthDate) : null;
-  const ageNote =
-    birth && !Number.isNaN(birth.getTime()) ? ` (~age ${ageAt(end, birth)} at peak)` : "";
-
-  const phase = end < now ? "past" : start <= now ? "present" : "future";
-
-  return [
-    {
-      label: "Watch window — dasha corridor",
-      window: `${fmtRange(start, end)}`,
-      score,
-      kind: "MARRIAGE",
-      dashaLabel: `${lord} Mahadasha`,
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      reason: `${lord} Mahadasha${phase === "present" ? " (current)" : phase === "future" ? " (upcoming)" : " (recent)"} forms a relationship corridor${ageNote}. Dasha read ${dashaScore}/100; gochar adds partial support. Exact timing needs classical muhurta within this period.`,
-    },
-  ];
+  return [...map.values()].sort((a, b) =>
+    (a.startDate || "").localeCompare(b.startDate || "") || b.score - a.score,
+  );
 }
 
 export const lifeCalendarService = new LifeCalendarService();

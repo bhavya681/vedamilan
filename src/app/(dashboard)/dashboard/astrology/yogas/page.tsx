@@ -27,10 +27,10 @@ import {
   Crown,
   Gem,
   Layers,
+  LayoutGrid,
   MoonStar,
   Search,
   Shield,
-  Sparkles,
   Star,
   Sun,
   type LucideIcon,
@@ -84,7 +84,7 @@ type Extras = {
 };
 
 const YOGA_CATEGORIES = [
-  { id: "all", label: "All Yogas", icon: Sparkles },
+  { id: "all", label: "All Yogas", icon: LayoutGrid },
   { id: "Raja Yoga", label: "Raja Yogas", icon: Crown },
   { id: "Dhana Yoga", label: "Dhana Yogas", icon: Coins },
   { id: "Pancha Mahapurusha", label: "Mahapurusha", icon: Gem },
@@ -397,7 +397,7 @@ export default function AstrologyYogasPage() {
                 Doshas
               </TabsTrigger>
               <TabsTrigger value="guide" className="gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" />
+                <BookOpen className="h-3.5 w-3.5" />
                 Guide
               </TabsTrigger>
             </TabsList>

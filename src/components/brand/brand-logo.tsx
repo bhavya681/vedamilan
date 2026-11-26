@@ -8,11 +8,13 @@ import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 const sizes = {
-  sm: { mark: 32, text: "text-lg" },
-  md: { mark: 40, text: "text-lg sm:text-xl md:text-2xl" },
-  lg: { mark: 56, text: "text-3xl" },
-  xl: { mark: 80, text: "text-5xl" },
+  sm: { mark: 32, full: 104 },
+  md: { mark: 40, full: 144 },
+  lg: { mark: 56, full: 208 },
+  xl: { mark: 80, full: 288 },
 } as const;
+
+const FULL_LOGO_HEIGHT_RATIO = 432 / 1294;
 
 export function BrandLogo({
   href = routes.home,
@@ -39,24 +41,17 @@ export function BrandLogo({
       aria-label={`${brand.name} home`}
     >
       <Image
-        src={brand.logo.mark}
+        src={showWordmark ? brand.logo.full : brand.logo.mark}
         alt=""
-        width={dim.mark}
-        height={dim.mark}
+        width={showWordmark ? dim.full : dim.mark}
+        height={
+          showWordmark ? Math.round(dim.full * FULL_LOGO_HEIGHT_RATIO) : dim.mark
+        }
         priority={priority}
-        className={cn("shrink-0 object-contain", size === "md" && "h-8 w-8 sm:h-10 sm:w-10")}
+        className={cn("h-auto max-w-full object-contain", !showWordmark && "shrink-0")}
         aria-hidden
       />
-      {showWordmark ? (
-        <span className={cn("font-display truncate tracking-wide", dim.text)}>
-          <span className="text-brand-gold">{brand.shortName}</span>
-          <span className="text-muted-foreground ml-1 align-middle text-[0.62em] font-semibold tracking-[0.14em]">
-            AI
-          </span>
-        </span>
-      ) : (
-        <span className="sr-only">{brand.name}</span>
-      )}
+      {!showWordmark ? <span className="sr-only">{brand.name}</span> : null}
     </Link>
   );
 }

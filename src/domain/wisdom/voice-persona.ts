@@ -201,4 +201,4 @@ export function resolveServerVoice(
 }
 
 export const VOICE_PRIVACY_NOTICE =
-  "Your microphone audio is processed only to power this conversation. VedaMilan does not permanently store raw voice recordings. Transcripts are kept with your wisdom conversation unless you delete them. This is an AI-generated voice designed to accompany the wisdom experience — not the voice of a historical figure.";
+  "Your microphone audio is processed only to power this conversation. KUNDLIV does not permanently store raw voice recordings. Transcripts are kept with your wisdom conversation unless you delete them. This is an AI-generated voice designed to accompany the wisdom experience — not the voice of a historical figure.";

@@ -102,7 +102,7 @@ export function AppearanceSettingsPanel() {
       <div>
         <h1 className="font-display text-3xl tracking-tight">Appearance</h1>
         <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
-          Personalize how VedaMilan feels. Themes change mood and accents — never matchmaking,
+          Personalize how KUNDLIV feels. Themes change mood and accents — never matchmaking,
           kundli math, or your identity.
         </p>
         <p className="text-muted-foreground mt-2 text-xs">
@@ -193,7 +193,7 @@ export function AppearanceSettingsPanel() {
             Theme
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Curated VedaMilan atmospheres. Veda Gold is the classic brand identity.
+            Curated KUNDLIV atmospheres. Veda Gold is the classic brand identity.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

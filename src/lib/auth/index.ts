@@ -56,7 +56,7 @@ function createAuth(db: Db, client: MongoClient) {
   const isProd = process.env.NODE_ENV === "production";
 
   return betterAuth({
-    appName: process.env.NEXT_PUBLIC_APP_NAME || "VedaMilan AI",
+    appName: process.env.NEXT_PUBLIC_APP_NAME || "KUNDLIV",
     baseURL:
       process.env.BETTER_AUTH_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||

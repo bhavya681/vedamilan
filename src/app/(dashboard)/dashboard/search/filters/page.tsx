@@ -46,7 +46,7 @@ export default function FiltersPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Advanced Filters"
         description="Precision discovery controls"
         actions={

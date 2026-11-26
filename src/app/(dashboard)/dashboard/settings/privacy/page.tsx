@@ -117,7 +117,7 @@ export default function PrivacySettingsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Privacy"
         description="Control discovery visibility and what others can see. Birth date, time, and place are never exposed on public profiles."
         actions={

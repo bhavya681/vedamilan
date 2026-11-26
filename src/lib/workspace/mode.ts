@@ -63,6 +63,7 @@ export function inferModeFromPath(pathname: string): WorkspaceMode | null {
     "/dashboard/horoscope",
     "/dashboard/calendar",
     "/dashboard/birth-details",
+    "/dashboard/consultation",
     "/dashboard/ai-insights",
     "/dashboard/predictions",
     "/dashboard/remedies",
@@ -83,6 +84,8 @@ export function inferModeFromPath(pathname: string): WorkspaceMode | null {
     "/dashboard/visitors",
     "/dashboard/recommendations",
     "/dashboard/compatibility",
+    "/dashboard/preferences",
+    "/dashboard/your-connection",
   ];
   if (matrimonyPrefixes.some((p) => bare === p || bare.startsWith(`${p}/`))) {
     return "matrimony";

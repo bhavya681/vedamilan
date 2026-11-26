@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { MessageCircle, Mic, Sparkles } from "lucide-react";
+import { BookOpen, MessageCircle, Mic } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,7 @@ export default function WisdomGuideProfilePage() {
             </div>
             <div className="max-w-2xl space-y-4">
               <p className="text-muted-foreground flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] uppercase">
-                <Sparkles className="text-gold h-3.5 w-3.5" aria-hidden />
+                <BookOpen className="text-gold h-3.5 w-3.5" aria-hidden />
                 {guide.role} · {guide.era}
               </p>
               {guide.sanskritName ? (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Compass, Orbit, Sparkles, Sunrise } from "lucide-react";
+import { Compass, Orbit, Sunrise } from "lucide-react";
 
 import { NAKSHATRAS, SIGNS } from "@/application/horoscope/vedic-constants";
 import { NAKSHATRA_DETAILS } from "@/application/horoscope/nakshatra-catalog";
@@ -469,7 +469,7 @@ export function NorthHorizonGalaxy({
             </div>
 
             <HorizonList
-              icon={<Sparkles className="h-3.5 w-3.5" />}
+              icon={<Sunrise className="h-3.5 w-3.5" />}
               title="In the rising house"
               items={rising}
               empty="No graha sitting exactly in house 1."

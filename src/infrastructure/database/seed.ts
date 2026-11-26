@@ -304,7 +304,7 @@ async function seed() {
   const adminId = await ensureAuthUser({
     email: "admin@vedamilan.ai",
     password: "VedaMilanAdmin!23",
-    name: "VedaMilan Admin",
+    name: "KUNDLIV Admin",
     role: "admin",
   });
   ids["admin@vedamilan.ai"] = adminId;

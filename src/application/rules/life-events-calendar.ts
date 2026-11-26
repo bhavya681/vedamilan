@@ -56,6 +56,10 @@ export type LifeEventItem = {
   travelKind?: TravelKind;
   /** Short human label for chips (e.g. “Foreign travel”) */
   detailLabel?: string;
+  /** Source of the chapter: dasha-derived or explicitly confirmed by the user */
+  source?: "dasha" | "user-asserted";
+  /** Date whose sky was used for scoring, so links can match the scoring moment */
+  skyAt?: string;
 };
 
 export type DeshKaalPatraContext = {
@@ -567,11 +571,10 @@ function meetsMajorBar(
       ? 55
       : 70;
   if (phase === "past" && category === "marriage" && score < pastMarriageMin) return false;
-  if (phase === "past" && score < 76) return false;
+  if (phase === "past" && score < 70) return false;
   if (phase === "future" && score < 74) return false;
   if (phase === "present" && score < 70) return false;
-  // Drop moderate-only noise unless score is clearly decisive
-  if (probability === "moderate" && score < 80) return false;
+  if (probability === "moderate" && score < 80 && phase !== "past") return false;
   return true;
 }
 
@@ -637,10 +640,16 @@ export function computeLifeEventsCalendar(input: {
   currentAntar?: string | null;
   gocharPlanets?: GocharLite[] | null;
   gocharHighlights?: string[] | null;
-  /** Historical gochar keyed by Antardasha start ISO — sky at period midpoint */
+  /** Dated gochar keyed by Antardasha start ISO — sky at period midpoint */
+  datedGocharByAntarStart?: Record<string, GocharLite[]> | null;
+  /** @deprecated Use datedGocharByAntarStart */
   historicalGocharByAntarStart?: Record<string, GocharLite[]> | null;
   /** User marital status — used to lower thresholds for known past marriages */
   maritalStatus?: string | null;
+  /** Maximum chapters returned per phase */
+  limits?: Partial<Record<LifeEventPhase, number>>;
+  /** How far ahead to project Antardasha chapters */
+  horizonYears?: number;
   now?: Date;
 }): {
   context: DeshKaalPatraContext;
@@ -678,14 +687,10 @@ export function computeLifeEventsCalendar(input: {
   const antars = full.filter((p) => p.level === "ANTAR");
   const events: LifeEventItem[] = [];
   const categories = Object.keys(CATEGORY_META) as LifeEventCategory[];
-  const pastCutoff = new Date(now);
-  pastCutoff.setFullYear(pastCutoff.getFullYear() - 25);
 
   const gocharSummary = input.gocharHighlights?.length
-    ? `Live gochar: ${input.gocharHighlights.slice(0, 3).join(" · ")}`
-    : input.gocharPlanets?.length
-      ? "Live gochar raises probability when transits agree; past windows use sky at that Antardasha midpoint."
-      : "Gochar unavailable — windows use dasha lords only.";
+    ? `Live gochar: ${input.gocharHighlights.slice(0, 3).join(" · ")}. Past and future chapters use sky dated to each chapter midpoint.`
+    : "Current and chapter-specific sky are used where available; otherwise chapters use dasha lords only.";
 
   for (const period of antars) {
     const start = new Date(period.startDate);
@@ -699,8 +704,9 @@ export function computeLifeEventsCalendar(input: {
     const ageAtWindow = validBirth ? ageAt(mid, validBirth) : null;
     const antarKey = start.toISOString();
 
-    if (phase === "past" && end < pastCutoff) continue;
-    if (phase === "future" && monthsFromNow(start, now) > 18 * 12) continue;
+    if (phase === "past" && validBirth && end < validBirth) continue;
+    const horizonMonths = (input.horizonYears ?? 18) * 12;
+    if (phase === "future" && monthsFromNow(start, now) > horizonMonths) continue;
 
     for (const category of categories) {
       const meta = CATEGORY_META[category];
@@ -720,17 +726,15 @@ export function computeLifeEventsCalendar(input: {
 
       let score = scoreTheme(category, mahaLord, antarLord, houseLords);
 
-      const hist = phase === "past" ? input.historicalGocharByAntarStart?.[antarKey] || null : null;
-      const liveNear =
-        phase === "present" ||
-        (phase === "future" && monthsFromNow(start, now) <= 24) ||
-        (phase === "past" && monthsFromNow(end, now) >= -2);
+      const datedGochar =
+        input.datedGocharByAntarStart || input.historicalGocharByAntarStart || null;
+      const sampledSky = phase === "present" ? null : datedGochar?.[antarKey] || null;
 
       const gocharPlanetsForScore =
-        phase === "past"
-          ? hist || (liveNear ? input.gocharPlanets : null)
-          : liveNear
-            ? input.gocharPlanets
+        phase === "present"
+          ? input.gocharPlanets || null
+          : phase === "past" || phase === "future"
+            ? sampledSky
             : null;
 
       const gochar = gocharPlanetsForScore
@@ -741,12 +745,7 @@ export function computeLifeEventsCalendar(input: {
             caution: undefined as string | undefined,
           };
 
-      if (phase === "present") score += gochar.boost;
-      else if (phase === "future" && monthsFromNow(start, now) <= 24) {
-        score += Math.round(gochar.boost * 0.85);
-      } else if (phase === "past") {
-        score += Math.round(gochar.boost * 0.9);
-      }
+      score += phase === "present" ? gochar.boost : Math.round(gochar.boost * 0.9);
       score = clamp(score);
 
       const houseHit =
@@ -770,10 +769,13 @@ export function computeLifeEventsCalendar(input: {
       const dashaLabel = `${mahaLord}–${antarLord}`;
       const range = fmtRange(start, end);
       const gocharParts = [gochar.note, gochar.caution].filter(Boolean);
-      const gocharNote =
-        gocharParts.length > 0
-          ? `${phase === "past" ? "Sky then · " : ""}${gocharParts.join(" ")}`
-          : undefined;
+      const skyPrefix =
+        phase === "past"
+          ? "Sky then · "
+          : phase === "future"
+            ? "Sky at chapter · "
+            : "";
+      const gocharNote = gocharParts.length > 0 ? `${skyPrefix}${gocharParts.join(" ")}` : undefined;
 
       const spanLabel =
         spanMonths >= 12
@@ -806,10 +808,14 @@ export function computeLifeEventsCalendar(input: {
           : phase === "future"
             ? `Upcoming major period ${range} (${spanLabel})${
                 travel ? ` for ${travel.label.toLowerCase()}` : ""
-              }. Watch when gochar activates houses ${meta.gocharHouses.join("/")}.`
+              } — ${sampledSky ? "scored with dasha + sky at the chapter midpoint" : "scored from dasha lords; dated sky sample unavailable"}. Watch houses ${meta.gocharHouses.join("/")} for confirmation.`
             : `Past major period ${range} (${spanLabel}) under ${dashaLabel}${
                 travel ? ` · ${travel.label}` : ""
-              }${hist ? " — scored with dasha + sky at the midpoint" : ""}.`;
+              }${
+                sampledSky
+                  ? " — scored with dasha + sky at the midpoint"
+                  : " — scored from dasha lords; historical sky sample unavailable"
+              }.`;
 
       events.push({
         id: `${category}-${start.toISOString()}-${antarLord}`,
@@ -835,6 +841,8 @@ export function computeLifeEventsCalendar(input: {
         spanMonths,
         travelKind: travel?.kind,
         detailLabel: travel?.label,
+        source: "dasha",
+        skyAt: (phase === "present" ? now : mid).toISOString(),
       });
     }
   }
@@ -860,26 +868,15 @@ export function computeLifeEventsCalendar(input: {
     }
   }
 
-  const sorted = [...bestByAntar.values()].sort((a, b) => {
-    const phaseRank = { present: 0, future: 1, past: 2 } as const;
-    const probRank = { high: 0, elevated: 1, moderate: 2 } as const;
-    if (a.phase !== b.phase) return phaseRank[a.phase] - phaseRank[b.phase];
-    if (a.phase === "past") {
-      return b.endDate.localeCompare(a.endDate) || b.score - a.score;
-    }
-    return (
-      probRank[a.probability] - probRank[b.probability] ||
-      b.score - a.score ||
-      b.spanMonths - a.spanMonths ||
-      a.startDate.localeCompare(b.startDate)
-    );
-  });
+  const byStartThenScore = (a: LifeEventItem, b: LifeEventItem) =>
+    a.startDate.localeCompare(b.startDate) || b.score - a.score;
+  const sorted = [...bestByAntar.values()].sort(byStartThenScore);
+  const limits = { past: 80, present: 8, future: 40, ...input.limits };
 
-  // Tight caps — major chapters only
   const byPhase: Record<LifeEventPhase, LifeEventItem[]> = {
-    past: sorted.filter((e) => e.phase === "past").slice(0, 6),
-    present: sorted.filter((e) => e.phase === "present").slice(0, 4),
-    future: sorted.filter((e) => e.phase === "future").slice(0, 8),
+    past: sorted.filter((e) => e.phase === "past").slice(0, limits.past),
+    present: sorted.filter((e) => e.phase === "present").slice(0, limits.present),
+    future: sorted.filter((e) => e.phase === "future").slice(0, limits.future),
   };
 
   const hasPastMarriage = byPhase.past.some((e) => e.category === "marriage");
@@ -893,8 +890,9 @@ export function computeLifeEventsCalendar(input: {
       .sort((a, b) => b.score - a.score || a.startDate.localeCompare(b.startDate));
     if (bestPastMarriage.length > 0) {
       byPhase.past.push(bestPastMarriage[0]!);
-      byPhase.past.sort((a, b) => b.endDate.localeCompare(a.endDate) || b.score - a.score);
-      if (byPhase.past.length > 6) byPhase.past.length = 6;
+      byPhase.past.sort((a, b) => b.score - a.score);
+      if (byPhase.past.length > limits.past) byPhase.past.length = limits.past;
+      byPhase.past.sort(byStartThenScore);
     }
   }
 
@@ -908,13 +906,13 @@ export function computeLifeEventsCalendar(input: {
         (MILESTONE_CATEGORIES.has(e.category) || e.category === "property") &&
         (e.probability === "high" || e.probability === "elevated" || e.score >= 78),
     )
-    .slice(0, 6);
+    .slice(0, 8);
 
   const highProbability = [...presentHighlights, ...futureHighlights].slice(0, 8);
 
   return {
     context,
-    events: [...byPhase.present, ...byPhase.future, ...byPhase.past],
+    events: sorted,
     byPhase,
     highProbability,
     pastHighlights,

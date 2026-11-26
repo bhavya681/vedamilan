@@ -45,7 +45,7 @@ export default function CheckoutPage() {
       key,
       amount,
       currency: "INR",
-      name: "VedaMilan AI",
+      name: "KUNDLIV",
       description: `${plan} plan`,
       order_id: orderId,
       handler: async (response: {

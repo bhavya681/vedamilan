@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       />
       <GlassCard className="mx-auto max-w-3xl space-y-4">
         <p className="text-muted-foreground text-sm leading-relaxed">
-          VedaMilan AI treats birth data, photos, and messages as sensitive. We use encryption in
+          KUNDLIV treats birth data, photos, and messages as sensitive. We use encryption in
           transit, role-based access, and soft-delete patterns so members can request removal.
         </p>
         <p className="text-muted-foreground text-sm leading-relaxed">

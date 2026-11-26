@@ -44,7 +44,7 @@ const overlays: Overlay = {
       tryAgain: "फिर कोशिश करें",
       viewOriginal: "मूल देखें",
       translatedFrom: "{language} से अनुवादित",
-      translatedByAi: "VedaMilan AI द्वारा अनुवादित",
+      translatedByAi: "KUNDLIV द्वारा अनुवादित",
       onlyYouCanSee: "केवल आप इसे देख सकते हैं।",
       language: "भाषा",
       region: "क्षेत्र",
@@ -73,7 +73,7 @@ const overlays: Overlay = {
       tryAgain: "Intentar de nuevo",
       viewOriginal: "Ver original",
       translatedFrom: "Traducido del {language}",
-      translatedByAi: "Traducido por VedaMilan AI",
+      translatedByAi: "Traducido por KUNDLIV",
       onlyYouCanSee: "Solo tú puedes ver esto.",
       language: "Idioma",
       region: "Región",
@@ -102,7 +102,7 @@ const overlays: Overlay = {
       tryAgain: "حاول مرة أخرى",
       viewOriginal: "عرض الأصل",
       translatedFrom: "مترجم من {language}",
-      translatedByAi: "ترجم بواسطة VedaMilan AI",
+      translatedByAi: "ترجم بواسطة KUNDLIV",
       onlyYouCanSee: "أنت فقط من يمكنه رؤية هذا.",
       language: "اللغة",
       region: "المنطقة",
@@ -131,7 +131,7 @@ const overlays: Overlay = {
       tryAgain: "Erneut versuchen",
       viewOriginal: "Original anzeigen",
       translatedFrom: "Übersetzt aus {language}",
-      translatedByAi: "Übersetzt von VedaMilan AI",
+      translatedByAi: "Übersetzt von KUNDLIV",
       onlyYouCanSee: "Nur Sie können dies sehen.",
       language: "Sprache",
       region: "Region",
@@ -160,7 +160,7 @@ const overlays: Overlay = {
       tryAgain: "Réessayer",
       viewOriginal: "Voir l’original",
       translatedFrom: "Traduit de {language}",
-      translatedByAi: "Traduit par VedaMilan AI",
+      translatedByAi: "Traduit par KUNDLIV",
       onlyYouCanSee: "Vous seul pouvez voir ceci.",
       language: "Langue",
       region: "Région",
@@ -324,7 +324,7 @@ const overlays: Overlay = {
       title: "सेटिंग्स",
       languageRegion: "भाषा और क्षेत्र",
       languageRegionDescription:
-        "VedaMilan आपसे कैसे बात करे — जन्म डेटा या ज्योतिष गणना बदले बिना।",
+        "KUNDLIV आपसे कैसे बात करे — जन्म डेटा या ज्योतिष गणना बदले बिना।",
       appLanguage: "ऐप भाषा",
       saved: "भाषा और क्षेत्र प्राथमिकताएँ सहेजी गईं।",
       birthDataUnchanged: "भाषा बदलने से संग्रहीत जन्म तिथि, समय, स्थान या कुंडली गणना नहीं बदलती।",
@@ -333,7 +333,7 @@ const overlays: Overlay = {
       title: "Ajustes",
       languageRegion: "Idioma y región",
       languageRegionDescription:
-        "Elige cómo te habla VedaMilan — sin cambiar tus datos de nacimiento ni los cálculos astrológicos.",
+        "Elige cómo te habla KUNDLIV — sin cambiar tus datos de nacimiento ni los cálculos astrológicos.",
       appLanguage: "Idioma de la app",
       saved: "Preferencias de idioma y región guardadas.",
       birthDataUnchanged:
@@ -637,7 +637,7 @@ async function main() {
       >;
       const overlay = overlays[ns]?.[locale] || {};
       const merged = { ...en, ...overlay };
-      if (ns === "common") merged.appName = "VedaMilan AI";
+      if (ns === "common") merged.appName = "KUNDLIV";
       await writeFile(
         path.join(root, locale, `${ns}.json`),
         `${JSON.stringify(merged, null, 2)}\n`,

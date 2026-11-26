@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, Sparkles } from "lucide-react";
+import { BadgeCheck, Heart } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { SoftEmoji, useCompatMood } from "@/features/compatibility/compatibility-visuals";
@@ -186,7 +186,7 @@ function ReportRow({
             ) : null}
             {strengthN > 0 ? (
               <span className="text-emerald inline-flex items-center gap-1">
-                <Sparkles className="h-3 w-3" />
+                <BadgeCheck className="h-3 w-3" />
                 {strengthN} strengths
               </span>
             ) : null}

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ArrowUp,
+  Bot,
   Check,
   ChevronRight,
   Copy,
@@ -12,9 +13,9 @@ import {
   History,
   Loader2,
   Menu,
+  MessageCircle,
   MessageSquarePlus,
   Plus,
-  Sparkles,
   Telescope,
 } from "lucide-react";
 
@@ -568,7 +569,7 @@ export default function MarriageGuruPage() {
                 title={prompt}
                 className="group hover:bg-muted/70 flex w-full min-w-0 items-start gap-2 rounded-lg px-2 py-2 text-left transition-colors disabled:opacity-50"
               >
-                <Sparkles className="text-rose mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <MessageCircle className="text-rose mt-0.5 h-3.5 w-3.5 shrink-0" />
 
                 <span className="text-muted-foreground group-hover:text-foreground line-clamp-2 min-w-0 flex-1 text-[11px] leading-snug">
                   {prompt}
@@ -684,7 +685,7 @@ export default function MarriageGuruPage() {
                     variant="secondary"
                     className="hidden shrink-0 gap-1 px-1.5 py-0 text-[9px] sm:inline-flex"
                   >
-                    <Sparkles className="h-2.5 w-2.5" />
+                    <Bot className="h-2.5 w-2.5" />
                     OpenUI
                   </Badge>
                 </div>
@@ -802,7 +803,7 @@ export default function MarriageGuruPage() {
                         onClick={() => void sendMessage(prompt)}
                         className="group border-border/50 bg-card/50 hover:border-rose/40 hover:bg-rose/[0.05] flex w-full min-w-0 items-start gap-2.5 overflow-hidden rounded-2xl border px-3.5 py-3 text-left transition-all disabled:opacity-50"
                       >
-                        <Sparkles className="text-rose mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <MessageCircle className="text-rose mt-0.5 h-3.5 w-3.5 shrink-0" />
 
                         <span className="text-foreground/85 group-hover:text-foreground min-w-0 flex-1 text-[12.5px] leading-snug [overflow-wrap:anywhere] break-words">
                           {prompt}
@@ -958,7 +959,7 @@ export default function MarriageGuruPage() {
                 className="border-border/55 bg-card/85 focus-within:border-rose/50 focus-within:ring-rose/15 box-border flex w-full min-w-0 items-end gap-1.5 overflow-hidden rounded-[1.55rem] border p-1.5 shadow-[var(--shadow-elevated)] transition focus-within:ring-2 sm:gap-2 sm:p-2"
               >
                 <div className="mb-0.5 ml-1 hidden size-8 shrink-0 items-center justify-center rounded-full sm:flex">
-                  <Sparkles className="text-rose h-4 w-4" />
+                  <MessageCircle className="text-rose h-4 w-4" />
                 </div>
 
                 <textarea

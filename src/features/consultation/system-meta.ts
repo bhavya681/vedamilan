@@ -7,12 +7,12 @@ import {
   GitBranch,
   Globe2,
   LayoutGrid,
+  Leaf,
   Network,
   Orbit,
   RefreshCw,
-  Sparkles,
-  Waves,
   type LucideIcon,
+  Waves,
 } from "lucide-react";
 
 import type { AstrologerSystem } from "@/domain/consultation/virtual-astrologers";
@@ -30,7 +30,7 @@ export const ASTROLOGER_SYSTEM_META: Record<
   tajika: { label: "Tajika / Varshaphala", shortLabel: "Tajika", icon: CalendarRange },
   gochar: { label: "Gochar transits", shortLabel: "Gochar", icon: RefreshCw },
   prashna: { label: "Prashna", shortLabel: "Prashna", icon: CircleHelp },
-  remedies: { label: "Remedies", shortLabel: "Remedies", icon: Sparkles },
+  remedies: { label: "Remedies", shortLabel: "Remedies", icon: Leaf },
   chinese: { label: "Chinese astrology", shortLabel: "Chinese", icon: Compass },
   western: { label: "Western astrology", shortLabel: "Western", icon: Globe2 },
 };

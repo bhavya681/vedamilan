@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 
 import { Globe3D, type GlobeMarker } from "@/components/ui/3d-globe";
 import { editorial } from "@/features/landing/lib/images";
@@ -64,7 +66,7 @@ export function InternationalGlobe({
         markers={markers}
         config={{
           showAtmosphere: true,
-          atmosphereColor: "#d7e3ef",
+          atmosphereColor: "#F4F0E7",
           atmosphereIntensity: 0.4,
           atmosphereBlur: 3,
           bumpScale: 4,
@@ -120,7 +122,7 @@ export function PlaceIndex({
           </button>
           <motion.span
             aria-hidden
-            className="block h-px origin-left bg-[#D4AF37]"
+            className="block h-px origin-left bg-[#C9A96E]"
             initial={false}
             animate={{ scaleX: i === active ? 1 : 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.4, ease }}

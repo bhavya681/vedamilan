@@ -59,7 +59,7 @@ export const SHUKRA: GrahaEntity = {
       number: 4,
       title: "Shukra & Relationships",
       narrative:
-        "On VedaMilan, Venus is a natural bridge between Jyotisha and matchmaking: how we seek beauty, fairness, and pleasure in partnership.",
+        "On KUNDLIV, Venus is a natural bridge between Jyotisha and matchmaking: how we seek beauty, fairness, and pleasure in partnership.",
       symbolizes: "Compatibility as shared aesthetic and ethical taste.",
       astrologicalConnection:
         "Explore Venus in houses and with the 7th for relationship symbolism — never as a sole marriage verdict.",
@@ -200,7 +200,7 @@ export const SHUKRA: GrahaEntity = {
       id: "shukra-relationships",
       label: "interpretive",
       title: "Shukra & Relationships",
-      body: "On VedaMilan, explore Venus alongside the 7th house and compatibility tools. Venus symbolism can illuminate taste in partnership — it does not alone decide marriage outcomes. Use chart data from the engine, then reflect with traditional frameworks.",
+      body: "On KUNDLIV, explore Venus alongside the 7th house and compatibility tools. Venus symbolism can illuminate taste in partnership — it does not alone decide marriage outcomes. Use chart data from the engine, then reflect with traditional frameworks.",
     },
   ],
 };

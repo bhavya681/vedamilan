@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         translatedText: null,
         targetLocale,
         provider: null,
-        label: "Translated by VedaMilan AI",
+        label: "Translated by KUNDLIV",
         available: false,
         message: "Translation is temporarily unavailable. The original message is unchanged.",
       });
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         translatedText,
         targetLocale,
         provider: "openai",
-        label: "Translated by VedaMilan AI",
+        label: "Translated by KUNDLIV",
         available: Boolean(translatedText),
         requestedBy: session.user.id,
       });
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
         translatedText,
         targetLocale,
         provider: "google",
-        label: "Translated by VedaMilan AI",
+        label: "Translated by KUNDLIV",
         available: Boolean(translatedText),
         requestedBy: session.user.id,
       });

@@ -20,7 +20,7 @@ export function FaqSection() {
             Questions, answered clearly
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base">
-            Everything you need before beginning your VedaMilan journey.
+            Everything you need before beginning your KUNDLIV journey.
           </p>
         </FadeIn>
 

@@ -35,7 +35,7 @@ export default function PremiumPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Premium"
         description="Unlock full intelligence"
         actions={

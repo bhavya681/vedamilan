@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* VedaMilan — calm, trustworthy relationship intelligence */
+/* KUNDLIV — calm, trustworthy relationship intelligence */
 @font-face {
   font-family: "Cormorant Garamond";
   font-style: normal;
@@ -201,6 +201,9 @@
   --color-saffron: var(--saffron);
   --color-rose: var(--rose);
   --color-navy: var(--navy);
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
   --color-gold: var(--gold);
   --color-ivory: var(--ivory);
   --color-ai: var(--ai);

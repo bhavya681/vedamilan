@@ -34,7 +34,7 @@ const EXAMPLES = [
 export function getGuruUiSystemPrompt(): string {
   return promptLibrary.prompt({
     preamble: [
-      "You are AI Guru, VedaMilan's professional Vedic astrology guide.",
+      "You are AI Guru, KUNDLIV's professional Vedic astrology guide.",
       "Compose every reply as one OpenUI Lang program using only the components listed below.",
       "The program renders directly inside a chat interface, so structure matters more than prose volume.",
     ].join(" "),

@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Bell,
   Heart,
+  HeartHandshake,
   Hourglass,
   ListChecks,
   MoonStar,
   ShieldAlert,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -24,7 +23,6 @@ import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skele
 import { moodFromScore } from "@/features/compatibility/compatibility-visuals";
 import { SpouseTendencyPanel } from "@/features/compatibility/spouse-tendency-panel";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
-import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
@@ -59,6 +57,7 @@ type Bundle = {
     reasons?: string[];
     methodology?: string;
   } | null;
+  needsSetup: boolean;
 };
 
 function greetingForHour(hour: number) {
@@ -147,7 +146,6 @@ function GuidanceCard({
 
 export default function MatrimonyHomePage() {
   const t = useT();
-  const router = useRouter();
   const reduceMotion = useReducedMotion();
   const { isPending } = useSession();
   const { setMode } = useWorkspaceMode();
@@ -169,7 +167,6 @@ export default function MatrimonyHomePage() {
 
     const ac = new AbortController();
     let cancelled = false;
-    let redirecting = false;
 
     async function load() {
       try {
@@ -220,27 +217,14 @@ export default function MatrimonyHomePage() {
 
         if (isUnauthorizedPayload(profileRaw) || !profile.success) {
           setError("Failed to load matrimony home");
-          return;
         }
 
         const profileData = profile.data;
-        const profileDoc = profileData?.profile;
-        const readiness = evaluateOnboardingReadiness({
-          gender: profileDoc?.gender,
-          city: profileDoc?.city,
-          profession: profileDoc?.profession,
-          education: profileDoc?.education,
-          photos: profileDoc?.photos,
-          completionScore: profileDoc?.completion?.score ?? 0,
-          hasBirthDetails: Boolean(profileData?.birthDetails?.birthDate),
-          hasChart: Boolean(chartRes.success && chartRes.data?.horoscope),
-        });
-
-        if (!readiness.ready) {
-          redirecting = true;
-          router.replace(routes.onboarding);
-          return;
-        }
+        const needsSetup =
+          !profile.success ||
+          !profileData?.birthDetails?.birthDate ||
+          !chartRes.success ||
+          !chartRes.data?.horoscope;
 
         const matchItems = matches.success ? matches.data?.data || [] : [];
         const insight =
@@ -258,12 +242,13 @@ export default function MatrimonyHomePage() {
           spouseTendencies: marriageRes?.success
             ? marriageRes.data?.spouseTendencies || null
             : null,
+          needsSetup,
         });
       } catch (error) {
         if (cancelled || isAbortError(error)) return;
         setError("Failed to load matrimony home");
       } finally {
-        if (!cancelled && !redirecting) setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     void load();
@@ -271,7 +256,7 @@ export default function MatrimonyHomePage() {
       cancelled = true;
       ac.abort();
     };
-  }, [isPending, router]);
+  }, [isPending]);
 
   const firstName = bundle?.userName?.split(" ")[0] ?? "friend";
 
@@ -301,6 +286,24 @@ export default function MatrimonyHomePage() {
         />
 
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
+
+        {bundle?.needsSetup ? (
+          <div className="border-gold/25 bg-gold/5 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-medium">Finish setup for a fuller relationship picture</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                Your profile, birth details, or Kundli are not ready yet. You can still browse modes
+                and ask AI guidance while you finish.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline" className="w-full shrink-0 sm:w-auto">
+              <Link href={routes.birthDetails}>
+                Add birth details
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
 
         {bundle ? (
           <>
@@ -452,7 +455,7 @@ export default function MatrimonyHomePage() {
               <GlassCard className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="bg-gold/10 text-gold grid h-8 w-8 place-items-center rounded-lg">
-                    <Sparkles className="h-4 w-4" aria-hidden />
+                    <HeartHandshake className="h-4 w-4" aria-hidden />
                   </span>
                   <h2 className="font-display text-xl">A closer look at your compatibility</h2>
                 </div>

@@ -59,8 +59,7 @@ export function MobileBottomNav() {
     ];
   }, [mode, homeHref]);
 
-  const primaryActive = primary.some((item) => isDashboardNavActive(pathname, item.href));
-  const moreActive = moreOpen || !primaryActive;
+  const moreActive = moreOpen;
 
   useEffect(() => {
     setMoreOpen(false);

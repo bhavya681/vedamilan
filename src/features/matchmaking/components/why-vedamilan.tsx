@@ -18,7 +18,7 @@ const reasons = [
   },
 ];
 
-export function WhyVedaMilanSection() {
+export function WhyKundlivSection() {
   return (
     <section
       id="why"
@@ -27,7 +27,7 @@ export function WhyVedaMilanSection() {
     >
       <FadeIn>
         <p className="text-secondary text-xs font-semibold tracking-[0.2em] uppercase">
-          Why VedaMilan AI
+          Why KUNDLIV
         </p>
         <h2 id="why-heading" className="font-display mt-3 text-3xl sm:text-4xl">
           Designed for trust at every layer

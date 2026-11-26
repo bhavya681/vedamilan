@@ -83,7 +83,7 @@ export default function PreferencesPage() {
   return (
     <div className="relative">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Partner Preferences"
         description="Intentional filters for discovery"
         actions={

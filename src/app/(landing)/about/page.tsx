@@ -18,7 +18,7 @@ export default function AboutPage() {
         description="The story behind calm, premium relationship intelligence."
         actions={
           <Button asChild variant="outline">
-            <Link href={routes.register}>Join VedaMilan</Link>
+            <Link href={routes.register}>Join KUNDLIV</Link>
           </Button>
         }
       />

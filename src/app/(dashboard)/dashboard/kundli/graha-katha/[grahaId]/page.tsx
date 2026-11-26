@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import {
   Bookmark,
   BookmarkCheck,
+  BookOpen,
+  ChartPie,
   ChevronLeft,
   Flame,
   House,
@@ -14,7 +16,6 @@ import {
   Orbit,
   Quote,
   ScrollText,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -158,7 +159,7 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
           { href: "#houses", label: t("grahaKatha.houses"), icon: House },
           { href: "#remedies", label: t("grahaKatha.remedies"), icon: Flame },
           { href: "#reflections", label: t("grahaKatha.reflections"), icon: Quote },
-          { href: "#my-chart", label: t("grahaKatha.myChart"), icon: Sparkles },
+          { href: "#my-chart", label: t("grahaKatha.myChart"), icon: ChartPie },
         ]}
       />
 
@@ -190,7 +191,7 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
           <div className="flex flex-wrap items-center gap-2">
             <ContentLabelBadge label={s.label} />
             <span className="bg-gold/10 text-gold inline-flex h-7 w-7 items-center justify-center rounded-lg">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              <BookOpen className="h-3.5 w-3.5" aria-hidden />
             </span>
           </div>
           <h2 className="font-display mt-3 text-2xl">{s.title}</h2>
@@ -277,7 +278,7 @@ export default function GrahaKathaDetailPage({ params }: { params: Promise<{ gra
       <div className="border-border/60 bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky-above-bottom-nav fixed inset-x-0 z-30 border-t px-3 py-2.5 backdrop-blur-md md:hidden">
         <Button asChild className="w-full gap-2">
           <a href="#my-chart">
-            <Sparkles className="h-4 w-4" aria-hidden />
+            <ChartPie className="h-4 w-4" aria-hidden />
             {t("grahaKatha.stickyChart")}
           </a>
         </Button>

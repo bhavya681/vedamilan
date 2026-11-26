@@ -130,7 +130,7 @@ function buildGocharSnapshot(
  * Current sky (Gochar) read against the member's natal Lagna longitude.
  * Deterministic Swiss Ephemeris calculation — AI only explains this output.
  */
-export async function computeGocharForUser(userId: string) {
+export async function computeGocharForUser(userId: string, asOf: Date = new Date()) {
   await connectMongo();
   const [birth, natal] = await Promise.all([
     BirthDetails.findOne({ userId }).lean(),
@@ -142,7 +142,7 @@ export async function computeGocharForUser(userId: string) {
   }
 
   return buildGocharSnapshot(
-    new Date(),
+    asOf,
     {
       latitude: birth.latitude,
       longitude: birth.longitude,

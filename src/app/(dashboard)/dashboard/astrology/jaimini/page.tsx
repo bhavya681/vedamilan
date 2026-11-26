@@ -7,10 +7,10 @@ import {
   BookOpen,
   Briefcase,
   Compass,
+  Crown,
   Heart,
   Link2,
   Scale,
-  Sparkles,
   Star,
   type LucideIcon,
 } from "lucide-react";
@@ -349,7 +349,7 @@ export default function AstrologyJaiminiPage() {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <KarakaSummary
-              icon={Sparkles}
+              icon={Crown}
               label="Atmakaraka"
               row={akRow}
               accent="text-gold"

@@ -16,7 +16,7 @@ export const THEME_PRESETS: ThemePresetMeta[] = [
   {
     id: "veda-gold",
     name: "Veda Gold",
-    description: "Classic VedaMilan — balanced, Vedic, and universal.",
+    description: "Classic KUNDLIV — balanced, Vedic, and universal.",
     swatches: ["#F7F1E3", "#C47A1A", "#D4AF37", "#14110E"],
     recommendedExpression: "neutral",
   },
@@ -65,7 +65,7 @@ export const EXPRESSION_OPTIONS: Array<{
   {
     id: "neutral",
     name: "Neutral",
-    description: "Balanced VedaMilan accents — recommended default.",
+    description: "Balanced KUNDLIV accents — recommended default.",
   },
   {
     id: "feminine",

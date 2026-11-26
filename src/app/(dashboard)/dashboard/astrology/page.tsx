@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Stars } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { ContentReveal, DashboardHomeSkeleton } from "@/components/ui/page-skeletons";
 import { CrossModeCta } from "@/features/workspace/cross-mode-cta";
-import { evaluateOnboardingReadiness } from "@/features/onboarding/onboarding-status";
 import { useWorkspaceMode } from "@/components/providers/workspace-mode-provider";
 import { useSession } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
@@ -34,6 +32,7 @@ type AstrologyBundle = {
   insight: string | null;
   gocharHighlights: string[];
   gocharError: boolean;
+  needsSetup: boolean;
 };
 
 function greetingForHour(hour: number) {
@@ -160,7 +159,6 @@ type ChartPayload = {
 };
 
 export default function AstrologyHomePage() {
-  const router = useRouter();
   const { isPending } = useSession();
   const { setMode } = useWorkspaceMode();
   const [bundle, setBundle] = useState<AstrologyBundle | null>(null);
@@ -181,7 +179,6 @@ export default function AstrologyHomePage() {
 
     const ac = new AbortController();
     let cancelled = false;
-    let redirecting = false;
 
     async function load() {
       try {
@@ -199,18 +196,15 @@ export default function AstrologyHomePage() {
         const profile = profileRaw as ProfilePayload;
         const chartRes = chartRaw as ChartPayload;
 
-        if (isUnauthorizedPayload(profileRaw) || isUnauthorizedPayload(meRaw)) {
+        if (
+          isUnauthorizedPayload(profileRaw) ||
+          isUnauthorizedPayload(meRaw) ||
+          !profile.success
+        ) {
           setError("Failed to load astrology overview");
-          return;
-        }
-
-        if (!profile.success) {
-          setError("Failed to load astrology overview");
-          return;
         }
 
         const profileData = profile.data;
-        const profileDoc = profileData?.profile;
         const chart = chartRes.success ? chartRes.data : null;
         const horoscope = chart?.horoscope;
         const dasha = chart?.dasha;
@@ -219,22 +213,11 @@ export default function AstrologyHomePage() {
         const currentMahaLord = resolved.currentMaha || dasha?.currentMaha || null;
         const currentAntarLord = resolved.currentAntar || dasha?.currentAntar || null;
 
-        const readiness = evaluateOnboardingReadiness({
-          gender: profileDoc?.gender,
-          city: profileDoc?.city,
-          profession: profileDoc?.profession,
-          education: profileDoc?.education,
-          photos: profileDoc?.photos,
-          completionScore: profileDoc?.completion?.score ?? 0,
-          hasBirthDetails: Boolean(profileData?.birthDetails?.birthDate),
-          hasChart: Boolean(horoscope),
-        });
-
-        if (!readiness.ready) {
-          redirecting = true;
-          router.replace(routes.onboarding);
-          return;
-        }
+        const needsSetup =
+          !profile.success ||
+          !profileData?.birthDetails?.birthDate ||
+          !chartRes.success ||
+          !horoscope;
 
         setBundle({
           userName: formatPersonName(me.user?.name || profileData?.user?.name, "Friend"),
@@ -247,6 +230,7 @@ export default function AstrologyHomePage() {
           insight: null,
           gocharHighlights: [],
           gocharError: false,
+          needsSetup,
         });
 
         void Promise.all([
@@ -285,7 +269,7 @@ export default function AstrologyHomePage() {
         if (cancelled || isAbortError(error)) return;
         setError("Failed to load astrology overview");
       } finally {
-        if (!cancelled && !redirecting) setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     void load();
@@ -293,7 +277,7 @@ export default function AstrologyHomePage() {
       cancelled = true;
       ac.abort();
     };
-  }, [isPending, router]);
+  }, [isPending]);
 
   const firstName = bundle?.userName?.split(" ")[0] ?? "friend";
 
@@ -323,6 +307,24 @@ export default function AstrologyHomePage() {
         />
 
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
+
+        {bundle?.needsSetup ? (
+          <div className="border-gold/25 bg-gold/5 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="font-medium">Finish setup for a personal chart</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                Your profile, birth details, or Kundli are not ready yet. You can still browse modes
+                and ask AI guidance while you finish.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline" className="w-full shrink-0 sm:w-auto">
+              <Link href={routes.birthDetails}>
+                Add birth details
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
 
         {bundle ? (
           <>

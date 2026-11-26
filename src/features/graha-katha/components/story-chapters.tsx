@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, Clock, Sparkles } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Clock, Orbit } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import type { StoryChapter } from "@/domain/graha-katha/types";
@@ -125,7 +125,7 @@ export function StoryChapters({
               </p>
             </div>
             <span className="border-gold/25 bg-gold/10 text-gold inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide">
-              <Sparkles className="h-3 w-3" aria-hidden />
+              <BookOpen className="h-3 w-3" aria-hidden />
               Chapter {activeIndex + 1} of {chapters.length}
             </span>
           </div>
@@ -254,7 +254,7 @@ export function StoryChapters({
                     <div className="border-cosmic/25 from-cosmic/10 rounded-xl border bg-gradient-to-br to-transparent p-3.5 sm:p-4">
                       <div className="flex items-center gap-2">
                         <span className="bg-cosmic/15 text-cosmic inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl">
-                          <Sparkles className="h-4 w-4" aria-hidden />
+                          <Orbit className="h-4 w-4" aria-hidden />
                         </span>
                         <div className="min-w-0">
                           <ContentLabelBadge label="interpretive" />

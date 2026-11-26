@@ -53,7 +53,7 @@ export default function LikesPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Likes"
         description="Interest signals"
         actions={

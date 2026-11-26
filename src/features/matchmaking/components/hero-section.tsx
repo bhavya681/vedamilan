@@ -63,7 +63,7 @@ export function HeroSection() {
         >
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
             <Image
-              src="/brand/logo-mark.png"
+              src="/newlogo/logotransparent.png"
               alt=""
               width={96}
               height={96}

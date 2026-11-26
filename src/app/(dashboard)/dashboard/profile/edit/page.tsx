@@ -109,7 +109,7 @@ export default function EditProfilePage() {
   return (
     <div className="relative">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Edit Profile"
         description="Your photo comes first — then the details that help the right people find you."
         actions={

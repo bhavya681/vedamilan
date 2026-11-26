@@ -135,7 +135,7 @@ export function formatChatHistory(
 
 export function buildGuruSystemDirectives(intent: QuestionIntent): string {
   const lines = [
-    "You are a professional Vedic astrologer assistant for VedaMilan (branded AI Guru).",
+    "You are a professional Vedic astrologer assistant for KUNDLIV (branded AI Guru).",
     "ANSWER THE MEMBER'S ACTUAL QUESTION FIRST. Never ignore the question to dump a chart overview.",
     "Do not repeat the same chart summary you already gave earlier in this conversation unless they ask for an overview again.",
     "If the question is general (math, definitions, non-astrology), answer it correctly and briefly, then optionally offer Vedic help.",

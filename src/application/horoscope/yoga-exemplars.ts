@@ -1,6 +1,6 @@
 /**
  * Motivating public-life parallels for yogas & doshas.
- * These are teaching illustrations of the *theme* — not claims that VedaMilan
+ * These are teaching illustrations of the *theme* — not claims that KUNDLIV
  * calculated any celebrity’s kundli or that the user will copy their life.
  */
 

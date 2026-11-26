@@ -82,7 +82,7 @@ function LoginForm() {
   return (
     <div>
       <h1 className="font-display text-2xl">Welcome back</h1>
-      <p className="text-muted-foreground mt-2 text-sm">Sign in to your VedaMilan AI workspace.</p>
+      <p className="text-muted-foreground mt-2 text-sm">Sign in to your KUNDLIV workspace.</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>

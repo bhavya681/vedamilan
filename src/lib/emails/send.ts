@@ -14,7 +14,7 @@ export type SendEmailInput = {
  */
 export async function sendEmail(input: SendEmailInput): Promise<{ sent: boolean }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.EMAIL_FROM || "VedaMilan AI <noreply@vedamilan.ai>";
+  const from = process.env.EMAIL_FROM || "KUNDLIV <noreply@vedamilan.ai>";
 
   if (!apiKey) {
     logger.warn({ to: input.to, subject: input.subject }, "Email skipped — RESEND_API_KEY not set");

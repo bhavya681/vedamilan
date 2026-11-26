@@ -1,5 +1,5 @@
 {
-  "appName": "VedaMilan AI",
+  "appName": "KUNDLIV",
   "loading": "Chargement…",
   "save": "Enregistrer",
   "saving": "Enregistrement…",
@@ -17,7 +17,7 @@
   "tryAgain": "Réessayer",
   "viewOriginal": "Voir l’original",
   "translatedFrom": "Traduit de {language}",
-  "translatedByAi": "Traduit par VedaMilan AI",
+  "translatedByAi": "Traduit par KUNDLIV",
   "onlyYouCanSee": "Vous seul pouvez voir ceci.",
   "language": "Langue",
   "region": "Région",

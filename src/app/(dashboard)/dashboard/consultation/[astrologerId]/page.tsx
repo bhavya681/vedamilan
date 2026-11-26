@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BookOpen, Check, Compass, MessageCircle, Mic, ShieldCheck, Sparkles } from "lucide-react";
+import { BookOpen, Bot, Check, Compass, MessageCircle, Mic, ShieldCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export default function ConsultationAstrologerProfilePage() {
             <div className="max-w-2xl min-w-0 space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-muted-foreground flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] uppercase">
-                  <Sparkles className="text-gold h-3.5 w-3.5" aria-hidden />
+                  <Bot className="text-gold h-3.5 w-3.5" aria-hidden />
                   {astrologer.title}
                 </p>
                 <span className="border-gold/25 bg-gold/8 text-gold inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">

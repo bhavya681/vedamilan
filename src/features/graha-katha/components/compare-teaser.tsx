@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, GitCompareArrows, Sparkles } from "lucide-react";
+import { ArrowUpRight, GitCompareArrows, Lightbulb } from "lucide-react";
 
 import type { GrahaComparePair } from "@/domain/graha-katha/types";
 
@@ -36,7 +36,7 @@ export function CompareTeaser({ pairs, title }: { pairs: GrahaComparePair[]; tit
               {p.symbolicRelationship}
             </p>
             <p className="text-saffron/90 mt-3 flex items-start gap-1.5 text-xs leading-relaxed">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
               {p.constructive}
             </p>
           </li>

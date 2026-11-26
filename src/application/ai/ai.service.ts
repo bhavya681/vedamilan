@@ -54,13 +54,13 @@ function hasLlmCredentials(): boolean {
 
 function greetingReply() {
   return withVedicDisclaimer(
-    "Namaste. I am **AI Guru** — your Vedic astrology guide on VedaMilan. Ask about your chart, dashas, timing, career, or relationships, and I will answer clearly from your Kundli data.",
+    "Namaste. I am **AI Guru** — your Vedic astrology guide on KUNDLIV. Ask about your chart, dashas, timing, career, or relationships, and I will answer clearly from your Kundli data.",
   );
 }
 
 function identityReply() {
   return withVedicDisclaimer(
-    "I am **AI Guru**, VedaMilan’s professional Vedic astrology assistant. I explain your calculated Kundli, dashas, yogas, and compatibility in plain language. I do not invent planet positions — the rule engine calculates; I interpret.",
+    "I am **AI Guru**, KUNDLIV’s professional Vedic astrology assistant. I explain your calculated Kundli, dashas, yogas, and compatibility in plain language. I do not invent planet positions — the rule engine calculates; I interpret.",
   );
 }
 

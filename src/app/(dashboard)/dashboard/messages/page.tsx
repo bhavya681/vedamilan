@@ -38,7 +38,7 @@ export default function MessagesPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Messages"
         description="Secure conversations"
         actions={

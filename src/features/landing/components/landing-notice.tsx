@@ -7,13 +7,11 @@ import { StickyBanner } from "@/components/ui/sticky-banner";
 import { useAppPathname } from "@/components/i18n/locale-navigation";
 import { routes } from "@/lib/constants/routes";
 
-const STORAGE_KEY = "vm-landing-notice";
-
 const NOTICES = [
   {
-    kicker: "Compatibility",
-    text: "Compatibility is more than a number. See how two lives may align.",
-    href: "/#compatibility",
+    kicker: "One platform",
+    text: "Kundli, AI Guru and compatibility — explore all three in one place.",
+    href: "/#experiences",
     cta: "Explore",
   },
   {
@@ -29,10 +27,10 @@ const NOTICES = [
     cta: "How it works",
   },
   {
-    kicker: "Matchmaking",
-    text: "Find someone who aligns with your life — not only a filter.",
+    kicker: "Begin",
+    text: "Start with your Vedic universe. One intelligent experience.",
     href: routes.register,
-    cta: "Begin",
+    cta: "Get started",
   },
 ] as const;
 
@@ -51,16 +49,9 @@ export function LandingNoticeBanner({
       onVisibilityChange?.(false);
       return;
     }
-    try {
-      if (sessionStorage.getItem(STORAGE_KEY) === "dismissed") {
-        setAllowed(false);
-        onVisibilityChange?.(false);
-        return;
-      }
-    } catch {
-      /* private mode */
-    }
-    setNotice(NOTICES[Math.floor(Date.now() / (1000 * 60 * 60 * 8)) % NOTICES.length] ?? NOTICES[0]);
+    setNotice(
+      NOTICES[Math.floor(Date.now() / (1000 * 60 * 60 * 8)) % NOTICES.length] ?? NOTICES[0],
+    );
     setAllowed(true);
   }, [pathname, onVisibilityChange]);
 
@@ -73,29 +64,20 @@ export function LandingNoticeBanner({
 
   const handleDismiss = useCallback(() => {
     onVisibilityChange?.(false);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, "dismissed");
-    } catch {
-      /* private mode */
-    }
   }, [onVisibilityChange]);
 
   if (!allowed) return null;
 
   return (
     <StickyBanner
-      hideOnScroll
       onOpenChange={handleOpenChange}
       onDismiss={handleDismiss}
-      className="bg-navy text-ivory relative px-8 pt-[env(safe-area-inset-top,0px)] sm:px-12"
+      className="landing-notice-banner relative pt-[max(0.375rem,env(safe-area-inset-top,0px))] pr-10 pb-1.5 pl-4 sm:px-12 sm:pt-[max(0.5rem,env(safe-area-inset-top,0px))] sm:pb-2"
     >
-      <p className="text-ivory mx-0 max-w-[min(42rem,calc(100%-2.5rem))] text-center text-[13px] leading-snug sm:text-sm">
-        <span className="text-ivory/55 mr-2 tracking-[0.16em] uppercase">{notice.kicker}</span>
+      <p className="landing-notice-text">
+        <span className="landing-notice-kicker">{notice.kicker}</span>
         {notice.text}{" "}
-        <Link
-          href={notice.href}
-          className="text-ivory underline decoration-white/35 underline-offset-4 transition duration-200 hover:decoration-white"
-        >
+        <Link href={notice.href} className="landing-notice-link">
           {notice.cta}
         </Link>
       </p>

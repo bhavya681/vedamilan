@@ -249,7 +249,7 @@ export class WisdomService {
       try {
         const agentInstance = vedaAgents.WISDOM_GUIDE;
         const prompt = [
-          "You are facilitating an 'Ask the Sages' reflective council for VedaMilan.",
+          "You are facilitating an 'Ask the Sages' reflective council for KUNDLIV.",
           "Each guide must answer the SAME member question from their own angle — concrete and different from the others.",
           "The member may ask about ordinary life: work, family, conflict, habits, money pressure, or a hard decision. Answer the practical question first; use the guide's tradition as a lens, not a sermon.",
           "Do not assume the member is Hindu, married, Indian, or familiar with Sanskrit terms. Explain any traditional term briefly and never pressure a religious conclusion.",

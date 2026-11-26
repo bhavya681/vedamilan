@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 
 import { cn } from "@/lib/utils/index";
 

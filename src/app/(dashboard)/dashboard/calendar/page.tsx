@@ -3,28 +3,28 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
+  BookOpen,
+  Bot,
   Briefcase,
+  CalendarClock,
   CalendarRange,
   ChevronDown,
+  CircleDot,
+  Flower2,
   GraduationCap,
   Heart,
+  History,
   Home,
+  Hourglass,
+  LayoutList,
+  MapPin,
+  Orbit,
   Plane,
   RefreshCw,
-  Sparkles,
-  Wallet,
-  Activity,
-  Flower2,
-  Orbit,
-  MapPin,
-  Hourglass,
-  UserRound,
-  History,
-  CircleDot,
-  Sparkle,
-  LayoutList,
   TrendingUp,
-  BookOpen,
+  UserRound,
+  Wallet,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -144,15 +144,15 @@ const CATEGORY_LABELS: Record<LifeEventCategory | "all", string> = {
 
 type TimeTab = LifeEventPhase | "all";
 
-const TAB_ORDER: TimeTab[] = ["present", "future", "past", "all"];
+const TAB_ORDER: TimeTab[] = ["past", "present", "future", "all"];
 
 const TAB_META: Record<
   TimeTab,
   { label: string; blurb: string; Icon: typeof CircleDot; accent: string }
 > = {
   all: {
-    label: "All",
-    blurb: "Major chapters across past, current, and future — one theme per Antardasha.",
+    label: "Lifetime",
+    blurb: "Every major chapter from birth onward in one clean date order — past, current, and future.",
     Icon: LayoutList,
     accent: "text-muted-foreground",
   },
@@ -164,14 +164,14 @@ const TAB_META: Record<
   },
   past: {
     label: "Past",
-    blurb: "Closed major chapters — scored with dasha and the sky at that period.",
+    blurb: "Major chapters from your birth to today, in sequence — open a card to see why it was flagged.",
     Icon: History,
     accent: "text-muted-foreground",
   },
   future: {
     label: "Future",
     blurb: "Upcoming multi-month chapters worth planning around — not everyday noise.",
-    Icon: Sparkle,
+    Icon: CalendarClock,
     accent: "text-sky-500",
   },
 };
@@ -189,8 +189,8 @@ const CATEGORY_CHIP_ORDER: Array<LifeEventCategory | "all"> = [
   "spiritual",
 ];
 
-function likelihoodPct(score: number) {
-  return Math.max(70, Math.min(98, Math.round(score)));
+function scorePct(score: number) {
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function formatSpan(months?: number) {
@@ -198,13 +198,12 @@ function formatSpan(months?: number) {
   return months >= 12 ? `~${Math.round(months / 12)} yr` : `${months} mo`;
 }
 
-function sortByLikelihood(list: LifeEventItem[]) {
-  const phaseRank: Record<LifeEventPhase, number> = { present: 0, future: 1, past: 2 };
+function sortByStart(list: LifeEventItem[]) {
   return [...list].sort(
     (a, b) =>
+      a.startDate.localeCompare(b.startDate) ||
       b.score - a.score ||
-      phaseRank[a.phase] - phaseRank[b.phase] ||
-      new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+      a.endDate.localeCompare(b.endDate),
   );
 }
 
@@ -220,6 +219,11 @@ type CalendarPayload = {
     sunSign?: string;
     currentMaha?: string | null;
     currentAntar?: string | null;
+    asOf?: string;
+    gocharAsOf?: string | null;
+    gocharStatus?: "live" | "unavailable";
+    historicalSamples?: number;
+    datedSamples?: number;
     gocharHighlights?: string[];
     gocharPlanets?: Array<{
       planet: string;
@@ -259,14 +263,17 @@ function axisPct(ts: number, range: { min: number; span: number }) {
 
 function ChapterTimeline({
   events,
+  birthDate,
   activeId,
   onSelect,
 }: {
   events: LifeEventItem[];
+  birthDate?: string | null;
   activeId: string | null;
   onSelect: (id: string) => void;
 }) {
   const [now, setNow] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     setNow(Date.now());
   }, []);
@@ -274,11 +281,12 @@ function ChapterTimeline({
     if (events.length === 0 || !now) return null;
     const starts = events.map((e) => new Date(e.startDate).getTime());
     const ends = events.map((e) => new Date(e.endDate).getTime());
-    const min = Math.min(...starts, now);
+    const birthTime = birthDate ? new Date(birthDate).getTime() : NaN;
+    const min = Math.min(...starts, Number.isNaN(birthTime) ? Infinity : birthTime, now);
     const max = Math.max(...ends, now);
     const pad = (max - min) * 0.06;
     return { min: min - pad, max: max + pad, span: Math.max(1, max - min + pad * 2) };
-  }, [events, now]);
+  }, [events, birthDate, now]);
 
   const years = useMemo(() => {
     if (!range) return [];
@@ -292,15 +300,11 @@ function ChapterTimeline({
     return list;
   }, [range]);
 
-  const rows = useMemo(() => {
-    return [...events]
-      .sort((a, b) => {
-        const marriageRank = Number(b.category === "marriage") - Number(a.category === "marriage");
-        if (marriageRank) return marriageRank;
-        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-      })
-      .slice(0, 10);
-  }, [events]);
+  const sortedRows = useMemo(() => sortByStart(events), [events]);
+  const rows = useMemo(
+    () => (expanded ? sortedRows : sortedRows.slice(0, 24)),
+    [expanded, sortedRows],
+  );
 
   const legend = useMemo(() => {
     const seen = new Set<LifeEventCategory>();
@@ -314,6 +318,10 @@ function ChapterTimeline({
   if (!range || events.length === 0 || !now) return null;
 
   const nowLeft = Math.max(0, Math.min(100, axisPct(now, range)));
+  const birthTime = birthDate ? new Date(birthDate).getTime() : NaN;
+  const birthLeft = Number.isNaN(birthTime)
+    ? null
+    : Math.max(0, Math.min(100, axisPct(birthTime, range)));
   const nowLabel = new Date(now).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
   const labelCol = "w-[9.25rem] sm:w-[11.5rem]";
 
@@ -323,11 +331,12 @@ function ChapterTimeline({
         <div className="min-w-0">
           <h2 className="font-display text-lg sm:text-xl">Chapter timeline</h2>
           <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-            Major Antardasha chapters on a shared time scale. Select a bar to open that chapter.
+            Major Antardasha chapters from birth to future on a shared time scale, numbered in date
+            order. Select a bar to open that chapter.
           </p>
         </div>
         <p className="text-muted-foreground text-[11px] tabular-nums">
-          {rows.length} chapters · today {nowLabel}
+          {rows.length} of {sortedRows.length} chapters · today {nowLabel}
         </p>
       </div>
 
@@ -375,6 +384,14 @@ function ChapterTimeline({
                     </span>
                   );
                 })}
+                {birthLeft !== null ? (
+                  <span
+                    className="text-muted-foreground absolute top-1.5 z-10 -translate-x-1/2 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                    style={{ left: `${birthLeft}%` }}
+                  >
+                    Born
+                  </span>
+                ) : null}
                 <span
                   className="text-gold absolute top-1.5 z-10 -translate-x-1/2 text-[10px] font-semibold tracking-[0.12em] uppercase"
                   style={{ left: `${nowLeft}%` }}
@@ -397,6 +414,12 @@ function ChapterTimeline({
                     />
                   );
                 })}
+                {birthLeft !== null ? (
+                  <span
+                    className="bg-border absolute top-0 bottom-0 z-[2] w-px"
+                    style={{ left: `${birthLeft}%` }}
+                  />
+                ) : null}
                 <span
                   className="bg-gold absolute top-0 bottom-0 z-[2] w-px"
                   style={{ left: `${nowLeft}%` }}
@@ -449,8 +472,8 @@ function ChapterTimeline({
                             <span className="block truncate text-[12px] leading-tight font-medium">
                               {e.title}
                             </span>
-                            <span className="text-muted-foreground mt-0.5 block truncate text-[10px]">
-                              {CATEGORY_LABELS[e.category]}
+                            <span className="text-muted-foreground mt-0.5 block truncate text-[10px] tabular-nums">
+                              {String(index + 1).padStart(2, "0")} · {CATEGORY_LABELS[e.category]}
                               <span className="capitalize">
                                 {" "}
                                 · {e.phase === "present" ? "current" : e.phase}
@@ -494,9 +517,20 @@ function ChapterTimeline({
           </div>
         </div>
       </div>
+      {sortedRows.length > 24 ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="w-full"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Show fewer chapters" : `Show all ${sortedRows.length} chapters`}
+        </Button>
+      ) : null}
       <p className="text-muted-foreground text-[11px] leading-relaxed">
-        The gold line is today. Past chapters sit quieter; current chapters are full strength.
-        Colours are life themes, not scores.
+        The Born line is your birth date; the gold line is today. Past chapters sit quieter; current
+        chapters are full strength. Colours are life themes, not scores.
       </p>
     </div>
   );
@@ -504,18 +538,20 @@ function ChapterTimeline({
 
 function EventCard({
   e,
+  sequence,
   open,
   onToggle,
   showPhase,
 }: {
   e: LifeEventItem;
+  sequence?: number;
   open: boolean;
   onToggle: () => void;
   showPhase?: boolean;
 }) {
   const Icon = CATEGORY_ICONS[e.category];
   const colors = CATEGORY_COLORS[e.category];
-  const pct = likelihoodPct(e.score);
+  const pct = scorePct(e.score);
   const isMarriage = e.category === "marriage";
   const isHigh = pct >= 80;
 
@@ -546,6 +582,11 @@ function EventCard({
           <span className="flex items-start justify-between gap-2">
             <span className="min-w-0">
               <span className="flex flex-wrap items-center gap-1.5">
+                {sequence ? (
+                  <Badge variant="outline" className="text-[9px] tabular-nums">
+                    #{String(sequence).padStart(2, "0")}
+                  </Badge>
+                ) : null}
                 <span className="text-sm font-medium break-words sm:text-[0.95rem]">{e.title}</span>
                 {showPhase ? (
                   <Badge variant="outline" className="text-[9px] tracking-wider uppercase">
@@ -596,6 +637,9 @@ function EventCard({
                 {formatSpan(e.spanMonths)}
               </Badge>
             ) : null}
+            {e.source === "user-asserted" ? (
+              <Badge className="border-gold/40 bg-gold/15 text-gold text-[10px]">Confirmed</Badge>
+            ) : null}
           </span>
         </span>
       </button>
@@ -630,10 +674,10 @@ function EventCard({
                 {e.suggestion}
               </p>
               <p className="text-muted-foreground text-[10px]">
-                {e.dashaLabel} · ~{pct}% directional likelihood
+                {e.dashaLabel} · {e.probabilityLabel} · {pct}/100 directional score
               </p>
               <Button asChild size="sm" variant="outline">
-                <Link href={northHorizonHref({ at: e.startDate })}>View sky</Link>
+                <Link href={northHorizonHref({ at: e.skyAt || e.startDate })}>View sky</Link>
               </Button>
             </div>
           </motion.div>
@@ -648,7 +692,7 @@ export default function CalendarPage() {
   const [data, setData] = useState<CalendarPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TimeTab>("present");
+  const [tab, setTab] = useState<TimeTab>("all");
   const [category, setCategory] = useState<LifeEventCategory | "all">("all");
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -656,7 +700,7 @@ export default function CalendarPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/calendar");
+      const res = await fetch("/api/calendar", { cache: "no-store" });
       const json = await res.json();
       if (!res.ok || !json.success) {
         throw new Error(json?.error?.message || json?.error || "Could not load calendar");
@@ -672,6 +716,8 @@ export default function CalendarPage() {
 
   useEffect(() => {
     void load();
+    const timer = window.setInterval(() => void load(), 10 * 60 * 1000);
+    return () => window.clearInterval(timer);
   }, [load]);
 
   const filterCat = useCallback(
@@ -699,18 +745,22 @@ export default function CalendarPage() {
   const tabEvents = useMemo(() => {
     if (!data) return [];
     if (tab === "all") {
-      return sortByLikelihood([
+      return sortByStart([
+        ...filterCat(data.byPhase.past),
         ...filterCat(data.byPhase.present),
         ...filterCat(data.byPhase.future),
-        ...filterCat(data.byPhase.past),
       ]);
     }
-    return sortByLikelihood(filterCat(data.byPhase[tab]));
+    return sortByStart(filterCat(data.byPhase[tab]));
   }, [data, tab, filterCat]);
 
   const timelineEvents = useMemo(() => {
     if (!data) return [];
-    return filterCat([...data.byPhase.past, ...data.byPhase.present, ...data.byPhase.future]);
+    return sortByStart([
+      ...filterCat(data.byPhase.past),
+      ...filterCat(data.byPhase.present),
+      ...filterCat(data.byPhase.future),
+    ]);
   }, [data, filterCat]);
 
   const categoryCounts = useMemo(() => {
@@ -754,7 +804,7 @@ export default function CalendarPage() {
       <PageHeader
         eyebrow="Desh · Kaal · Patra"
         title="Calendar"
-        description="Major life chapters from dasha and gochar — filtered by place, time, and chart capacity. Not a daily planner."
+        description="Your whole life in date order — dasha chapters scored with live sky now and dated sky for past and future. Not a daily planner."
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Button
@@ -790,9 +840,16 @@ export default function CalendarPage() {
 
       {data ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {(
               [
+                {
+                  key: "past" as TimeTab,
+                  label: "From birth",
+                  value: data.byPhase.past.length,
+                  icon: History,
+                  color: "text-muted-foreground",
+                },
                 {
                   key: "present" as TimeTab,
                   label: "Current",
@@ -804,15 +861,8 @@ export default function CalendarPage() {
                   key: "future" as TimeTab,
                   label: "Upcoming",
                   value: data.byPhase.future.length,
-                  icon: Sparkle,
+                  icon: CalendarClock,
                   color: "text-sky-500",
-                },
-                {
-                  key: "past" as TimeTab,
-                  label: "Past",
-                  value: data.byPhase.past.length,
-                  icon: History,
-                  color: "text-muted-foreground",
                 },
                 {
                   key: "all" as TimeTab,
@@ -854,6 +904,23 @@ export default function CalendarPage() {
                   {dashaPeriodText(data.snapshot.currentMaha, data.snapshot.currentAntar) ||
                     "Vimshottari chapters"}
                 </p>
+                <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                  <span>
+                    {data.snapshot.asOf
+                      ? `Updated ${new Date(data.snapshot.asOf).toLocaleTimeString("en-GB", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
+                      : "Updated just now"}
+                  </span>
+                  <span aria-hidden>·</span>
+                  <span>
+                    {data.snapshot.gocharStatus === "live" ? "live sky" : "sky unavailable"}
+                  </span>
+                  {data.snapshot.datedSamples ? (
+                    <span>· {data.snapshot.datedSamples} dated samples</span>
+                  ) : null}
+                </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {data.snapshot.lagnaSign ? (
@@ -864,6 +931,12 @@ export default function CalendarPage() {
                 ) : null}
               </div>
             </div>
+            <ChapterTimeline
+              events={timelineEvents}
+              birthDate={data.context.birthDate}
+              activeId={openId}
+              onSelect={selectChapter}
+            />
             <div className="grid gap-2.5 sm:grid-cols-3">
               {(
                 [
@@ -914,7 +987,6 @@ export default function CalendarPage() {
                 </div>
               ))}
             </div>
-            <ChapterTimeline events={timelineEvents} activeId={openId} onSelect={selectChapter} />
           </GlassCard>
 
           {data.snapshot.gocharHighlights?.length || data.gocharSummary ? (
@@ -923,6 +995,14 @@ export default function CalendarPage() {
                 <Orbit className="h-3.5 w-3.5" />
                 Live gochar
               </p>
+              {data.snapshot.gocharAsOf ? (
+                <p className="text-muted-foreground text-[11px]">
+                  Sky sampled {new Date(data.snapshot.gocharAsOf).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </p>
+              ) : null}
               {data.snapshot.gocharHighlights?.length ? (
                 <ul className="grid gap-1 sm:grid-cols-2">
                   {data.snapshot.gocharHighlights.slice(0, 4).map((h) => (
@@ -1028,7 +1108,7 @@ export default function CalendarPage() {
                         </div>
                       ) : (
                         <ul className="space-y-2.5">
-                          {list.map((e) => (
+                          {list.map((e, index) => (
                             <li
                               key={e.id}
                               id={`chapter-${e.id}`}
@@ -1036,6 +1116,7 @@ export default function CalendarPage() {
                             >
                               <EventCard
                                 e={e}
+                                sequence={index + 1}
                                 open={openId === e.id}
                                 onToggle={() => setOpenId(openId === e.id ? null : e.id)}
                                 showPhase={key === "all"}
@@ -1073,7 +1154,7 @@ export default function CalendarPage() {
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium">{w.label}</p>
                           <span className="text-muted-foreground text-[10px] tabular-nums">
-                            {likelihoodPct(w.score)}%
+                            {scorePct(w.score)}%
                           </span>
                         </div>
                         <p className="text-muted-foreground text-xs">{w.window}</p>
@@ -1107,14 +1188,14 @@ export default function CalendarPage() {
                   </div>
                 </div>
                 <ul className="text-muted-foreground space-y-2 text-xs leading-relaxed">
-                  <li>Only major multi-month chapters are shown — mild windows stay hidden.</li>
-                  <li>Tap a chapter for gochar notes and what to accept in that period.</li>
-                  <li>Percentages are directional from dasha + gochar, not a guarantee.</li>
+                  <li>Open Lifetime to read every chapter from birth onward in one date order.</li>
+                  <li>Tap any chapter for dasha, dated sky notes, and what to accept in that period.</li>
+                  <li>Confirmed chapters come from your own journey record; scores are directional, not guarantees.</li>
                 </ul>
                 <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
                   <Button asChild size="sm" variant="ai" className="w-full">
                     <Link href={routes.aiInsights}>
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <Bot className="h-3.5 w-3.5" />
                       Ask AI Guru
                     </Link>
                   </Button>

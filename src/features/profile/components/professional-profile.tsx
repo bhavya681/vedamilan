@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { BadgeCheck, Briefcase, GraduationCap, MapPin, Ruler, Sparkles } from "lucide-react";
+import { BadgeCheck, Briefcase, CalendarDays, GraduationCap, MapPin, Ruler } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import {
@@ -321,7 +321,7 @@ export function ProfileScorePanel({
           {strengths?.length ? (
             <div>
               <p className="text-muted-foreground mb-1.5 inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
-                <Sparkles className="text-gold h-3 w-3" aria-hidden />
+                <BadgeCheck className="text-gold h-3 w-3" aria-hidden />
                 Strengths
               </p>
               <ul className="space-y-1 text-sm leading-relaxed">
@@ -445,7 +445,7 @@ export function ProfileQuickFacts({
   city?: string | null;
 }) {
   const bits = [
-    age != null ? { icon: Sparkles, label: `${age} yrs` } : null,
+    age != null ? { icon: CalendarDays, label: `${age} yrs` } : null,
     heightCm != null ? { icon: Ruler, label: `${heightCm} cm` } : null,
     city ? { icon: MapPin, label: city } : null,
   ].filter(Boolean) as Array<{ icon: typeof MapPin; label: string }>;

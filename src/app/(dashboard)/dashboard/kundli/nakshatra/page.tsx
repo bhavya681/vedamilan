@@ -18,7 +18,7 @@ export default function NakshatraPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Nakshatra"
         description="Birth stars and padas from your chart"
         actions={

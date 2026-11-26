@@ -19,8 +19,8 @@ const TOPICS: GuideTopic[] = [
       "overview",
       "steps",
     ],
-    title: "How VedaMilan works",
-    answer: `VedaMilan is a **Vedic relationship intelligence** platform — matchmaking plus kundli, compatibility, timing, and AI guidance.
+    title: "How KUNDLIV works",
+    answer: `KUNDLIV is a **Vedic relationship intelligence** platform — matchmaking plus kundli, compatibility, timing, and AI guidance.
 
 ### Three steps
 1. **Create an account** and complete your profile (photo required).
@@ -115,7 +115,7 @@ For invoice or payment issues, use [Support](${routes.support}) or [Contact](${r
     title: "Messaging",
     answer: `Once you connect with a match, use **Messages / Chat** in the dashboard for secure conversation.
 
-Video chat is available where enabled on your plan. Keep conversations respectful — VedaMilan is built for intentional introductions, not spam.`,
+Video chat is available where enabled on your plan. Keep conversations respectful — KUNDLIV is built for intentional introductions, not spam.`,
   },
   {
     keys: ["consult", "expert", "book", "astrologer session"],
@@ -138,7 +138,7 @@ Use AI Insights for everyday chart Q&A; use consultation when you want deeper, l
   },
 ];
 
-const FALLBACK = `I can help you understand **how VedaMilan works**.
+const FALLBACK = `I can help you understand **how KUNDLIV works**.
 
 Try asking about:
 - Getting started / how it works
@@ -169,11 +169,11 @@ export function answerProductGuide(message: string): string {
 
   const math = trySolveMath(trimmed);
   if (math) {
-    return `${math}\n\nFor VedaMilan help, ask about getting started, kundli, matching, compatibility, or AI Guru.`;
+    return `${math}\n\nFor KUNDLIV help, ask about getting started, kundli, matching, compatibility, or AI Guru.`;
   }
 
   if (/^(hi|hello|hey|namaste)\b/i.test(trimmed) && trimmed.length < 40) {
-    return `Namaste — I am the **landing guide** for VedaMilan.\n\nAsk me how the app works, how kundli is calculated, matching, compatibility, or billing. For chart readings after login, open **AI Guru** in your dashboard.`;
+    return `Namaste — I am the **landing guide** for KUNDLIV.\n\nAsk me how the app works, how kundli is calculated, matching, compatibility, or billing. For chart readings after login, open **AI Guru** in your dashboard.`;
   }
 
   let best: GuideTopic | null = null;
@@ -187,7 +187,7 @@ export function answerProductGuide(message: string): string {
   }
 
   if (!best || bestScore < 1) {
-    return `I am best at product questions about VedaMilan (getting started, kundli, matching, compatibility, AI Guru, billing).\n\nYou asked: “${trimmed.slice(0, 160)}” — try rephrasing toward how the platform works, or [register](${routes.register}) and ask **AI Guru** for chart-backed guidance.`;
+    return `I am best at product questions about KUNDLIV (getting started, kundli, matching, compatibility, AI Guru, billing).\n\nYou asked: “${trimmed.slice(0, 160)}” — try rephrasing toward how the platform works, or [register](${routes.register}) and ask **AI Guru** for chart-backed guidance.`;
   }
 
   return `### ${best.title}\n\n${best.answer}`;

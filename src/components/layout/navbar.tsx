@@ -10,10 +10,10 @@ import {
   Hourglass,
   Menu,
   MessageCircle,
+  MessagesSquare,
   Palette,
   Search,
-  Sparkles,
-  Stars,
+  PieChart
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -42,14 +42,14 @@ const MATRIMONY_QUICK = [
 ] as const;
 
 const ASTROLOGY_QUICK = [
-  { href: routes.kundli, labelKey: "navigation.kundli", icon: Stars },
-  { href: routes.dasha, labelKey: "navigation.dashas", icon: Hourglass },
+  { href: routes.kundli, labelKey: "navigation.kundli", icon: PieChart },
+  { href: routes.astrologyDasha, labelKey: "navigation.dashas", icon: Hourglass },
   { href: routes.astrologyYogas, labelKey: "navigation.yogas", icon: Crown },
 ] as const;
 
 const WISDOM_QUICK = [
   { href: routes.vedicWisdom, labelKey: "navigation.vedicWisdom", icon: BookOpen },
-  { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: Sparkles },
+  { href: routes.askTheSages, labelKey: "navigation.askTheSages", icon: MessagesSquare },
   { href: routes.wisdomJournal, labelKey: "navigation.wisdomJournal", icon: BookOpen },
 ] as const;
 
@@ -178,31 +178,41 @@ export function Navbar({
             ))}
           </nav>
         ) : (
-          <nav
-            className="bg-muted/40 dark:bg-muted/25 border-border/40 hidden items-center gap-1 rounded-full border p-1 md:flex"
-            aria-label="Quick"
-          >
-            {dashQuick.map((item) => {
-              const active = isDashboardNavActive(pathname, item.href);
-              const Icon = item.icon;
-              return (
-                <LocaleLink
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-all lg:px-3.5",
-                    active
-                      ? "bg-card text-foreground shadow-soft"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Icon className={cn("h-3.5 w-3.5", active && "text-gold")} aria-hidden />
-                  <span className="hidden lg:inline">{t(item.labelKey)}</span>
-                  <span className="sr-only lg:hidden">{t(item.labelKey)}</span>
-                </LocaleLink>
-              );
-            })}
-          </nav>
+          <div className="hidden items-center gap-2 md:flex">
+            {/* {activeModeLabel ? (
+              <span
+                className="border-border/40 bg-muted/40 text-muted-foreground rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                data-active-mode
+              >
+                {activeModeLabel}
+              </span>
+            ) : null} */}
+            <nav
+              className="bg-muted/40 dark:bg-muted/25 border-border/40 flex items-center gap-1 rounded-full border p-1"
+              aria-label="Quick"
+            >
+              {dashQuick.map((item) => {
+                const active = isDashboardNavActive(pathname, item.href);
+                const Icon = item.icon;
+                return (
+                  <LocaleLink
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-all lg:px-3.5",
+                      active
+                        ? "bg-card text-foreground shadow-soft"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Icon className={cn("h-3.5 w-3.5", active && "text-gold")} aria-hidden />
+                    <span className="hidden lg:inline">{t(item.labelKey)}</span>
+                    <span className="sr-only lg:hidden">{t(item.labelKey)}</span>
+                  </LocaleLink>
+                );
+              })}
+            </nav>
+          </div>
         )}
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">

@@ -7,7 +7,7 @@
   "emptyHint": "Nuevos intereses, mensajes y actualizaciones de conexión aparecerán aquí.",
   "types": {
     "WELCOME": {
-      "title": "Bienvenido/a a VedaMilan AI",
+      "title": "Bienvenido/a a KUNDLIV",
       "body": "Completa tu perfil, añade datos de nacimiento y genera tu kundli para desbloquear matching y explicaciones de IA."
     },
     "KUNDLI_HINT": {

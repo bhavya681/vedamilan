@@ -1,10 +1,10 @@
 "use client";
 
 import {
+  BrainCircuit,
   Clock3,
   HeartHandshake,
   MessagesSquare,
-  Sparkles,
   Stars,
   UserRoundSearch,
 } from "lucide-react";
@@ -34,7 +34,7 @@ const features = [
     body: "Dasha and transit confluence to highlight sincere windows, not fear.",
   },
   {
-    icon: Sparkles,
+    icon: BrainCircuit,
     title: "Explainable AI",
     body: "Insight that interprets your chart—never invents planetary positions.",
   },

@@ -15,11 +15,11 @@ import {
   Home,
   Leaf,
   Loader2,
+  MessagesSquare,
   MoonStar,
   RefreshCw,
-  Sparkles,
-  Users,
   type LucideIcon,
+  Users,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-shell";
@@ -545,7 +545,7 @@ export function SageCouncil() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <MessagesSquare className="h-4 w-4" />
                     Compare perspectives
                   </>
                 )}

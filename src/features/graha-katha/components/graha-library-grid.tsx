@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, SearchX, Sparkles } from "lucide-react";
+import { ArrowUpRight, BookOpen, SearchX } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { prefetchGraha } from "@/domain/graha-katha";
@@ -95,7 +95,7 @@ export function GrahaLibraryGrid({
                   ))}
                   {seen ? (
                     <span className="text-gold ml-auto inline-flex items-center gap-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
-                      <Sparkles className="h-3 w-3" aria-hidden />
+                      <BookOpen className="h-3 w-3" aria-hidden />
                       {t("grahaKatha.continue")}
                     </span>
                   ) : null}

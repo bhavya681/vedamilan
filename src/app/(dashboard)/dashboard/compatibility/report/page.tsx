@@ -92,7 +92,7 @@ export default function CompatibilityReportPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Compatibility Report"
         description="Compatibility score — deep chart compare (Ashta Koota, Shukra Milan, weighted modules). Different from discovery match score."
         actions={

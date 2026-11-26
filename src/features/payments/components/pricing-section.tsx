@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 
 import { FadeIn } from "@/components/animations/motion";
 import { LandingSection } from "@/components/layout/landing-section";
@@ -27,7 +29,7 @@ export function PricingSection() {
             Plans with intention
           </h2>
           <p className="text-muted-foreground mt-4 max-w-lg text-sm leading-relaxed sm:text-base">
-            Transparent pricing for every stage. Upgrade anytime as your search deepens.
+            Transparent pricing for every stage. Upgrade anytime as your journey deepens.
           </p>
         </FadeIn>
         <FadeIn delay={0.08}>
@@ -53,26 +55,26 @@ export function PricingSection() {
               className={cn(
                 "relative flex h-full flex-col overflow-hidden rounded-2xl p-5 sm:p-6 md:p-7",
                 featured
-                  ? "z-10 border border-white/10 bg-[#14110E] text-[#F7F1E3] shadow-[0_28px_70px_rgba(20,17,14,0.22)] md:order-first md:col-span-2 lg:order-none lg:col-span-1 lg:-translate-y-2"
+                  ? "z-10 border border-gold/20 bg-[#121212] text-[#F4F0E7] shadow-[0_28px_70px_rgba(0,0,0,0.22)] md:order-first md:col-span-2 lg:order-none lg:col-span-1 lg:-translate-y-2"
                   : "border-border/60 bg-card border",
               )}
             >
               {featured ? (
-                <span className="absolute inset-x-0 top-0 h-px bg-[#D4AF37]" aria-hidden />
+                <span className="absolute inset-x-0 top-0 h-px bg-[#C9A96E]" aria-hidden />
               ) : null}
 
               <div className="flex items-start justify-between gap-3">
                 <p
                   className={cn(
                     "text-[10px] tabular-nums tracking-[0.18em] uppercase",
-                    featured ? "text-[#F7F1E3]/50" : "text-muted-foreground",
+                    featured ? "text-[#F4F0E7]/50" : "text-muted-foreground",
                   )}
                 >
                   0{index + 1}
                 </p>
                 {featured ? (
-                  <p className="rounded-full border border-[#D4AF37]/35 px-2.5 py-0.5 text-[10px] tracking-[0.16em] text-[#D4AF37] uppercase">
-                    Most chosen
+                  <p className="rounded-full border border-[#C9A96E]/35 px-2.5 py-0.5 text-[10px] tracking-[0.16em] text-[#C9A96E] uppercase">
+                    Featured
                   </p>
                 ) : (
                   <p className="text-muted-foreground text-[10px] tracking-[0.16em] uppercase">
@@ -85,7 +87,7 @@ export function PricingSection() {
               <p
                 className={cn(
                   "mt-2 max-w-md text-sm leading-relaxed",
-                  featured ? "text-[#F7F1E3]/72" : "text-muted-foreground",
+                  featured ? "text-[#F4F0E7]/72" : "text-muted-foreground",
                 )}
               >
                 {plan.description}
@@ -98,7 +100,7 @@ export function PricingSection() {
                 <span
                   className={cn(
                     "text-sm",
-                    featured ? "text-[#F7F1E3]/55" : "text-muted-foreground",
+                    featured ? "text-[#F4F0E7]/55" : "text-muted-foreground",
                   )}
                 >
                   {plan.period}
@@ -111,12 +113,12 @@ export function PricingSection() {
                     key={feature}
                     className={cn(
                       "flex items-center gap-3 border-t py-3 text-sm",
-                      featured ? "border-white/10" : "border-border/50",
+                      featured ? "border-gold/20" : "border-border/50",
                     )}
                   >
                     <span
                       aria-hidden
-                      className={cn("h-px w-4 shrink-0", featured ? "bg-[#D4AF37]" : "bg-foreground/25")}
+                      className={cn("h-px w-4 shrink-0", featured ? "bg-[#C9A96E]" : "bg-foreground/25")}
                     />
                     {feature}
                   </li>
@@ -128,7 +130,7 @@ export function PricingSection() {
                 size="lg"
                 className={cn(
                   "mt-8 h-12 w-full",
-                  featured && "bg-[#F7F1E3] text-[#14110E] hover:bg-[#F7F1E3]/90",
+                  featured && "bg-[#F4F0E7] text-[#121212] hover:bg-[#F4F0E7]/90",
                 )}
                 variant={featured ? "default" : "outline"}
               >

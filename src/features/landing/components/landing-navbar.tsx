@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -21,6 +21,7 @@ export function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const noticeRef = useRef<HTMLDivElement>(null);
   const pathname = useAppPathname();
   const { data: session, isPending } = useSession();
   const isHome = pathname === "/";
@@ -40,11 +41,27 @@ export function LandingNavbar() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--landing-notice",
-      bannerVisible ? "3.25rem" : "0px",
-    );
+    const element = noticeRef.current;
+    if (!element) return;
+
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height = bannerVisible ? Math.ceil(element.getBoundingClientRect().height) : 0;
+        document.documentElement.style.setProperty("--landing-notice", `${height}px`);
+      });
+    };
+
+    update();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    observer?.observe(element);
+    window.addEventListener("resize", update);
+
     return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
       document.documentElement.style.setProperty("--landing-notice", "0px");
     };
   }, [bannerVisible]);
@@ -56,24 +73,35 @@ export function LandingNavbar() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
-      <div className="pointer-events-auto">
+      <div ref={noticeRef} className="pointer-events-auto">
         <LandingNoticeBanner onVisibilityChange={setBannerVisible} />
       </div>
       <div
         className={cn(
-          "px-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))]",
-          bannerVisible
-            ? "pt-2"
-            : "pt-[max(0.5rem,env(safe-area-inset-top,0px))]",
+          "landing-container",
+          bannerVisible ? "pt-2" : "pt-[max(0.5rem,env(safe-area-inset-top,0px))]",
         )}
       >
         <div
           className={cn(
-            "pointer-events-auto relative z-50 mx-auto flex max-w-6xl items-center justify-between gap-3 transition-[background,box-shadow,height] duration-300",
+            "pointer-events-auto relative z-50 flex items-center justify-between gap-3 transition-[background,box-shadow,height] duration-300",
             compact
-              ? "border-border/40 bg-ivory/85 h-12 rounded-full border px-3 shadow-[0_8px_30px_rgba(20,17,14,0.08)] backdrop-blur-xl sm:h-14 dark:bg-[#14110E]/80"
+              ? "border-border bg-background/90 shadow-elevated h-12 rounded-full border px-3 backdrop-blur-xl sm:h-14"
               : "h-14 bg-transparent px-1 sm:h-16",
           )}
         >
@@ -81,7 +109,7 @@ export function LandingNavbar() {
             href={isAuthed ? routes.dashboard : routes.home}
             size="sm"
             priority
-            className={cn(overHero && "[&_span]:text-ivory [&_.text-muted-foreground]:text-ivory/70")}
+            className={cn(overHero && "[&_.text-muted-foreground]:text-foreground/70")}
           />
 
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
@@ -92,7 +120,7 @@ export function LandingNavbar() {
                 className={cn(
                   "text-[13px] font-medium tracking-wide transition-colors duration-200",
                   overHero
-                    ? "text-ivory/80 hover:text-ivory"
+                    ? "text-foreground/80 hover:text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -103,12 +131,17 @@ export function LandingNavbar() {
 
           <div className="flex shrink-0 items-center gap-1">
             <ThemeToggle
-              className={cn(overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
+              className={cn(
+                overHero && "text-foreground hover:bg-foreground/10 hover:text-foreground",
+              )}
             />
             <LanguageSelector
               compact
               variant="ghost"
-              className={cn("hidden sm:inline-flex", overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
+              className={cn(
+                "hidden sm:inline-flex",
+                overHero && "text-foreground hover:bg-foreground/10 hover:text-foreground",
+              )}
             />
             {mounted && !isPending && isAuthed ? (
               <Button asChild size="sm" className="hidden sm:inline-flex">
@@ -120,12 +153,15 @@ export function LandingNavbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={cn("hidden sm:inline-flex", overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
+                  className={cn(
+                    "hidden sm:inline-flex",
+                    overHero && "text-foreground hover:bg-foreground/10 hover:text-foreground",
+                  )}
                 >
                   <Link href={landingCta.login.href}>{landingCta.login.label}</Link>
                 </Button>
                 <Button asChild size="sm" className="hidden sm:inline-flex">
-                  <Link href={landingCta.match.href}>{landingCta.match.label}</Link>
+                  <Link href={landingCta.getStarted.href}>{landingCta.getStarted.label}</Link>
                 </Button>
               </>
             ) : (
@@ -134,12 +170,15 @@ export function LandingNavbar() {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={cn("hidden sm:inline-flex", overHero && "text-ivory hover:bg-ivory/10 hover:text-ivory")}
+                  className={cn(
+                    "hidden sm:inline-flex",
+                    overHero && "text-foreground hover:bg-foreground/10 hover:text-foreground",
+                  )}
                 >
                   <Link href={landingCta.login.href}>{landingCta.login.label}</Link>
                 </Button>
                 <Button asChild size="sm" className="hidden sm:inline-flex">
-                  <Link href={landingCta.match.href}>{landingCta.match.label}</Link>
+                  <Link href={landingCta.getStarted.href}>{landingCta.getStarted.label}</Link>
                 </Button>
               </>
             )}
@@ -147,12 +186,14 @@ export function LandingNavbar() {
               variant="outline"
               size="icon"
               className={cn(
-                "lg:hidden h-11 w-11",
-                overHero && "border-ivory/30 text-ivory hover:bg-ivory/10 bg-transparent",
+                "h-11 w-11 lg:hidden",
+                overHero &&
+                  "border-border/60 text-foreground hover:bg-foreground/10 bg-transparent",
                 compact && "rounded-full",
               )}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
+              aria-controls="landing-mobile-menu"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -162,7 +203,28 @@ export function LandingNavbar() {
       </div>
 
       {open ? (
-        <div className="bg-ivory pointer-events-auto fixed inset-0 z-[60] flex flex-col px-6 pt-[calc(5.5rem+var(--landing-notice,0px))] pb-[env(safe-area-inset-bottom,1rem)] lg:hidden dark:bg-[#14110E]">
+        <div
+          id="landing-mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile menu"
+          className="bg-background text-foreground pointer-events-auto fixed inset-0 z-[60] flex flex-col px-6 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[env(safe-area-inset-bottom,1rem)] lg:hidden"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
+          <div className="border-border/40 mb-4 flex items-center justify-between gap-3 border-b pb-4">
+            <BrandLogo href={isAuthed ? routes.dashboard : routes.home} size="sm" priority />
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <nav className="flex flex-1 flex-col justify-center gap-1" aria-label="Mobile">
             {landingNav.map((item) => (
               <Link
@@ -181,12 +243,16 @@ export function LandingNavbar() {
                 <Button asChild size="lg" onClick={() => setOpen(false)}>
                   <Link href={routes.dashboard}>Open dashboard</Link>
                 </Button>
-                <SignOutButton className="w-full" redirectTo={routes.home} onSignedOut={() => setOpen(false)} />
+                <SignOutButton
+                  className="w-full"
+                  redirectTo={routes.home}
+                  onSignedOut={() => setOpen(false)}
+                />
               </>
             ) : (
               <>
                 <Button asChild size="lg" onClick={() => setOpen(false)}>
-                  <Link href={landingCta.match.href}>{landingCta.match.label}</Link>
+                  <Link href={landingCta.getStarted.href}>{landingCta.getStarted.label}</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" onClick={() => setOpen(false)}>
                   <Link href={landingCta.login.href}>{landingCta.login.label}</Link>

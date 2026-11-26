@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Sparkles, Star } from "lucide-react";
+import { Bot, Star } from "lucide-react";
 
 import { useT } from "@/components/i18n/i18n-provider";
 import { PageHeader, EmptyState, ErrorState } from "@/components/layout/page-shell";
@@ -660,7 +660,7 @@ export default function NumerologyPage() {
 
               <GlassCard className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="text-gold h-4 w-4" />
+                  <Bot className="text-gold h-4 w-4" />
                   <h3 className="font-display text-xl">{t("numerology.aiGuide.title")}</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">

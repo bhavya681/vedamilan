@@ -3,31 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useMotionValueEvent, useReducedMotion, useSpring } from "framer-motion";
-import {
-  HeartHandshake,
-  Lock,
-  ShieldCheck,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { motion, useInView, useMotionValueEvent, useSpring } from "framer-motion";
+import { Calculator, HeartHandshake, Lock, ShieldCheck, Users } from "lucide-react";
 
 import { FadeIn } from "@/components/animations/motion";
 import { LandingSection } from "@/components/layout/landing-section";
 import { Button } from "@/components/ui/button";
 import { editorial } from "@/features/landing/lib/images";
 import { landingCta } from "@/features/landing/lib/nav";
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const TRUST = [
-  { label: "Vedic Compatibility", icon: Sparkles },
-  { label: "Human Preferences", icon: Users },
-  { label: "AI Explained", icon: HeartHandshake },
-  { label: "Privacy First", icon: Lock },
-  { label: "Global Matchmaking", icon: ShieldCheck },
+  { label: "Engine-calculated kundli", icon: Calculator },
+  { label: "AI-explained wisdom", icon: HeartHandshake },
+  { label: "Vedic compatibility", icon: ShieldCheck },
+  { label: "Privacy controls", icon: Lock },
+  { label: "Global community", icon: Users },
 ] as const;
 
 const ALIGN_LAYERS = [
@@ -66,7 +61,7 @@ export function NotJustAMatch() {
 
   return (
     <LandingSection tone="muted">
-      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-12">
+      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 md:gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-12 xl:gap-16">
         <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             The difference
@@ -75,7 +70,7 @@ export function NotJustAMatch() {
             Not every good profile is a good life partner.
           </h2>
           <p className="text-muted-foreground mt-5 max-w-md text-sm leading-relaxed sm:text-base">
-            VedaMilan looks beyond surface-level preferences to understand how two people may align
+            KUNDLIV looks beyond surface-level preferences to understand how two people may align
             across values, goals, personality and Vedic compatibility.
           </p>
         </FadeIn>
@@ -87,12 +82,12 @@ export function NotJustAMatch() {
               <DifferencePortrait
                 src={editorial.you.src}
                 name="Adrian"
-                className="-rotate-3 -translate-x-2"
+                className="-translate-x-2 -rotate-3"
               />
               <DifferencePortrait
                 src={editorial.partner.src}
                 name="Elena"
-                className="rotate-3 translate-x-2"
+                className="translate-x-2 rotate-3"
               />
             </div>
 
@@ -107,13 +102,13 @@ export function NotJustAMatch() {
                       onMouseEnter={() => setActive(i)}
                       className={cn(
                         "group flex w-full items-center gap-4 border-b py-3.5 text-left transition-colors duration-500",
-                        selected ? "border-[#D4AF37]/40" : "border-border/50",
+                        selected ? "border-[#C9A96E]/40" : "border-border/50",
                       )}
                     >
                       <span
                         className={cn(
-                          "w-8 text-[11px] tabular-nums tracking-[0.16em] transition-colors duration-500",
-                          selected ? "text-[#C47A1A]" : "text-muted-foreground",
+                          "w-8 text-[11px] tracking-[0.16em] tabular-nums transition-colors duration-500",
+                          selected ? "text-[#C9A96E]" : "text-muted-foreground",
                         )}
                       >
                         0{i + 1}
@@ -123,7 +118,9 @@ export function NotJustAMatch() {
                         <span
                           className={cn(
                             "text-muted-foreground grid overflow-hidden text-xs leading-relaxed transition-[grid-template-rows,opacity] duration-500",
-                            selected ? "mt-0.5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                            selected
+                              ? "mt-0.5 grid-rows-[1fr] opacity-100"
+                              : "grid-rows-[0fr] opacity-0",
                           )}
                         >
                           <span className="min-h-0">{layer.note}</span>
@@ -131,7 +128,7 @@ export function NotJustAMatch() {
                       </span>
                       <span className="bg-border relative hidden h-px w-16 overflow-hidden sm:block">
                         <motion.span
-                          className="absolute inset-y-0 left-0 bg-[#D4AF37]"
+                          className="absolute inset-y-0 left-0 bg-[#C9A96E]"
                           initial={false}
                           animate={{ width: selected ? "100%" : "0%" }}
                           transition={{ duration: reduceMotion ? 0 : 0.45, ease }}
@@ -173,7 +170,7 @@ function AlignmentRings({ active, reduceMotion }: { active: number; reduceMotion
           rx={86 + i * 22}
           ry={54 + i * 16}
           fill="none"
-          stroke={i <= active ? "#D4AF37" : "currentColor"}
+          stroke={i <= active ? "#C9A96E" : "currentColor"}
           strokeWidth={i === active ? 1.4 : 0.7}
           className={i <= active ? "" : "text-foreground"}
           initial={false}
@@ -200,9 +197,9 @@ function DifferencePortrait({
 }) {
   return (
     <figure className={cn("relative z-10 w-[42%] max-w-[11.5rem]", className)}>
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-[0_18px_40px_rgba(20,17,14,0.12)] ring-1 ring-black/5">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,0.12)] ring-1 ring-black/5">
         <Image src={src} alt="" fill sizes="200px" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#14110E]/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#121212]/50 to-transparent" />
         <figcaption className="font-display text-ivory absolute inset-x-0 bottom-2.5 text-center text-sm">
           {name}
         </figcaption>
@@ -221,7 +218,7 @@ function ScoreMark({ score, size = "md" }: { score: number; size?: "sm" | "md" }
   const offset = c * (1 - score / 100);
   return (
     <div
-      className="relative shrink-0 rounded-full bg-[#14110E]/80"
+      className="relative shrink-0 rounded-full bg-[#121212]/80"
       style={{ width: dim, height: dim }}
       aria-label={`${score} percent compatibility`}
     >
@@ -231,7 +228,7 @@ function ScoreMark({ score, size = "md" }: { score: number; size?: "sm" | "md" }
           cy={dim / 2}
           r={r}
           fill="none"
-          stroke="rgba(247,241,227,0.22)"
+          stroke="rgba(244,240,231,0.22)"
           strokeWidth="1.5"
         />
         <motion.circle
@@ -239,7 +236,7 @@ function ScoreMark({ score, size = "md" }: { score: number; size?: "sm" | "md" }
           cy={dim / 2}
           r={r}
           fill="none"
-          stroke="#D4AF37"
+          stroke="#C9A96E"
           strokeWidth="1.6"
           strokeDasharray={c}
           strokeLinecap="round"
@@ -272,7 +269,11 @@ function DiscoverCard({
       initial={reduceMotion ? false : { opacity: 0, y: 22 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      whileHover={reduceMotion ? undefined : { y: featured ? -8 : -5, transition: { duration: 0.45, delay: 0, ease } }}
+      whileHover={
+        reduceMotion
+          ? undefined
+          : { y: featured ? -8 : -5, transition: { duration: 0.45, delay: 0, ease } }
+      }
       transition={{ duration: 0.55, ease, delay }}
       className="h-full"
     >
@@ -296,13 +297,13 @@ function DiscoverCard({
           className={cn(
             "absolute inset-0",
             featured
-              ? "bg-[linear-gradient(180deg,rgba(20,17,14,0.05)_0%,rgba(20,17,14,0.18)_48%,rgba(20,17,14,0.88)_100%)]"
-              : "bg-[linear-gradient(180deg,rgba(20,17,14,0.12)_0%,rgba(20,17,14,0.28)_40%,rgba(20,17,14,0.92)_100%)]",
+              ? "bg-[linear-gradient(180deg,rgba(0,0,0,0.05)_0%,rgba(0,0,0,0.18)_48%,rgba(0,0,0,0.88)_100%)]"
+              : "bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.28)_40%,rgba(0,0,0,0.92)_100%)]",
           )}
         />
-        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/12 transition-[box-shadow] duration-500 group-hover:shadow-[inset_0_0_0_1px_rgba(212,175,55,0.35)]" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/12 transition-[box-shadow] duration-500 ring-inset group-hover:shadow-[inset_0_0_0_1px_rgba(201,169,110,0.35)]" />
 
-        <div className="absolute top-4 right-4 rounded-full bg-[#14110E]/50 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md">
+        <div className="absolute top-4 right-4 rounded-full bg-[#121212]/50 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.28)] backdrop-blur-md">
           <ScoreMark score={person.score} size={featured ? "md" : "sm"} />
         </div>
 
@@ -330,7 +331,9 @@ function DiscoverCard({
           <p
             className={cn(
               "text-ivory/82 mt-2 leading-relaxed",
-              featured ? "max-w-sm text-sm sm:text-base" : "line-clamp-2 text-xs sm:text-sm lg:line-clamp-1",
+              featured
+                ? "max-w-sm text-sm sm:text-base"
+                : "line-clamp-2 text-xs sm:text-sm lg:line-clamp-1",
             )}
           >
             {person.headline}
@@ -339,7 +342,7 @@ function DiscoverCard({
             Interested
             <span
               aria-hidden
-              className="bg-[#D4AF37] h-px w-4 origin-left transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-150"
+              className="h-px w-4 origin-left bg-[#C9A96E] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-150"
             />
           </span>
         </div>
@@ -411,8 +414,11 @@ export function CompatibilityVisual() {
             See what brings two charts together.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-xl text-sm leading-relaxed">
-            Traditional Vedic indicators suggest areas of strength and conversation. This is an
-            astrological interpretation, not a certainty.
+            Explore Guna Milan, planetary themes and life goals together. This is an astrological
+            interpretation, not a certainty.
+          </p>
+          <p className="text-muted-foreground mt-3 text-[11px] tracking-[0.14em] uppercase">
+            Illustrative preview
           </p>
         </FadeIn>
         <FadeIn delay={0.08}>
@@ -424,27 +430,17 @@ export function CompatibilityVisual() {
 
       <div className="relative mt-8">
         <div
-          className="pointer-events-none absolute top-[42%] right-[12%] left-[12%] hidden h-px bg-[linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)] md:block"
+          className="pointer-events-none absolute top-[42%] right-[12%] left-[12%] hidden h-px bg-[linear-gradient(90deg,transparent,rgba(201,169,110,0.55),transparent)] md:block"
           aria-hidden
         />
         <div className="grid items-center gap-6 md:grid-cols-[1fr_auto_1fr] md:gap-4 lg:gap-6">
-          <ChartPerson
-            label="You"
-            name="Adrian"
-            src={editorial.you.src}
-            delay={0.05}
-          />
+          <ChartPerson label="You" name="Adrian" src={editorial.you.src} delay={0.05} />
           <CompatibilityCore value={91} reduceMotion={Boolean(reduceMotion)} />
-          <ChartPerson
-            label="Partner"
-            name="Elena"
-            src={editorial.partner.src}
-            delay={0.12}
-          />
+          <ChartPerson label="Partner" name="Elena" src={editorial.partner.src} delay={0.12} />
         </div>
       </div>
 
-      <ul className="mt-8 grid gap-4 md:grid-cols-3">
+      <ul className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-4">
         {CHART_INSIGHTS.map((item, i) => (
           <motion.li
             key={item.n}
@@ -454,12 +450,12 @@ export function CompatibilityVisual() {
             transition={{ duration: 0.55, delay: 0.06 * i, ease }}
             className="group border-border/60 bg-background/70 relative overflow-hidden rounded-2xl border p-6"
           >
-            <p className="text-[11px] tabular-nums tracking-[0.18em] text-[#C47A1A]">{item.n}</p>
+            <p className="text-[11px] tracking-[0.18em] text-[#C9A96E] tabular-nums">{item.n}</p>
             <h3 className="font-display mt-3 text-xl tracking-tight sm:text-2xl">{item.title}</h3>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{item.body}</p>
             <span
               aria-hidden
-              className="absolute inset-x-6 bottom-0 h-px origin-left scale-x-0 bg-[#D4AF37] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
+              className="absolute inset-x-6 bottom-0 h-px origin-left scale-x-0 bg-[#C9A96E] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
             />
           </motion.li>
         ))}
@@ -490,10 +486,10 @@ function ChartPerson({
       className="mx-auto w-full max-w-[16.5rem] text-center"
     >
       <div className="relative mx-auto h-40 w-40 sm:h-52 sm:w-52 md:h-48 md:w-48 lg:h-56 lg:w-56">
-        <div className={cn("absolute inset-0 text-foreground", !reduceMotion && "landing-orbit")}>
+        <div className={cn("text-foreground absolute inset-0", !reduceMotion && "landing-orbit")}>
           <KundliFrame />
         </div>
-        <div className="absolute inset-[22%] overflow-hidden rounded-full shadow-[0_16px_40px_rgba(20,17,14,0.14)] ring-1 ring-[#D4AF37]/35">
+        <div className="absolute inset-[22%] overflow-hidden rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.14)] ring-1 ring-[#C9A96E]/35">
           <Image src={src} alt="" fill sizes="180px" className="object-cover" />
         </div>
       </div>
@@ -509,7 +505,7 @@ function KundliFrame() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden>
       <rect x="7" y="7" width="86" height="86" fill="none" stroke="currentColor" opacity="0.22" />
-      <polygon points="50,7 93,50 50,93 7,50" fill="none" stroke="#D4AF37" strokeWidth="1.15" />
+      <polygon points="50,7 93,50 50,93 7,50" fill="none" stroke="#C9A96E" strokeWidth="1.15" />
       <line x1="7" y1="7" x2="93" y2="93" stroke="currentColor" opacity="0.16" />
       <line x1="93" y1="7" x2="7" y2="93" stroke="currentColor" opacity="0.16" />
     </svg>
@@ -523,8 +519,12 @@ function CompatibilityCore({ value, reduceMotion }: { value: number; reduceMotio
 
   return (
     <div className="relative z-10 mx-auto flex h-48 w-48 items-center justify-center sm:h-52 sm:w-52">
-      <div className="bg-card ring-border absolute inset-0 rounded-full shadow-[0_20px_50px_rgba(20,17,14,0.08)] ring-1" />
-      <svg viewBox="0 0 140 140" className={cn("text-foreground absolute inset-2", !reduceMotion && "landing-orbit-rev")} aria-hidden>
+      <div className="bg-card ring-border absolute inset-0 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.08)] ring-1" />
+      <svg
+        viewBox="0 0 140 140"
+        className={cn("text-foreground absolute inset-2", !reduceMotion && "landing-orbit-rev")}
+        aria-hidden
+      >
         <circle
           cx="70"
           cy="70"
@@ -536,14 +536,26 @@ function CompatibilityCore({ value, reduceMotion }: { value: number; reduceMotio
           strokeDasharray="2 8"
         />
       </svg>
-      <svg viewBox="0 0 140 140" className="text-foreground absolute inset-3 -rotate-90" aria-hidden>
-        <circle cx="70" cy="70" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="1.8" />
+      <svg
+        viewBox="0 0 140 140"
+        className="text-foreground absolute inset-3 -rotate-90"
+        aria-hidden
+      >
+        <circle
+          cx="70"
+          cy="70"
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.12"
+          strokeWidth="1.8"
+        />
         <motion.circle
           cx="70"
           cy="70"
           r={r}
           fill="none"
-          stroke="#D4AF37"
+          stroke="#C9A96E"
           strokeWidth="2"
           strokeLinecap="round"
           strokeDasharray={c}
@@ -593,9 +605,9 @@ const PATH = [
 ] as const;
 
 const ALIGN_TONE = {
-  "Strongly aligned": { value: 0.92, bar: "bg-[#D4AF37]", stroke: "#D4AF37" },
-  "Worth discussing": { value: 0.64, bar: "bg-[#C47A1A]", stroke: "#C47A1A" },
-  "Different perspectives": { value: 0.4, bar: "bg-[#1F3A5F]", stroke: "#1F3A5F" },
+  "Strongly aligned": { value: 0.92, bar: "bg-[#C9A96E]", stroke: "#C9A96E" },
+  "Worth discussing": { value: 0.64, bar: "bg-[#C9A96E]", stroke: "#C9A96E" },
+  "Different perspectives": { value: 0.4, bar: "bg-[#B0AAA0]", stroke: "#B0AAA0" },
 } as const;
 
 function polarPoint(index: number, total: number, radius: number, cx: number, cy: number) {
@@ -614,7 +626,11 @@ function LifePathRadar() {
     .join(" ");
 
   return (
-    <svg viewBox="0 0 320 320" className="text-foreground mx-auto h-auto w-full max-w-md" aria-hidden>
+    <svg
+      viewBox="0 0 320 320"
+      className="text-foreground mx-auto h-auto w-full max-w-md"
+      aria-hidden
+    >
       {[0.34, 0.67, 1].map((ring) => (
         <polygon
           key={ring}
@@ -626,12 +642,22 @@ function LifePathRadar() {
       ))}
       {PATH.map((row, i) => {
         const [x, y] = polarPoint(i, PATH.length, maxR, cx, cy);
-        return <line key={row[0]} x1={cx} y1={cy} x2={x} y2={y} stroke="currentColor" strokeOpacity={0.12} />;
+        return (
+          <line
+            key={row[0]}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            stroke="currentColor"
+            strokeOpacity={0.12}
+          />
+        );
       })}
       <motion.polygon
         points={polygon}
-        fill="rgba(212,175,55,0.16)"
-        stroke="#D4AF37"
+        fill="rgba(201,169,110,0.16)"
+        stroke="#C9A96E"
         strokeWidth="1.6"
         initial={reduceMotion ? false : { opacity: 0, scale: 0.35 }}
         whileInView={{ opacity: 1, scale: 1 }}
@@ -647,7 +673,7 @@ function LifePathRadar() {
             cx={x}
             cy={y}
             r="3.5"
-            fill="#F7F1E3"
+            fill="#F4F0E7"
             stroke={ALIGN_TONE[row[3]].stroke}
             strokeWidth="1.5"
             initial={reduceMotion ? false : { opacity: 0, scale: 0 }}
@@ -690,6 +716,9 @@ export function LifePathAlignment() {
           <h2 className="font-display mt-3 text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
             Alignment beyond the chart.
           </h2>
+          <p className="text-muted-foreground mt-3 text-[11px] tracking-[0.14em] uppercase">
+            Illustrative preview
+          </p>
         </div>
         <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link href={routes.situationalAlignment}>Explore Life Alignment</Link>

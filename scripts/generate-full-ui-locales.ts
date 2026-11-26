@@ -61,7 +61,7 @@ const navigation: Record<(typeof locales)[number], Dict> = {
     signOut: "साइन आउट",
     expandSidebar: "साइडबार विस्तारें",
     collapseSidebar: "साइडबार संक्षिप्त करें",
-    workspaceMode: "VedaMilan वर्कस्पेस मोड",
+    workspaceMode: "KUNDLIV वर्कस्पेस मोड",
     howItWorks: "यह कैसे काम करता है",
     pricing: "मूल्य",
     faq: "FAQ",

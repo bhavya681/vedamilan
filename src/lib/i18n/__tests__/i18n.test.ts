@@ -46,14 +46,14 @@ describe("i18n messages", () => {
   it("merges hindi overlays without dropping english fallbacks", async () => {
     const hi = await getMessages("hi");
     expect(translateKey(hi, "common.save")).toBe("सहेजें");
-    expect(translateKey(hi, "common.appName")).toBe("VedaMilan AI");
+    expect(translateKey(hi, "common.appName")).toBe("KUNDLIV");
   });
 
   it("loads sanskrit overlays", async () => {
     const sa = await getMessages("sa");
     expect(translateKey(sa, "common.save")).toBe("रक्षतु");
     expect(translateKey(sa, "navigation.kundli")).toBe("कुण्डली");
-    expect(translateKey(sa, "common.appName")).toBe("VedaMilan AI");
+    expect(translateKey(sa, "common.appName")).toBe("KUNDLIV");
   });
 
   it("covers all launch locales without throwing", async () => {

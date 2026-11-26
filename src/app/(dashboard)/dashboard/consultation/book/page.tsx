@@ -10,7 +10,7 @@ export default function BookConsultationPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Book consultation"
         description="Scheduling opens with the expert network launch"
         actions={

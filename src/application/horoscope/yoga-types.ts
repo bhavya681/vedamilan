@@ -1,5 +1,5 @@
 /**
- * Shared types for the VedaMilan classical yoga system.
+ * Shared types for the KUNDLIV classical yoga system.
  *
  * Design goals:
  * - One source of truth for every cataloged classical yoga (metadata + source).

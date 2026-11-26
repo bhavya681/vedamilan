@@ -50,7 +50,7 @@ export default function ReportsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Reports"
         description="Compatibility dossiers and billing receipts"
         actions={

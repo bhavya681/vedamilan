@@ -26,7 +26,7 @@ const testimonials = [
     name: "Kabir & Sana",
     location: "Delhi NCR",
     quote:
-      "From horoscope clarity to calm messaging, VedaMilan felt like a guided ritual rather than endless scrolling.",
+      "From horoscope clarity to calm messaging, KUNDLIV felt like a guided ritual rather than endless scrolling.",
     image: landingImages.testimonials[2],
   },
 ];

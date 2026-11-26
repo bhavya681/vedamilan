@@ -17,6 +17,7 @@ import {
   cityFromPlaceName,
   evaluateOnboardingReadiness,
 } from "@/features/onboarding/onboarding-status";
+import { markKundlivWelcomeSeen } from "@/features/onboarding/welcome-state";
 import { authClient } from "@/lib/auth/client";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
@@ -92,6 +93,7 @@ export function OnboardingWizard() {
     const birth = profileRes.success ? profileRes.data?.birthDetails : null;
     const prefs = profileRes.success ? profileRes.data?.preferences : null;
     const name = me.data?.user?.name || "";
+    if (me.data?.user?.id) markKundlivWelcomeSeen(me.data.user.id);
     setForm((f) => ({
       ...f,
       name,
@@ -359,6 +361,15 @@ export function OnboardingWizard() {
       <div className="border-border/70 bg-card shadow-soft space-y-5 rounded-2xl border p-5 sm:p-6">
         {step === 0 ? (
           <>
+            <div className="border-border/60 bg-muted/30 rounded-xl border p-3">
+              <p className="text-gold/85 text-[10px] font-semibold tracking-[0.18em] uppercase">
+                KUNDLIV
+              </p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                Welcome to KUNDLIV — Your Vedic Universe. One Intelligent Experience. Begin with
+                Kundli, AI guidance, or matchmaking; this setup helps personalize all three.
+              </p>
+            </div>
             <div className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="name">What should we call you?</Label>

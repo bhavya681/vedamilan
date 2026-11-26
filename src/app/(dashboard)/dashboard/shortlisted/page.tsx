@@ -44,7 +44,7 @@ export default function ShortlistedPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Shortlisted"
         description="Profiles you are considering"
         actions={

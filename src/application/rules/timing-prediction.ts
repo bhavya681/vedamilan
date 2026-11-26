@@ -474,11 +474,14 @@ export function predictSelfTiming(input: {
   currentMaha?: string | null;
   currentAntar?: string | null;
   birthDate?: Date | string | null;
+  now?: Date;
 }): TimingPrediction {
-  const asOf = new Date().toISOString();
+  const now = input.now || new Date();
+  const asOf = now.toISOString();
   const dasha = scoreDashaMarriageReadiness(input.periods, {
     manglikStatus: input.manglikStatus,
     seventhLord: input.seventhLord,
+    now,
   });
   const gochar = scoreGocharMarriageSupport(input.gocharPlanets || [], {
     manglikStatus: input.manglikStatus,
@@ -522,6 +525,7 @@ export function predictSelfTiming(input: {
     kind: "PARTNER_ARRIVAL",
     limit: 4,
     birthDate: input.birthDate,
+    now,
   });
   const bestMarriageWindows = computeTimedWindows(input.periods, {
     manglikStatus: input.manglikStatus,
@@ -529,15 +533,17 @@ export function predictSelfTiming(input: {
     kind: "MARRIAGE",
     limit: 5,
     birthDate: input.birthDate,
+    now,
   });
   const pastMarriageWindows = computeTimedWindows(input.periods, {
     manglikStatus: input.manglikStatus,
     seventhLord: input.seventhLord,
     kind: "MARRIAGE",
-    limit: 3,
-    birthDate: input.birthDate,
+    limit: 12,
     includePast: true,
-    pastCutoffYears: 25,
+    pastCutoffYears: 100,
+    birthDate: input.birthDate,
+    now,
   });
 
   return {

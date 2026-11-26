@@ -171,4 +171,137 @@ describe("life events calendar + gochar", () => {
       expect(e.score).toBeGreaterThanOrEqual(74);
     }
   });
+
+  it("keeps past chapters from birth in chronological order beyond the recent-years cutoff", () => {
+    const now = new Date("2026-07-29T00:00:00.000Z");
+    const birth = new Date("1990-01-01T00:00:00.000Z");
+
+    const report = computeLifeEventsCalendar({
+      now,
+      birthDate: birth,
+      lagnaSign: "Aries",
+      periods: [
+        {
+          lord: "Venus",
+          parentLord: "Venus",
+          level: "MAHA",
+          startDate: "2005-01-01",
+          endDate: "2035-01-01",
+        },
+        {
+          lord: "Venus",
+          parentLord: "Venus",
+          level: "ANTAR",
+          startDate: "2011-01-01",
+          endDate: "2013-01-01",
+        },
+        {
+          lord: "Venus",
+          parentLord: "Venus",
+          level: "ANTAR",
+          startDate: "2015-01-01",
+          endDate: "2017-01-01",
+        },
+        {
+          lord: "Venus",
+          parentLord: "Venus",
+          level: "ANTAR",
+          startDate: "2021-01-01",
+          endDate: "2023-01-01",
+        },
+      ],
+    });
+
+    const starts = report.byPhase.past.map((e) => e.startDate);
+    expect(starts.length).toBeGreaterThan(0);
+    expect(new Date(starts[0]!).getFullYear()).toBeLessThanOrEqual(2011);
+    expect([...starts].sort()).toEqual(starts);
+    expect(starts.every((start) => new Date(start) >= birth)).toBe(true);
+  });
+
+  it("scores past chapters with dated sky only, never today's sky", () => {
+    const now = new Date("2026-07-29T00:00:00.000Z");
+    const birth = new Date("2003-07-01T00:00:00.000Z");
+    const antarStart = "2025-03-01T00:00:00.000Z";
+    const periods = [
+      {
+        lord: "Venus",
+        parentLord: "Venus",
+        level: "MAHA",
+        startDate: "2019-01-01",
+        endDate: "2039-01-01",
+      },
+      {
+        lord: "Ketu",
+        parentLord: "Venus",
+        level: "ANTAR",
+        startDate: antarStart,
+        endDate: "2026-05-01",
+      },
+    ];
+    const liveOnly = computeLifeEventsCalendar({
+      now,
+      birthDate: birth,
+      lagnaSign: "Aries",
+      gocharPlanets: [{ planet: "Mercury", houseFromNatalLagna: 10 }],
+      periods,
+    });
+    const dated = computeLifeEventsCalendar({
+      now,
+      birthDate: birth,
+      lagnaSign: "Aries",
+      datedGocharByAntarStart: {
+        [antarStart]: [
+          { planet: "Sun", houseFromNatalLagna: 10 },
+          { planet: "Mercury", houseFromNatalLagna: 10 },
+          { planet: "Venus", houseFromNatalLagna: 11 },
+        ],
+      },
+      periods,
+    });
+
+    const pickChapter = (report: ReturnType<typeof computeLifeEventsCalendar>) =>
+      report.events.find((e) => e.startDate === antarStart);
+    expect(pickChapter(liveOnly)?.gocharNote).toBeUndefined();
+    expect(pickChapter(dated)!.score).toBeGreaterThan(pickChapter(liveOnly)!.score);
+  });
+
+  it("records the sky date and respects the configured future horizon", () => {
+    const now = new Date("2026-07-29T00:00:00.000Z");
+    const report = computeLifeEventsCalendar({
+      now,
+      birthDate: new Date("2003-07-01T00:00:00.000Z"),
+      lagnaSign: "Aries",
+      horizonYears: 2,
+      periods: [
+        {
+          lord: "Venus",
+          parentLord: "Venus",
+          level: "MAHA",
+          startDate: "2019-01-01",
+          endDate: "2039-01-01",
+        },
+        {
+          lord: "Mercury",
+          parentLord: "Venus",
+          level: "ANTAR",
+          startDate: "2026-08-01",
+          endDate: "2028-08-01",
+        },
+        {
+          lord: "Ketu",
+          parentLord: "Venus",
+          level: "ANTAR",
+          startDate: "2028-08-01",
+          endDate: "2031-01-01",
+        },
+      ],
+    });
+
+    expect(report.events.length).toBeGreaterThan(0);
+    expect(report.events.every((e) => e.source === "dasha" && Boolean(e.skyAt))).toBe(true);
+    expect(report.byPhase.future.every((e) => new Date(e.startDate) <= new Date("2028-07-29"))).toBe(
+      true,
+    );
+  });
 });

@@ -11,9 +11,9 @@ import {
   Info,
   Layers,
   MapPin,
+  MessageCircle,
   Pause,
   Play,
-  Sparkles,
 } from "lucide-react";
 
 import type { CelestialSnapshot } from "@/application/horoscope/celestial-horizon.types";
@@ -349,7 +349,7 @@ export function NorthHorizonExplorer() {
     setAiBusy(true);
     setAiAnswer(null);
     const context = [
-      "Calculated by VedaMilan astrology engine (Swiss Ephemeris, Lahiri).",
+      "Calculated by KUNDLIV astrology engine (Swiss Ephemeris, Lahiri).",
       `Mode ${data.mode}. Time ${data.timestamp}. Place ${data.location.label}.`,
       `Ascendant ${data.ascendant.sign} ${data.ascendant.degreeInSign}, ${data.ascendant.nakshatra} pada ${data.ascendant.nakshatraPada}.`,
       `Planets: ${data.planets.map((p) => `${p.planet} ${p.sign} ${p.degreeInSign} alt ${p.altitude}° az ${p.azimuth}° ${p.status}`).join("; ")}.`,
@@ -705,7 +705,7 @@ export function NorthHorizonExplorer() {
                     </div>
                   </div>
                   <p className="text-ivory/45 relative z-10 px-3 pb-2 text-center text-[10px]">
-                    Calculated by VedaMilan astrology engine · Lahiri sidereal · pinch or +/− to
+                    Calculated by KUNDLIV astrology engine · Lahiri sidereal · pinch or +/− to
                     zoom
                   </p>
                 </>
@@ -827,7 +827,7 @@ export function NorthHorizonExplorer() {
 
                 <GlassCard className="space-y-2 p-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="text-primary h-4 w-4" />
+                    <MessageCircle className="text-primary h-4 w-4" />
                     <p className="font-display text-base">Ask about this sky</p>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -1127,7 +1127,7 @@ export function NorthHorizonExplorer() {
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   The Ascendant is the zodiac sign rising on the eastern horizon at this time and
-                  place. It is calculated by the VedaMilan engine, not by the visualization.
+                  place. It is calculated by the KUNDLIV engine, not by the visualization.
                 </p>
                 <Button asChild>
                   <Link href={routes.kundli}>Understand my ascendant</Link>
@@ -1210,7 +1210,7 @@ export function NorthHorizonExplorer() {
                 </p>
               ) : null}
               <p className="text-muted-foreground text-xs leading-relaxed">
-                This is a calculated local sky from the VedaMilan engine, not a live telescope
+                This is a calculated local sky from the KUNDLIV engine, not a live telescope
                 image. Use the nakshatra strip to walk the ecliptic.
               </p>
             </div>

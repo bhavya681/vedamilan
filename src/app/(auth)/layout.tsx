@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="mandala-bg absolute inset-0 opacity-25 mix-blend-soft-light" />
         <div className="text-ivory relative flex h-full flex-col justify-end p-12">
           <BrandMark size={96} className="mb-5 drop-shadow-lg" />
-          <p className="font-display text-brand-gold text-4xl tracking-wide">VedaMilan</p>
+          <p className="font-display text-brand-gold text-4xl tracking-wide">KUNDLIV</p>
           <p className="text-ivory/80 mt-3 max-w-md text-lg leading-relaxed">
             Private by design. Explainable by default. Built for intentional unions.
           </p>

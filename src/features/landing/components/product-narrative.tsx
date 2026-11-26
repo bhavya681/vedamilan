@@ -2,11 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, type ReactNode } from "react";
-import { Ban, EyeOff, Lock, MessageCircle, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import {
+  Ban,
+  Calculator,
+  EyeOff,
+  Lock,
+  MessageCircle,
+  ShieldCheck,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import { FadeIn } from "@/components/animations/motion";
+import { useSafeReducedMotion as useReducedMotion } from "@/hooks/use-safe-reduced-motion";
 import { LandingSection } from "@/components/layout/landing-section";
 import { Button } from "@/components/ui/button";
 import { StickyScroll } from "@/components/ui/sticky-scroll-reveal";
@@ -22,7 +31,7 @@ function KundliMini() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full text-current" aria-hidden>
       <rect x="8" y="8" width="84" height="84" fill="none" stroke="currentColor" opacity="0.35" />
-      <polygon points="50,8 92,50 50,92 8,50" fill="none" stroke="#D4AF37" strokeWidth="1.1" />
+      <polygon points="50,8 92,50 50,92 8,50" fill="none" stroke="#C9A96E" strokeWidth="1.1" />
       <line x1="8" y1="8" x2="92" y2="92" stroke="currentColor" opacity="0.2" />
       <line x1="92" y1="8" x2="8" y2="92" stroke="currentColor" opacity="0.2" />
     </svg>
@@ -51,10 +60,10 @@ function VedicStill({
       >
         <Image src={src} alt={alt} fill sizes="320px" className="object-cover" />
       </motion.div>
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.15)_0%,rgba(20,17,14,0.72)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.72)_100%)]" />
       {children}
       {caption ? (
-        <p className="font-display absolute right-4 bottom-4 left-4 text-2xl text-[#F7F1E3]">
+        <p className="font-display absolute right-4 bottom-4 left-4 text-2xl text-[#F4F0E7]">
           {caption}
         </p>
       ) : null}
@@ -67,7 +76,7 @@ export function AstrologyExplained() {
     {
       title: "The kundli",
       description:
-        "A Lahiri sidereal chart from Swiss Ephemeris. Engine calculated — the same positions used everywhere in VedaMilan.",
+        "A Lahiri sidereal chart from Swiss Ephemeris. Engine calculated — the same positions used everywhere in KUNDLIV.",
       content: (
         <VedicStill
           src={editorial.vedic.sky.src}
@@ -116,9 +125,9 @@ export function AstrologyExplained() {
           caption="Mahadasha"
         >
           <div className="absolute inset-x-5 top-8 space-y-2">
-            <div className="h-1 w-4/5 bg-[#D4AF37]/80" />
-            <div className="h-1 w-3/5 bg-[#D4AF37]/50" />
-            <div className="h-1 w-2/5 bg-[#D4AF37]/30" />
+            <div className="h-1 w-4/5 bg-[#C9A96E]/80" />
+            <div className="h-1 w-3/5 bg-[#C9A96E]/50" />
+            <div className="h-1 w-2/5 bg-[#C9A96E]/30" />
           </div>
         </VedicStill>
       ),
@@ -136,7 +145,7 @@ export function AstrologyExplained() {
             Ancient wisdom. Clearly explained.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-lg text-sm leading-relaxed sm:text-base">
-            VedaMilan uses traditional Vedic calculations and translates complex chart information
+            KUNDLIV uses traditional Vedic calculations and translates complex chart information
             into understandable insights.
           </p>
         </div>
@@ -173,8 +182,14 @@ export function CompatibilityStudio() {
       <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
         One connection. Deeper understanding.
       </h2>
+      <p className="text-muted-foreground mt-3 text-[11px] tracking-[0.14em] uppercase">
+        Illustrative preview
+      </p>
       <Tabs defaultValue="compatibility" className="mt-10">
-        <TabsList aria-label="Studio views">
+        <TabsList
+          aria-label="Studio views"
+          className="h-auto flex-wrap [overflow:visible] rounded-2xl sm:h-11 sm:flex-nowrap sm:[overflow-x:auto] sm:rounded-full"
+        >
           <TabsTrigger value="compatibility">Compatibility</TabsTrigger>
           <TabsTrigger value="goals">Life Goals</TabsTrigger>
           <TabsTrigger value="vedic">Vedic</TabsTrigger>
@@ -223,7 +238,7 @@ export function CompatibilityStudio() {
 
 function StudioPanel({ score, title, body }: { score: string; title: string; body: string }) {
   return (
-    <div className="grid gap-6 md:grid-cols-[0.4fr_1fr] md:items-start lg:gap-8">
+    <div className="grid gap-6 md:grid-cols-[0.4fr_1fr] md:items-start lg:gap-8 xl:gap-12">
       <p className="font-display text-5xl">{score}</p>
       <div>
         <h3 className="font-display text-2xl">{title}</h3>
@@ -282,8 +297,8 @@ export function CoupleSpacePreview() {
 
   return (
     <LandingSection>
-      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
-        <FadeIn>
+      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10 xl:gap-14">
+        <FadeIn className="min-w-0">
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             Couple space
           </p>
@@ -303,9 +318,9 @@ export function CoupleSpacePreview() {
           </Button>
         </FadeIn>
 
-        <FadeIn delay={0.08}>
-          <div className="relative overflow-hidden rounded-2xl">
-            <div className="relative aspect-[5/4] min-h-[18rem] sm:min-h-[22rem] md:min-h-[24rem] lg:min-h-[26rem]">
+        <FadeIn className="min-w-0" delay={0.08}>
+          <div className="relative w-full min-w-0 overflow-hidden rounded-2xl">
+            <div className="relative aspect-[5/4] w-full min-w-0 sm:min-h-[22rem] md:min-h-[24rem] lg:min-h-[26rem]">
               <motion.div
                 className="absolute inset-0"
                 initial={reduceMotion ? false : { scale: 1.06 }}
@@ -321,7 +336,7 @@ export function CoupleSpacePreview() {
                   className="object-cover"
                 />
               </motion.div>
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.2)_0%,rgba(20,17,14,0.28)_38%,rgba(20,17,14,0.82)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0.28)_38%,rgba(0,0,0,0.82)_100%)]" />
               <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/12 ring-inset" />
 
               <div className="absolute top-4 right-4 left-4 flex items-center justify-between gap-3">
@@ -330,26 +345,26 @@ export function CoupleSpacePreview() {
                     {[editorial.you.src, editorial.partner.src].map((src) => (
                       <span
                         key={src}
-                        className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-[#14110E]"
+                        className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-[#121212]"
                       >
                         <Image src={src} alt="" fill sizes="40px" className="object-cover" />
                       </span>
                     ))}
                   </div>
-                  <div className="text-[#F7F1E3]">
+                  <div className="text-[#F4F0E7]">
                     <p className="text-sm">Adrian · Elena</p>
                     <p className="text-ivory/55 text-[10px] tracking-[0.16em] uppercase">
                       Illustrative
                     </p>
                   </div>
                 </div>
-                <p className="border-ivory/20 text-ivory hidden rounded-full border bg-[#14110E]/50 px-3 py-1 text-[10px] tracking-[0.16em] uppercase backdrop-blur-md sm:block">
+                <p className="border-ivory/20 text-ivory hidden rounded-full border bg-[#121212]/50 px-3 py-1 text-[10px] tracking-[0.16em] uppercase backdrop-blur-md sm:block">
                   Private
                 </p>
               </div>
 
               <div className="absolute inset-x-4 bottom-4 sm:inset-x-5 sm:bottom-5">
-                <div className="border-ivory/15 rounded-xl border bg-[#14110E]/70 p-4 text-[#F7F1E3] shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-5">
+                <div className="border-ivory/15 rounded-xl border bg-[#121212]/70 p-4 text-[#F4F0E7] shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-5">
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {SPACE_PANES.map((item, i) => (
                       <button
@@ -366,7 +381,7 @@ export function CoupleSpacePreview() {
                         <span
                           aria-hidden
                           className={cn(
-                            "mt-1 block h-px origin-left bg-[#D4AF37] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                            "mt-1 block h-px origin-left bg-[#C9A96E] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                             i === active ? "scale-x-100" : "scale-x-0",
                           )}
                         />
@@ -475,13 +490,17 @@ export function VedicKnowledge() {
         <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
           Explore the wisdom behind the chart.
         </h2>
+        <p className="text-muted-foreground mt-4 max-w-xl text-sm leading-relaxed sm:text-base">
+          From Graha Katha to the sages, Vedic narratives sit beside the calculation — never in
+          place of it.
+        </p>
       </FadeIn>
 
-      <div className="mt-8 grid min-w-0 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-10">
+      <div className="mt-8 grid min-w-0 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-10 xl:gap-14">
         <FadeIn>
           <Link
             href={topic.href}
-            className="bg-navy group relative block aspect-[5/4] overflow-hidden rounded-2xl sm:min-h-[22rem] lg:min-h-[28rem]"
+            className="bg-ink group relative block aspect-[5/4] overflow-hidden rounded-2xl sm:min-h-[22rem] lg:min-h-[28rem]"
           >
             {KNOWLEDGE.map((item, i) => (
               <motion.div
@@ -506,14 +525,14 @@ export function VedicKnowledge() {
                 />
               </motion.div>
             ))}
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.12)_0%,rgba(20,17,14,0.2)_40%,rgba(20,17,14,0.82)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.2)_40%,rgba(0,0,0,0.82)_100%)]" />
             <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/12 ring-inset" />
 
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
               <p className="text-ivory/55 text-[10px] tracking-[0.18em] uppercase">
                 {topic.kicker}
               </p>
-              <p className="font-display mt-2 text-3xl text-[#F7F1E3] sm:text-4xl">{topic.title}</p>
+              <p className="font-display mt-2 text-3xl text-[#F4F0E7] sm:text-4xl">{topic.title}</p>
               <p className="text-ivory/80 mt-3 max-w-md text-sm leading-relaxed">{topic.body}</p>
               <span className="text-ivory mt-5 inline-flex items-center gap-2 text-[11px] tracking-[0.16em] uppercase">
                 Open
@@ -563,7 +582,7 @@ export function VedicKnowledge() {
                 </Link>
                 <motion.span
                   aria-hidden
-                  className="block h-px origin-left bg-[#D4AF37]"
+                  className="block h-px origin-left bg-[#C9A96E]"
                   initial={false}
                   animate={{ scaleX: i === active ? 1 : 0 }}
                   transition={{ duration: reduceMotion ? 0 : 0.45, ease }}
@@ -584,7 +603,7 @@ export function AiGuidance() {
 
   return (
     <LandingSection id="gurus" className="scroll-mt-24" tone="muted">
-      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10">
+      <div className="grid min-w-0 items-center gap-8 md:grid-cols-2 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-10 xl:gap-14">
         <FadeIn>
           <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
             AI Vedic guidance
@@ -601,7 +620,7 @@ export function AiGuidance() {
         </FadeIn>
 
         <FadeIn delay={0.08}>
-          <div className="border-border/60 bg-background relative overflow-hidden rounded-2xl border p-5 shadow-[0_20px_50px_rgba(20,17,14,0.05)] sm:p-6">
+          <div className="border-border/60 bg-background relative overflow-hidden rounded-2xl border p-5 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-muted-foreground text-[10px] tracking-[0.18em] uppercase">
@@ -648,10 +667,10 @@ export function AiGuidance() {
                 transition={{ duration: 0.55, delay: 0.28, ease }}
                 className="flex gap-3"
               >
-                <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#14110E] text-[#D4AF37] ring-1 ring-[#D4AF37]/30">
+                <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#121212] text-[#C9A96E] ring-1 ring-[#C9A96E]/30">
                   <span className="font-display text-[11px]">G</span>
                 </span>
-                <div className="bg-gold/10 max-w-[min(24rem,calc(100%-2.5rem))] min-w-0 rounded-2xl rounded-tl-md px-3 py-3 ring-1 ring-[#D4AF37]/15 sm:px-4">
+                <div className="bg-gold/10 max-w-[min(24rem,calc(100%-2.5rem))] min-w-0 rounded-2xl rounded-tl-md px-3 py-3 ring-1 ring-[#C9A96E]/15 sm:px-4">
                   <p className="text-muted-foreground mb-1 text-[10px] tracking-[0.16em] uppercase">
                     AI Guru
                   </p>
@@ -687,36 +706,42 @@ export function AiGuidance() {
 const SAFETY = [
   {
     n: "01",
-    title: "Verified profiles",
-    body: "Profiles can carry a verification mark in the product.",
-    icon: ShieldCheck,
+    title: "Engine-calculated charts",
+    body: "Swiss Ephemeris positions power every kundli and compatibility view.",
+    icon: Calculator,
   },
   {
     n: "02",
+    title: "AI explains, never invents",
+    body: "Guidance is grounded in calculated data and marked as generated explanation.",
+    icon: ShieldCheck,
+  },
+  {
+    n: "03",
     title: "Privacy controls",
     body: "You choose what of the chart and profile is visible.",
     icon: SlidersHorizontal,
   },
   {
-    n: "03",
+    n: "04",
     title: "Block",
     body: "Blocked members stay out of your search and messages.",
     icon: Ban,
   },
   {
-    n: "04",
+    n: "05",
     title: "Secure messaging",
     body: "Conversation opens when interest is mutual.",
     icon: MessageCircle,
   },
   {
-    n: "05",
+    n: "06",
     title: "Photo and chart privacy",
     body: "Birth details and photos stay in a private workspace.",
     icon: EyeOff,
   },
   {
-    n: "06",
+    n: "07",
     title: "Profile controls",
     body: "Visibility, interests, and online status are yours to set.",
     icon: Lock,
@@ -729,9 +754,11 @@ export function SafetyTrust() {
   return (
     <LandingSection>
       <FadeIn>
-        <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">Trust</p>
+        <p className="text-secondary text-[11px] font-semibold tracking-[0.2em] uppercase">
+          Trust &amp; accuracy
+        </p>
         <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight text-balance sm:text-4xl lg:text-5xl">
-          Built for meaningful connections, with your privacy in mind.
+          Clear calculations. Private by design.
         </h2>
       </FadeIn>
       <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -756,7 +783,7 @@ export function SafetyTrust() {
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{item.body}</p>
             <span
               aria-hidden
-              className="absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-[#D4AF37] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
+              className="absolute inset-x-5 bottom-0 h-px origin-left scale-x-0 bg-[#C9A96E] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
             />
           </motion.li>
         ))}
@@ -775,10 +802,13 @@ export function International() {
           International
         </p>
         <h2 className="font-display mt-3 max-w-xl text-[1.75rem] tracking-tight sm:text-4xl lg:text-5xl">
-          Wherever life takes you, find someone aligned with your journey.
+          Vedic intelligence, wherever life takes you.
         </h2>
+        <p className="text-muted-foreground mt-3 text-[11px] tracking-[0.14em] uppercase">
+          Illustrative markers
+        </p>
       </FadeIn>
-      <div className="mt-8 grid min-w-0 items-center gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-8">
+      <div className="mt-8 grid min-w-0 items-center gap-6 md:grid-cols-2 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-8 xl:gap-12">
         <FadeIn>
           <InternationalGlobe active={active} onActive={setActive} />
         </FadeIn>

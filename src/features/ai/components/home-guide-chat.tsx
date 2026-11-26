@@ -11,13 +11,13 @@ import { cn } from "@/lib/utils/cn";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const OPENING = `Namaste — I am **${AI_GURU_NAME}**. Ask how VedaMilan works: kundli, matching, compatibility, insights, pricing, or privacy. I will guide you with calm clarity.`;
+const OPENING = `Namaste — I am **${AI_GURU_NAME}**. Ask about your kundli, Vedic wisdom, compatibility, or how KUNDLIV works. I explain what the chart engine calculated — I do not invent the sky.`;
 
 const PROMPTS = [
-  "How does VedaMilan work?",
-  "How do I generate my kundli?",
-  "How does matching work?",
-  "What is compatibility / Guna Milan?",
+  "How do I read my kundli?",
+  "What can the AI Guru explain?",
+  "How does Guna Milan work?",
+  "How does KUNDLIV work?",
   `What can ${AI_GURU_NAME} help me with?`,
 ];
 
@@ -92,7 +92,7 @@ export function HomeGuideChat() {
         aria-expanded={open}
         aria-controls="home-guide-chat"
         className={cn(
-          "border-gold/30 bg-navy text-ivory hover:bg-navy/95 shadow-elevated fixed z-40 h-12 gap-2 rounded-full border px-3 transition-opacity sm:px-4",
+          "border-gold/30 bg-ink text-ivory hover:bg-ink/95 shadow-elevated fixed z-40 h-12 gap-2 rounded-full border px-3 transition-opacity sm:px-4",
           "right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))]",
           open && "pointer-events-none opacity-0",
         )}
@@ -125,8 +125,8 @@ export function HomeGuideChat() {
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <header className="from-navy to-cosmic text-ivory relative shrink-0 overflow-hidden border-b bg-gradient-to-r via-[#1a140f] px-4 py-4">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.2),transparent_55%)]" />
+        <header className="from-ink to-ink text-ivory relative shrink-0 overflow-hidden border-b bg-gradient-to-r via-[#121212] px-4 py-4">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(201,169,110,0.2),transparent_55%)]" />
           <div className="relative flex items-start gap-3">
             <AiGuruAvatar size="lg" className="border-gold/40 mt-0.5" />
             <div className="min-w-0 flex-1 pr-8">
@@ -134,7 +134,7 @@ export function HomeGuideChat() {
                 {AI_GURU_NAME}
               </h2>
               <p className="text-ivory/65 mt-1 text-xs">
-                Sacred guidance for kundli, matching & the path ahead
+                Kundli, Vedic wisdom & compatibility, explained
               </p>
             </div>
             <button
@@ -162,7 +162,7 @@ export function HomeGuideChat() {
                     className={cn(
                       "max-w-[92%] rounded-2xl px-3.5 py-2.5",
                       isUser
-                        ? "bg-navy text-ivory rounded-br-md"
+                        ? "bg-ink text-ivory rounded-br-md"
                         : "border-border/50 bg-card rounded-bl-md border shadow-sm",
                     )}
                   >
@@ -202,7 +202,7 @@ export function HomeGuideChat() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={2}
-              placeholder={`Ask ${AI_GURU_NAME} about matching, kundli, or the app…`}
+              placeholder={`Ask ${AI_GURU_NAME} about kundli, wisdom or compatibility…`}
               className="border-input bg-background focus-visible:ring-gold/40 max-h-28 min-h-[48px] flex-1 resize-none rounded-2xl border px-3 py-2.5 text-sm focus-visible:ring-2 focus-visible:outline-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

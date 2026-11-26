@@ -90,7 +90,7 @@ export class NotificationService {
       {
         userId,
         type: "WELCOME",
-        title: "Welcome to VedaMilan AI",
+        title: "Welcome to KUNDLIV",
         body: "Complete your profile, add birth details, and generate your kundli to unlock matching and AI explanations.",
         channel: "IN_APP",
         sentAt: new Date(),

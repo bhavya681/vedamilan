@@ -52,7 +52,7 @@
   "chart": {
     "title": "Want to see how this Graha appears in your chart?",
     "cta": "Explore My {planet}",
-    "engineNote": "Chart data calculated by VedaMilan's astrology engine.",
+    "engineNote": "Chart data calculated by KUNDLIV's astrology engine.",
     "interpNote": "Interpretation generated from traditional Vedic frameworks.",
     "placement": "Your {planet}",
     "house": "House {house}",

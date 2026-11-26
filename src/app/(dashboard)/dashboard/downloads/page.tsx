@@ -56,7 +56,7 @@ export default function DownloadsPage() {
   return (
     <div className="relative space-y-6">
       <PageHeader
-        eyebrow="VedaMilan AI"
+        eyebrow="KUNDLIV"
         title="Downloads"
         description="Open your saved dossiers and receipts"
         actions={

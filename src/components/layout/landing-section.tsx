@@ -16,23 +16,18 @@ export function LandingSection({
   children: ReactNode;
   className?: string;
   innerClassName?: string;
-  tone?: "default" | "muted" | "navy" | "soft";
+  tone?: "default" | "muted" | "ink" | "soft";
 } & HTMLAttributes<HTMLElement>) {
   const toneClass = {
     default: "bg-transparent",
     muted: "border-y border-border/40 bg-muted/30",
-    navy: "bg-navy text-ivory",
+    ink: "bg-ink text-ivory",
     soft: "bg-brand-dual-soft",
   }[tone];
 
   return (
     <section id={id} className={cn("relative overflow-x-clip", toneClass, className)} {...props}>
-      <div
-        className={cn(
-          "mx-auto w-full max-w-7xl px-[max(1rem,env(safe-area-inset-left,0px))] py-10 pr-[max(1rem,env(safe-area-inset-right,0px))] sm:px-6 sm:py-12 md:py-14 lg:px-8 lg:py-16",
-          innerClassName,
-        )}
-      >
+      <div className={cn("landing-container py-10 sm:py-12 md:py-14 lg:py-16", innerClassName)}>
         {children}
       </div>
     </section>
@@ -99,7 +94,7 @@ export function MarketingPageShell({
     <main
       id="main-content"
       className={cn(
-        "relative mx-auto w-full max-w-7xl flex-1 px-4 pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-16 sm:px-6 sm:pt-[calc(7rem+env(safe-area-inset-top,0px))] sm:pb-20 lg:px-8 lg:pb-24",
+        "landing-container relative flex-1 pt-[calc(6rem+env(safe-area-inset-top,0px))] pb-16 sm:pt-[calc(7rem+env(safe-area-inset-top,0px))] sm:pb-20 lg:pb-24",
         className,
       )}
     >

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, MessageCircle, Sparkles, Users } from "lucide-react";
+import { HeartHandshake, Link2, MessageCircle, Users } from "lucide-react";
 
 import { PageHeader, EmptyState } from "@/components/layout/page-shell";
 import { useT } from "@/components/i18n/i18n-provider";
@@ -210,7 +210,7 @@ export default function ConnectionsPage() {
             <div className="space-y-8">
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="text-gold h-4 w-4" />
+                  <HeartHandshake className="text-gold h-4 w-4" />
                   <h2 className="font-display text-xl">Mutual Interest</h2>
                 </div>
                 {hub.interested.mutual.length ? (
