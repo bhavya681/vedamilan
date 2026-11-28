@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="Jeffrey Esteem">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e293b" />
+      <stop offset="1" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="48" fill="url(#bg)" />
+  <circle cx="160" cy="126" r="62" fill="#334155" />
+  <path d="M52 300c14-66 55-99 108-99s94 33 108 99" fill="#334155" />
+  <text x="160" y="282" text-anchor="middle" font-family="system-ui, sans-serif" font-size="34" font-weight="700" fill="#e2e8f0" letter-spacing="4">JE</text>
+</svg>

@@ -1,4 +1,8 @@
-import { CELEBRITY_CATALOG, celebrityPublicSummary, type BirthTimeAccuracy } from "./celebrity-catalog";
+import {
+  CELEBRITY_CATALOG,
+  celebrityPublicSummary,
+  type BirthTimeAccuracy,
+} from "./celebrity-catalog";
 import { getCelebrityChart } from "./celebrity-charts.service";
 import { horoscopeService } from "./horoscope.service";
 import { detectBnnPatterns } from "./bnn/bnn-patterns";
@@ -18,7 +22,13 @@ const CLASSICAL_PLANETS = [
 
 const CLASSICAL_SET = new Set<string>(CLASSICAL_PLANETS);
 
-export const SIMILARITY_FOCUSES = ["overall", "conjunctions", "placements", "yogas", "core"] as const;
+export const SIMILARITY_FOCUSES = [
+  "overall",
+  "conjunctions",
+  "placements",
+  "yogas",
+  "core",
+] as const;
 export type SimilarityFocus = (typeof SIMILARITY_FOCUSES)[number];
 
 export type SimilarityPlanet = {
@@ -41,7 +51,8 @@ export type SimilarityChart = {
 };
 
 export type SimilarSignal = {
-  kind: "lagna" | "moon" | "sun" | "nakshatra" | "sign" | "house" | "conjunction" | "yoga" | "exchange";
+  kind:
+    "lagna" | "moon" | "sun" | "nakshatra" | "sign" | "house" | "conjunction" | "yoga" | "exchange";
   label: string;
   detail: string;
   points: number;
@@ -82,8 +93,24 @@ type CategoryKey = "core" | "lagna" | "signs" | "houses" | "conjunctions" | "yog
 
 const CATEGORY_WEIGHTS: Record<SimilarityFocus, Record<CategoryKey, number>> = {
   overall: { core: 20, lagna: 8, signs: 18, houses: 8, conjunctions: 26, yogas: 14, exchange: 6 },
-  conjunctions: { core: 6, lagna: 2, signs: 10, houses: 4, conjunctions: 58, yogas: 8, exchange: 12 },
-  placements: { core: 12, lagna: 6, signs: 36, houses: 28, conjunctions: 10, yogas: 5, exchange: 3 },
+  conjunctions: {
+    core: 6,
+    lagna: 2,
+    signs: 10,
+    houses: 4,
+    conjunctions: 58,
+    yogas: 8,
+    exchange: 12,
+  },
+  placements: {
+    core: 12,
+    lagna: 6,
+    signs: 36,
+    houses: 28,
+    conjunctions: 10,
+    yogas: 5,
+    exchange: 3,
+  },
   yogas: { core: 10, lagna: 4, signs: 6, houses: 4, conjunctions: 10, yogas: 60, exchange: 6 },
   core: { core: 56, lagna: 18, signs: 12, houses: 4, conjunctions: 4, yogas: 4, exchange: 2 },
 };
@@ -308,9 +335,11 @@ export function scoreChartSimilarity(
   };
 }
 
-function reliabilityNote(accuracy: BirthTimeAccuracy) {
-  if (accuracy === "unknown") return "Noon chart: Lagna and houses are illustrative, so they count less toward the match.";
-  if (accuracy === "approximate") return "Approximate birth time: Lagna and houses carry reduced weight.";
+export function reliabilityNote(accuracy: BirthTimeAccuracy) {
+  if (accuracy === "unknown")
+    return "Noon chart: Lagna and houses are illustrative, so they count less toward the match.";
+  if (accuracy === "approximate")
+    return "Approximate birth time: Lagna and houses carry reduced weight.";
   return null;
 }
 
@@ -327,14 +356,44 @@ export type SimilarQuery = {
   minScore: number;
 };
 
+export async function getUserSimilarityChart(userId: string) {
+  const latest = await horoscopeService.getLatest(userId);
+  const horoscope = latest?.horoscope;
+  if (!horoscope) return null;
+
+  const storedPlanets = Array.isArray(horoscope.planets)
+    ? (horoscope.planets as unknown as SimilarityPlanet[])
+    : [];
+  const storedYogas = Array.isArray(horoscope.yogas)
+    ? (horoscope.yogas as unknown as Array<{ code: string; name?: string }>)
+    : [];
+  const chart: SimilarityChart = {
+    lagnaSign: String(horoscope.lagnaSign || "Aries"),
+    moonSign: String(horoscope.moonSign || ""),
+    sunSign: String(horoscope.sunSign || ""),
+    moonNakshatra: storedPlanets.find((planet) => planet.planet === "Moon")?.nakshatra ?? null,
+    planets: storedPlanets,
+    yogas: storedYogas,
+  };
+
+  return {
+    chart,
+    basics: {
+      lagnaSign: chart.lagnaSign,
+      moonSign: chart.moonSign,
+      sunSign: chart.sunSign,
+    },
+    horoscope,
+  };
+}
+
 export async function findSimilarCelebrities(
   userId: string,
   query: SimilarQuery,
 ): Promise<SimilarCelebritiesResult> {
-  const latest = await horoscopeService.getLatest(userId);
-  const horoscope = latest?.horoscope;
+  const userRecord = await getUserSimilarityChart(userId);
 
-  if (!horoscope) {
+  if (!userRecord) {
     return {
       hasKundli: false,
       focus: query.focus,
@@ -344,21 +403,7 @@ export async function findSimilarCelebrities(
     };
   }
 
-  const storedPlanets = Array.isArray(horoscope.planets)
-    ? (horoscope.planets as unknown as SimilarityPlanet[])
-    : [];
-  const storedYogas = Array.isArray(horoscope.yogas)
-    ? (horoscope.yogas as unknown as Array<{ code: string; name?: string }>)
-    : [];
-  const user: SimilarityChart = {
-    lagnaSign: String(horoscope.lagnaSign || "Aries"),
-    moonSign: String(horoscope.moonSign || ""),
-    sunSign: String(horoscope.sunSign || ""),
-    moonNakshatra: storedPlanets.find((planet) => planet.planet === "Moon")?.nakshatra ?? null,
-    planets: storedPlanets,
-    yogas: storedYogas,
-  };
-
+  const { chart: user, basics } = userRecord;
   const results: CelebritySimilarity[] = [];
   for (const record of CELEBRITY_CATALOG) {
     try {
@@ -398,11 +443,7 @@ export async function findSimilarCelebrities(
   return {
     hasKundli: true,
     focus: query.focus,
-    userChart: {
-      lagnaSign: user.lagnaSign,
-      moonSign: user.moonSign,
-      sunSign: user.sunSign,
-    },
+    userChart: basics,
     results: results.slice(0, query.limit),
     scanned: results.length,
   };

@@ -1,4 +1,11 @@
+import { GENERATED_CELEBRITY_IMAGES } from "./celebrity-images.generated";
+import { SEARCH_CELEBRITY_IMAGES } from "./celebrity-images.search";
+import { SUPPLEMENTAL_CELEBRITY_IMAGES } from "./celebrity-images.supplemental";
+
 export const CELEBRITY_IMAGES: Record<string, string> = {
+  ...GENERATED_CELEBRITY_IMAGES,
+  ...SUPPLEMENTAL_CELEBRITY_IMAGES,
+  ...SEARCH_CELEBRITY_IMAGES,
   "shri-krishna": "/images/sages/krishna.webp",
   "shri-rama": "https://i.pinimg.com/736x/e6/62/cc/e662cc08751f7d6b612350f2ef224f64.jpg",
   bhima:
@@ -415,7 +422,7 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
   "georges-st-pierre":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/2021_-_Centre_Stage_DG4_5765_%2851685717187%29_%28cropped%29.jpg/500px-2021_-_Centre_Stage_DG4_5765_%2851685717187%29_%28cropped%29.jpg",
   "chuck-liddell":
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Chuck_Liddell_in_Santa_Monica-_California_on_5_5_18_-_Photo_by_ITHAKA_-_By_Glenn_Francis.jpg/500px-Chuck_Liddell_in_Santa_Monica-_California_on_5_5_18_-_Photo_by_ITHAKA_-_By_Glenn_Francis.jpg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy5diIG76GToOnMTQaJx-gc7qAUKknfbYKoM-bu8Knlg&s=10",
   "kamaru-usman":
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmYey-iXGWhvb1alTJh81fgANadRTcIsfU1FAySSrpyQ&s=10",
   "alexander-volkanovski":
@@ -451,7 +458,7 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
   "jordan-belfort":
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3zBhq6hc8adIiKK0-r5055xdPTI9OvRJ_1-UrMHCLNQ&s",
   "john-dillinger":
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/John_Dillinger_mug_shot.jpg/500px-John_Dillinger_mug_shot.jpg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsqL4IF8NQ0GXTlUUHbhiRqn6GCkbhVq0xFsSSao-VTQ&s=10",
   "billy-walters":
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJ_D2VCrzbKaFD4aBr8ARRbjdQRyCeKAPT8T_wo_cemA&s=10",
   "shivkrupanand-swami":
@@ -463,4 +470,10 @@ export const CELEBRITY_IMAGES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Charles_Oliveira_do_Bronxs.jpg/330px-Charles_Oliveira_do_Bronxs.jpg",
   "adolf-hitler":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Hitler_portrait_crop_%28cropped%29%282%29.jpg/330px-Hitler_portrait_crop_%28cropped%29%282%29.jpg",
+  "jeffrey-esteem":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5sRGu9_1Jj_knHYznl_RvvaTRxuM3jKjOoE3B6gsq7w&s=10",
+  "leonard-lake":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvR9gUTkW8XkxcDZifSmipbYZCEdZpUwpYP0GtCbCdUw&s=10",
+  "larry-hite":
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuVLoaxUCL2sycW1t055UtRbeaomahyaR8bxF85WpCwA&s=10",
 };

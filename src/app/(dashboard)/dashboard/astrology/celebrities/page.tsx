@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   ArrowUpRight,
   Building,
   Calendar,
@@ -25,6 +26,7 @@ import {
   Search,
   SearchX,
   Shield,
+  Skull,
   Star,
   Sun,
   Telescope,
@@ -37,7 +39,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-shell";
-import { ContentReveal } from "@/components/ui/page-skeletons";
+import { ContentReveal, PanelSkeleton } from "@/components/ui/page-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,10 +51,15 @@ import {
   type NorthChartData,
 } from "@/features/horoscope/components/kundli-charts";
 import { dashaPeriodText } from "@/features/horoscope/dasha-view";
+import { getCelebrityImageUrl } from "@/lib/http/celebrity-image-cache";
 import { fetchJsonWhenAuthed } from "@/lib/http/session-fetch";
 import { routes } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils/cn";
 import { getYogaCategoryDisplay, getYogaIcon } from "@/application/horoscope/yoga-icons";
+import {
+  celebrityMatchesQuery,
+  countCelebritiesByCategory,
+} from "@/application/horoscope/celebrity-filters";
 
 type CelebritySummary = {
   id: string;
@@ -137,6 +144,57 @@ type SimilarCelebritiesResponse = {
   data: SimilarCelebritiesData;
 };
 
+type CelebrityChartBasics = {
+  lagnaSign: string;
+  moonSign: string;
+  sunSign: string;
+  moonNakshatra: string | null;
+};
+
+type ComparisonChartVisuals = {
+  lagnaSign: string;
+  d9LagnaSign: string;
+  chartNorth: unknown;
+  chartD9: unknown;
+  sourceLabel: string;
+};
+
+type CelebrityComparison = {
+  celebrity: CelebritySummary;
+  focus: SimilarityFocus;
+  hasKundli: boolean;
+  score: number | null;
+  signals: SimilarSignal[];
+  shared: {
+    conjunctions: string[];
+    signs: string[];
+    houses: string[];
+    yogas: string[];
+  } | null;
+  reliabilityNote: string | null;
+  userChart: CelebrityChartBasics | null;
+  celebrityChart: CelebrityChartBasics;
+  userVisuals: ComparisonChartVisuals | null;
+  celebrityVisuals: ComparisonChartVisuals;
+  planets: Array<{
+    planet: string;
+    userSign: string | null;
+    celebritySign: string;
+    userHouse: number | null;
+    celebrityHouse: number;
+    userNakshatra: string | null;
+    celebrityNakshatra: string | null;
+    sameSign: boolean;
+    sameHouse: boolean;
+  }>;
+  yogas: { user: string[]; celebrity: string[]; shared: string[] };
+};
+
+type CelebrityComparisonResponse = {
+  success: boolean;
+  data: CelebrityComparison;
+};
+
 const FOCUS_OPTIONS: Array<{ value: SimilarityFocus; label: string }> = [
   { value: "overall", label: "Overall" },
   { value: "conjunctions", label: "Conjunctions" },
@@ -159,6 +217,7 @@ const CATEGORIES = [
   "Mystic",
   "Divine",
   "Criminals",
+  "Psychopaths",
 ] as const;
 
 type CategoryFilter = (typeof CATEGORIES)[number];
@@ -239,6 +298,12 @@ const CATEGORY_META: Record<
     avatar: "border-rose/30 from-rose/20 to-gold/10 text-rose",
     chip: "border-rose/25 bg-rose/10 text-rose",
     wash: "from-rose/12 via-transparent",
+  },
+  Psychopaths: {
+    icon: Skull,
+    avatar: "border-rose/35 from-rose/25 to-cosmic/10 text-rose",
+    chip: "border-rose/30 bg-rose/12 text-rose",
+    wash: "from-rose/15 via-transparent",
   },
 };
 
@@ -371,6 +436,10 @@ function categoryMeta(category: string) {
   return CATEGORY_META[category as CategoryName] ?? CATEGORY_META.Cinema;
 }
 
+function hasPlaceholderBirthData(note?: string | null) {
+  return Boolean(note?.includes("PLACEHOLDER BIRTH DATA"));
+}
+
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -396,7 +465,21 @@ function CelebrityAvatar({
 }) {
   const theme = categoryMeta(category);
   const [failed, setFailed] = useState(false);
-  const showPhoto = Boolean(imageUrl) && !failed;
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (imageUrl || !name) return;
+    let active = true;
+    setResolvedUrl(null);
+    getCelebrityImageUrl(name).then((url) => {
+      if (active && url) setResolvedUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [imageUrl, name]);
+
+  const photoUrl = failed ? null : (imageUrl ?? resolvedUrl);
 
   return (
     <div
@@ -406,9 +489,9 @@ function CelebrityAvatar({
         className,
       )}
     >
-      {showPhoto ? (
+      {photoUrl ? (
         <Image
-          src={imageUrl!}
+          src={photoUrl}
           alt={`Portrait of ${name}`}
           fill
           sizes={sizes}
@@ -515,6 +598,39 @@ function ChartPanel({
   );
 }
 
+function AlignmentChartCard({
+  code,
+  chart,
+  lagna,
+  sourceLabel,
+}: {
+  code: string;
+  chart: unknown;
+  lagna: string;
+  sourceLabel: string;
+}) {
+  return (
+    <div className="border-border/60 bg-background/40 min-w-0 rounded-xl border p-2.5 sm:p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-gold text-[10px] font-semibold tracking-[0.14em] uppercase">{code}</p>
+        <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[9px]">
+          Lagna {lagna}
+        </Badge>
+      </div>
+      <div className="mt-2 flex justify-center">
+        {isNorthChart(chart) ? (
+          <NorthIndianKundli chart={chart as NorthChartData} className="max-w-[260px]" />
+        ) : (
+          <p className="text-muted-foreground py-8 text-xs">Chart layout unavailable.</p>
+        )}
+      </div>
+      <p className="text-muted-foreground mt-1 truncate text-center text-[9px] tracking-wide">
+        {sourceLabel}
+      </p>
+    </div>
+  );
+}
+
 function ProfileHero({ chart }: { chart: CelebrityChart }) {
   const theme = categoryMeta(chart.category);
   const accuracy = TIME_ACCURACY_META[chart.timeAccuracy] ?? TIME_ACCURACY_META.unknown!;
@@ -549,6 +665,16 @@ function ProfileHero({ chart }: { chart: CelebrityChart }) {
                 <span className="h-1.5 w-1.5 rounded-full bg-current" />
                 {accuracy.label}
               </Badge>
+              {hasPlaceholderBirthData(chart.note) ? (
+                <Badge
+                  variant="outline"
+                  className="border-amber/30 bg-amber/10 text-amber"
+                  title={chart.note ?? undefined}
+                >
+                  <Info className="mr-1 h-3 w-3" />
+                  Illustrative chart
+                </Badge>
+              ) : null}
             </div>
             <h1 className="font-display mt-2 text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
               {chart.name}
@@ -928,6 +1054,390 @@ function YogaSection({
   );
 }
 
+function CelebrityCompare({ chart }: { chart: CelebrityChart }) {
+  const [open, setOpen] = useState(false);
+  const [focus, setFocus] = useState<SimilarityFocus>("overall");
+  const [data, setData] = useState<CelebrityComparison | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const ac = new AbortController();
+    setLoading(true);
+    setError(null);
+    const params = new URLSearchParams({ id: chart.id, focus });
+    fetchJsonWhenAuthed(`/api/astrology/celebrities/compare?${params.toString()}`, ac.signal)
+      .then((res) => {
+        const payload = res as CelebrityComparisonResponse;
+        if (payload?.success && payload.data) setData(payload.data);
+        else setError("Failed to compare charts");
+      })
+      .catch((err) => {
+        if (err?.name === "AbortError") return;
+        setError("Failed to compare charts");
+      })
+      .finally(() => setLoading(false));
+    return () => ac.abort();
+  }, [open, focus, chart.id]);
+
+  const coreRows = data?.userChart
+    ? [
+        {
+          label: "Lagna",
+          you: data.userChart.lagnaSign,
+          them: data.celebrityChart.lagnaSign,
+          hint: null,
+        },
+        {
+          label: "Moon",
+          you: data.userChart.moonSign,
+          them: data.celebrityChart.moonSign,
+          hint: data.userChart.moonNakshatra,
+        },
+        {
+          label: "Sun",
+          you: data.userChart.sunSign,
+          them: data.celebrityChart.sunSign,
+          hint: null,
+        },
+        {
+          label: "Moon nakshatra",
+          you: data.userChart.moonNakshatra || "—",
+          them: data.celebrityChart.moonNakshatra || "—",
+          hint: null,
+        },
+      ]
+    : [];
+
+  return (
+    <section className="space-y-3">
+      <div className="border-border/60 bg-card flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-gold flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase">
+            <ArrowLeftRight className="h-3.5 w-3.5" />
+            Compare with your chart
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+            Side-by-side structural match against your saved kundli — Lagna, Moon, Sun, houses and
+            yogas.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant={open ? "secondary" : "default"}
+          onClick={() => setOpen((value) => !value)}
+          aria-pressed={open}
+          aria-expanded={open}
+          className="w-full shrink-0 sm:w-auto"
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          {open ? "Hide comparison" : "Compare with my chart"}
+        </Button>
+      </div>
+
+      {open ? (
+        <Card className="border-border/60">
+          <CardContent className="space-y-4 p-4 sm:p-5">
+            <div className="scrollbar-hidden -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0">
+              {FOCUS_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFocus(option.value)}
+                  aria-pressed={focus === option.value}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    focus === option.value
+                      ? "border-gold/40 bg-gold/12 text-foreground"
+                      : "border-border/60 text-muted-foreground hover:border-gold/30 hover:text-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <PanelSkeleton lines={6} />
+            ) : error ? (
+              <p className="text-destructive text-sm">{error}</p>
+            ) : !data ? null : !data.hasKundli ? (
+              <div className="border-gold/25 bg-gold/5 flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-display text-lg">Generate your kundli first</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Comparing charts needs your saved birth chart. Add your birth details, then come
+                    back to this page.
+                  </p>
+                </div>
+                <Button asChild className="w-full shrink-0 sm:w-auto">
+                  <Link href={routes.kundli}>
+                    Open kundli studio
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="border-gold/20 bg-gold/5 flex flex-wrap items-center gap-3 rounded-xl border p-4">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Structural match
+                    </p>
+                    <p className="font-display text-3xl leading-tight tabular-nums">
+                      {data.score ?? 0}
+                      <span className="text-muted-foreground text-sm"> / 100</span>
+                    </p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground text-sm font-medium">
+                      You <span className="text-muted-foreground">vs</span> {data.celebrity.name}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      Ranked by {FOCUS_OPTIONS.find((option) => option.value === focus)?.label}. A
+                      study of shared chart structure, not a prediction or compatibility verdict.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {coreRows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="border-border/60 bg-background/60 min-w-0 rounded-xl border p-3"
+                    >
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.12em] uppercase">
+                        {row.label}
+                      </p>
+                      <div className="mt-1.5 space-y-1 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-muted-foreground text-xs">You</span>
+                          <span className="truncate font-medium">{row.you}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-muted-foreground truncate text-xs">
+                            {data.celebrity.name.split(" ")[0]}
+                          </span>
+                          <span className="truncate font-medium">{row.them}</span>
+                        </div>
+                      </div>
+                      {row.hint ? (
+                        <p className="text-muted-foreground mt-1 truncate text-[10px]">
+                          {row.hint}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-gold text-[10px] font-semibold tracking-[0.16em] uppercase">
+                        Chart alignment
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Their D1 and D9 on the left, your saved D1 and D9 on the right.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="border-gold/30 bg-gold/10 text-gold">
+                      D1 + D9 side by side
+                    </Badge>
+                  </div>
+
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="border-border/60 min-w-0 rounded-xl border p-3 sm:p-4">
+                      <div className="mb-3 flex items-center gap-2.5">
+                        <CelebrityAvatar
+                          name={data.celebrity.name}
+                          imageUrl={data.celebrity.imageUrl}
+                          category={data.celebrity.category}
+                          sizes="36px"
+                          className="h-9 w-9 text-xs"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{data.celebrity.name}</p>
+                          <p className="text-muted-foreground text-[10px] tracking-wide uppercase">
+                            Their charts
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid gap-2.5 sm:grid-cols-2">
+                        <AlignmentChartCard
+                          code="D1 · Rashi"
+                          chart={data.celebrityVisuals.chartNorth}
+                          lagna={data.celebrityVisuals.lagnaSign}
+                          sourceLabel={data.celebrityVisuals.sourceLabel}
+                        />
+                        <AlignmentChartCard
+                          code="D9 · Navamsa"
+                          chart={data.celebrityVisuals.chartD9}
+                          lagna={data.celebrityVisuals.d9LagnaSign}
+                          sourceLabel={data.celebrityVisuals.sourceLabel}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="border-border/60 min-w-0 rounded-xl border p-3 sm:p-4">
+                      <div className="mb-3 flex items-center gap-2.5">
+                        <div className="border-gold/30 bg-gold/10 flex h-9 w-9 items-center justify-center rounded-xl">
+                          <Compass className="text-gold h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">Your chart</p>
+                          <p className="text-muted-foreground text-[10px] tracking-wide uppercase">
+                            Saved kundli
+                          </p>
+                        </div>
+                      </div>
+                      {data.userVisuals ? (
+                        <div className="grid gap-2.5 sm:grid-cols-2">
+                          <AlignmentChartCard
+                            code="D1 · Rashi"
+                            chart={data.userVisuals.chartNorth}
+                            lagna={data.userVisuals.lagnaSign}
+                            sourceLabel={data.userVisuals.sourceLabel}
+                          />
+                          <AlignmentChartCard
+                            code="D9 · Navamsa"
+                            chart={data.userVisuals.chartD9}
+                            lagna={data.userVisuals.d9LagnaSign}
+                            sourceLabel={data.userVisuals.sourceLabel}
+                          />
+                        </div>
+                      ) : (
+                        <div className="border-border/60 bg-background/60 rounded-xl border p-4">
+                          <p className="text-muted-foreground text-xs">
+                            Your saved kundli has no planets available to draw. Regenerate it from
+                            the kundli studio.
+                          </p>
+                          <Button asChild variant="outline" size="sm" className="mt-3 w-full">
+                            <Link href={routes.kundli}>Regenerate kundli</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-display text-lg">Planetary placements</h3>
+                  <div className="table-scroll">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                            Planet
+                          </th>
+                          <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                            Your sign
+                          </th>
+                          <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                            {data.celebrity.name.split(" ")[0]} sign
+                          </th>
+                          <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                            Your house
+                          </th>
+                          <th className="text-muted-foreground pb-2 text-left text-xs font-medium">
+                            Their house
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.planets.map((planet) => (
+                          <tr key={planet.planet} className="border-b last:border-0">
+                            <td className="py-2 font-medium">{planet.planet}</td>
+                            <td className="py-2">{planet.userSign || "—"}</td>
+                            <td className="py-2">
+                              {planet.celebritySign}
+                              {planet.sameSign ? (
+                                <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                                  Same
+                                </Badge>
+                              ) : null}
+                            </td>
+                            <td className="py-2 tabular-nums">{planet.userHouse ?? "—"}</td>
+                            <td className="py-2 tabular-nums">
+                              {planet.celebrityHouse || "—"}
+                              {planet.sameHouse ? (
+                                <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                                  Same
+                                </Badge>
+                              ) : null}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="border-border/60 min-w-0 rounded-xl border p-3">
+                    <p className="text-gold text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Shared signals
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {data.signals.length ? (
+                        data.signals.map((signal, index) => (
+                          <span
+                            key={`${signal.kind}-${signal.detail}-${index}`}
+                            className="border-border/60 bg-background/60 text-muted-foreground max-w-full truncate rounded-full border px-2 py-1 text-[11px]"
+                            title={signal.detail}
+                          >
+                            {signal.label}: {signal.detail}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          No shared structural signals detected.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="border-border/60 min-w-0 rounded-xl border p-3">
+                    <p className="text-gold text-[10px] font-semibold tracking-[0.14em] uppercase">
+                      Shared yogas
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {data.yogas.shared.length ? (
+                        data.yogas.shared.map((yoga) => (
+                          <Badge
+                            key={yoga}
+                            variant="outline"
+                            className="border-gold/30 bg-gold/10 gap-1.5"
+                          >
+                            <Gem className="text-gold h-3 w-3" />
+                            {yoga}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          No yoga overlap detected.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-muted-foreground flex items-start gap-1.5 text-[11px] leading-relaxed">
+                  <Info className="mt-px h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    One or both charts may use a noon birth time, so Lagna and houses are
+                    illustrative and carry less weight.
+                    {data.reliabilityNote ? ` ${data.reliabilityNote}` : ""}
+                  </span>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+    </section>
+  );
+}
+
 function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
   const disclaimer =
     chart.chartSource === "traditional"
@@ -948,6 +1458,8 @@ function CelebrityDetail({ chart }: { chart: CelebrityChart }) {
           D1 + D9 studio
         </Badge>
       </div>
+
+      <CelebrityCompare chart={chart} />
 
       <ProfileHero chart={chart} />
 
@@ -1134,8 +1646,8 @@ function SimilarityControls({
           <p className="text-muted-foreground flex items-start gap-1.5 text-[11px] leading-relaxed">
             <Info className="mt-px h-3.5 w-3.5 shrink-0" />
             <span>
-              Public birth times are often unknown. Noon charts are still ranked, but their Lagna and
-              houses carry less weight. This is a structural study, not a claim of destiny.
+              Public birth times are often unknown. Noon charts are still ranked, but their Lagna
+              and houses carry less weight. This is a structural study, not a claim of destiny.
             </span>
           </p>
         </div>
@@ -1193,6 +1705,16 @@ function CelebrityCard({
         <Badge variant="outline" className="font-mono text-[10px] tracking-wide">
           D1 · D9
         </Badge>
+        {hasPlaceholderBirthData(celebrity.note) ? (
+          <Badge
+            variant="outline"
+            className="border-amber/30 bg-amber/10 text-amber"
+            title={celebrity.note ?? undefined}
+          >
+            <Info className="mr-1 h-3 w-3" />
+            Illustrative
+          </Badge>
+        ) : null}
         {match ? (
           <Badge
             variant="outline"
@@ -1419,46 +1941,45 @@ function CelebritiesContent() {
 
   const celebrities = data?.celebrities;
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: celebrities?.length ?? 0 };
-    for (const item of celebrities ?? []) {
-      counts[item.category] = (counts[item.category] ?? 0) + 1;
-    }
-    return counts;
-  }, [celebrities]);
+  const searchPool = useMemo(
+    () =>
+      matchMode ? (similar?.results.map((match) => match.celebrity) ?? []) : (celebrities ?? []),
+    [celebrities, matchMode, similar],
+  );
 
-  const filtered = useMemo(() => {
-    if (!celebrities) return [];
-    const q = query.trim().toLowerCase();
-    return celebrities
-      .filter((celebrity) => category === "All" || celebrity.category === category)
-      .filter((celebrity) => {
-        if (!q) return true;
-        return (
-          celebrity.name.toLowerCase().includes(q) ||
-          celebrity.field.toLowerCase().includes(q) ||
-          celebrity.category.toLowerCase().includes(q) ||
-          celebrity.place.toLowerCase().includes(q)
-        );
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [category, celebrities, query]);
+  const categoryCounts = useMemo(
+    () => countCelebritiesByCategory(searchPool, query),
+    [query, searchPool],
+  );
 
-  const matched = useMemo(() => {
-    if (!similar) return [];
-    const q = query.trim().toLowerCase();
-    return similar.results.filter((match) => {
-      if (category !== "All" && match.celebrity.category !== category) return false;
-      if (!q) return true;
-      return (
-        match.celebrity.name.toLowerCase().includes(q) ||
-        match.celebrity.field.toLowerCase().includes(q) ||
-        match.celebrity.category.toLowerCase().includes(q) ||
-        match.celebrity.place.toLowerCase().includes(q)
-      );
-    });
-  }, [category, query, similar]);
+  const filtered = useMemo(
+    () =>
+      searchPool
+        .filter((celebrity) => category === "All" || celebrity.category === category)
+        .filter((celebrity) => celebrityMatchesQuery(celebrity, query))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [category, query, searchPool],
+  );
+
+  const matched = useMemo(
+    () =>
+      (similar?.results ?? []).filter(
+        (match) =>
+          (category === "All" || match.celebrity.category === category) &&
+          celebrityMatchesQuery(match.celebrity, query),
+      ),
+    [category, query, similar],
+  );
   const visible = matchMode ? matched : filtered;
+  const poolReady = loading
+    ? false
+    : matchMode
+      ? Boolean(similar) && !similarLoading
+      : Boolean(celebrities);
+  const visibleCategories = Object.keys(categoryCounts).filter(
+    (key) => key !== "All" && (categoryCounts[key] ?? 0) > 0,
+  ).length;
+  const countLabel = loading || (matchMode && similarLoading) ? "—" : null;
 
   if (selectedId) {
     if (loading) {
@@ -1500,8 +2021,8 @@ function CelebritiesContent() {
     <div className="min-w-0 space-y-5 sm:space-y-6">
       <ContentReveal className="space-y-5 sm:space-y-6">
         <AtlasHero
-          total={celebrities?.length ?? null}
-          categories={celebrities ? new Set(celebrities.map((item) => item.category)).size : null}
+          total={poolReady ? (categoryCounts.All ?? 0) : null}
+          categories={poolReady ? visibleCategories : null}
         />
 
         <Card className="border-border/60">
@@ -1547,7 +2068,9 @@ function CelebritiesContent() {
                     >
                       <Icon className="h-3.5 w-3.5" />
                       {option}
-                      <span className="text-muted-foreground/80 tabular-nums">{count}</span>
+                      <span className="text-muted-foreground/80 tabular-nums">
+                        {countLabel ?? count}
+                      </span>
                     </button>
                   );
                 })}
