@@ -170,7 +170,23 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "thumb.wikimedia.org",
+      },
+      {
+        protocol: "https",
         hostname: "commons.wikimedia.org",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn0.gstatic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.mm.bing.net",
+      },
+      {
+        protocol: "https",
+        hostname: "**.explicit.bing.net",
       },
     ],
   },
